@@ -1,0 +1,114 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Identity-StandardUsers Template. This creates Standard IAM Users within the Identity Account.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "StandardManagedPoliciesStackName",
+            "StandardGroupsStackName"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "StandardManagedPoliciesStackName" : { "default" : "Standard ManagedPolicies Stack Name" },
+        "StandardGroupsStackName" : { "default" : "Standard Groups Stack Name" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "StandardManagedPoliciesStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard ManagedPolicies.",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardManagedPolicies",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "StandardGroupsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Groups.",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardGroups",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    }
+  },
+
+  "Resources" : {
+    "administratorUser" : {
+      "Type" : "AWS::IAM::User",
+      "Properties" : {
+        "UserName" : "administrator",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-AdministratorsGroup" }}
+        ]
+      }
+    },
+
+    "networkadministratorUser" : {
+      "Type" : "AWS::IAM::User",
+      "Properties" : {
+        "UserName" : "networkadministrator",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-NetworkAdministratorsGroup" }}
+        ]
+      }
+    },
+
+    "systemadministratorUser" : {
+      "Type" : "AWS::IAM::User",
+      "Properties" : {
+        "UserName" : "systemadministrator",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-SystemAdministratorsGroup" }}
+        ]
+      }
+    },
+
+    "databaseadministratorUser" : {
+      "Type" : "AWS::IAM::User",
+      "Properties" : {
+        "UserName" : "databaseadministrator",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-DatabaseAdministratorsGroup" }}
+        ]
+      }
+    },
+
+    "developerUser" : {
+      "Type" : "AWS::IAM::User",
+      "Properties" : {
+        "UserName" : "developer",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-DevelopersGroup" }}
+        ]
+      }
+    },
+
+    "userUser" : {
+      "Type" : "AWS::IAM::User",
+      "Properties" : {
+        "UserName" : "user",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-UsersGroup" }}
+        ]
+      }
+    }
+  }
+}

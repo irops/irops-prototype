@@ -1,0 +1,7 @@
+# Override some default behavior for binary files
+*.xls binary
+*.xlsx binary
+*.doc binary
+*.docx binary
+*.vsd binary
+*.pdf binary

@@ -1,0 +1,394 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Example-WebServers Template. This is an example of an auto-scaled web server based application, showing installation and configuration via cfn-init.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [ "EnvironmentVPCStackName" ]
+        },
+        {
+          "Label" : { "default" : "Application Configuration" },
+          "Parameters" : [
+            "CompanyName",
+            "SystemName",
+            "EnvironmentName",
+            "ApplicationName",
+            "ApplicationVersion",
+            "ApplicationDomain",
+            "ApplicationBucket",
+            "KeyName",
+            "AdministratorNetwork"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "EnvironmentVPCStackName" : { "default" : "Environment VPC Stack Name" },
+        "CompanyName" : { "default" : "Company Name" },
+        "SystemName" : { "default" : "System Name" },
+        "EnvironmentName" : { "default" : "Environment Name" },
+        "ApplicationName" : { "default" : "Application Name" },
+        "ApplicationVersion" : { "default" : "Application Version" },
+        "ApplicationDomain" : { "default" : "Application Domain" },
+        "ApplicationBucket" : { "default" : "Application Bucket" },
+        "KeyName" : { "default" : "Key Name" },
+        "AdministratorNetwork" : { "default" : "Administrator Network" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "EnvironmentVPCStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Environment VPC.",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-VPC",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain upper and lower case letters and numbers, or a hyphen."
+    },
+
+    "CompanyName" : {
+      "Description" : "A company name that will be prefixed to resource names",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "Demo",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "can contain only alphanumeric characters."
+    },
+
+    "SystemName" : {
+      "Description" : "A system name that will be prefixed to resource names",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "IROPS",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "can contain only alphanumeric characters."
+    },
+
+    "EnvironmentName" : {
+      "Description" : "An environment name that will be prefixed to resource names",
+      "Type" : "String",
+      "Default" : "Production",
+      "AllowedValues" : [ "Production", "Staging", "QA", "Development" ],
+      "ConstraintDescription" : "must be one of the following: Production, Staging, QA, Development."
+    },
+
+    "ApplicationName" : {
+      "Description" : "An application name that will be appended to resource names",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "ExampleWebServer",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "can contain only alphanumeric characters."
+    },
+
+    "ApplicationVersion" : {
+      "Description" : "The version of the application to be deployed",
+      "Type" : "String",
+      "MinLength" : 5,
+      "MaxLength" : 32,
+      "Default" : "1.0.0",
+      "AllowedPattern" : "^[0-9]*.[0-9]*.[0-9]*(-[a-zA-Z0-9][-a-zA-Z0-9]*)?$",
+      "ConstraintDescription" : "must be semantic versioning conventions."
+    },
+
+    "ApplicationDomain" : {
+      "Description" : "The domain of the application to be deployed",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "demo.iropshub.com",
+      "AllowedPattern" : "^[a-z][-.a-z0-9]*$",
+      "ConstraintDescription" : "can contain only lower-case letters, digits, hyphens and periods."
+    },
+
+    "ApplicationBucket" : {
+      "Description" : "The S3 bucket containing the version of the application to be deployed",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "applications-irops",
+      "AllowedPattern" : "^[a-zA-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "can contain only alphanumeric characters or hyphens."
+    },
+
+    "MinWebServerInstances" : {
+      "Description" : "The minimum number of WebServer Instances",
+      "Type" : "Number",
+      "MinValue" : 1,
+      "MaxValue" : 4,
+      "Default" : 2,
+      "ConstraintDescription" : "must be between 1 and 4 Instances."
+    },
+
+    "MaxWebServerInstances" : {
+      "Description" : "The maximum number of WebServer Instances",
+      "Type" : "Number",
+      "MinValue" : 1,
+      "MaxValue" : 8,
+      "Default" : 4,
+      "ConstraintDescription" : "must be between 1 and 8 Instances."
+    },
+
+    "KeyName" : {
+      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instances",
+      "Type" : "AWS::EC2::KeyPair::KeyName",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "demo",
+      "AllowedPattern" : "^[_a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
+    },
+
+    "AdministratorNetwork" : {
+      "Description" : "The IP address range that can be used to SSH to the EC2 instances",
+      "Type" : "String",
+      "MinLength" : "9",
+      "MaxLength" : "18",
+      "Default" : "0.0.0.0/0",
+      "AllowedPattern" : "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    }
+  },
+
+  "Mappings" : {
+    "ImageIdMap" : {
+      "us-east-1" : { "HVM64" : "ami-f5f41398" },
+      "us-west-2" : { "HVM64" : "ami-d0f506b0" },
+      "us-west-1" : { "HVM64" : "ami-6e84fa0e" }
+    },
+
+    "InstanceTypeMap" : {
+      "WebServer" : { "Production" : "t2.medium", "Staging" : "t2.small", "QA" : "t2.micro", "Development" : "t2.nano" }
+    }
+  },
+
+  "Resources" : {
+    "LoadBalancerSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : { "Fn::Sub" : "${EnvironmentName}${ApplicationName}LoadBalancerSecurityGroup" },
+        "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EnvironmentVPCStackName}-VPC" }},
+        "SecurityGroupIngress" : [
+          { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : "0.0.0.0/0" },
+          { "IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : "0.0.0.0/0" },
+          { "IpProtocol" : "tcp", "FromPort" : "443", "ToPort" : "443", "CidrIp" : "0.0.0.0/0" }
+        ],
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${EnvironmentName}-${ApplicationName}LoadBalancerSecurityGroup" }}
+        ]
+      }
+    },
+
+    "WebServerSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : { "Fn::Sub" : "${EnvironmentName}${ApplicationName}WebServerSecurityGroup" },
+        "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EnvironmentVPCStackName}-VPC" }},
+        "SecurityGroupIngress" : [
+          { "IpProtocol" : "icmp", "FromPort" :  "-1", "ToPort" :  "-1", "CidrIp" : { "Ref" : "AdministratorNetwork" }},
+          { "IpProtocol" : "tcp",  "FromPort" :  "22", "ToPort" :  "22", "CidrIp" : { "Ref" : "AdministratorNetwork" }},
+          { "IpProtocol" : "tcp",  "FromPort" :  "80", "ToPort" :  "80", "CidrIp" : { "Ref" : "AdministratorNetwork" }},
+          { "IpProtocol" : "tcp",  "FromPort" : "443", "ToPort" : "443", "CidrIp" : { "Ref" : "AdministratorNetwork" }}
+        ],
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${EnvironmentName}-${ApplicationName}WebServerSecurityGroup" }}
+        ]
+      }
+    },
+
+    "WebServerLoadBalancer" : {
+      "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties" : {
+        "Subnets" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${EnvironmentVPCStackName}-WebSubnetA" }},
+          { "Fn::ImportValue" : { "Fn::Sub" : "${EnvironmentVPCStackName}-WebSubnetB" }}
+        ],
+        "SecurityGroups" : [{ "Fn::GetAtt" : [ "LoadBalancerSecurityGroup", "GroupId" ]}],
+        "CrossZone" : "true",
+        "LBCookieStickinessPolicy" : [{
+          "PolicyName" : "CookieBasedPolicy",
+          "CookieExpirationPeriod" : "30"
+        }],
+        "Listeners" : [{
+          "LoadBalancerPort" : "80",
+          "InstancePort" : "80",
+          "Protocol" : "HTTP",
+          "PolicyNames" : [ "CookieBasedPolicy" ]
+        }],
+        "HealthCheck" : {
+          "Target" : "HTTP:80/index.html",
+          "HealthyThreshold" : "2",
+          "UnhealthyThreshold" : "2",
+          "Interval" : "15",
+          "Timeout" : "5"
+        },
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${EnvironmentName}-${ApplicationName}WebServerLoadBalancer" }}
+        ]
+      }
+    },
+
+    "WebServerLaunchConfiguration" : {
+      "Type" : "AWS::AutoScaling::LaunchConfiguration",
+      "Metadata" : {
+        "AWS::CloudFormation::Init" : {
+          "configSets" : {
+            "All" : [ "ConfigureOS", "InstallCFN", "InstallApache", "InstallApplication" ]
+          },
+          "ConfigureOS" : {
+            "files" : {
+              "/etc/profile.d/local.sh" : {
+                "content" : { "Fn::Join" : [ "", [
+                  "alias lsa='ls -lAF'\n"
+                ]]},
+                "mode"  : "000644",
+                "owner" : "root",
+                "group" : "root"
+              }
+            }
+          },
+          "InstallCFN" : {
+            "files" : {
+              "/etc/cfn/cfn-hup.conf" : {
+                "content" : { "Fn::Join" : [ "", [
+                  "[main]\n",
+                  "stack=", { "Ref" : "AWS::StackId" }, "\n",
+                  "region=", { "Ref" : "AWS::Region" }, "\n"
+                ]]},
+                "mode"  : "000400",
+                "owner" : "root",
+                "group" : "root"
+              },
+              "/etc/cfn/hooks.d/cfn-auto-reloader.conf" : {
+                "content" : { "Fn::Join" : [ "", [
+                  "[cfn-auto-reloader-hook]\n",
+                  "triggers=post.update\n",
+                  "path=Resources.WebServerLaunchConfiguration.Metadata.AWS::CloudFormation::Init\n",
+                  "action=/opt/aws/bin/cfn-init -v",
+                  " --stack ", { "Ref" : "AWS::StackName" },
+                  " --resource WebServerLaunchConfiguration",
+                  " --configsets All",
+                  " --region ", { "Ref" : "AWS::Region" }, "\n"
+                ]]},
+                "mode"  : "000400",
+                "owner" : "root",
+                "group" : "root"
+              }
+            },
+            "services" : {
+              "sysvinit" : {
+                "cfn-hup" : { "enabled" : "true", "ensureRunning" : "true",
+                              "files" : [ "/etc/cfn/cfn-hup.conf", "/etc/cfn/hooks.d/cfn-auto-reloader.conf" ]}
+              }
+            }
+          },
+          "InstallApache" : {
+            "packages" : {
+              "yum" : {
+                "httpd" : []
+              }
+            },
+            "commands" : {
+              "01_enable_ssi" : {
+                "command" : "sed -i -e '/^    Options Indexes FollowSymLinks$/a\\    XBitHack on' /etc/httpd/conf/httpd.conf",
+                "ignoreErrors" : "false"
+              }
+            },
+            "services" : {
+              "sysvinit" : {
+                "httpd" : { "enabled" : "true", "ensureRunning" : "true",
+                            "files" : [ "/etc/httpd/conf/httpd.conf" ]}
+              }
+            }
+          },
+          "InstallApplication" : {
+            "files" : {
+              "/var/www/html/index.html" : {
+                "content" : { "Fn::Join" : [ "", [
+                  "<h1>", { "Ref" : "ApplicationName" }, " (", { "Ref" : "ApplicationVersion" }, ")</h1>\n"
+                ]]},
+                "mode"  : "000644",
+                "owner" : "root",
+                "group" : "root"
+              }
+            }
+          }
+        }
+      },
+      "Properties" : {
+        "ImageId" : { "Fn::FindInMap" : [ "ImageIdMap", { "Ref" : "AWS::Region" } , "HVM64" ]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "WebServer", { "Ref" : "EnvironmentName" }]},
+        "KeyName" : { "Ref" : "KeyName" },
+        "SecurityGroups" : [{ "Ref" : "WebServerSecurityGroup"}],
+        "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "", [
+             "#!/bin/bash -xe\n",
+             "yum update -y aws-cfn-bootstrap\n",
+
+             "# Install the files and packages from the metadata\n",
+             "/opt/aws/bin/cfn-init -v",
+             " --stack ", { "Ref" : "AWS::StackName" },
+             " --resource WebServerLaunchConfiguration",
+             " --configsets All",
+             " --region ", { "Ref" : "AWS::Region" }, "\n",
+
+             "# Signal the status from cfn-init\n",
+             "/opt/aws/bin/cfn-signal -e $?",
+             " --stack ", { "Ref" : "AWS::StackName" },
+             " --resource WebServerAutoScalingGroup",
+             " --region ", { "Ref" : "AWS::Region" }, "\n"
+        ]]}}
+      }
+    },
+
+    "WebServerAutoScalingGroup" : {
+      "Type" : "AWS::AutoScaling::AutoScalingGroup",
+      "Properties" : {
+        "LaunchConfigurationName" : { "Ref" : "WebServerLaunchConfiguration" },
+        "VPCZoneIdentifier" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-WebSubnetA" }},
+          { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-WebSubnetB" }}
+        ],
+        "MinSize" : { "Ref" : "MinWebServerInstances" },
+        "MaxSize" : { "Ref" : "MaxWebServerInstances" },
+        "DesiredCapacity" : { "Ref" : "MinWebServerInstances" },
+        "Cooldown" : "60",
+        "HealthCheckType" : "ELB",
+        "HealthCheckGracePeriod" : "300",
+        "LoadBalancerNames" : [{ "Ref" : "WebServerLoadBalancer" }],
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${EnvironmentName}-${ApplicationName}WebServerInstance" }, "PropagateAtLaunch" : "true" }
+        ]
+      },
+      "CreationPolicy" : {
+        "ResourceSignal" : {
+          "Count" : { "Ref" : "MinWebServerInstances" },
+          "Timeout" : "PT15M"
+        }
+      },
+      "UpdatePolicy" : {
+        "AutoScalingRollingUpdate" : {
+          "MinInstancesInService" : "1",
+          "MaxBatchSize" : "1",
+          "PauseTime" : "PT15M",
+          "WaitOnResourceSignals" : "true"
+        }
+      }
+    }
+  },
+
+  "Outputs" : {
+    "URL" : {
+      "Description" : "URL of the sample website",
+      "Value" :  { "Fn::Join" : [ "", [ "http://", { "Fn::GetAtt" : [ "WebServerLoadBalancer", "DNSName" ]}]]}
+    }
+  }
+}

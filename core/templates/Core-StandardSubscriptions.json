@@ -1,0 +1,63 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Core-StandardSubscriptions Template. This creates Standard SNS Subscriptions to Standard Topics within the Core Account.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "StandardTopicsStackName"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "StandardTopicsStackName" : { "default" : "Standard Topics Stack Name" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "StandardTopicsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Topics.",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardTopics",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    }
+  },
+
+  "Resources" : {
+    "ManagersTopicManagersListEmailSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-ManagersTopic" }},
+        "Protocol" : "email",
+        "Endpoint" : "irops-aws-team@hpe.com"
+      }
+    },
+
+    "DevelopersTopicDevelopersListEmailSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-DevelopersTopic" }},
+        "Protocol" : "email",
+        "Endpoint" : "irops-aws-team@hpe.com"
+      }
+    },
+
+    "UsersTopicUsersListEmailSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-UsersTopic" }},
+        "Protocol" : "email",
+        "Endpoint" : "irops-aws-team@hpe.com"
+      }
+    }
+  }
+}

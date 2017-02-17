@@ -1,0 +1,157 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Identity-StandardGroups Template. This creates Standard IAM Groups within the Identity Account.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "StandardManagedPoliciesStackName"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "StandardManagedPoliciesStackName" : { "default" : "Standard ManagedPolicies Stack Name" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "StandardManagedPoliciesStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard ManagedPolicies.",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardManagedPolicies",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    }
+  },
+
+  "Resources" : {
+    "AdministratorsGroup" : {
+      "Type" : "AWS::IAM::Group",
+      "Properties" : {
+        "GroupName" : "Administrators",
+        "Path" : "/",
+        "ManagedPolicyArns" : [ "arn:aws:iam::aws:policy/AdministratorAccess" ]
+      }
+    },
+
+    "AdministratorsWithoutBillingGroup" : {
+      "Type" : "AWS::IAM::Group",
+      "Properties" : {
+        "GroupName" : "AdministratorsWithoutBilling",
+        "Path" : "/",
+        "ManagedPolicyArns" : [{ "Fn::ImportValue" : { "Fn::Sub" : "${StandardManagedPoliciesStackName}-AdministratorAccessWithoutBilling" }}]
+      }
+    },
+
+    "NetworkAdministratorsGroup" : {
+      "Type" : "AWS::IAM::Group",
+      "Properties" : {
+        "GroupName" : "NetworkAdministrators",
+        "Path" : "/",
+        "ManagedPolicyArns" : [ "arn:aws:iam::aws:policy/job-function/NetworkAdministrator" ]
+      }
+    },
+
+    "SystemAdministratorsGroup" : {
+      "Type" : "AWS::IAM::Group",
+      "Properties" : {
+        "GroupName" : "SystemAdministrators",
+        "Path" : "/",
+        "ManagedPolicyArns" : [ "arn:aws:iam::aws:policy/job-function/SystemAdministrator" ]
+      }
+    },
+
+    "DatabaseAdministratorsGroup" : {
+      "Type" : "AWS::IAM::Group",
+      "Properties" : {
+        "GroupName" : "DatabaseAdministrators",
+        "Path" : "/",
+        "ManagedPolicyArns" : [ "arn:aws:iam::aws:policy/job-function/DatabaseAdministrator" ]
+      }
+    },
+
+    "DevelopersGroup" : {
+      "Type" : "AWS::IAM::Group",
+      "Properties" : {
+        "GroupName" : "Developers",
+        "Path" : "/",
+        "ManagedPolicyArns" : [ "arn:aws:iam::aws:policy/PowerUserAccess" ]
+      }
+    },
+
+    "UsersGroup" : {
+      "Type" : "AWS::IAM::Group",
+      "Properties" : {
+        "GroupName" : "Users",
+        "Path" : "/",
+        "ManagedPolicyArns" : [ "arn:aws:iam::aws:policy/ReadOnlyAccess" ]
+      }
+    },
+
+    "BastionUsersGroup" : {
+      "Type" : "AWS::IAM::Group",
+      "Properties" : {
+        "GroupName" : "BastionUsers",
+        "Path" : "/"
+      }
+    }
+  },
+
+  "Outputs" : {
+    "AdministratorsGroup" : {
+      "Description" : "The AdministratorsGroup Name",
+      "Value" :  { "Ref" : "AdministratorsGroup" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-AdministratorsGroup" }}
+    },
+
+    "AdministratorsWithoutBillingGroup" : {
+      "Description" : "The AdministratorsWithoutBillingGroup Name",
+      "Value" :  { "Ref" : "AdministratorsWithoutBillingGroup" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-AdministratorsWithoutBillingGroup" }}
+    },
+
+    "NetworkAdministratorsGroup" : {
+      "Description" : "The NetworkAdministratorsGroup Name",
+      "Value" :  { "Ref" : "NetworkAdministratorsGroup" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-NetworkAdministratorsGroup" }}
+    },
+
+    "SystemAdministratorsGroup" : {
+      "Description" : "The SystemAdministratorsGroup Name",
+      "Value" :  { "Ref" : "SystemAdministratorsGroup" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-SystemAdministratorsGroup" }}
+    },
+
+    "DatabaseAdministratorsGroup" : {
+      "Description" : "The DatabaseAdministratorsGroup Name",
+      "Value" :  { "Ref" : "DatabaseAdministratorsGroup" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-DatabaseAdministratorsGroup" }}
+    },
+
+    "DevelopersGroup" : {
+      "Description" : "The DevelopersGroup Name",
+      "Value" :  { "Ref" : "DevelopersGroup" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-DevelopersGroup" }}
+    },
+
+    "UsersGroup" : {
+      "Description" : "The UsersGroup Name",
+      "Value" :  { "Ref" : "UsersGroup" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-UsersGroup" }}
+    },
+
+    "BastionUsersGroup" : {
+      "Description" : "The BastionUsersGroup Name",
+      "Value" :  { "Ref" : "BastionUsersGroup" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-BastionUsersGroup" }}
+    }
+  }
+}

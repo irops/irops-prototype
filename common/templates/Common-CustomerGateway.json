@@ -1,0 +1,85 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Common-CustomerGateway Template. This template creates a Customer Gateway.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "CustomerGateway Configuration" },
+          "Parameters" : [
+            "Name",
+            "Asn",
+            "Address"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "Name" : { "default" : "Customer Gateway Name" },
+        "Asn" : { "default" : "Customer Gateway BGP ASN" },
+        "Address" : { "default" : "Customer Gateway Address" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "Name" : {
+      "Description" : "Name of the CustomerGateway, usually the location.",
+      "Type" : "String",
+      "MinLength" : 3,
+      "MaxLength" : 64,
+      "Default" : "Charlotte",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "Asn" : {
+      "Description" : "Border Gateway Protocol (BGP) Autonomous System Number (ASN) of the Customer Gateway",
+      "Type" : "Number",
+      "MinValue" : 60000,
+      "MaxValue" : 65000,
+      "Default" : 65000,
+      "ConstraintDescription" : "must be a number between 60000 and 65000. Use 65000 for static routing without BGP."
+    },
+
+    "Address" : {
+      "Description" : "IP Address of the Customer Gateway",
+      "Type" : "String",
+      "MinLength" : "9",
+      "MaxLength" : "18",
+      "Default" : "204.26.253.5",
+      "AllowedPattern" : "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$",
+      "ConstraintDescription" : "must be a valid IP address of the form X.X.X.X."
+    }
+  },
+
+  "Resources" : {
+    "CustomerGateway" : {
+      "Type" : "AWS::EC2::CustomerGateway",
+      "Properties" : {
+        "Type" : "ipsec.1",
+        "BgpAsn" : { "Ref" : "Asn" },
+        "IpAddress" : { "Ref" : "Address" },
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}CustomerGateway" }}
+        ]
+      }
+    }
+  },
+
+  "Outputs" : {
+    "CustomerGateway" : {
+      "Description" : "The CustomerGateway",
+      "Value" :  { "Ref" : "CustomerGateway" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-CustomerGateway" }}
+    },
+
+    "CustomerGatewayName" : {
+      "Description" : "The CustomerGateway Name",
+      "Value" :  { "Ref" : "Name" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-CustomerGatewayName" }}
+    }
+  }
+}
