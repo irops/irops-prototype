@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# This script creates the BillingTopics Stack in the Core Account.
+# This script creates the BillingTopics Stack in the Billing Account.
 #
 # This script is written in a format suitable for interactive demos,
 # but can be run non-Iteractively and more quickly with the "-I" flag.
@@ -26,13 +26,13 @@ verbose=0
 owner=${OWNER_EMAIL:-$USER@hpe.com}
 company=${COMPANY_NAME:-Demo}
 system=${SYSTEM_NAME:-IROPS}
-environment=${CORE_NAME:-Core}
+environment=Billing
 region=us-east-1 # This must currently run only in us-east-1
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-administrator}
 
 templatesbucket=${AWS_TEMPLATES_BUCKET:-templates-$account}
-templatespath=/core
+templatespath=/billing
 
 
 #  2. Define functions
@@ -180,7 +180,7 @@ if [ -z $environment ]; then
     exit 16
 fi
 
-s3_domain=s3.amazonaws.com;;
+s3_domain=s3.amazonaws.com
 
 if [ -z $account ]; then
     echo "-a account missing!"
@@ -254,7 +254,7 @@ fi
 read -r -d '' statement << EOS
 aws s3 sync $templatesdir \\
             s3://$templatesbucket$templatespath \\
-            --exclude '*' --include 'Core-BillingTopics.json' --include 'Core-BillingTopics-StackPolicy.json' \\
+            --exclude '*' --include 'Billing-BillingTopics.json' --include 'Billing-BillingTopics-StackPolicy.json' \\
             --profile $profile --region $region --output table
 EOS
 run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
@@ -285,11 +285,11 @@ fi
 
 ((++step))
 if [ ! -z $templatesbucket ]; then
-    template_parameter="--template-url https://$s3_domain/$templatesbucket$templatespath/Core-BillingTopics.json"
-    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templatesbucket$templatespath/Core-BillingTopics-StackPolicy.json"
+    template_parameter="--template-url https://$s3_domain/$templatesbucket$templatespath/Billing-BillingTopics.json"
+    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templatesbucket$templatespath/Billing-BillingTopics-StackPolicy.json"
 else
-    template_parameter="--template-body file://$templatesdir/Core-BillingTopics.json"
-    stack_policy_parameter="--stack-policy-body file://$templatesdir/Core-BillingTopics-StackPolicy.json"
+    template_parameter="--template-body file://$templatesdir/Billing-BillingTopics.json"
+    stack_policy_parameter="--stack-policy-body file://$templatesdir/Billing-BillingTopics-StackPolicy.json"
 fi
 read -r -d '' statement << EOS
 aws cloudformation create-stack --stack-name BillingTopics \\

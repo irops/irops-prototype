@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# This script deletes the BillingTopics Stack in the Core Account.
+# This script deletes the BillingTopics Stack in the Billing Account.
 #
 # This script is written in a format suitable for interactive demos,
 # but can be run non-Iteractively and more quickly with the "-I" flag.
