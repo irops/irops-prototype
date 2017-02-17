@@ -66,22 +66,6 @@
         "TopicName" : "AlarmsSMS",
         "DisplayName" : "Alarms"
       }
-    },
-
-    "BillsTopic" : {
-      "Type" : "AWS::SNS::Topic",
-      "Properties" : {
-        "TopicName" : "Bills",
-        "DisplayName" : "Bills"
-      }
-    },
-
-    "BillsSMSTopic" : {
-      "Type" : "AWS::SNS::Topic",
-      "Properties" : {
-        "TopicName" : "BillsSMS",
-        "DisplayName" : "Bills"
-      }
     }
   },
 
@@ -132,18 +116,6 @@
       "Description" : "The AlarmsSMS Topic ARN",
       "Value" :  { "Ref" : "AlarmsSMSTopic" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-AlarmsSMSTopic" }}
-    },
-
-    "BillsTopic" : {
-      "Description" : "The Bills Topic ARN",
-      "Value" :  { "Ref" : "BillsTopic" },
-      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-BillsTopic" }}
-    },
-
-    "BillsSMSTopic" : {
-      "Description" : "The BillsSMS Topic ARN",
-      "Value" :  { "Ref" : "BillsSMSTopic" },
-      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-BillsSMSTopic" }}
     }
   }
 }

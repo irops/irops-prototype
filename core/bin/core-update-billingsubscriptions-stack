@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# This script updates the BillingAlarms Stack in the Core Account.
+# This script updates the BillingSubscriptions Stack in the Core Account.
 #
 # This script is written in a format suitable for interactive demos,
 # but can be run non-Iteractively and more quickly with the "-I" flag.
@@ -206,9 +206,9 @@ if ! aws s3api head-bucket --bucket $templatesbucket --profile $profile --region
     unset templatesbucket
 fi
 
-if ! aws cloudformation describe-stacks --stack-name BillingAlarms \
+if ! aws cloudformation describe-stacks --stack-name BillingSubscriptions \
                                         --profile $profile --region $region --output text &> /dev/null; then
-    echo "Unable to update - BillingAlarms Stack does not exist!"
+    echo "Unable to update - BillingSubscriptions Stack does not exist!"
     exit 70
 fi
 
@@ -260,7 +260,7 @@ fi
 read -r -d '' statement << EOS
 aws s3 sync $templatesdir \\
             s3://$templatesbucket$templatespath \\
-            --exclude '*' --include 'Core-BillingAlarms.json' --include 'Core-BillingAlarms-StackPolicy.json' \\
+            --exclude '*' --include 'Core-BillingSubscriptions.json' --include 'Core-BillingSubscriptions-StackPolicy.json' \\
             --profile $profile --region $region --output table
 EOS
 run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
@@ -291,17 +291,17 @@ fi
 
 ((++step))
 if [ ! -z $templatesbucket ]; then
-    template_parameter="--template-url https://$s3_domain/$templatesbucket$templatespath/Core-BillingAlarms.json"
-    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templatesbucket$templatespath/Core-BillingAlarms-StackPolicy.json"
+    template_parameter="--template-url https://$s3_domain/$templatesbucket$templatespath/Core-BillingSubscriptions.json"
+    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templatesbucket$templatespath/Core-BillingSubscriptions-StackPolicy.json"
 else
-    template_parameter="--template-body file://$templatesdir/Core-BillingAlarms.json"
-    stack_policy_parameter="--stack-policy-body file://$templatesdir/Core-BillingAlarms-StackPolicy.json"
+    template_parameter="--template-body file://$templatesdir/Core-BillingSubscriptions.json"
+    stack_policy_parameter="--stack-policy-body file://$templatesdir/Core-BillingSubscriptions-StackPolicy.json"
 fi
 read -r -d '' statement << EOS
-aws cloudformation update-stack --stack-name BillingAlarms \\
+aws cloudformation update-stack --stack-name BillingSubscriptions \\
                                 $template_parameter \\
                                 $stack_policy_parameter \\
-                                --parameters ParameterKey=BillingTopicsStackName,ParameterValue=BillingTopics \\
+                                --parameters ParameterKey=StandardTopicsStackName,ParameterValue=StandardTopics \\
                                 --tags Key=Owner,Value=$owner \\
                                        Key=Company,Value=$company \\
                                        Key=System,Value=$system \\
@@ -336,7 +336,7 @@ fi
 
 ((++step))
 read -r -d '' statement << EOS
-aws cloudformation describe-stacks --stack-name BillingAlarms \\
+aws cloudformation describe-stacks --stack-name BillingSubscriptions \\
                                    --query 'Stacks[].[StackName,StackStatus]' \\
                                    --profile $profile --region $region --output table
 EOS
@@ -344,7 +344,7 @@ run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
 eval_statement="${statement//\\$'\n'} 2> /dev/null"
 
 read -r -d '' statement2 << EOS
-aws cloudformation describe-stack-events --stack-name BillingAlarms --max-items 5 \\
+aws cloudformation describe-stack-events --stack-name BillingSubscriptions --max-items 5 \\
                                          --query 'StackEvents[].[LogicalResourceId,ResourceStatus,Timestamp]' \\
                                          --profile $profile --region $region --output table
 EOS
@@ -365,7 +365,7 @@ echo "$statement"
 echo
 echo "$statement2"
 
-if [ "$(aws cloudformation describe-stacks --stack-name BillingAlarms \
+if [ "$(aws cloudformation describe-stacks --stack-name BillingSubscriptions \
                                            --query 'Stacks[].StackStatus' \
                                            --profile $profile --region $region --output text 2> /dev/null)" = "UPDATE_COMPLETE" ]; then
     echo
@@ -390,7 +390,7 @@ else
             echo "$run_statement2"
             eval "$eval_statement2"
 
-            status=$(aws cloudformation describe-stacks --stack-name BillingAlarms \
+            status=$(aws cloudformation describe-stacks --stack-name BillingSubscriptions \
                                                         --query 'Stacks[].StackStatus' \
                                                         --profile $profile --region $region --output text 2> /dev/null)
             if [ -z "$status" -o "$status" = "UPDATE_COMPLETE" -o "$status" = "UPDATE_FAILED" -o "$status" = "ROLLBACK_COMPLETE" ]; then
@@ -443,7 +443,7 @@ fi
 
 ((++step))
 read -r -d '' statement << EOS
-aws cloudformation describe-stack-resources --stack-name BillingAlarms \\
+aws cloudformation describe-stack-resources --stack-name BillingSubscriptions \\
                                             --query 'StackResources[].[ResourceType,LogicalResourceId,PhysicalResourceId,ResourceStatus]' \\
                                             --profile $profile --region $region --output table
 EOS

@@ -131,7 +131,8 @@
         "UserName" : "mgowda",
         "Path" : "/",
         "Groups" : [
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-UsersGroup" }}
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-UsersGroup" }},
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-BastionUsersGroup" }}
         ]
       }
     },
@@ -142,7 +143,8 @@
         "UserName" : "geverett",
         "Path" : "/",
         "Groups" : [
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-UsersGroup" }}
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-UsersGroup" }},
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-BastionUsersGroup" }}
         ]
       }
     },

@@ -2,9 +2,6 @@
 #
 # Defines the IROPS Environment Variables for the QA Environment
 
-# IROPS
-export IROPS_HOME=~/Workspaces/irops/irops-prototype
-
 # Company
 export COMPANY_CODE=demo
 export COMPANY_NAME="Demo"
@@ -65,7 +62,7 @@ export AWS_USER_NAME=$USER
 export AWS_DEFAULT_PROFILE=$AWS_ACCOUNT_ALIAS-$AWS_USER_NAME
 
 # Keys
-export AWS_KEY_NAME=demo
+export AWS_KEY_NAME=$USER
 export AWS_KEY_FILE=${HOME}/.ssh/irops_${AWS_KEY_NAME}_id_rsa
 
 # Notification

@@ -9,24 +9,24 @@
         {
           "Label" : { "default" : "Stack Dependencies" },
           "Parameters" : [
-            "StandardTopicsStackName"
+            "BillingTopicsStackName"
           ]
         }
       ],
 
       "ParameterLabels" : {
-        "StandardTopicsStackName" : { "default" : "Standard Topics Stack Name" }
+        "BillingTopicsStackName" : { "default" : "Billing Topics Stack Name" }
       }
     }
   },
 
   "Parameters" : {
-    "StandardTopicsStackName" : {
-      "Description" : "Name of the CloudFormation Stack containing Standard Topics.",
+    "BillingTopicsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Billing Topics.",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 64,
-      "Default" : "StandardTopics",
+      "Default" : "BillingTopics",
       "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     }
@@ -39,7 +39,7 @@
         "AlarmName" : "BillingEstimatedCharges-0025",
         "AlarmDescription" : "Notify BillsTopic when AWS EstimatedCharges exceed $25",
         "AlarmActions" : [
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-BillsTopic" }}
+          { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsTopic" }}
         ],
         "Namespace" : "AWS/Billing",
         "MetricName" : "EstimatedCharges",
@@ -60,7 +60,7 @@
         "AlarmName" : "BillingEstimatedCharges-0050",
         "AlarmDescription" : "Notify BillsTopic when AWS EstimatedCharges exceed $50",
         "AlarmActions" : [
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-BillsTopic" }}
+          { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsTopic" }}
         ],
         "Namespace" : "AWS/Billing",
         "MetricName" : "EstimatedCharges",
@@ -81,7 +81,7 @@
         "AlarmName" : "BillingEstimatedCharges-0075",
         "AlarmDescription" : "Notify BillsTopic when AWS EstimatedCharges exceed $75",
         "AlarmActions" : [
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-BillsTopic" }}
+          { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsTopic" }}
         ],
         "Namespace" : "AWS/Billing",
         "MetricName" : "EstimatedCharges",
@@ -102,7 +102,7 @@
         "AlarmName" : "BillingEstimatedCharges-0100",
         "AlarmDescription" : "Notify BillsTopic when AWS EstimatedCharges exceed $100",
         "AlarmActions" : [
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-BillsTopic" }}
+          { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsTopic" }}
         ],
         "Namespace" : "AWS/Billing",
         "MetricName" : "EstimatedCharges",
@@ -123,7 +123,7 @@
         "AlarmName" : "BillingEstimatedCharges-0150",
         "AlarmDescription" : "Notify BillsTopic when AWS EstimatedCharges exceed $150",
         "AlarmActions" : [
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-BillsTopic" }}
+          { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsTopic" }}
         ],
         "Namespace" : "AWS/Billing",
         "MetricName" : "EstimatedCharges",
@@ -144,7 +144,7 @@
         "AlarmName" : "BillingEstimatedCharges-0200",
         "AlarmDescription" : "Notify BillsTopic when AWS EstimatedCharges exceed $200",
         "AlarmActions" : [
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-BillsTopic" }}
+          { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsTopic" }}
         ],
         "Namespace" : "AWS/Billing",
         "MetricName" : "EstimatedCharges",
@@ -165,8 +165,8 @@
         "AlarmName" : "BillingEstimatedCharges-0250",
         "AlarmDescription" : "Notify BillsTopic when AWS EstimatedCharges exceed $250",
         "AlarmActions" : [
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-BillsTopic" }},
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-BillsSMSTopic" }}
+          { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsTopic" }},
+          { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsSMSTopic" }}
         ],
         "Namespace" : "AWS/Billing",
         "MetricName" : "EstimatedCharges",
@@ -187,8 +187,8 @@
         "AlarmName" : "BillingEstimatedCharges-0500",
         "AlarmDescription" : "Notify BillsTopic when AWS EstimatedCharges exceed $500",
         "AlarmActions" : [
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-BillsTopic" }},
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-BillsSMSTopic" }}
+          { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsTopic" }},
+          { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsSMSTopic" }}
         ],
         "Namespace" : "AWS/Billing",
         "MetricName" : "EstimatedCharges",
@@ -209,8 +209,8 @@
         "AlarmName" : "BillingEstimatedCharges-0750",
         "AlarmDescription" : "Notify BillsTopic when AWS EstimatedCharges exceed $750",
         "AlarmActions" : [
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-BillsTopic" }},
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-BillsSMSTopic" }}
+          { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsTopic" }},
+          { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsSMSTopic" }}
         ],
         "Namespace" : "AWS/Billing",
         "MetricName" : "EstimatedCharges",
@@ -231,8 +231,8 @@
         "AlarmName" : "BillingEstimatedCharges-1000",
         "AlarmDescription" : "Notify BillsTopic when AWS EstimatedCharges exceed $1000",
         "AlarmActions" : [
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-BillsTopic" }},
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-BillsSMSTopic" }}
+          { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsTopic" }},
+          { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsSMSTopic" }}
         ],
         "Namespace" : "AWS/Billing",
         "MetricName" : "EstimatedCharges",
@@ -253,8 +253,8 @@
         "AlarmName" : "BillingEstimatedCharges-1500",
         "AlarmDescription" : "Notify BillsTopic when AWS EstimatedCharges exceed $1500",
         "AlarmActions" : [
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-BillsTopic" }},
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-BillsSMSTopic" }}
+          { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsTopic" }},
+          { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsSMSTopic" }}
         ],
         "Namespace" : "AWS/Billing",
         "MetricName" : "EstimatedCharges",
@@ -275,8 +275,8 @@
         "AlarmName" : "BillingEstimatedCharges-2000",
         "AlarmDescription" : "Notify BillsTopic when AWS EstimatedCharges exceed $2000",
         "AlarmActions" : [
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-BillsTopic" }},
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-BillsSMSTopic" }}
+          { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsTopic" }},
+          { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsSMSTopic" }}
         ],
         "Namespace" : "AWS/Billing",
         "MetricName" : "EstimatedCharges",
@@ -297,8 +297,8 @@
         "AlarmName" : "BillingEstimatedCharges-2500",
         "AlarmDescription" : "Notify BillsTopic when AWS EstimatedCharges exceed $2500",
         "AlarmActions" : [
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-BillsTopic" }},
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-BillsSMSTopic" }}
+          { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsTopic" }},
+          { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsSMSTopic" }}
         ],
         "Namespace" : "AWS/Billing",
         "MetricName" : "EstimatedCharges",
