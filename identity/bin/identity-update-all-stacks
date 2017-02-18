@@ -29,7 +29,7 @@ system=${SYSTEM_NAME:-IROPS}
 environment=${IDENTITY_NAME:-Identity}
 environment_domain=${IDENTITY_DOMAIN:-demo.iropshub.com}
 environment_network=${IDENTITY_NETWORK:-10.255.0.0/16}
-region=${AWS_DEFAULT_REGION:-us-west-2}
+region=us-east-1 # This should run only in us-east-1
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-administrator}
 
