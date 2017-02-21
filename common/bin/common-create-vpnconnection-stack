@@ -27,14 +27,11 @@ owner=${OWNER_EMAIL:-$USER@hpe.com}
 company=${COMPANY_NAME:-Demo}
 system=${SYSTEM_NAME:-IROPS}
 environment=${ENVIRONMENT_NAME:-Production}
-gateway=${GATEWAY_NAME:-SantaBarbara}
-gateway_network=${GATEWAY_NETWORK:-10.0.0.0/16}
+gateway=${GATEWAY_NAME:-Charlotte}
+gateway_network=${GATEWAY_NETWORK:-204.26.128.0/17}
 region=${AWS_DEFAULT_REGION:-us-west-2}
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-administrator}
-
-templatesbucket=${AWS_TEMPLATES_BUCKET:-templates-$account}
-templatespath=/common
 
 
 #  2. Define functions
@@ -236,6 +233,9 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     echo "Expected to find: [profile $profile] in ~/.aws/config"
     exit 60
 fi
+
+templatesbucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
+templatespath=/common
 
 if ! aws s3api head-bucket --bucket $templatesbucket --profile $profile --region $region 2> /dev/null; then
     unset templatesbucket

@@ -42,7 +42,7 @@
       }
     },
 
-    "BillsTopicKMccutchenEmailSubscription" : {
+    "BillsTopicKMcCutchenEmailSubscription" : {
       "Type" : "AWS::SNS::Subscription",
       "Properties" : {
         "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsTopic" }},
@@ -69,7 +69,7 @@
       }
     },
 
-    "BillsSMSTopicKMccutchenSMSSubscription" : {
+    "BillsSMSTopicKMcCutchenSMSSubscription" : {
       "Type" : "AWS::SNS::Subscription",
       "Properties" : {
         "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsSMSTopic" }},

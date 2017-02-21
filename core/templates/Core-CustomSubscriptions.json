@@ -32,6 +32,16 @@
     }
   },
 
+  "Conditions" : {
+    "UseSMS" : { "Fn::Or" : [{ "Fn::Equals" : [{ "Ref" : "AWS::Region" }, "us-east-1" ]},
+                             { "Fn::Equals" : [{ "Ref" : "AWS::Region" }, "us-west-2" ]},
+                             { "Fn::Equals" : [{ "Ref" : "AWS::Region" }, "eu-west-1" ]},
+                             { "Fn::Equals" : [{ "Ref" : "AWS::Region" }, "ap-northeast-1" ]},
+                             { "Fn::Equals" : [{ "Ref" : "AWS::Region" }, "ap-southeast-1" ]},
+                             { "Fn::Equals" : [{ "Ref" : "AWS::Region" }, "ap-southeast-2" ]}
+                            ]}
+  },
+
   "Resources" : {
     "AdministratorsTopicMCrawfordEmailSubscription" : {
       "Type" : "AWS::SNS::Subscription",
@@ -42,7 +52,7 @@
       }
     },
 
-    "AdministratorsTopicKMccutchenEmailSubscription" : {
+    "AdministratorsTopicKMcCutchenEmailSubscription" : {
       "Type" : "AWS::SNS::Subscription",
       "Properties" : {
         "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-AdministratorsTopic" }},
@@ -69,7 +79,7 @@
       }
     },
 
-    "EventsTopicKMccutchenEmailSubscription" : {
+    "EventsTopicKMcCutchenEmailSubscription" : {
       "Type" : "AWS::SNS::Subscription",
       "Properties" : {
         "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-EventsTopic" }},
@@ -91,17 +101,17 @@
       "Type" : "AWS::SNS::Subscription",
       "Properties" : {
         "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-EventsSMSTopic" }},
-        "Protocol" : "sms",
-        "Endpoint" : "+14156525483"
+        "Protocol" : { "Fn::If" : [ "UseSMS", "sms", "email" ]},
+        "Endpoint" : { "Fn::If" : [ "UseSMS", "+14156525483", "mcrawford@hpe.com" ]}
       }
     },
 
-    "EventsSMSTopicKMccutchenSMSSubscription" : {
+    "EventsSMSTopicKMcCutchenSMSSubscription" : {
       "Type" : "AWS::SNS::Subscription",
       "Properties" : {
         "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-EventsSMSTopic" }},
-        "Protocol" : "sms",
-        "Endpoint" : "+19542421633"
+        "Protocol" : { "Fn::If" : [ "UseSMS", "sms", "email" ]},
+        "Endpoint" : { "Fn::If" : [ "UseSMS", "+19542421633", "kerry.mccutchen@hpe.com" ]}
       }
     },
 
@@ -109,8 +119,8 @@
       "Type" : "AWS::SNS::Subscription",
       "Properties" : {
         "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-EventsSMSTopic" }},
-        "Protocol" : "sms",
-        "Endpoint" : "+12143920541"
+        "Protocol" : { "Fn::If" : [ "UseSMS", "sms", "email" ]},
+        "Endpoint" : { "Fn::If" : [ "UseSMS", "+12143920541", "gregg.veazey@hpe.com" ]}
       }
     },
 
@@ -123,7 +133,7 @@
       }
     },
 
-    "AlarmsTopicKMccutchenEmailSubscription" : {
+    "AlarmsTopicKMcCutchenEmailSubscription" : {
       "Type" : "AWS::SNS::Subscription",
       "Properties" : {
         "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-AlarmsTopic" }},
@@ -145,17 +155,17 @@
       "Type" : "AWS::SNS::Subscription",
       "Properties" : {
         "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-AlarmsSMSTopic" }},
-        "Protocol" : "sms",
-        "Endpoint" : "+14156525483"
+        "Protocol" : { "Fn::If" : [ "UseSMS", "sms", "email" ]},
+        "Endpoint" : { "Fn::If" : [ "UseSMS", "+14156525483", "mcrawford@hpe.com" ]}
       }
     },
 
-    "AlarmsSMSTopicKMccutchenSMSSubscription" : {
+    "AlarmsSMSTopicKMcCutchenSMSSubscription" : {
       "Type" : "AWS::SNS::Subscription",
       "Properties" : {
         "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-AlarmsSMSTopic" }},
-        "Protocol" : "sms",
-        "Endpoint" : "+19542421633"
+        "Protocol" : { "Fn::If" : [ "UseSMS", "sms", "email" ]},
+        "Endpoint" : { "Fn::If" : [ "UseSMS", "+19542421633", "kerry.mccutchen@hpe.com" ]}
       }
     },
 
@@ -163,8 +173,8 @@
       "Type" : "AWS::SNS::Subscription",
       "Properties" : {
         "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-AlarmsSMSTopic" }},
-        "Protocol" : "sms",
-        "Endpoint" : "+12143920541"
+        "Protocol" : { "Fn::If" : [ "UseSMS", "sms", "email" ]},
+        "Endpoint" : { "Fn::If" : [ "UseSMS", "+12143920541", "gregg.veazey@hpe.com" ]}
       }
     }
   }

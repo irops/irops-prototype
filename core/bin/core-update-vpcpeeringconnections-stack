@@ -30,12 +30,8 @@ region=${AWS_DEFAULT_REGION:-us-west-2}
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-administrator}
 
-templatesbucket=${AWS_TEMPLATES_BUCKET:-templates-$account}
-templatespath=/core
-
 core_vpc_stack_name=Core-VPC
 build_vpc_stack_name=Build-VPC
-identity_vpc_stack_name=Identity-VPC
 production_vpc_stack_name=Production-VPC
 staging_vpc_stack_name=Staging-VPC
 qa_vpc_stack_name=QA-VPC
@@ -216,6 +212,9 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     exit 60
 fi
 
+templatesbucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
+templatespath=/core
+
 if ! aws s3api head-bucket --bucket $templatesbucket --profile $profile --region $region 2> /dev/null; then
     unset templatesbucket
 fi
@@ -236,12 +235,6 @@ if ! aws cloudformation describe-stacks --stack-name Build-VPC \
                                         --profile $profile --region $region --output text &> /dev/null; then
     echo "Stack dependency missing - Build-VPC Stack does not exist!"
     unset build_vpc_stack_name
-fi
-
-if ! aws cloudformation describe-stacks --stack-name Identity-VPC \
-                                        --profile $profile --region $region --output text &> /dev/null; then
-    echo "Stack dependency missing - Identity-VPC Stack does not exist!"
-    unset identity_vpc_stack_name
 fi
 
 if ! aws cloudformation describe-stacks --stack-name Production-VPC \
@@ -361,7 +354,6 @@ aws cloudformation update-stack --stack-name Core-VPCPeeringConnections \\
                                 $stack_policy_parameter \\
                                 --parameters ParameterKey=CoreVPCStackName,ParameterValue=$core_vpc_stack_name \
                                              ParameterKey=BuildVPCStackName,ParameterValue=$build_vpc_stack_name \\
-                                             ParameterKey=IdentityVPCStackName,ParameterValue=$identity_vpc_stack_name \\
                                              ParameterKey=ProductionVPCStackName,ParameterValue=$production_vpc_stack_name \\
                                              ParameterKey=StagingVPCStackName,ParameterValue=$staging_vpc_stack_name \\
                                              ParameterKey=QAVPCStackName,ParameterValue=$qa_vpc_stack_name \\

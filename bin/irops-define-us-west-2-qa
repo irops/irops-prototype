@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Defines the IROPS Environment Variables for the Staging Environment
+# Defines the IROPS Environment Variables for the QA Environment in Oregon
 
 # Company
 export COMPANY_CODE=demo
@@ -15,10 +15,10 @@ export SYSTEM_CODE=irops
 export SYSTEM_NAME="IROPS"
 
 # Environment
-export ENVIRONMENT_CODE=s
-export ENVIRONMENT_NAME="Staging"
+export ENVIRONMENT_CODE=q
+export ENVIRONMENT_NAME="QA"
 export ENVIRONMENT_DOMAIN=$ENVIRONMENT_CODE.$COMPANY_CODE.iropshub.com
-export ENVIRONMENT_NETWORK=10.41.0.0/16
+export ENVIRONMENT_NETWORK=10.42.0.0/16
 export ENVIRONMENT_HA_NAT_GATEWAYS=false
 
 # Core

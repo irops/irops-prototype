@@ -35,9 +35,6 @@ region=${AWS_DEFAULT_REGION:-us-west-2}
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-administrator}
 
-templatesbucket=${AWS_TEMPLATES_BUCKET:-templates-$account}
-templatespath=/core
-
 
 #  2. Define functions
 
@@ -258,8 +255,19 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     exit 60
 fi
 
+templatesbucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
+templatespath=/example
+
 if ! aws s3api head-bucket --bucket $templatesbucket --profile $profile --region $region 2> /dev/null; then
     unset templatesbucket
+fi
+
+examplesbucket=${AWS_EXAMPLES_BUCKET:-examples-$region-$account}
+examplespath=/$application
+
+if ! aws s3api head-bucket --bucket $examplesbucket --profile $profile --region $region 2> /dev/null; then
+    echo "$examplesbucket S3 bucket does not exist!"
+    exit 68
 fi
 
 if ! aws cloudformation describe-stacks --stack-name $environment-$application \
@@ -362,6 +370,7 @@ aws cloudformation update-stack --stack-name $environment-$application \\
                                              ParameterKey=SystemName,ParameterValue=$system \\
                                              ParameterKey=ApplicationName,ParameterValue=$application \\
                                              ParameterKey=ApplicationVersion,ParameterValue=$application_version \\
+                                             ParameterKey=ApplicationBucket,ParameterValue=$examplesbucket \\
                                              ParameterKey=KeyName,ParameterValue=$key \\
                                              ParameterKey=AdministratorNetwork,ParameterValue=$network \\
                                 --tags Key=Owner,Value=$owner \\

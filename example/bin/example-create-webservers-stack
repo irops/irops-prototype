@@ -41,9 +41,6 @@ region=${AWS_DEFAULT_REGION:-us-west-2}
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-administrator}
 
-templatesbucket=${AWS_TEMPLATES_BUCKET:-templates-$account}
-templatespath=/example
-
 
 #  2. Define functions
 
@@ -214,6 +211,9 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     echo "Expected to find: [profile $profile] in ~/.aws/config"
     exit 53
 fi
+
+templatesbucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
+templatespath=/example
 
 if ! aws s3api head-bucket --bucket $templatesbucket --profile $profile --region $region 2> /dev/null; then
     unset templatesbucket

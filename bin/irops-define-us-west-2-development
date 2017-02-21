@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Defines the IROPS Environment Variables for the Production Environment
+# Defines the IROPS Environment Variables for the Development Environment in Oregon
 
 # Company
 export COMPANY_CODE=demo
@@ -15,11 +15,11 @@ export SYSTEM_CODE=irops
 export SYSTEM_NAME="IROPS"
 
 # Environment
-export ENVIRONMENT_CODE=p
-export ENVIRONMENT_NAME="Production"
-export ENVIRONMENT_DOMAIN=$COMPANY_CODE.iropshub.com
-export ENVIRONMENT_NETWORK=10.40.0.0/16
-export ENVIRONMENT_HA_NAT_GATEWAYS=true
+export ENVIRONMENT_CODE=d
+export ENVIRONMENT_NAME="Development"
+export ENVIRONMENT_DOMAIN=$ENVIRONMENT_CODE.$COMPANY_CODE.iropshub.com
+export ENVIRONMENT_NETWORK=10.43.0.0/16
+export ENVIRONMENT_HA_NAT_GATEWAYS=false
 
 # Core
 export CORE_CODE=c

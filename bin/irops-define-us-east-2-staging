@@ -1,38 +1,38 @@
 #!/bin/bash
 #
-# Defines the IROPS Environment Variables for the QA Environment
+# Defines the IROPS Environment Variables for the Staging Environment in Ohio
 
 # Company
 export COMPANY_CODE=demo
 export COMPANY_NAME="Demo"
 
 # Location (match AWS_DEFAULT_REGION below)
-export LOCATION_CODE=uw2
-export LOCATION_NAME="US-West-2"
+export LOCATION_CODE=ue2
+export LOCATION_NAME="US-East-2"
 
 # System
 export SYSTEM_CODE=irops
 export SYSTEM_NAME="IROPS"
 
 # Environment
-export ENVIRONMENT_CODE=q
-export ENVIRONMENT_NAME="QA"
+export ENVIRONMENT_CODE=s
+export ENVIRONMENT_NAME="Staging"
 export ENVIRONMENT_DOMAIN=$ENVIRONMENT_CODE.$COMPANY_CODE.iropshub.com
-export ENVIRONMENT_NETWORK=10.42.0.0/16
+export ENVIRONMENT_NETWORK=10.81.0.0/16
 export ENVIRONMENT_HA_NAT_GATEWAYS=false
 
 # Core
 export CORE_CODE=c
 export CORE_NAME="Core"
 export CORE_DOMAIN=$COMPANY_CODE.iropshub.com
-export CORE_NETWORK=10.46.0.0/16
+export CORE_NETWORK=10.86.0.0/16
 export CORE_HA_NAT_GATEWAYS=false
 
 # Build
 export BUILD_CODE=b
 export BUILD_NAME="Build"
 export BUILD_DOMAIN=$COMPANY_CODE.iropshub.com
-export BUILD_NETWORK=10.47.0.0/16
+export BUILD_NETWORK=10.87.0.0/16
 export BUILD_HA_NAT_GATEWAYS=false
 
 # Identity
@@ -49,7 +49,7 @@ export GATEWAY_ADDRESS=204.26.253.5
 export GATEWAY_NETWORK=204.26.128.0/17
 
 # Region
-export AWS_DEFAULT_REGION=us-west-2
+export AWS_DEFAULT_REGION=us-east-2
 
 # Account
 export AWS_ACCOUNT_ALIAS=irops
