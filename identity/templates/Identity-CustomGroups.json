@@ -1,0 +1,67 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Identity-CustomGroups Template. This creates Custom IAM Groups within the Identity Account.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "StandardManagedPoliciesStackName",
+            "CustomManagedPoliciesStackName"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "StandardManagedPoliciesStackName" : { "default" : "Standard ManagedPolicies Stack Name" },
+        "CustomManagedPoliciesStackName" : { "default" : "Custom ManagedPolicies Stack Name" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "StandardManagedPoliciesStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard ManagedPolicies.",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardManagedPolicies",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "CustomManagedPoliciesStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Custom ManagedPolicies.",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "CustomManagedPolicies",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    }
+  },
+
+  "Resources" : {
+    "ApplicationAdministratorsGroup" : {
+      "Type" : "AWS::IAM::Group",
+      "Properties" : {
+        "GroupName" : "ApplicationAdministrators",
+        "Path" : "/",
+        "ManagedPolicyArns" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${CustomManagedPoliciesStackName}-ApplicationAdministratorAccess" }}
+        ]
+      }
+    }
+  },
+
+  "Outputs" : {
+    "ApplicationAdministratorsGroup" : {
+      "Description" : "The ApplicationAdministratorsGroup Name",
+      "Value" :  { "Ref" : "ApplicationAdministratorsGroup" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-ApplicationAdministratorsGroup" }}
+    }
+  }
+}

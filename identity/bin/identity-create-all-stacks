@@ -230,15 +230,244 @@ unset EC2_CERT
 
 start=$(date +%s)
 
+((++step))
+read -r -d '' statement << EOS
 $bindir/identity-create-standardmanagedpolicies-stack $options
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'}"
 
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Create the StandardManagedPolicies Stack"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
+
+run
+
+if [ $choice = y ]; then
+    echo
+    echo "$run_statement"
+    eval "$eval_statement"
+
+    next
+fi
+
+
+((++step))
+read -r -d '' statement << EOS
+$bindir/identity-create-custommanagedpolicies-stack $options
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'}"
+
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Create the CustomManagedPolicies Stack"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
+
+run
+
+if [ $choice = y ]; then
+    echo
+    echo "$run_statement"
+    eval "$eval_statement"
+
+    next
+fi
+
+
+((++step))
+read -r -d '' statement << EOS
 $bindir/identity-create-standardgroups-stack $options
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'}"
 
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Create the StandardGroups Stack"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
+
+run
+
+if [ $choice = y ]; then
+    echo
+    echo "$run_statement"
+    eval "$eval_statement"
+
+    next
+fi
+
+
+((++step))
+read -r -d '' statement << EOS
+$bindir/identity-create-customgroups-stack $options
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'}"
+
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Create the CustomGroups Stack"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
+
+run
+
+if [ $choice = y ]; then
+    echo
+    echo "$run_statement"
+    eval "$eval_statement"
+
+    next
+fi
+
+
+((++step))
+read -r -d '' statement << EOS
 $bindir/identity-create-standardusers-stack $options
-$bindir/identity-create-customusers-stack $options
-$bindir/identity-create-reviewusers-stack $options
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'}"
 
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Create the StandardUsers Stack"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
+
+run
+
+if [ $choice = y ]; then
+    echo
+    echo "$run_statement"
+    eval "$eval_statement"
+
+    next
+fi
+
+
+((++step))
+read -r -d '' statement << EOS
+$bindir/identity-create-customusers-stack $options
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'}"
+
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Create the CustomUsers Stack"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
+
+run
+
+if [ $choice = y ]; then
+    echo
+    echo "$run_statement"
+    eval "$eval_statement"
+
+    next
+fi
+
+
+((++step))
+read -r -d '' statement << EOS
+$bindir/identity-create-reviewusers-stack $options
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'}"
+
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Create the ReviewUsers Stack"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
+
+run
+
+if [ $choice = y ]; then
+    echo
+    echo "$run_statement"
+    eval "$eval_statement"
+
+    next
+fi
+
+
+((++step))
+read -r -d '' statement << EOS
 $bindir/identity-create-standardroles-stack $options
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'}"
+
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Create the StandardRoles Stack"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
+
+run
+
+if [ $choice = y ]; then
+    echo
+    echo "$run_statement"
+    eval "$eval_statement"
+
+    next
+fi
 
 end=$(date +%s)
 

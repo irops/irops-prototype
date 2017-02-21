@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# This script creates the ReviewUsers Stack in the Identity Account.
+# This script deletes the CustomManagedPolicies Stack in the Identity Account.
 #
 # This script is written in a format suitable for interactive demos,
 # but can be run non-Iteractively and more quickly with the "-I" flag.
@@ -17,15 +17,12 @@ speed_max=400
 run_default=10
 pause_default=2
 next_default=5
-create_default=15
-create_attempts=20
+delete_default=15
+delete_attempts=20
 
 interactive=1
 speed=100
 verbose=0
-owner=${OWNER_EMAIL:-$USER@hpe.com}
-company=${COMPANY_NAME:-Demo}
-system=${SYSTEM_NAME:-IROPS}
 environment=${IDENTITY_NAME:-Identity}
 region=us-east-1 # This should run only in us-east-1
 account=${AWS_ACCOUNT_ALIAS:-irops}
@@ -36,16 +33,12 @@ user=${AWS_USER_NAME:-administrator}
 
 usage () {
     echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v]"
-    echo "                  [-O owner] [-C company ] [-S system]"
     echo "                  [-E environment]"
     echo "                  [-a account] [-u user]"
     echo "  -I              non-interactive"
     echo "  -s              slower: increase pauses by 25%"
     echo "  -f              faster: reduce pauses by 25%"
     echo "  -v              verbose"
-    echo "  -O owner        Owner Email (default: $owner)"
-    echo "  -C company      Company Name (default: $company)"
-    echo "  -S system       System Name (default: $system)"
     echo "  -E environment  Environment Name (default: $environment)"
     echo "  -a account      Account (default: $account)"
     echo "  -u user         User (default: $user)"
@@ -131,15 +124,12 @@ next() {
 
 #  3. Parse command line options
 
-while getopts IsfvO:C:S:E:a:u:? arg; do
+while getopts IsfvE:a:u:? arg; do
     case $arg in
     I)  interactive=0;;
     s)  ((speed < speed_max)) && ((speed=speed+25));;
     f)  ((speed > 0)) && ((speed=speed-25));;
     v)  verbose=1;;
-    O)  owner="$OPTARG";;
-    C)  company="$OPTARG";;
-    S)  system="$OPTARG";;
     E)  environment="$OPTARG";;
     a)  account="$OPTARG";;
     u)  user="$OPTARG";;
@@ -152,24 +142,6 @@ shift $(($OPTIND - 1))
 
 
 #  4. Validate environment
-
-if [ -z $owner ]; then
-    echo "-O owner missing!"
-    echo "Could not automatically determine owner, and it was not specified as a parameter"
-    exit 10
-fi
-
-if [ -z $company ]; then
-    echo "-C company missing!"
-    echo "Could not automatically determine company, and it was not specified as a parameter"
-    exit 12
-fi
-
-if [ -z $system ]; then
-    echo "-S system missing!"
-    echo "Could not automatically determine system, and it was not specified as a parameter"
-    exit 14
-fi
 
 if [ -z $environment ]; then
     echo "-E environment missing!"
@@ -199,23 +171,10 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     exit 60
 fi
 
-templatesbucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
-templatespath=/identity
-
-if ! aws s3api head-bucket --bucket $templatesbucket --profile $profile --region $region 2> /dev/null; then
-    unset templatesbucket
-fi
-
-if ! aws cloudformation describe-stacks --stack-name StandardManagedPolicies \
+if ! aws cloudformation describe-stacks --stack-name CustomManagedPolicies \
                                         --profile $profile --region $region --output text &> /dev/null; then
-    echo "Stack dependency missing - StandardManagedPolicies Stack does not exist!"
+    echo "Unable to delete - CustomManagedPolicies Stack does not exist!"
     exit 70
-fi
-
-if ! aws cloudformation describe-stacks --stack-name StandardGroups \
-                                        --profile $profile --region $region --output text &> /dev/null; then
-    echo "Stack dependency missing - StandardGroups Stack does not exist!"
-    exit 71
 fi
 
 # Prevent certain environment variables from breaking commands
@@ -264,66 +223,17 @@ fi
 
 ((++step))
 read -r -d '' statement << EOS
-aws s3 sync $templatesdir \\
-            s3://$templatesbucket$templatespath \\
-            --exclude '*' --include 'Identity-ReviewUsers.json' --include 'Identity-ReviewUsers-StackPolicy.json' \\
-            --profile $profile --region $region --output table
-EOS
-run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
-eval_statement="${statement//\\$'\n'}"
-
-if [ ! -z $templatesbucket ]; then
-    clear
-    echo
-    echo "============================================================"
-    echo
-    echo "$(printf '%2d' $step). Sync Template and Policy to ($templatesbucket) Bucket"
-    echo
-    echo "============================================================"
-    echo
-    echo "Commands:"
-    echo
-    echo "$statement"
-
-    next 50
-
-    echo
-    echo "$run_statement"
-    eval "$eval_statement"
-
-    next 50
-fi
-
-
-((++step))
-if [ ! -z $templatesbucket ]; then
-    template_parameter="--template-url https://$s3_domain/$templatesbucket$templatespath/Identity-ReviewUsers.json"
-    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templatesbucket$templatespath/Identity-ReviewUsers-StackPolicy.json"
-else
-    template_parameter="--template-body file://$templatesdir/Identity-ReviewUsers.json"
-    stack_policy_parameter="--stack-policy-body file://$templatesdir/Identity-ReviewUsers-StackPolicy.json"
-fi
-read -r -d '' statement << EOS
-aws cloudformation create-stack --stack-name ReviewUsers \\
-                                $template_parameter \\
-                                $stack_policy_parameter \\
-                                --parameters ParameterKey=StandardManagedPoliciesStackName,ParameterValue=StandardManagedPolicies \\
-                                             ParameterKey=StandardGroupsStackName,ParameterValue=StandardGroups \\
-                                --tags Key=Owner,Value=$owner \\
-                                       Key=Company,Value=$company \\
-                                       Key=System,Value=$system \\
-                                       Key=Environment,Value=$environment \\
-                                --capabilities CAPABILITY_NAMED_IAM \\
+aws cloudformation delete-stack --stack-name CustomManagedPolicies \\
                                 --profile $profile --region $region --output table
 EOS
 run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
-eval_statement="${statement//\\$'\n'}"
+eval_statement="${statement//\\$'\n'} 2> /dev/null"
 
 clear
 echo
 echo "============================================================"
 echo
-echo "$(printf '%2d' $step). Create the Stack"
+echo "$(printf '%2d' $step). Delete the Stack"
 echo
 echo "============================================================"
 echo
@@ -331,11 +241,11 @@ echo "Commands:"
 echo
 echo "$statement"
 
-if aws cloudformation describe-stacks --stack-name ReviewUsers \
-                                      --profile $profile --region $region --output text &> /dev/null; then
+if ! aws cloudformation describe-stacks --stack-name CustomManagedPolicies \
+                                        --profile $profile --region $region --output text &> /dev/null; then
     echo
     tput rev
-    echo "Already Created!"
+    echo "Already Deleted!"
     tput sgr0
 
     next 50
@@ -355,7 +265,7 @@ fi
 
 ((++step))
 read -r -d '' statement << EOS
-aws cloudformation describe-stacks --stack-name ReviewUsers \\
+aws cloudformation describe-stacks --stack-name CustomManagedPolicies \\
                                    --query 'Stacks[].[StackName,StackStatus]' \\
                                    --profile $profile --region $region --output table
 EOS
@@ -363,7 +273,7 @@ run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
 eval_statement="${statement//\\$'\n'} 2> /dev/null"
 
 read -r -d '' statement2 << EOS
-aws cloudformation describe-stack-events --stack-name ReviewUsers --max-items 5 \\
+aws cloudformation describe-stack-events --stack-name CustomManagedPolicies --max-items 5 \\
                                          --query 'StackEvents[].[LogicalResourceId,ResourceStatus,Timestamp]' \\
                                          --profile $profile --region $region --output table
 EOS
@@ -374,7 +284,7 @@ clear
 echo
 echo "============================================================"
 echo
-echo "$(printf '%2d' $step). Monitor Stack creation"
+echo "$(printf '%2d' $step). Monitor Stack deletion"
 echo
 echo "============================================================"
 echo
@@ -384,12 +294,11 @@ echo "$statement"
 echo
 echo "$statement2"
 
-if [ "$(aws cloudformation describe-stacks --stack-name ReviewUsers \
-                                           --query 'Stacks[].StackStatus' \
-                                           --profile $profile --region $region --output text 2> /dev/null)" = "CREATE_COMPLETE" ]; then
+if ! aws cloudformation describe-stacks --stack-name CustomManagedPolicies \
+                                        --profile $profile --region $region &> /dev/null; then
     echo
     tput rev
-    echo "Already Complete!"
+    echo "Already Deleted!"
     tput sgr0
 
     next 50
@@ -403,13 +312,13 @@ else
         eval "$eval_statement"
 
         attempt=0
-        seconds=$create_default
-        while ((attempt++ <= create_attempts)); do
+        seconds=$delete_default
+        while ((attempt++ <= delete_attempts)); do
             echo
             echo "$run_statement2"
             eval "$eval_statement2"
 
-            status=$(aws cloudformation describe-stacks --stack-name ReviewUsers \
+            status=$(aws cloudformation describe-stacks --stack-name CustomManagedPolicies \
                                                         --query 'Stacks[].StackStatus' \
                                                         --profile $profile --region $region --output text 2> /dev/null)
             if [ -z "$status" -o "$status" = "CREATE_COMPLETE" -o "$status" = "CREATE_FAILED" -o "$status" = "ROLLBACK_COMPLETE" ]; then
@@ -441,40 +350,6 @@ if [ $verbose = 1 ]; then
     echo "============================================================"
     echo
     echo "$(printf '%2d' $step). List Resulting Stacks"
-    echo
-    echo "============================================================"
-    echo
-    echo "Commands:"
-    echo
-    echo "$statement"
-
-    run 50
-
-    if [ $choice = y ]; then
-        echo
-        echo "$run_statement"
-        eval "$eval_statement"
-
-        next
-    fi
-fi
-
-
-((++step))
-read -r -d '' statement << EOS
-aws cloudformation describe-stack-resources --stack-name ReviewUsers \\
-                                            --query 'StackResources[].[ResourceType,LogicalResourceId,PhysicalResourceId,ResourceStatus]' \\
-                                            --profile $profile --region $region --output table
-EOS
-run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
-eval_statement="${statement//\\$'\n'} 2> /dev/null"
-
-if [ $verbose = 1 ]; then
-    clear
-    echo
-    echo "============================================================"
-    echo
-    echo "$(printf '%2d' $step). List Resulting Stack Resources"
     echo
     echo "============================================================"
     echo

@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
 
-  "Description" : "Identity-ReviewUsers Template. This creates Review IAM Users within the Identity Account.",
+  "Description" : "Identity-ReviewUsers Template. This creates Review IAM Users within the Identity Account. Due to what appears to be a bug in the User Resource Groups Property which ignores changes during Stack Updates, we are currently listing all group memberships explicitly through separate UsertoGroupAddition Resources.",
 
   "Metadata" : {
     "AWS::CloudFormation::Interface" : {
@@ -10,14 +10,18 @@
           "Label" : { "default" : "Stack Dependencies" },
           "Parameters" : [
             "StandardManagedPoliciesStackName",
-            "StandardGroupsStackName"
+            "CustomManagedPoliciesStackName",
+            "StandardGroupsStackName",
+            "CustomGroupsStackName"
           ]
         }
       ],
 
       "ParameterLabels" : {
         "StandardManagedPoliciesStackName" : { "default" : "Standard ManagedPolicies Stack Name" },
-        "StandardGroupsStackName" : { "default" : "Standard Groups Stack Name" }
+        "CustomManagedPoliciesStackName" : { "default" : "Custom ManagedPolicies Stack Name" },
+        "StandardGroupsStackName" : { "default" : "Standard Groups Stack Name" },
+        "CustomGroupsStackName" : { "default" : "Custom Groups Stack Name" }
       }
     }
   },
@@ -33,6 +37,16 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
+    "CustomManagedPoliciesStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Custom ManagedPolicies.",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "CustomManagedPolicies",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
     "StandardGroupsStackName" : {
       "Description" : "Name of the CloudFormation Stack containing Standard Groups.",
       "Type" : "String",
@@ -41,11 +55,21 @@
       "Default" : "StandardGroups",
       "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "CustomGroupsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Custom Groups.",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "CustomGroups",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     }
   },
 
   "Resources" : {
-    "lwadeUser" : {
+    "LWadeUser" : {
       "Type" : "AWS::IAM::User",
       "Properties" : {
         "UserName" : "lwade",
@@ -57,7 +81,7 @@
       }
     },
 
-    "mheleniusUser" : {
+    "MHeleniusUser" : {
       "Type" : "AWS::IAM::User",
       "Properties" : {
         "UserName" : "mhelenius",
@@ -69,7 +93,7 @@
       }
     },
 
-    "nliechtyUser" : {
+    "NLiechtyUser" : {
       "Type" : "AWS::IAM::User",
       "Properties" : {
         "UserName" : "nliechty",
@@ -81,7 +105,7 @@
       }
     },
 
-    "dmccueUser" : {
+    "DMcCueUser" : {
       "Type" : "AWS::IAM::User",
       "Properties" : {
         "UserName" : "dmccue",
@@ -93,7 +117,7 @@
       }
     },
 
-    "jmilleUser" : {
+    "JMilleUser" : {
       "Type" : "AWS::IAM::User",
       "Properties" : {
         "UserName" : "jmille",
@@ -105,7 +129,7 @@
       }
     },
 
-    "bthomasonUser" : {
+    "BThomasonUser" : {
       "Type" : "AWS::IAM::User",
       "Properties" : {
         "UserName" : "bthomason",

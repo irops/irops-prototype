@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# This script creates the ReviewUsers Stack in the Identity Account.
+# This script updates the CustomManagedPolicies Stack in the Identity Account.
 #
 # This script is written in a format suitable for interactive demos,
 # but can be run non-Iteractively and more quickly with the "-I" flag.
@@ -17,8 +17,8 @@ speed_max=400
 run_default=10
 pause_default=2
 next_default=5
-create_default=15
-create_attempts=20
+update_default=15
+update_attempts=20
 
 interactive=1
 speed=100
@@ -206,16 +206,10 @@ if ! aws s3api head-bucket --bucket $templatesbucket --profile $profile --region
     unset templatesbucket
 fi
 
-if ! aws cloudformation describe-stacks --stack-name StandardManagedPolicies \
+if ! aws cloudformation describe-stacks --stack-name CustomManagedPolicies \
                                         --profile $profile --region $region --output text &> /dev/null; then
-    echo "Stack dependency missing - StandardManagedPolicies Stack does not exist!"
+    echo "Unable to update - CustomManagedPolicies Stack does not exist!"
     exit 70
-fi
-
-if ! aws cloudformation describe-stacks --stack-name StandardGroups \
-                                        --profile $profile --region $region --output text &> /dev/null; then
-    echo "Stack dependency missing - StandardGroups Stack does not exist!"
-    exit 71
 fi
 
 # Prevent certain environment variables from breaking commands
@@ -266,7 +260,7 @@ fi
 read -r -d '' statement << EOS
 aws s3 sync $templatesdir \\
             s3://$templatesbucket$templatespath \\
-            --exclude '*' --include 'Identity-ReviewUsers.json' --include 'Identity-ReviewUsers-StackPolicy.json' \\
+            --exclude '*' --include 'Identity-CustomManagedPolicies.json' --include 'Identity-CustomManagedPolicies-StackPolicy.json' \\
             --profile $profile --region $region --output table
 EOS
 run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
@@ -297,23 +291,21 @@ fi
 
 ((++step))
 if [ ! -z $templatesbucket ]; then
-    template_parameter="--template-url https://$s3_domain/$templatesbucket$templatespath/Identity-ReviewUsers.json"
-    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templatesbucket$templatespath/Identity-ReviewUsers-StackPolicy.json"
+    template_parameter="--template-url https://$s3_domain/$templatesbucket$templatespath/Identity-CustomManagedPolicies.json"
+    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templatesbucket$templatespath/Identity-CustomManagedPolicies-StackPolicy.json"
 else
-    template_parameter="--template-body file://$templatesdir/Identity-ReviewUsers.json"
-    stack_policy_parameter="--stack-policy-body file://$templatesdir/Identity-ReviewUsers-StackPolicy.json"
+    template_parameter="--template-body file://$templatesdir/Identity-CustomManagedPolicies.json"
+    stack_policy_parameter="--stack-policy-body file://$templatesdir/Identity-CustomManagedPolicies-StackPolicy.json"
 fi
 read -r -d '' statement << EOS
-aws cloudformation create-stack --stack-name ReviewUsers \\
+aws cloudformation update-stack --stack-name CustomManagedPolicies \\
                                 $template_parameter \\
                                 $stack_policy_parameter \\
-                                --parameters ParameterKey=StandardManagedPoliciesStackName,ParameterValue=StandardManagedPolicies \\
-                                             ParameterKey=StandardGroupsStackName,ParameterValue=StandardGroups \\
                                 --tags Key=Owner,Value=$owner \\
                                        Key=Company,Value=$company \\
                                        Key=System,Value=$system \\
                                        Key=Environment,Value=$environment \\
-                                --capabilities CAPABILITY_NAMED_IAM \\
+                                --capabilities CAPABILITY_IAM \\
                                 --profile $profile --region $region --output table
 EOS
 run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
@@ -323,7 +315,7 @@ clear
 echo
 echo "============================================================"
 echo
-echo "$(printf '%2d' $step). Create the Stack"
+echo "$(printf '%2d' $step). Update the Stack"
 echo
 echo "============================================================"
 echo
@@ -331,31 +323,21 @@ echo "Commands:"
 echo
 echo "$statement"
 
-if aws cloudformation describe-stacks --stack-name ReviewUsers \
-                                      --profile $profile --region $region --output text &> /dev/null; then
+run
+
+if [ $choice = y ]; then
     echo
-    tput rev
-    echo "Already Created!"
-    tput sgr0
+    echo "$run_statement"
+    eval "$eval_statement"
 
-    next 50
-
-else
-    run
-
-    if [ $choice = y ]; then
-        echo
-        echo "$run_statement"
-        eval "$eval_statement"
-
-        next
-    fi
+    next
 fi
+
 
 
 ((++step))
 read -r -d '' statement << EOS
-aws cloudformation describe-stacks --stack-name ReviewUsers \\
+aws cloudformation describe-stacks --stack-name CustomManagedPolicies \\
                                    --query 'Stacks[].[StackName,StackStatus]' \\
                                    --profile $profile --region $region --output table
 EOS
@@ -363,7 +345,7 @@ run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
 eval_statement="${statement//\\$'\n'} 2> /dev/null"
 
 read -r -d '' statement2 << EOS
-aws cloudformation describe-stack-events --stack-name ReviewUsers --max-items 5 \\
+aws cloudformation describe-stack-events --stack-name CustomManagedPolicies --max-items 5 \\
                                          --query 'StackEvents[].[LogicalResourceId,ResourceStatus,Timestamp]' \\
                                          --profile $profile --region $region --output table
 EOS
@@ -374,7 +356,7 @@ clear
 echo
 echo "============================================================"
 echo
-echo "$(printf '%2d' $step). Monitor Stack creation"
+echo "$(printf '%2d' $step). Monitor Stack update"
 echo
 echo "============================================================"
 echo
@@ -384,9 +366,9 @@ echo "$statement"
 echo
 echo "$statement2"
 
-if [ "$(aws cloudformation describe-stacks --stack-name ReviewUsers \
+if [ "$(aws cloudformation describe-stacks --stack-name CustomManagedPolicies \
                                            --query 'Stacks[].StackStatus' \
-                                           --profile $profile --region $region --output text 2> /dev/null)" = "CREATE_COMPLETE" ]; then
+                                           --profile $profile --region $region --output text 2> /dev/null)" = "UPDATE_COMPLETE" ]; then
     echo
     tput rev
     echo "Already Complete!"
@@ -403,16 +385,16 @@ else
         eval "$eval_statement"
 
         attempt=0
-        seconds=$create_default
-        while ((attempt++ <= create_attempts)); do
+        seconds=$update_default
+        while ((attempt++ <= update_attempts)); do
             echo
             echo "$run_statement2"
             eval "$eval_statement2"
 
-            status=$(aws cloudformation describe-stacks --stack-name ReviewUsers \
+            status=$(aws cloudformation describe-stacks --stack-name CustomManagedPolicies \
                                                         --query 'Stacks[].StackStatus' \
                                                         --profile $profile --region $region --output text 2> /dev/null)
-            if [ -z "$status" -o "$status" = "CREATE_COMPLETE" -o "$status" = "CREATE_FAILED" -o "$status" = "ROLLBACK_COMPLETE" ]; then
+            if [ -z "$status" -o "$status" = "UPDATE_COMPLETE" -o "$status" = "UPDATE_FAILED" -o "$status" = "ROLLBACK_COMPLETE" ]; then
                 break
             else
                 echo
@@ -425,7 +407,6 @@ else
         next
     fi
 fi
-
 
 ((++step))
 read -r -d '' statement << EOS
@@ -462,7 +443,7 @@ fi
 
 ((++step))
 read -r -d '' statement << EOS
-aws cloudformation describe-stack-resources --stack-name ReviewUsers \\
+aws cloudformation describe-stack-resources --stack-name CustomManagedPolicies \\
                                             --query 'StackResources[].[ResourceType,LogicalResourceId,PhysicalResourceId,ResourceStatus]' \\
                                             --profile $profile --region $region --output table
 EOS

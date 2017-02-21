@@ -184,14 +184,245 @@ unset EC2_CERT
 
 start=$(date +%s)
 
+((++step))
+read -r -d '' statement << EOS
 $bindir/identity-delete-standardroles-stack $options
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'}"
 
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Delete the StandardRoles Stack"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
+
+run
+
+if [ $choice = y ]; then
+    echo
+    echo "$run_statement"
+    eval "$eval_statement"
+
+    next
+fi
+
+
+((++step))
+read -r -d '' statement << EOS
+$bindir/identity-delete-reviewusers-stack $options
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'}"
+
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Delete the ReviewUsers Stack"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
+
+run
+
+if [ $choice = y ]; then
+    echo
+    echo "$run_statement"
+    eval "$eval_statement"
+
+    next
+fi
+
+
+((++step))
+read -r -d '' statement << EOS
 $bindir/identity-delete-customusers-stack $options
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'}"
+
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Delete the CustomUsers Stack"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
+
+run
+
+if [ $choice = y ]; then
+    echo
+    echo "$run_statement"
+    eval "$eval_statement"
+
+    next
+fi
+
+
+((++step))
+read -r -d '' statement << EOS
 $bindir/identity-delete-standardusers-stack $options
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'}"
 
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Delete the StandardUsers Stack"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
+
+run
+
+if [ $choice = y ]; then
+    echo
+    echo "$run_statement"
+    eval "$eval_statement"
+
+    next
+fi
+
+
+
+((++step))
+read -r -d '' statement << EOS
+$bindir/identity-delete-customgroups-stack $options
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'}"
+
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Delete the CustomGroups Stack"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
+
+run
+
+if [ $choice = y ]; then
+    echo
+    echo "$run_statement"
+    eval "$eval_statement"
+
+    next
+fi
+
+
+((++step))
+read -r -d '' statement << EOS
 $bindir/identity-delete-standardgroups-stack $options
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'}"
 
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Delete the StandardGroups Stack"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
+
+run
+
+if [ $choice = y ]; then
+    echo
+    echo "$run_statement"
+    eval "$eval_statement"
+
+    next
+fi
+
+
+((++step))
+read -r -d '' statement << EOS
+$bindir/identity-delete-custommanagedpolicies-stack $options
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'}"
+
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Delete the CustomManagedPolicies Stack"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
+
+run
+
+if [ $choice = y ]; then
+    echo
+    echo "$run_statement"
+    eval "$eval_statement"
+
+    next
+fi
+
+
+((++step))
+read -r -d '' statement << EOS
 $bindir/identity-delete-standardmanagedpolicies-stack $options
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'}"
+
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Delete the StandardManagedPolicies Stack"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
+
+run
+
+if [ $choice = y ]; then
+    echo
+    echo "$run_statement"
+    eval "$eval_statement"
+
+    next
+fi
 
 end=$(date +%s)
 

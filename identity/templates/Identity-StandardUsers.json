@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
 
-  "Description" : "Identity-StandardUsers Template. This creates Standard IAM Users within the Identity Account.",
+  "Description" : "Identity-StandardUsers Template. This creates Standard IAM Users within the Identity Account. Due to what appears to be a bug in the User Resource Groups Property which ignores changes during Stack Updates, we are currently listing all group memberships explicitly through separate UsertoGroupAddition Resources.",
 
   "Metadata" : {
     "AWS::CloudFormation::Interface" : {
@@ -45,7 +45,7 @@
   },
 
   "Resources" : {
-    "administratorUser" : {
+    "AdministratorUser" : {
       "Type" : "AWS::IAM::User",
       "Properties" : {
         "UserName" : "administrator",
@@ -56,40 +56,7 @@
       }
     },
 
-    "networkadministratorUser" : {
-      "Type" : "AWS::IAM::User",
-      "Properties" : {
-        "UserName" : "networkadministrator",
-        "Path" : "/",
-        "Groups" : [
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-NetworkAdministratorsGroup" }}
-        ]
-      }
-    },
-
-    "systemadministratorUser" : {
-      "Type" : "AWS::IAM::User",
-      "Properties" : {
-        "UserName" : "systemadministrator",
-        "Path" : "/",
-        "Groups" : [
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-SystemAdministratorsGroup" }}
-        ]
-      }
-    },
-
-    "databaseadministratorUser" : {
-      "Type" : "AWS::IAM::User",
-      "Properties" : {
-        "UserName" : "databaseadministrator",
-        "Path" : "/",
-        "Groups" : [
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-DatabaseAdministratorsGroup" }}
-        ]
-      }
-    },
-
-    "developerUser" : {
+    "DeveloperUser" : {
       "Type" : "AWS::IAM::User",
       "Properties" : {
         "UserName" : "developer",
@@ -100,7 +67,7 @@
       }
     },
 
-    "userUser" : {
+    "UserUser" : {
       "Type" : "AWS::IAM::User",
       "Properties" : {
         "UserName" : "user",

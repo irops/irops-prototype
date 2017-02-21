@@ -38,7 +38,9 @@
       "Properties" : {
         "GroupName" : "Administrators",
         "Path" : "/",
-        "ManagedPolicyArns" : [ "arn:aws:iam::aws:policy/AdministratorAccess" ]
+        "ManagedPolicyArns" : [ 
+          "arn:aws:iam::aws:policy/AdministratorAccess"
+        ]
       }
     },
 
@@ -47,7 +49,9 @@
       "Properties" : {
         "GroupName" : "AdministratorsWithoutBilling",
         "Path" : "/",
-        "ManagedPolicyArns" : [{ "Fn::ImportValue" : { "Fn::Sub" : "${StandardManagedPoliciesStackName}-AdministratorAccessWithoutBilling" }}]
+        "ManagedPolicyArns" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardManagedPoliciesStackName}-AdministratorWithoutBillingAccess" }}
+        ]
       }
     },
 
@@ -56,7 +60,9 @@
       "Properties" : {
         "GroupName" : "NetworkAdministrators",
         "Path" : "/",
-        "ManagedPolicyArns" : [ "arn:aws:iam::aws:policy/job-function/NetworkAdministrator" ]
+        "ManagedPolicyArns" : [
+          "arn:aws:iam::aws:policy/job-function/NetworkAdministrator"
+        ]
       }
     },
 
@@ -65,7 +71,9 @@
       "Properties" : {
         "GroupName" : "SystemAdministrators",
         "Path" : "/",
-        "ManagedPolicyArns" : [ "arn:aws:iam::aws:policy/job-function/SystemAdministrator" ]
+        "ManagedPolicyArns" : [
+          "arn:aws:iam::aws:policy/job-function/SystemAdministrator"
+        ]
       }
     },
 
@@ -74,7 +82,9 @@
       "Properties" : {
         "GroupName" : "DatabaseAdministrators",
         "Path" : "/",
-        "ManagedPolicyArns" : [ "arn:aws:iam::aws:policy/job-function/DatabaseAdministrator" ]
+        "ManagedPolicyArns" : [
+          "arn:aws:iam::aws:policy/job-function/DatabaseAdministrator"
+        ]
       }
     },
 
@@ -83,7 +93,10 @@
       "Properties" : {
         "GroupName" : "Developers",
         "Path" : "/",
-        "ManagedPolicyArns" : [ "arn:aws:iam::aws:policy/PowerUserAccess" ]
+        "ManagedPolicyArns" : [
+          "arn:aws:iam::aws:policy/PowerUserAccess",
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardManagedPoliciesStackName}-UserSelfManagementAccess" }}
+        ]
       }
     },
 
@@ -92,7 +105,10 @@
       "Properties" : {
         "GroupName" : "Users",
         "Path" : "/",
-        "ManagedPolicyArns" : [ "arn:aws:iam::aws:policy/ReadOnlyAccess" ]
+        "ManagedPolicyArns" : [
+          "arn:aws:iam::aws:policy/ReadOnlyAccess",
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardManagedPoliciesStackName}-UserSelfManagementAccess" }}
+        ]
       }
     },
 
