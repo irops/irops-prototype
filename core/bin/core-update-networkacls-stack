@@ -1,0 +1,508 @@
+#!/bin/bash
+#
+# This script updates the Core NetworkAcls Stack in the Core Account.
+#
+# This script is written in a format suitable for interactive demos,
+# but can be run non-Iteractively and more quickly with the "-I" flag.
+#
+
+#  1. Initalize Environment
+
+bindir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+templatesdir=${bindir%/*}/templates
+tmpdir=/var/tmp
+
+step=0
+speed_max=400
+run_default=10
+pause_default=2
+next_default=5
+update_default=15
+update_attempts=20
+
+interactive=1
+speed=100
+verbose=0
+owner=${OWNER_EMAIL:-$USER@hpe.com}
+company=${COMPANY_NAME:-Demo}
+system=${SYSTEM_NAME:-IROPS}
+environment=${CORE_NAME:-Core}
+region=${AWS_DEFAULT_REGION:-us-west-2}
+account=${AWS_ACCOUNT_ALIAS:-irops}
+user=${AWS_USER_NAME:-administrator}
+
+
+#  2. Define functions
+
+usage () {
+    echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v]"
+    echo "                  [-O owner] [-C company ] [-S system]"
+    echo "                  [-E environment]"
+    echo "                  [-r region ] [-a account] [-u user]"
+    echo "  -I              non-interactive"
+    echo "  -s              slower: increase pauses by 25%"
+    echo "  -f              faster: reduce pauses by 25%"
+    echo "  -v              verbose"
+    echo "  -O owner        Owner Email (default: $owner)"
+    echo "  -C company      Company Name (default: $company)"
+    echo "  -S system       System Name (default: $system)"
+    echo "  -E environment  Environment Name (default: $environment)"
+    echo "  -r region       Region (default: $region)"
+    echo "  -a account      Account (default: $account)"
+    echo "  -u user         User (default: $user)"
+}
+
+run() {
+    if [ -z $1 ] || (($1 % 25 != 0)); then
+        ((seconds=run_default * speed / 100))
+    else
+        ((seconds=run_default * $1 * speed / 10000))
+    fi
+    if [ $interactive = 1 ]; then
+        echo
+        echo -n "Run? [Y/n/q]"
+        read choice
+        case "$choice" in
+            "" | "y" | "Y" | "yes" | "Yes") choice=y ;;
+            "n" | "N" | "no" | "No") choice=n ;;
+             *) echo "cancelled"
+                exit 2;;
+        esac
+    else
+        echo
+        echo -n -e "Waiting $(printf '%2d' $seconds) seconds..."
+        while ((seconds > 0)); do
+            if ((seconds < 10 || seconds % 10 == 0)); then
+                echo -n -e "\rWaiting $(printf '%2d' $seconds) seconds..."
+            fi
+            sleep 1
+            ((seconds--))
+        done
+        echo " Done"
+        choice=y
+    fi
+}
+
+pause() {
+    if [ -z $1 ] || (($1 % 25 != 0)); then
+        ((seconds=pause_default * speed / 100))
+    else
+        ((seconds=pause_default * $1 * speed / 10000))
+    fi
+    if [ $interactive = 1 ]; then
+        echo "#"
+        read pause
+        echo -en "\033[1A\033[2K"    # undo newline from read
+    else
+        echo "#"
+        sleep $seconds
+    fi
+}
+
+next() {
+    if [ -z $1 ] || (($1 % 25 != 0)); then
+        ((seconds=next_default * speed / 100))
+    else
+        ((seconds=next_default * $1 * speed / 10000))
+    fi
+    if [ $interactive = 1 ]; then
+        echo
+        echo -n "Next? [Y/q]"
+        read choice
+        case "$choice" in
+            "" | "y" | "Y" | "yes" | "Yes") choice=y ;;
+             *) echo "cancelled"
+                exit 2;;
+        esac
+    else
+        echo
+        echo -n -e "Waiting $(printf '%2d' $seconds) seconds..."
+        while ((seconds > 0)); do
+            if ((seconds < 10 || seconds % 10 == 0)); then
+                echo -n -e "\rWaiting $(printf '%2d' $seconds) seconds..."
+            fi
+            sleep 1
+            ((seconds--))
+        done
+        echo " Done"
+        choice=y
+    fi
+}
+
+
+#  3. Parse command line options
+
+while getopts IsfvO:C:S:E:r:a:u:? arg; do
+    case $arg in
+    I)  interactive=0;;
+    s)  ((speed < speed_max)) && ((speed=speed+25));;
+    f)  ((speed > 0)) && ((speed=speed-25));;
+    v)  verbose=1;;
+    O)  owner="$OPTARG";;
+    C)  company="$OPTARG";;
+    S)  system="$OPTARG";;
+    E)  environment="$OPTARG";;
+    r)  region="$OPTARG";;
+    a)  account="$OPTARG";;
+    u)  user="$OPTARG";;
+    ?)  usage
+        exit 1;;
+    esac
+done
+
+shift $(($OPTIND - 1))
+
+
+#  4. Validate environment
+
+if [ -z $owner ]; then
+    echo "-O owner missing!"
+    echo "Could not automatically determine owner, and it was not specified as a parameter"
+    exit 10
+fi
+
+if [ -z $company ]; then
+    echo "-C company missing!"
+    echo "Could not automatically determine company, and it was not specified as a parameter"
+    exit 12
+fi
+
+if [ -z $system ]; then
+    echo "-S system missing!"
+    echo "Could not automatically determine system, and it was not specified as a parameter"
+    exit 14
+fi
+
+if [ -z $environment ]; then
+    echo "-E environment missing!"
+    echo "Could not automatically determine environment, and it was not specified as a parameter"
+    exit 16
+fi
+
+if [ -z $region ]; then
+    echo "-r region missing!"
+    echo "Could not automatically determine region, and it was not specified as a parameter"
+    exit 50
+else
+    case $region in
+      us-east-1)
+        s3_domain=s3.amazonaws.com;;
+      us-east-2|us-west-1|us-west-2|ca-central-1|sa-east-1|eu-west-1|eu-west-2|eu-central-1|ap-northeast-1|ap-northeast-2|ap-south-1|ap-southeast-1|ap-southeast-2)
+        s3_domain=s3-$region.amazonaws.com;;
+    *)
+        echo "-r $region invalid: Please specify a valid region"
+        exit 51;;
+    esac
+fi
+
+if [ -z $account ]; then
+    echo "-a account missing!"
+    echo "Could not automatically determine account, and it was not specified as a parameter"
+    exit 52
+fi
+
+if [ -z $user ]; then
+    echo "-u user missing!"
+    echo "Could not automatically determine user, and it was not specified as a parameter"
+    exit 54
+fi
+
+profile=$account-$user
+
+if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
+    echo "Could not find ($account) Account ($user) User AWSCLI profile!"
+    echo "Expected to find: [profile $profile] in ~/.aws/config"
+    exit 60
+fi
+
+templatesbucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
+templatespath=/core
+
+if ! aws s3api head-bucket --bucket $templatesbucket --profile $profile --region $region 2> /dev/null; then
+    unset templatesbucket
+fi
+
+if ! aws cloudformation describe-stacks --stack-name $environment-VPC \
+                                        --profile $profile --region $region --output text &> /dev/null; then
+    echo "Unable to update - $environment-VPC Stack does not exist!"
+    exit 70
+fi
+
+if ! aws cloudformation describe-stacks --stack-name $environment-NetworkAcls \
+                                        --profile $profile --region $region --output text &> /dev/null; then
+    echo "Unable to update - $environment-NetworkAcls Stack does not exist!"
+    exit 71
+fi
+
+# Prevent certain environment variables from breaking commands
+unset AWS_DEFAULT_PROFILE
+unset AWS_CREDENTIAL_FILE
+unset EC2_PRIVATE_KEY
+unset EC2_CERT
+
+
+#  5. Run
+
+start=$(date +%s)
+
+((++step))
+read -r -d '' statement << EOS
+aws cloudformation describe-stacks --query 'Stacks[].[StackName,StackStatus]' \\
+                                   --profile $profile --region $region --output table
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'}"
+
+if [ $verbose = 1 ]; then
+    clear
+    echo
+    echo "============================================================"
+    echo
+    echo "$(printf '%2d' $step). List Existing Stacks"
+    echo
+    echo "============================================================"
+    echo
+    echo "Commands:"
+    echo
+    echo "$statement"
+
+    run 50
+
+    if [ $choice = y ]; then
+        echo
+        echo "$run_statement"
+        eval "$eval_statement"
+
+        next
+    fi
+fi
+
+
+((++step))
+read -r -d '' statement << EOS
+aws s3 sync $templatesdir \\
+            s3://$templatesbucket$templatespath \\
+            --exclude '*' --include 'Core-NetworkAcls.json' --include 'Core-NetworkAcls-StackPolicy.json' \\
+            --profile $profile --region $region --output table
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'}"
+
+if [ ! -z $templatesbucket ]; then
+    clear
+    echo
+    echo "============================================================"
+    echo
+    echo "$(printf '%2d' $step). Sync Template and Policy to ($templatesbucket) Bucket"
+    echo
+    echo "============================================================"
+    echo
+    echo "Commands:"
+    echo
+    echo "$statement"
+
+    next 50
+
+    echo
+    echo "$run_statement"
+    eval "$eval_statement"
+
+    next 50
+fi
+
+
+((++step))
+if [ ! -z $templatesbucket ]; then
+    template_parameter="--template-url https://$s3_domain/$templatesbucket$templatespath/Core-NetworkAcls.json"
+    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templatesbucket$templatespath/Core-NetworkAcls-StackPolicy.json"
+else
+    template_parameter="--template-body file://$templatesdir/Core-NetworkAcls.json"
+    stack_policy_parameter="--stack-policy-body file://$templatesdir/Core-NetworkAcls-StackPolicy.json"
+fi
+read -r -d '' statement << EOS
+aws cloudformation update-stack --stack-name $environment-NetworkAcls \\
+                                $template_parameter \\
+                                $stack_policy_parameter \\
+                                --parameters ParameterKey=VPCStackName,ParameterValue=$environment-VPC \\
+                                --tags Key=Owner,Value=$owner \\
+                                       Key=Company,Value=$company \\
+                                       Key=System,Value=$system \\
+                                       Key=Environment,Value=$environment \\
+                                --capabilities CAPABILITY_IAM \\
+                                --profile $profile --region $region --output table
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'}"
+
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Update the Stack"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
+
+run
+
+if [ $choice = y ]; then
+    echo
+    echo "$run_statement"
+    eval "$eval_statement"
+
+    next
+fi
+
+
+((++step))
+read -r -d '' statement << EOS
+aws cloudformation describe-stacks --stack-name $environment-NetworkAcls \\
+                                   --query 'Stacks[].[StackName,StackStatus]' \\
+                                   --profile $profile --region $region --output table
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'} 2> /dev/null"
+
+read -r -d '' statement2 << EOS
+aws cloudformation describe-stack-events --stack-name $environment-NetworkAcls --max-items 5 \\
+                                         --query 'StackEvents[].[LogicalResourceId,ResourceStatus,Timestamp]' \\
+                                         --profile $profile --region $region --output table
+EOS
+run_statement2=$(echo "$statement2" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement2="${statement2//\\$'\n'} 2> /dev/null"
+
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Monitor Stack update"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
+echo
+echo "$statement2"
+
+if [ "$(aws cloudformation describe-stacks --stack-name $environment-NetworkAcls \
+                                           --query 'Stacks[].StackStatus' \
+                                           --profile $profile --region $region --output text 2> /dev/null)" = "UPDATE_COMPLETE" ]; then
+    echo
+    tput rev
+    echo "Already Complete!"
+    tput sgr0
+
+    next 50
+
+else
+    run 50
+
+    if [ $choice = y ]; then
+        echo
+        echo "$run_statement"
+        eval "$eval_statement"
+
+        attempt=0
+        seconds=$update_default
+        while ((attempt++ <= update_attempts)); do
+            echo
+            echo "$run_statement2"
+            eval "$eval_statement2"
+
+            status=$(aws cloudformation describe-stacks --stack-name $environment-NetworkAcls \
+                                                        --query 'Stacks[].StackStatus' \
+                                                        --profile $profile --region $region --output text 2> /dev/null)
+            if [ -z "$status" -o "$status" = "UPDATE_COMPLETE" -o "$status" = "UPDATE_FAILED" -o "$status" = "ROLLBACK_COMPLETE" ]; then
+                break
+            else
+                echo
+                echo -n "Not finished ($status). Waiting $seconds seconds..."
+                sleep $seconds
+                echo " Done"
+            fi
+        done
+
+        next
+    fi
+fi
+
+
+((++step))
+read -r -d '' statement << EOS
+aws cloudformation describe-stacks --query 'Stacks[].[StackName,StackStatus]' \\
+                                   --profile $profile --region $region --output table
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'}"
+
+if [ $verbose = 1 ]; then
+    clear
+    echo
+    echo "============================================================"
+    echo
+    echo "$(printf '%2d' $step). List Resulting Stacks"
+    echo
+    echo "============================================================"
+    echo
+    echo "Commands:"
+    echo
+    echo "$statement"
+
+    run 50
+
+    if [ $choice = y ]; then
+        echo
+        echo "$run_statement"
+        eval "$eval_statement"
+
+        next
+    fi
+fi
+
+
+((++step))
+read -r -d '' statement << EOS
+aws cloudformation describe-stack-resources --stack-name $environment-NetworkAcls \\
+                                            --query 'StackResources[].[ResourceType,LogicalResourceId,PhysicalResourceId,ResourceStatus]' \\
+                                            --profile $profile --region $region --output table
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'} 2> /dev/null"
+
+if [ $verbose = 1 ]; then
+    clear
+    echo
+    echo "============================================================"
+    echo
+    echo "$(printf '%2d' $step). List Resulting Stack Resources"
+    echo
+    echo "============================================================"
+    echo
+    echo "Commands:"
+    echo
+    echo "$statement"
+
+    run 50
+
+    if [ $choice = y ]; then
+        echo
+        echo "$run_statement"
+        eval "$eval_statement"
+
+        next
+    fi
+fi
+
+end=$(date +%s)
+
+echo
+case $(uname) in
+  Darwin)
+    echo "(time: $(date -u -r $((end-start)) +"%T"))";;
+  *)
+    echo "(time: $(date -u -d @$((end-start)) +"%T"))";;
+esac

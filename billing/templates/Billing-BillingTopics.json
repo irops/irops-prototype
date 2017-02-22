@@ -1,0 +1,37 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Core-BillingTopics Template. This creates Billing SNS Topics within the Core Account.",
+
+  "Resources" : {
+    "BillsTopic" : {
+      "Type" : "AWS::SNS::Topic",
+      "Properties" : {
+        "TopicName" : "Bills",
+        "DisplayName" : "Bills"
+      }
+    },
+
+    "BillsSMSTopic" : {
+      "Type" : "AWS::SNS::Topic",
+      "Properties" : {
+        "TopicName" : "BillsSMS",
+        "DisplayName" : "Bills"
+      }
+    }
+  },
+
+  "Outputs" : {
+    "BillsTopic" : {
+      "Description" : "The Bills Topic ARN",
+      "Value" :  { "Ref" : "BillsTopic" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-BillsTopic" }}
+    },
+
+    "BillsSMSTopic" : {
+      "Description" : "The BillsSMS Topic ARN",
+      "Value" :  { "Ref" : "BillsSMSTopic" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-BillsSMSTopic" }}
+    }
+  }
+}

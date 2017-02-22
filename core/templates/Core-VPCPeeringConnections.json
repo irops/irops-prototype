@@ -1,0 +1,459 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Core-VPCPeeringConnections Template. This template creates all VPCPeeringConnections.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "CoreVPCStackName",
+            "BuildVPCStackName",
+            "ProductionVPCStackName",
+            "StagingVPCStackName",
+            "QAVPCStackName",
+            "DevelopmentVPCStackName"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "CoreVPCStackName" : { "default" : "Core VPC Stack Name" },
+        "BuildVPCStackName" : { "default" : "Build VPC Stack Name" },
+        "ProductionVPCStackName" : { "default" : "Production VPC Stack Name" },
+        "StagingVPCStackName" : { "default" : "Staging VPC Stack Name" },
+        "QAVPCStackName" : { "default" : "QA VPC Stack Name" },
+        "DevelopmentVPCStackName" : { "default" : "Development VPC Stack Name" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "CoreVPCStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Core VPC.",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Core-VPC",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "BuildVPCStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Build VPC.",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "ProductionVPCStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Production VPC.",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "StagingVPCStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Staging VPC.",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "QAVPCStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the QA VPC.",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "DevelopmentVPCStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Development VPC.",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    }
+  },
+
+  "Conditions" : {
+    "PeerToBuildVPC"       : { "Fn::Equals" : [{ "Ref" : "BuildVPCStackName" }, "Build-VPC" ]},
+    "PeerToProductionVPC"  : { "Fn::Equals" : [{ "Ref" : "ProductionVPCStackName" }, "Production-VPC" ]},
+    "PeerToStagingVPC"     : { "Fn::Equals" : [{ "Ref" : "StagingVPCStackName" }, "Staging-VPC" ]},
+    "PeerToQAVPC"          : { "Fn::Equals" : [{ "Ref" : "QAVPCStackName" }, "QA-VPC" ]},
+    "PeerToDevelopmentVPC" : { "Fn::Equals" : [{ "Ref" : "DevelopmentVPCStackName" }, "Development-VPC" ]}
+  },
+
+  "Resources" : {
+    "BuildVPCPeeringConnection" : {
+      "Type" : "AWS::EC2::VPCPeeringConnection",
+      "Properties" : {
+        "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-VPC" }},
+        "PeerVpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${BuildVPCStackName}-VPC" }},
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "Core-BuildVPCPeeringConnection" }}
+        ]
+      },
+      "Condition" : "PeerToBuildVPC"
+    },
+
+    "PublicCoreToBuildRoute" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${BuildVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-PublicRouteTable" }},
+        "VpcPeeringConnectionId" : { "Ref" : "BuildVPCPeeringConnection" }
+      },
+      "Condition" : "PeerToBuildVPC"
+    },
+
+    "PublicBuildToCoreRoute" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${BuildVPCStackName}-PublicRouteTable" }},
+        "VpcPeeringConnectionId" : { "Ref" : "BuildVPCPeeringConnection" }
+      },
+      "Condition" : "PeerToBuildVPC"
+    },
+
+    "PrivateCoreToBuildRouteA" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${BuildVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-PrivateRouteTableA" }},
+        "VpcPeeringConnectionId" : { "Ref" : "BuildVPCPeeringConnection" }
+      },
+      "Condition" : "PeerToBuildVPC"
+    },
+
+    "PrivateBuildToCoreRouteA" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${BuildVPCStackName}-PrivateRouteTableA" }},
+        "VpcPeeringConnectionId" : { "Ref" : "BuildVPCPeeringConnection" }
+      },
+      "Condition" : "PeerToBuildVPC"
+    },
+
+    "PrivateCoreToBuildRouteB" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${BuildVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-PrivateRouteTableB" }},
+        "VpcPeeringConnectionId" : { "Ref" : "BuildVPCPeeringConnection" }
+      },
+      "Condition" : "PeerToBuildVPC"
+    },
+
+    "PrivateBuildToCoreRouteB" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${BuildVPCStackName}-PrivateRouteTableB" }},
+        "VpcPeeringConnectionId" : { "Ref" : "BuildVPCPeeringConnection" }
+      } ,
+      "Condition" : "PeerToBuildVPC"
+    },
+
+    "ProductionVPCPeeringConnection" : {
+      "Type" : "AWS::EC2::VPCPeeringConnection",
+      "Properties" : {
+        "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-VPC" }},
+        "PeerVpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${ProductionVPCStackName}-VPC" }},
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "Core-ProductionVPCPeeringConnection" }}
+        ]
+      },
+      "Condition" : "PeerToProductionVPC"
+    },
+
+    "PublicCoreToProductionRoute" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${ProductionVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-PublicRouteTable" }},
+        "VpcPeeringConnectionId" : { "Ref" : "ProductionVPCPeeringConnection" }
+      },
+      "Condition" : "PeerToProductionVPC"
+    },
+
+    "PublicProductionToCoreRoute" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${ProductionVPCStackName}-PublicRouteTable" }},
+        "VpcPeeringConnectionId" : { "Ref" : "ProductionVPCPeeringConnection" }
+      },
+      "Condition" : "PeerToProductionVPC"
+    },
+
+    "PrivateCoreToProductionRouteA" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${ProductionVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-PrivateRouteTableA" }},
+        "VpcPeeringConnectionId" : { "Ref" : "ProductionVPCPeeringConnection" }
+      },
+      "Condition" : "PeerToProductionVPC"
+    },
+
+    "PrivateProductionToCoreRouteA" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${ProductionVPCStackName}-PrivateRouteTableA" }},
+        "VpcPeeringConnectionId" : { "Ref" : "ProductionVPCPeeringConnection" }
+      },
+      "Condition" : "PeerToProductionVPC"
+    },
+
+    "PrivateCoreToProductionRouteB" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${ProductionVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-PrivateRouteTableB" }},
+        "VpcPeeringConnectionId" : { "Ref" : "ProductionVPCPeeringConnection" }
+      },
+      "Condition" : "PeerToProductionVPC"
+    },
+
+    "PrivateProductionToCoreRouteB" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${ProductionVPCStackName}-PrivateRouteTableB" }},
+        "VpcPeeringConnectionId" : { "Ref" : "ProductionVPCPeeringConnection" }
+      } ,
+      "Condition" : "PeerToProductionVPC"
+    },
+
+    "StagingVPCPeeringConnection" : {
+      "Type" : "AWS::EC2::VPCPeeringConnection",
+      "Properties" : {
+        "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-VPC" }},
+        "PeerVpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${StagingVPCStackName}-VPC" }},
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "Core-StagingVPCPeeringConnection" }}
+        ]
+      },
+      "Condition" : "PeerToStagingVPC"
+    },
+
+    "PublicCoreToStagingRoute" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${StagingVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-PublicRouteTable" }},
+        "VpcPeeringConnectionId" : { "Ref" : "StagingVPCPeeringConnection" }
+      },
+      "Condition" : "PeerToStagingVPC"
+    },
+
+    "PublicStagingToCoreRoute" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${StagingVPCStackName}-PublicRouteTable" }},
+        "VpcPeeringConnectionId" : { "Ref" : "StagingVPCPeeringConnection" }
+      },
+      "Condition" : "PeerToStagingVPC"
+    },
+
+    "PrivateCoreToStagingRouteA" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${StagingVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-PrivateRouteTableA" }},
+        "VpcPeeringConnectionId" : { "Ref" : "StagingVPCPeeringConnection" }
+      },
+      "Condition" : "PeerToStagingVPC"
+    },
+
+    "PrivateStagingToCoreRouteA" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${StagingVPCStackName}-PrivateRouteTableA" }},
+        "VpcPeeringConnectionId" : { "Ref" : "StagingVPCPeeringConnection" }
+      },
+      "Condition" : "PeerToStagingVPC"
+    },
+
+    "PrivateCoreToStagingRouteB" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${StagingVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-PrivateRouteTableB" }},
+        "VpcPeeringConnectionId" : { "Ref" : "StagingVPCPeeringConnection" }
+      },
+      "Condition" : "PeerToStagingVPC"
+    },
+
+    "PrivateStagingToCoreRouteB" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${StagingVPCStackName}-PrivateRouteTableB" }},
+        "VpcPeeringConnectionId" : { "Ref" : "StagingVPCPeeringConnection" }
+      } ,
+      "Condition" : "PeerToStagingVPC"
+    },
+
+    "QAVPCPeeringConnection" : {
+      "Type" : "AWS::EC2::VPCPeeringConnection",
+      "Properties" : {
+        "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-VPC" }},
+        "PeerVpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${QAVPCStackName}-VPC" }},
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "Core-QAVPCPeeringConnection" }}
+        ]
+      },
+      "Condition" : "PeerToQAVPC"
+    },
+
+    "PublicCoreToQARoute" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${QAVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-PublicRouteTable" }},
+        "VpcPeeringConnectionId" : { "Ref" : "QAVPCPeeringConnection" }
+      },
+      "Condition" : "PeerToQAVPC"
+    },
+
+    "PublicQAToCoreRoute" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${QAVPCStackName}-PublicRouteTable" }},
+        "VpcPeeringConnectionId" : { "Ref" : "QAVPCPeeringConnection" }
+      },
+      "Condition" : "PeerToQAVPC"
+    },
+
+    "PrivateCoreToQARouteA" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${QAVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-PrivateRouteTableA" }},
+        "VpcPeeringConnectionId" : { "Ref" : "QAVPCPeeringConnection" }
+      },
+      "Condition" : "PeerToQAVPC"
+    },
+
+    "PrivateQAToCoreRouteA" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${QAVPCStackName}-PrivateRouteTableA" }},
+        "VpcPeeringConnectionId" : { "Ref" : "QAVPCPeeringConnection" }
+      },
+      "Condition" : "PeerToQAVPC"
+    },
+
+    "PrivateCoreToQARouteB" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${QAVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-PrivateRouteTableB" }},
+        "VpcPeeringConnectionId" : { "Ref" : "QAVPCPeeringConnection" }
+      },
+      "Condition" : "PeerToQAVPC"
+    },
+
+    "PrivateQAToCoreRouteB" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${QAVPCStackName}-PrivateRouteTableB" }},
+        "VpcPeeringConnectionId" : { "Ref" : "QAVPCPeeringConnection" }
+      } ,
+      "Condition" : "PeerToQAVPC"
+    },
+
+    "DevelopmentVPCPeeringConnection" : {
+      "Type" : "AWS::EC2::VPCPeeringConnection",
+      "Properties" : {
+        "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-VPC" }},
+        "PeerVpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${DevelopmentVPCStackName}-VPC" }},
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "Core-DevelopmentVPCPeeringConnection" }}
+        ]
+      },
+      "Condition" : "PeerToDevelopmentVPC"
+    },
+
+    "PublicCoreToDevelopmentRoute" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${DevelopmentVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-PublicRouteTable" }},
+        "VpcPeeringConnectionId" : { "Ref" : "DevelopmentVPCPeeringConnection" }
+      },
+      "Condition" : "PeerToDevelopmentVPC"
+    },
+
+    "PublicDevelopmentToCoreRoute" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${DevelopmentVPCStackName}-PublicRouteTable" }},
+        "VpcPeeringConnectionId" : { "Ref" : "DevelopmentVPCPeeringConnection" }
+      },
+      "Condition" : "PeerToDevelopmentVPC"
+    },
+
+    "PrivateCoreToDevelopmentRouteA" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${DevelopmentVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-PrivateRouteTableA" }},
+        "VpcPeeringConnectionId" : { "Ref" : "DevelopmentVPCPeeringConnection" }
+      },
+      "Condition" : "PeerToDevelopmentVPC"
+    },
+
+    "PrivateDevelopmentToCoreRouteA" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${DevelopmentVPCStackName}-PrivateRouteTableA" }},
+        "VpcPeeringConnectionId" : { "Ref" : "DevelopmentVPCPeeringConnection" }
+      },
+      "Condition" : "PeerToDevelopmentVPC"
+    },
+
+    "PrivateCoreToDevelopmentRouteB" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${DevelopmentVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-PrivateRouteTableB" }},
+        "VpcPeeringConnectionId" : { "Ref" : "DevelopmentVPCPeeringConnection" }
+      },
+      "Condition" : "PeerToDevelopmentVPC"
+    },
+
+    "PrivateDevelopmentToCoreRouteB" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${DevelopmentVPCStackName}-PrivateRouteTableB" }},
+        "VpcPeeringConnectionId" : { "Ref" : "DevelopmentVPCPeeringConnection" }
+      } ,
+      "Condition" : "PeerToDevelopmentVPC"
+    }
+  }
+}

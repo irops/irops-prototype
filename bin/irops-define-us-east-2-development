@@ -1,0 +1,77 @@
+#!/bin/bash
+#
+# Defines the IROPS Environment Variables for the Development Environment in Ohio
+
+# Company
+export COMPANY_CODE=demo
+export COMPANY_NAME="Demo"
+
+# Location (match AWS_DEFAULT_REGION below)
+export LOCATION_CODE=ue2
+export LOCATION_NAME="US-East-2"
+
+# System
+export SYSTEM_CODE=irops
+export SYSTEM_NAME="IROPS"
+
+# Environment
+export ENVIRONMENT_CODE=d
+export ENVIRONMENT_NAME="Development"
+export ENVIRONMENT_DOMAIN=$ENVIRONMENT_CODE.$COMPANY_CODE.iropshub.com
+export ENVIRONMENT_NETWORK=10.83.0.0/16
+export ENVIRONMENT_HA_NAT_GATEWAYS=false
+
+# Core
+export CORE_CODE=c
+export CORE_NAME="Core"
+export CORE_DOMAIN=$COMPANY_CODE.iropshub.com
+export CORE_NETWORK=10.86.0.0/16
+export CORE_HA_NAT_GATEWAYS=false
+
+# Build
+export BUILD_CODE=b
+export BUILD_NAME="Build"
+export BUILD_DOMAIN=$COMPANY_CODE.iropshub.com
+export BUILD_NETWORK=10.87.0.0/16
+export BUILD_HA_NAT_GATEWAYS=false
+
+# Identity
+export IDENTITY_CODE=i
+export IDENTITY_NAME="Identity"
+export IDENTITY_NETWORK=10.255.0.0/16
+export IDENTITY_HA_NAT_GATEWAYS=false
+
+# Gateway
+export GATEWAY_CODE=clt
+export GATEWAY_NAME="Charlotte"
+export GATEWAY_ASN=65000
+export GATEWAY_ADDRESS=204.26.253.5
+export GATEWAY_NETWORK=204.26.128.0/17
+
+# Region
+export AWS_DEFAULT_REGION=us-east-2
+
+# Account
+export AWS_ACCOUNT_ALIAS=irops
+export AWS_ACCOUNT_NUMBER=624812452220
+
+# User
+export AWS_USER_NAME=$USER
+
+# Credentials
+export AWS_DEFAULT_PROFILE=$AWS_ACCOUNT_ALIAS-$AWS_USER_NAME
+
+# Keys
+export AWS_KEY_NAME=$USER
+export AWS_KEY_FILE=${HOME}/.ssh/irops_${AWS_KEY_NAME}_id_rsa
+
+# Notification
+export SNS_ADMINISTRATOR_TOPIC="arn:aws:sns:${AWS_DEFAULT_REGION}:${AWS_ACCOUNT_NUMBER}:Administrators"
+export SNS_EVENTS_TOPIC="arn:aws:sns:${AWS_DEFAULT_REGION}:${AWS_ACCOUNT_NUMBER}:Events"
+export SNS_ALARMS_TOPIC="arn:aws:sns:${AWS_DEFAULT_REGION}:${AWS_ACCOUNT_NUMBER}:Alarms"
+
+# Owner
+export OWNER_EMAIL=$USER@hpe.com
+
+# Home
+export ADMINISTRATOR_NETWORK=72.215.187.176/28

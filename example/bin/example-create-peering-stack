@@ -1,0 +1,679 @@
+#!/bin/bash
+#
+# This script creates the VPCPeeringConnection Example Stack.
+#
+# This script is written in a format suitable for interactive demos,
+# but can be run non-Iteractively and more quickly with the "-I" flag.
+#
+
+#  1. Initalize Environment
+
+bindir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+templatesdir=${bindir%/*}/templates
+keysdir=${bindir%/*/*}/keys
+tmpdir=/var/tmp
+
+if [ -z "$IROPS_HOME" ]; then
+    echo "IROPS_HOME not set, please source the appropriate irops-define-<environment> script."
+    exit 1
+fi
+
+step=0
+speed_max=400
+run_default=10
+pause_default=2
+next_default=5
+create_default=15
+create_attempts=20
+
+interactive=1
+speed=100
+verbose=0
+setup=0
+keypair=example
+domain=example.iropshub.com
+region=${AWS_DEFAULT_REGION#*@}
+account=${AWS_ACCOUNT_NAME:-irops}
+user=${AWS_USER_NAME:-administrator}
+ssh_user=ec2-user
+
+templatesbucket=${AWS_TEMPLATES_BUCKET:-templates-$account}
+templatespath=/core
+
+source_vpc_network=10.0.0.0/16
+source_private_subnet_network=10.0.0.0/24
+dest_vpc_network=10.1.0.0/16
+dest_private_subnet_network=10.1.0.0/24
+instance_type=t2.nano
+
+
+#  2. Define functions
+
+usage () {
+    echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v] [-S] [-d domain] [-k keypair]"
+    echo "              [-r region ] [-a account] [-u user]"
+    echo "  -I          non-interactive"
+    echo "  -s          slower: increase pauses by 25%"
+    echo "  -f          faster: reduce pauses by 25%"
+    echo "  -v          verbose"
+    echo "  -S          setup"
+    echo "  -k keypair  KeyPair (default: $keypair)"
+    echo "  -d domain   Domain (default: $domain)"
+    echo "  -r region   Region (default: $region)"
+    echo "  -a account  Account (default: $account)"
+    echo "  -u user     User (default: $user)"
+}
+
+run() {
+    if [ -z $1 ] || (($1 % 25 != 0)); then
+        ((seconds=run_default * speed / 100))
+    else
+        ((seconds=run_default * $1 * speed / 10000))
+    fi
+    if [ $interactive = 1 ]; then
+        echo
+        echo -n "Run? [Y/n/q]"
+        read choice
+        case "$choice" in
+            "" | "y" | "Y" | "yes" | "Yes") choice=y ;;
+            "n" | "N" | "no" | "No") choice=n ;;
+             *) echo "cancelled"
+                exit 2;;
+        esac
+    else
+        echo
+        echo -n -e "Waiting $(printf '%2d' $seconds) seconds..."
+        while ((seconds > 0)); do
+            if ((seconds < 10 || seconds % 10 == 0)); then
+                echo -n -e "\rWaiting $(printf '%2d' $seconds) seconds..."
+            fi
+            sleep 1
+            ((seconds--))
+        done
+        echo " Done"
+        choice=y
+    fi
+}
+
+pause() {
+    if [ -z $1 ] || (($1 % 25 != 0)); then
+        ((seconds=pause_default * speed / 100))
+    else
+        ((seconds=pause_default * $1 * speed / 10000))
+    fi
+    if [ $interactive = 1 ]; then
+        echo "#"
+        read pause
+        echo -en "\033[1A\033[2K"    # undo newline from read
+    else
+        echo "#"
+        sleep $seconds
+    fi
+}
+
+next() {
+    if [ -z $1 ] || (($1 % 25 != 0)); then
+        ((seconds=next_default * speed / 100))
+    else
+        ((seconds=next_default * $1 * speed / 10000))
+    fi
+    if [ $interactive = 1 ]; then
+        echo
+        echo -n "Next? [Y/q]"
+        read choice
+        case "$choice" in
+            "" | "y" | "Y" | "yes" | "Yes") choice=y ;;
+             *) echo "cancelled"
+                exit 2;;
+        esac
+    else
+        echo
+        echo -n -e "Waiting $(printf '%2d' $seconds) seconds..."
+        while ((seconds > 0)); do
+            if ((seconds < 10 || seconds % 10 == 0)); then
+                echo -n -e "\rWaiting $(printf '%2d' $seconds) seconds..."
+            fi
+            sleep 1
+            ((seconds--))
+        done
+        echo " Done"
+        choice=y
+    fi
+}
+
+
+#  3. Parse command line options
+
+while getopts IsfvSk:d:r:a:u:? arg; do
+    case $arg in
+    I)  interactive=0;;
+    s)  ((speed < speed_max)) && ((speed=speed+25));;
+    f)  ((speed > 0)) && ((speed=speed-25));;
+    v)  verbose=1;;
+    S)  setup=1;;
+    k)  keypair="$OPTARG";;
+    d)  domain="$OPTARG";;
+    r)  region="$OPTARG";;
+    a)  account="$OPTARG";;
+    u)  user="$OPTARG";;
+    ?)  usage
+        exit 1;;
+    esac
+done
+
+shift $(($OPTIND - 1))
+
+
+#  4. Validate environment
+
+if [ -z $keypair ]; then
+    echo "-k keypair missing!"
+    echo "Could not automatically determine keypair, and it was not specified as a parameter"
+    exit 10
+elif [ $setup = 0 ]; then
+    if [ ! -r ~/.ssh/irops_${keypair}_id_rsa ]; then
+        echo "-k keypair private key not found in expected location!"
+        echo "Could not find ~/.ssh/irops_${keypair}_id_rsa. Please run again with \"-S\" for setup,"
+        echo "or manually put the private key associated with the KeyPair in this location."
+        exit 11
+    fi
+fi
+
+if [ -z $domain ]; then
+    echo "-d domain missing!"
+    echo "Could not automatically determine domain, and it was not specified as a parameter"
+    exit 18
+fi
+
+if [ -z $region ]; then
+    echo "-r region missing!"
+    echo "Could not automatically determine region, and it was not specified as a parameter"
+    exit 20
+else
+    case $region in
+      us-east-1)
+        s3_domain=s3.amazonaws.com;;
+      us-east-2|us-west-1|us-west-2|ca-central-1|sa-east-1|eu-west-1|eu-west-2|eu-central-1|ap-northeast-1|ap-northeast-2|ap-south-1|ap-southeast-1|ap-southeast-2)
+        s3_domain=s3-$region.amazonaws.com;;
+    *)
+        echo "-r $region invalid: Please specify a valid region"
+        exit 21;;
+    esac
+fi
+
+if [ -z $account ]; then
+    echo "-a account missing!"
+    echo "Could not automatically determine account, and it was not specified as a parameter"
+    exit 22
+fi
+
+if [ -z $user ]; then
+    echo "-u user missing!"
+    echo "Could not automatically determine user, and it was not specified as a parameter"
+    exit 24
+fi
+
+profile=$account-$user
+
+if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
+    echo "Could not find ($account) Account ($user) User AWSCLI profile!"
+    echo "Expected to find: [profile $profile] in ~/.aws/config"
+    exit 53
+fi
+
+if ! aws s3api head-bucket --bucket $templatesbucket --profile $profile --region $region 2> /dev/null; then
+    unset templatesbucket
+fi
+
+if ! which lynx > /dev/null; then
+    echo "lynx missing: Some examples use the lynx text-mode browser to confirm webpage content"
+    case $(uname) in
+      Darwin)
+        echo "- Lynx for OSX can be found here: http://habilis.net/lynxlet/"
+        echo "- Follow instructions to install and create /usr/bin/lynx symlink";;
+      *)
+        echo "- yum install -y lynx";;
+    esac
+
+    exit 98
+fi
+
+# Prevent certain environment variables from breaking commands
+unset AWS_DEFAULT_PROFILE
+unset AWS_CREDENTIAL_FILE
+unset EC2_PRIVATE_KEY
+unset EC2_CERT
+
+
+#  5. Run Example
+
+start=$(date +%s)
+
+if [ $setup = 1 ]; then
+    clear
+    echo
+    echo "============================================================"
+    echo
+    echo "S1. Configure IROPS Example Keypair"
+    echo
+    echo "============================================================"
+    echo
+    echo "Commands:"
+    echo
+    echo "cat << EOF > ~/.ssh/irops_example_id_rsa"
+    cat $keysdir/irops_example_id_rsa
+    echo "EOF"
+    echo
+    echo "chmod 0600 ~/.ssh/irops_example_id_rsa"
+    echo
+    echo "cat << EOF > ~/.ssh/irops_example_id_rsa.pub"
+    cat $keysdir/irops_example_id_rsa.pub
+    echo "EOF"
+
+    if [ -r ~/.ssh/irops_example_id_rsa -a -r ~/.ssh/irops_example_id_rsa.pub ]; then
+        echo
+        tput rev
+        echo "Already Congigured!"
+        tput sgr0
+
+        next 50
+
+    else
+        run 50
+
+        if [ $choice = y ]; then
+            echo
+            echo "# cat << EOF > ~/.ssh/irops_example_id_rsa"
+            cat $keysdir/irops_example_id_rsa | sed -e 's/^/> /'
+            echo "> EOF"
+            cp $keysdir/irops_example_id_rsa ~/.ssh/irops_example_id_rsa
+            echo "#"
+            echo "# chmod 0600 ~/.ssh/irops_example_id_rsa"
+            chmod 0600 ~/.ssh/irops_example_id_rsa
+            pause
+
+            echo "# cat << EOF > ~/.ssh/irops_example_id_rsa.pub"
+            cat $keysdir/irops_example_id_rsa.pub | sed -e 's/^/> /'
+            echo "> EOF"
+            cp $keysdir/irops_example_id_rsa.pub ~/.ssh/irops_example_id_rsa.pub
+
+            next
+        fi
+    fi
+fi
+
+
+if [ $setup = 1 ]; then
+    clear
+    echo
+    echo "============================================================"
+    echo
+    echo "S2. Import IROPS Example Keypair"
+    echo
+    echo "============================================================"
+    echo
+    echo "Commands:"
+    echo
+    echo "aws ec2 import-key-pair --key-name=example \\"
+    echo "                        --public-key-material file://~/.ssh/irops_example_id_rsa.pub \\"
+    echo "                        --profile $profile --region $region --output text"
+
+    if aws ec2 describe-key-pairs --key-names example --profile $profile --region $region --output text &> /dev/null; then
+        echo
+        tput rev
+        echo "Already Imported!"
+        tput sgr0
+
+        next 50
+
+    else
+        run 50
+
+        if [ $choice = y ]; then
+            echo
+            echo "# aws ec2 import-key-pair --key-name=example \\"
+            echo ">                         --public-key-material file://~/.ssh/irops_example_id_rsa.pub \\"
+            echo ">                         --profile $profile --region $region --output text"
+            aws ec2 import-key-pair --key-name=example \
+                                    --public-key-material file://~/.ssh/irops_example_id_rsa.pub \
+                                    --profile $profile --region $region --output text
+
+            next
+        fi
+    fi
+fi
+
+
+((++step))
+if [ $verbose = 1 ]; then
+    clear
+    echo
+    echo "============================================================"
+    echo
+    echo "$(printf '%2d' $step). List Existing Stacks"
+    echo
+    echo "============================================================"
+    echo
+    echo "Commands:"
+    echo
+    echo "aws cloudformation describe-stacks --query 'Stacks[].[StackName,StackStatus]' \\"
+    echo "                                   --profile $profile --region $region --output table"
+
+
+    run 50
+
+    if [ $choice = y ]; then
+        echo
+        echo "# aws cloudformation describe-stacks --query 'Stacks[].[StackName,StackStatus]' \\"
+        echo ">                                    --profile $aws_profile --region $aws_region --output table"
+        aws cloudformation describe-stacks --query 'Stacks[].[StackName,StackStatus]' \
+                                           --profile $profile --region $region --output table
+
+        next
+    fi
+fi
+
+
+((++step))
+if [ ! -z $templatesbucket ]; then
+    clear
+    echo
+    echo "============================================================"
+    echo
+    echo "$(printf '%2d' $step). Sync Template and Policy to ($templatesbucket) Bucket"
+    echo
+    echo "============================================================"
+    echo
+    echo "Commands:"
+    echo
+    echo "aws s3 sync $templatesdir \\"
+    echo "            s3://$templatesbucket$templatespath \\"
+    echo "            --exclude '*' --include 'Example-VPCPeeringConnection.json' \\"
+    echo "            --profile $profile --region $region --output table"
+
+    next 50
+
+    echo
+    echo "# aws s3 sync $templatesdir \\"
+    echo ">             s3://$templatesbucket$templatespath \\"
+    echo ">             --exclude '*' --include 'Example-VPCPeeringConnection.json' \\"
+    echo ">             --profile $profile --region $region --output table"
+    aws s3 sync $templatesdir \
+                s3://$templatesbucket$templatespath \
+                --exclude '*' --include 'Example-VPCPeeringConnection.json' \
+                --profile $profile --region $region --output table
+
+    next 50
+fi
+
+
+((++step))
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Create the Stack"
+if [ ! -z $templatesbucket ]; then
+    echo "    - Referencing the template as an S3 URL"
+else
+    echo "    - Referencing the template as a local File"
+fi
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+if [ ! -z $templatesbucket ]; then
+    echo "aws cloudformation create-stack --stack-name Example-VPCPeeringConnection \\"
+    echo "                                --template-url https://$s3_domain/$templatesbucket$templatespath/Example-VPCPeeringConnection.json \\"
+    echo "                                --parameters ParameterKey=SourceVPCNetwork,ParameterValue=$source_vpc_network \\"
+    echo "                                             ParameterKey=SourcePublicSubnetNetwork,ParameterValue=$source_private_subnet_network \\"
+    echo "                                             ParameterKey=DestVPCNetwork,ParameterValue=$dest_vpc_network \\"
+    echo "                                             ParameterKey=DestPrivateSubnetNetwork,ParameterValue=$dest_private_subnet_network \\"
+    echo "                                             ParameterKey=InstanceType,ParameterValue=$instance_type \\"
+    echo "                                             ParameterKey=KeyPair,ParameterValue=$keypair \\"
+    echo "                                --capabilities CAPABILITY_IAM \\"
+    echo "                                --tags Key=Company,Value=Example \\"
+    echo "                                       Key=System,Value=Example \\"
+    echo "                                       Key=Environment,Value=Example \\"
+    echo "                                       Key=Owner,Value=$OWNER_EMAIL \\"
+    echo "                                --profile $profile --region $region --output table"
+else
+    echo "aws cloudformation create-stack --stack-name Example-VPCPeeringConnection \\"
+    echo "                                --template-body file://$templatesdir/Example-VPCPeeringConnection.json \\"
+    echo "                                --parameters ParameterKey=SourceVPCNetwork,ParameterValue=$source_vpc_network \\"
+    echo "                                             ParameterKey=SourcePublicSubnetNetwork,ParameterValue=$source_private_subnet_network \\"
+    echo "                                             ParameterKey=DestVPCNetwork,ParameterValue=$dest_vpc_network \\"
+    echo "                                             ParameterKey=DestPrivateSubnetNetwork,ParameterValue=$dest_private_subnet_network \\"
+    echo "                                             ParameterKey=InstanceType,ParameterValue=$instance_type \\"
+    echo "                                             ParameterKey=KeyPair,ParameterValue=$keypair \\"
+    echo "                                --capabilities CAPABILITY_IAM \\"
+    echo "                                --tags Key=Company,Value=Example \\"
+    echo "                                       Key=System,Value=Example \\"
+    echo "                                       Key=Environment,Value=Example \\"
+    echo "                                       Key=Owner,Value=$OWNER_EMAIL \\"
+    echo "                                --profile $profile --region $region --output table"
+fi
+
+if aws cloudformation describe-stacks --stack-name Example-VPCPeeringConnection \
+                                      --profile $profile --region $region --output text &> /dev/null; then
+    echo
+    tput rev
+    echo "Already Created!"
+    tput sgr0
+
+    next 50
+
+else
+    run
+
+    if [ $choice = y ]; then
+        echo
+        if [ ! -z $templatesbucket ]; then
+            echo "# aws cloudformation create-stack --stack-name Example-VPCPeeringConnection \\"
+            echo ">                                 --template-url https://$s3_domain/$templatesbucket$templatespath/Example-VPCPeeringConnection.json \\"
+            echo ">                                 --parameters ParameterKey=SourceVPCNetwork,ParameterValue=$source_vpc_network \\"
+            echo ">                                              ParameterKey=SourcePublicSubnetNetwork,ParameterValue=$source_private_subnet_network \\"
+            echo ">                                              ParameterKey=DestVPCNetwork,ParameterValue=$dest_vpc_network \\"
+            echo ">                                              ParameterKey=DestPrivateSubnetNetwork,ParameterValue=$dest_private_subnet_network \\"
+            echo ">                                              ParameterKey=InstanceType,ParameterValue=$instance_type \\"
+            echo ">                                              ParameterKey=KeyPair,ParameterValue=$keypair \\"
+            echo ">                                 --capabilities CAPABILITY_IAM \\"
+            echo ">                                 --tags Key=Company,Value=Example \\"
+            echo ">                                        Key=System,Value=Example \\"
+            echo ">                                        Key=Environment,Value=Example \\"
+            echo ">                                        Key=Owner,Value=$OWNER_EMAIL \\"
+            echo ">                                 --profile $profile --region $region --output table"
+            aws cloudformation create-stack --stack-name Example-VPCPeeringConnection \
+                                            --template-url https://$s3_domain/$templatesbucket$templatespath/Example-VPCPeeringConnection.json \
+                                            --parameters ParameterKey=SourceVPCNetwork,ParameterValue=$source_vpc_network \
+                                                         ParameterKey=SourcePublicSubnetNetwork,ParameterValue=$source_private_subnet_network \
+                                                         ParameterKey=DestVPCNetwork,ParameterValue=$dest_vpc_network \
+                                                         ParameterKey=DestPrivateSubnetNetwork,ParameterValue=$dest_private_subnet_network \
+                                                         ParameterKey=InstanceType,ParameterValue=$instance_type \
+                                                         ParameterKey=KeyPair,ParameterValue=$keypair \
+                                            --capabilities CAPABILITY_IAM \
+                                            --tags Key=Company,Value=Example \
+                                                   Key=System,Value=Example \
+                                                   Key=Environment,Value=Example \
+                                                   Key=Owner,Value=$OWNER_EMAIL \
+                                            --profile $profile --region $region --output table
+        else
+            echo "# aws cloudformation create-stack --stack-name Example-VPCPeeringConnection \\"
+            echo ">                                 --template-body file://$templatesdir/Example-VPCPeeringConnection.json \\"
+            echo ">                                 --parameters ParameterKey=SourceVPCNetwork,ParameterValue=$source_vpc_network \\"
+            echo ">                                              ParameterKey=SourcePublicSubnetNetwork,ParameterValue=$source_private_subnet_network \\"
+            echo ">                                              ParameterKey=DestVPCNetwork,ParameterValue=$dest_vpc_network \\"
+            echo ">                                              ParameterKey=DestPrivateSubnetNetwork,ParameterValue=$dest_private_subnet_network \\"
+            echo ">                                              ParameterKey=InstanceType,ParameterValue=$instance_type \\"
+            echo ">                                              ParameterKey=KeyPair,ParameterValue=$keypair \\"
+            echo ">                                 --capabilities CAPABILITY_IAM \\"
+            echo ">                                 --tags Key=Company,Value=Example \\"
+            echo ">                                        Key=System,Value=Example \\"
+            echo ">                                        Key=Environment,Value=Example \\"
+            echo ">                                        Key=Owner,Value=$OWNER_EMAIL \\"
+            echo ">                                 --profile $profile --region $region --output table"
+            aws cloudformation create-stack --stack-name Example-VPCPeeringConnection \
+                                            --template-body file://$templatesdir/Example-VPCPeeringConnection.json \
+                                            --parameters ParameterKey=SourceVPCNetwork,ParameterValue=$source_vpc_network \
+                                                         ParameterKey=SourcePublicSubnetNetwork,ParameterValue=$source_private_subnet_network \
+                                                         ParameterKey=DestVPCNetwork,ParameterValue=$dest_vpc_network \
+                                                         ParameterKey=DestPrivateSubnetNetwork,ParameterValue=$dest_private_subnet_network \
+                                                         ParameterKey=InstanceType,ParameterValue=$instance_type \
+                                                         ParameterKey=KeyPair,ParameterValue=$keypair \
+                                            --capabilities CAPABILITY_IAM \
+                                            --tags Key=Company,Value=Example \
+                                                   Key=System,Value=Example \
+                                                   Key=Environment,Value=Example \
+                                                   Key=Owner,Value=$OWNER_EMAIL \
+                                            --profile $profile --region $region --output table
+        fi
+
+        next
+    fi
+fi
+
+
+((++step))
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Monitor Stack creation"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "aws cloudformation describe-stacks --stack-name Example-VPCPeeringConnection \\"
+echo "                                   --query 'Stacks[].[StackName,StackStatus]' \\"
+echo "                                   --profile $profile --region $region --output table"
+echo
+echo "aws cloudformation describe-stack-events --stack-name Example-VPCPeeringConnection --max-items 5 \\"
+echo "                                         --query 'StackEvents[].[LogicalResourceId,ResourceStatus,Timestamp]' \\"
+echo "                                         --profile $profile --region $region --output table"
+
+if [ "$(aws cloudformation describe-stacks --stack-name Example-VPCPeeringConnection \
+                                           --query 'Stacks[].StackStatus' \
+                                           --profile $profile --region $region --output text 2> /dev/null)" = "CREATE_COMPLETE" ]; then
+    echo
+    tput rev
+    echo "Already Complete!"
+    tput sgr0
+
+    next 50
+
+else
+    run 50
+
+    if [ $choice = y ]; then
+        echo
+        echo "# aws cloudformation describe-stacks --stack-name Example-VPCPeeringConnection \\"
+        echo ">                                    --query 'Stacks[].[StackName,StackStatus]' \\"
+        echo ">                                    --profile $profile --region $region --output table"
+        aws cloudformation describe-stacks --stack-name Example-VPCPeeringConnection \
+                                           --query 'Stacks[].[StackName,StackStatus]' \
+                                           --profile $profile --region $region --output table 2> /dev/null
+        pause
+
+        attempt=0
+        seconds=$create_default
+        while ((attempt++ <= create_attempts)); do
+            echo
+            echo "# aws cloudformation describe-stack-events --stack-name Example-VPCPeeringConnection --max-items 5 \\"
+            echo ">                                          --query 'StackEvents[].[LogicalResourceId,ResourceStatus,Timestamp]' \\"
+            echo ">                                          --profile $profile --region $region --output table"
+            aws cloudformation describe-stack-events --stack-name Example-VPCPeeringConnection --max-items 5 \
+                                                     --query 'StackEvents[].[LogicalResourceId,ResourceStatus,Timestamp]' \
+                                                     --profile $profile --region $region --output table 2> /dev/null
+
+            status=$(aws cloudformation describe-stacks --stack-name Example-VPCPeeringConnection \
+                                                        --query 'Stacks[].StackStatus' \
+                                                        --profile $profile --region $region --output text 2> /dev/null)
+            RC=$?
+            if [ -z "$status" -o "$status" = "CREATE_COMPLETE" -o "$status" = "CREATE_FAILED" -o "$status" = "ROLLBACK_COMPLETE" ]; then
+                break
+            else
+                echo
+                echo -n "Not finished ($RC). Waiting $seconds seconds..."
+                sleep $seconds
+                echo " Done"
+            fi
+        done
+
+        next
+    fi
+fi
+
+
+((++step))
+if [ $verbose = 1 ]; then
+    clear
+    echo
+    echo "============================================================"
+    echo
+    echo "$(printf '%2d' $step). List Resulting Stacks"
+    echo
+    echo "============================================================"
+    echo
+    echo "Commands:"
+    echo
+    echo "aws cloudformation describe-stacks --query 'Stacks[].[StackName,StackStatus]' \\"
+    echo "                                   --profile $profile --region $region --output table"
+    echo
+
+
+    run 50
+
+    if [ $choice = y ]; then
+        echo
+        echo "# aws cloudformation describe-stacks --query 'Stacks[].[StackName,StackStatus]' \\"
+        echo ">                                    --profile $profile --region $region --output table"
+        aws cloudformation describe-stacks --query 'Stacks[].[StackName,StackStatus]' \
+                                           --profile $profile --region $region --output table
+
+        next
+    fi
+fi
+
+
+((++step))
+if [ $verbose = 1 ]; then
+    clear
+    echo
+    echo "============================================================"
+    echo
+    echo "$(printf '%2d' $step). List Resulting Stack Resources"
+    echo
+    echo "============================================================"
+    echo
+    echo "Commands:"
+    echo
+    echo "aws cloudformation describe-stack-resources --stack-name Example-VPCPeeringConnection \\"
+    echo "                                            --query 'StackResources[].[ResourceType,LogicalResourceId,PhysicalResourceId,ResourceStatus]' \\"
+    echo "                                            --profile $profile --region $region --output table"
+
+    run 50
+
+    if [ $choice = y ]; then
+        echo
+        echo "# aws cloudformation describe-stack-resources --stack-name Example-VPCPeeringConnection \\"
+        echo ">                                             --query 'StackResources[].[ResourceType,LogicalResourceId,PhysicalResourceId,ResourceStatus]' \\"
+        echo ">                                             --profile $profile --region $region --output table"
+        aws cloudformation describe-stack-resources --stack-name Example-VPCPeeringConnection \
+                                                    --query 'StackResources[].[ResourceType,LogicalResourceId,PhysicalResourceId,ResourceStatus]' \
+                                                    --profile $profile --region $region --output table 2> /dev/null
+
+        next
+    fi
+fi
+
+end=$(date +%s)
+
+echo
+case $(uname) in
+  Darwin)
+    echo "(time: $(date -u -r $((end-start)) +"%T"))";;
+  *)
+    echo "(time: $(date -u -d @$((end-start)) +"%T"))";;
+esac

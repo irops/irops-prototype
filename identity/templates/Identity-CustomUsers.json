@@ -1,0 +1,209 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Identity-CustomUsers Template. This creates Custom IAM Users within the Identity Account.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "StandardManagedPoliciesStackName",
+            "CustomManagedPoliciesStackName",
+            "StandardGroupsStackName",
+            "CustomGroupsStackName"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "StandardManagedPoliciesStackName" : { "default" : "Standard ManagedPolicies Stack Name" },
+        "CustomManagedPoliciesStackName" : { "default" : "Custom ManagedPolicies Stack Name" },
+        "StandardGroupsStackName" : { "default" : "Standard Groups Stack Name" },
+        "CustomGroupsStackName" : { "default" : "Custom Groups Stack Name" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "StandardManagedPoliciesStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard ManagedPolicies.",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardManagedPolicies",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "CustomManagedPoliciesStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Custom ManagedPolicies.",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "CustomManagedPolicies",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "StandardGroupsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Groups.",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardGroups",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "CustomGroupsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Custom Groups.",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "CustomGroups",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    }
+  },
+
+  "Resources" : {
+    "ApplicationAdministratorUser" : {
+      "Type" : "AWS::IAM::User",
+      "Properties" : {
+        "UserName" : "applicationadministrator",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${CustomGroupsStackName}-ApplicationAdministratorsGroup" }}
+        ]
+      }
+    },
+
+    "MCrawfordUser" : {
+      "Type" : "AWS::IAM::User",
+      "Properties" : {
+        "UserName" : "mcrawford",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-AdministratorsGroup" }},
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-BastionUsersGroup" }}
+        ]
+      }
+    },
+
+    "KMcCutchenUser" : {
+      "Type" : "AWS::IAM::User",
+      "Properties" : {
+        "UserName" : "kmccutchen",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-AdministratorsGroup" }},
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-BastionUsersGroup" }}
+        ]
+      }
+    },
+
+    "GVeazeyUser" : {
+      "Type" : "AWS::IAM::User",
+      "Properties" : {
+        "UserName" : "gveazey",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-AdministratorsGroup" }},
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-BastionUsersGroup" }}
+        ]
+      }
+    },
+
+    "VKamalakaranUser" : {
+      "Type" : "AWS::IAM::User",
+      "Properties" : {
+        "UserName" : "vkamalakaran",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-UsersGroup" }}
+        ]
+      }
+    },
+
+    "NShethUser" : {
+      "Type" : "AWS::IAM::User",
+      "Properties" : {
+        "UserName" : "nsheth",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-UsersGroup" }}
+        ]
+      }
+    },
+
+    "CLaneUser" : {
+      "Type" : "AWS::IAM::User",
+      "Properties" : {
+        "UserName" : "clane",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-UsersGroup" }}
+        ]
+      }
+    },
+
+    "CBradenUser" : {
+      "Type" : "AWS::IAM::User",
+      "Properties" : {
+        "UserName" : "cbraden",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-UsersGroup" }}
+        ]
+      }
+    },
+
+    "MGowdaUser" : {
+      "Type" : "AWS::IAM::User",
+      "Properties" : {
+        "UserName" : "mgowda",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-UsersGroup" }},
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-BastionUsersGroup" }}
+        ]
+      }
+    },
+
+    "GEverettUser" : {
+      "Type" : "AWS::IAM::User",
+      "Properties" : {
+        "UserName" : "geverett",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-UsersGroup" }},
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-BastionUsersGroup" }}
+        ]
+      }
+    },
+
+    "KKempelUser" : {
+      "Type": "AWS::IAM::User",
+      "Properties": {
+        "UserName": "kkempel",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-UsersGroup" }}
+        ]
+      }
+    },
+
+    "JHarvenUser" : {
+      "Type": "AWS::IAM::User",
+      "Properties": {
+        "UserName": "jharven",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-UsersGroup" }}
+        ]
+      }
+    }
+  }
+}

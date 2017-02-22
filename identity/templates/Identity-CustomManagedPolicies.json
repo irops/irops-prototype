@@ -1,0 +1,41 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Identity-CustomManagedPolicies Template. This creates Custom IAM ManagedPolicies within the Identity Account.",
+
+  "Resources" : {
+    "ApplicationAdministratorAccess" : {
+      "Type" : "AWS::IAM::ManagedPolicy",
+      "Properties" : {
+        "Description" : "Provides partial access to Development AWS services and resources, needed for Application Administrators.",
+        "Path" : "/",
+        "PolicyDocument" : {
+          "Version" :"2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [
+              "ec2:StartInstances",
+              "ec2:StopInstances",
+              "ec2:RebootInstances",
+              "ec2:TerminateInstances"
+            ],
+            "Condition" : {
+              "StringEquals" : { "ec2:ResourceTag/Environment" : "Development" }
+            },
+            "Resource": [
+              { "Fn::Sub" : "arn:aws:ec2::${AWS::AccountId}:instance/*" }
+            ],
+          }]
+        }
+      }
+    }
+  },
+
+  "Outputs" : {
+    "ApplicationAdministratorAccess" : {
+      "Description" : "The ApplictionAdministratorAccess ManagedPolicy ARN",
+      "Value" :  { "Ref" : "ApplicationAdministratorAccess" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-ApplicationAdministratorAccess" }}
+    }
+  }
+}

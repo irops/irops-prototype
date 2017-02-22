@@ -1,0 +1,30 @@
+# Build Targets
+*/target
+target
+*.class
+*.jar
+*.war
+*.ear
+
+# Junk
+.DS_Store
+Thumbs.db
+.*.swp
+*.versionsBackup
+~$*
+
+# Log files
+*.log
+*.log.*
+
+# Secure files
+certs-private/
+certs/*.key
+certs/*.key.passphrase
+certs/*.pfx.passphrase
+*-passwords.txt
+keys-private/
+urls.xlsx
+
+# Old files
+old/

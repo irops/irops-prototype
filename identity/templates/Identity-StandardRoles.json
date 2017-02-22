@@ -1,0 +1,61 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Identity-StandardRoles Template. This creates Standard IAM Roles within the Identity Account. Roles will usually be created within the Application Template where they are used, instead of globally in this Template. So, this Template contains only a trivial Role used as an example of the technique.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "StandardManagedPoliciesStackName"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "StandardManagedPoliciesStackName" : { "default" : "Standard ManagedPolicies Stack Name" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "StandardManagedPoliciesStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard ManagedPolicies.",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardManagedPolicies",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    }
+  },
+
+  "Resources" : {
+    "UserRole" : {
+      "Type" : "AWS::IAM::Role",
+      "Properties" : {
+        "RoleName" : "User",
+        "Path" : "/",
+        "AssumeRolePolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [ "sts:AssumeRole" ],
+            "Principal" : { "Service" : [ "ec2.amazonaws.com" ]},
+          }]
+        },
+        "ManagedPolicyArns" : [ "arn:aws:iam::aws:policy/ReadOnlyAccess" ]
+      }
+    }
+  },
+
+  "Outputs" : {
+    "UserRole" : {
+      "Description" : "The UserRole Name",
+      "Value" :  { "Ref" : "UserRole" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-UserRole" }}
+    }
+  }
+}

@@ -1,0 +1,121 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Core-StandardTopics Template. This creates Standard SNS Topics within the Core Account.",
+
+  "Resources" : {
+    "AdministratorsTopic" : {
+      "Type" : "AWS::SNS::Topic",
+      "Properties" : {
+        "TopicName" : "Administrators",
+        "DisplayName" : "Administrators"
+      }
+    },
+
+    "ManagersTopic" : {
+      "Type" : "AWS::SNS::Topic",
+      "Properties" : {
+        "TopicName" : "Managers",
+        "DisplayName" : "Managers"
+      }
+    },
+
+    "DevelopersTopic" : {
+      "Type" : "AWS::SNS::Topic",
+      "Properties" : {
+        "TopicName" : "Developers",
+        "DisplayName" : "Developers"
+      }
+    },
+
+    "UsersTopic" : {
+      "Type" : "AWS::SNS::Topic",
+      "Properties" : {
+        "TopicName" : "Users",
+        "DisplayName" : "Users"
+      }
+    },
+
+    "EventsTopic" : {
+      "Type" : "AWS::SNS::Topic",
+      "Properties" : {
+        "TopicName" : "Events",
+        "DisplayName" : "Events"
+      }
+    },
+
+    "EventsSMSTopic" : {
+      "Type" : "AWS::SNS::Topic",
+      "Properties" : {
+        "TopicName" : "EventsSMS",
+        "DisplayName" : "Events"
+      }
+    },
+
+    "AlarmsTopic" : {
+      "Type" : "AWS::SNS::Topic",
+      "Properties" : {
+        "TopicName" : "Alarms",
+        "DisplayName" : "Alarms"
+      }
+    },
+
+    "AlarmsSMSTopic" : {
+      "Type" : "AWS::SNS::Topic",
+      "Properties" : {
+        "TopicName" : "AlarmsSMS",
+        "DisplayName" : "Alarms"
+      }
+    }
+  },
+
+  "Outputs" : {
+    "AdministratorsTopic" : {
+      "Description" : "The Administrators Topic ARN",
+      "Value" :  { "Ref" : "AdministratorsTopic" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-AdministratorsTopic" }}
+    },
+
+    "ManagersTopic" : {
+      "Description" : "The Managers Topic ARN",
+      "Value" :  { "Ref" : "ManagersTopic" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-ManagersTopic" }}
+    },
+
+    "DevelopersTopic" : {
+      "Description" : "The Developers Topic ARN",
+      "Value" :  { "Ref" : "DevelopersTopic" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-DevelopersTopic" }}
+    },
+
+    "UsersTopic" : {
+      "Description" : "The Users Topic ARN",
+      "Value" :  { "Ref" : "UsersTopic" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-UsersTopic" }}
+    },
+
+    "EventsTopic" : {
+      "Description" : "The Events Topic ARN",
+      "Value" :  { "Ref" : "EventsTopic" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-EventsTopic" }}
+    },
+
+    "EventsSMSTopic" : {
+      "Description" : "The EventsSMS Topic ARN",
+      "Value" :  { "Ref" : "EventsSMSTopic" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-EventsSMSTopic" }}
+    },
+
+    "AlarmsTopic" : {
+      "Description" : "The Alarms Topic ARN",
+      "Value" :  { "Ref" : "AlarmsTopic" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-AlarmsTopic" }}
+    },
+
+    "AlarmsSMSTopic" : {
+      "Description" : "The AlarmsSMS Topic ARN",
+      "Value" :  { "Ref" : "AlarmsSMSTopic" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-AlarmsSMSTopic" }}
+    }
+  }
+}

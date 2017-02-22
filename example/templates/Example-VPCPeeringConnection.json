@@ -1,0 +1,304 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Example-VPCPeeringConnection Template. This template creates source and destination VPCs, then a peering connection between them.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Source VPC Configuration" },
+          "Parameters" : [ "SourceVPCNetwork", "SourcePublicSubnetNetwork" ]
+        },
+        {
+          "Label" : { "default" : "Destination VPC Configuration" },
+          "Parameters" : [ "DestVPCNetwork", "DestPrivateSubnetNetwork" ]
+        }
+        {
+          "Label" : { "default" : "Instance Configuration" },
+          "Parameters" : [ "KeyPair", "InstanceType" ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "SourceVPCNetwork" : { "default" : "Source VPC Network" },
+        "SourcePublicSubnetNetwork" : { "default" : "Source Public Subnet Network" },
+        "DestVPCNetwork" : { "default" : "Destination VPC Network" },
+        "DestPrivateSubnetNetwork" : { "default" : "Destination Private Subnet Network" },
+        "KeyPair" : { "default" : "KeyPair" },
+        "InstanceType" : { "default" : "InstanceType" }
+      }
+    }
+  },
+
+  "Parameters" : 
+    "SourceVPCNetwork" : {
+      "Description" : "The network for the Source VPC.",
+      "Type" : "String",
+      "MinLength" : "9",
+      "MaxLength" : "18",
+      "Default" : "10.0.0.0/16",
+      "AllowedPattern" : "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "SourcePublicSubnetNetwork" : {
+      "Description" : "The network for the Source VPC Public Subnet.",
+      "Type" : "String",
+      "MinLength" : "9",
+      "MaxLength" : "18",
+      "Default" : "10.0.0.0/24",
+      "AllowedPattern" : "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "DestVPCNetwork" : {
+      "Description" : "The network for the Dest VPC.",
+      "Type" : "String",
+      "MinLength" : "9",
+      "MaxLength" : "18",
+      "Default" : "10.1.0.0/16",
+      "AllowedPattern" : "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "DestPrivateSubnetNetwork" : {
+      "Description" : "The network for the Dest VPC Private Subnet.",
+      "Type" : "String",
+      "MinLength" : "9",
+      "MaxLength" : "18",
+      "Default" : "10.1.0.0/24",
+      "AllowedPattern" : "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "KeyPair" : {
+      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instances",
+      "Type" : "AWS::EC2::KeyPair::KeyName",
+      "Default" : "demo",
+      "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
+    },
+
+    "InstanceType" : {
+      "Description" : "EC2 instance type",
+      "Type" : "String",
+      "Default" : "t2.nano",
+      "AllowedValues" : [ "t2.nano", "t2.micro", "t2.small", "t2.medium", "t2.large" ],
+      "ConstraintDescription" : "must be a valid EC2 T2 instance type."
+    }
+  },
+
+  "Mappings" : {
+    "AWSRegionToAMI" : {
+      "us-east-1"      : { "64" : "ami-fb8e9292" },
+      "us-west-2"      : { "64" : "ami-043a5034" },
+      "us-west-1"      : { "64" : "ami-7aba833f" },
+      "eu-west-1"      : { "64" : "ami-2918e35e" },
+      "ap-southeast-1" : { "64" : "ami-b40d5ee6" },
+      "ap-southeast-2" : { "64" : "ami-3b4bd301" },
+      "ap-northeast-1" : { "64" : "ami-c9562fc8" },
+      "sa-east-1"      : { "64" : "ami-215dff3c" }
+    }
+  },
+
+  "Resources" : {
+    "SourceVPC" : {
+      "Type" : "AWS::EC2::VPC",
+      "Properties" : {
+        "CidrBlock" : { "Ref" : "SourceVPCNetwork" },
+        "EnableDnsSupport" : true,
+        "EnableDnsHostnames" : true,
+        "InstanceTenancy" : "default",
+        "Tags" : [
+          { "Key" : "Name", "Value" : "PeeringExampleSource-VPC" }
+        ]
+      }
+    },
+
+    "SourceInternetGateway" : {
+      "Type" : "AWS::EC2::InternetGateway",
+      "Properties" : {
+        "Tags" : [
+          { "Key" : "Name", "Value" : "PeeringExampleSource-InternetGateway" }
+        ]
+      }
+    },
+
+    "SourceInternetGatewayAttachmnt" : {
+      "Type" : "AWS::EC2::VPCGatewayAttachment",
+      "Properties" : {
+        "VpcId" : { "Ref" : "SourceVPC" },
+        "InternetGatewayId" : { "Ref" : "SourceInternetGateway" }
+      }
+    },
+
+    "SourcePublicSubnet" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "CidrBlock" : { "Ref" : "SourcePublicSubnetNetwork" },
+        "VpcId" : { "Ref" : "SourceVPC" },
+        "Tags" : [
+          { "Key" : "Name", "Value" : "PeeringExampleSource-SourcePublicSubnet" }
+        ]
+      }
+    },
+
+    "SourcePublicRouteTable" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Properties" : {
+        "VpcId" : { "Ref" : "SourceVPC" },
+        "Tags" : [
+          { "Key" : "Name", "Value" : "PeeringExampleSource-SourcePublicRouteTable" }
+        ]
+      }
+    },
+
+    "SourcePublicDefaultRoute" : {
+      "Type" : "AWS::EC2::Route",
+      "DependsOn" : "SourceInternetGatewayAttachmnt",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "SourcePublicRouteTable" },
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "GatewayId" : { "Ref" : "SourceInternetGateway" }
+      }
+    },
+
+    "SourcePublicDestRoute" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Ref" : "DestVPCNetwork" },
+        "RouteTableId" : { "Ref" : "SourcePublicRouteTable" },
+        "VpcPeeringConnectionId" : { "Ref" : "DestVPCPeeringConnection" }
+      }
+    },
+
+    "SourcePublicSubnetRouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "SourcePublicSubnet" },
+        "RouteTableId" : { "Ref" : "SourcePublicRouteTable" }
+      }
+    },
+
+    "SourcePublicSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Source Public Security Group",
+        "VpcId" : { "Ref" : "SourceVPC" },
+        "SecurityGroupIngress" : [
+          { "IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : "0.0.0.0/0" },
+          { "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0" }
+        ],
+        "Tags" : [
+          { "Key" : "Name", "Value" : "PeeringExampleSource-SourcePublicSecurityGroup" }
+        ]
+      }
+    },
+
+    "SourcePublicInstance" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "ImageId" : { "Fn::FindInMap" : [ "AWSRegionToAMI", { "Ref" : "AWS::Region" }, "64" ]},
+        "KeyName" : { "Ref" : "KeyPair" },
+        "NetworkInterfaces" : [{
+          "AssociatePublicIpAddress" : "true",
+          "DeviceIndex" : "0",
+          "GroupSet" : [{ "Ref" : "SourcePublicSecurityGroup" }],
+          "SubnetId" : { "Ref" : "SourcePublicSubnet" }
+        }],
+        "Tags" : [
+          { "Key" : "Name", "Value" : "PeeringExampleSource-SourcePublicInstance" }
+        ]
+      }
+    },
+
+    "DestVPCPeeringConnection" : {
+      "Type" : "AWS::EC2::VPCPeeringConnection",
+      "Properties" : {
+        "VpcId" : { "Ref" : "SourceVPC" },
+        "PeerVpcId" : { "Ref" : "DestVPC" },
+        "Tags" : [
+          { "Key" : "Name", "Value" : "PeeringExampleSource-DestVPCPeeringConnection" }
+        ]
+      }
+    },
+
+    "DestVPC" : {
+      "Type" : "AWS::EC2::VPC",
+      "Properties" : {
+        "CidrBlock" : { "Ref" : "DestVPCNetwork" },
+        "EnableDnsSupport" : false,
+        "EnableDnsHostnames" : false,
+        "InstanceTenancy" : "default",
+        "Tags" : [
+          { "Key" : "Name", "Value" : "PeeringExampleDest-VPC" }
+        ]
+      }
+    },
+
+    "DestPrivateSubnet" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "DestVPC" },
+        "CidrBlock" : { "Ref" : "DestPrivateSubnetNetwork" },
+        "Tags" : [
+          { "Key" : "Name", "Value" : "PeeringExampleDest-DestPrivateSubnet" }
+        ]
+      }
+    },
+
+    "DestPrivateRouteTable" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Properties" : {
+        "VpcId" : { "Ref" : "DestVPC" },
+        "Tags" : [
+          { "Key" : "Name", "Value" : "PeeringExampleDest-DestPrivateRouteTable" }
+        ]
+      }
+    },
+
+    "DestPrivateDefaultRoute" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "RouteTableId" : { "Ref" : "DestPrivateRouteTable" },
+        "VpcPeeringConnectionId" : { "Ref" : "DestVPCPeeringConnection" }
+      }
+    },
+
+    "DestPrivateSubnetRouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "DestPrivateSubnet" },
+        "RouteTableId" : { "Ref" : "DestPrivateRouteTable" }
+      }
+    },
+
+    "DestPrivateSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Dest Private Security Group",
+        "VpcId" : { "Ref" : "DestVPC" },
+        "SecurityGroupIngress" : [
+          { "IpProtocol" : "-1", "FromPort" : "0", "ToPort" : "65535", "CidrIp" : "0.0.0.0/0" }
+        ],
+        "Tags" : [
+          { "Key" : "Name", "Value" : "PeeringExampleDest-DestPrivateSecurityGroup" }
+        ]
+      }
+    },
+
+    "DestPrivateInstance" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "ImageId" : { "Fn::FindInMap" : [ "AWSRegionToAMI", { "Ref" : "AWS::Region" }, "64" ]},
+        "KeyName" : { "Ref" : "KeyPair" },
+        "SubnetId" : { "Ref" : "DestPrivateSubnet" },
+        "SecurityGroupIds" : [{ "Ref" : "DestPrivateSecurityGroup" }],
+        "Tags" : [
+          { "Key" : "Name", "Value" : "PeeringExampleDest-DestPrivateInstance" }
+        ]
+      }
+    }
+  }
+}

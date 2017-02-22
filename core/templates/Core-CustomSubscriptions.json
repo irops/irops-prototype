@@ -1,0 +1,181 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Core-CustomSubscriptions Template. This creates Custom SNS Subscriptions to Standard Topics within the Core Account.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "StandardTopicsStackName"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "StandardTopicsStackName" : { "default" : "Standard Topics Stack Name" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "StandardTopicsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Topics.",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardTopics",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    }
+  },
+
+  "Conditions" : {
+    "UseSMS" : { "Fn::Or" : [{ "Fn::Equals" : [{ "Ref" : "AWS::Region" }, "us-east-1" ]},
+                             { "Fn::Equals" : [{ "Ref" : "AWS::Region" }, "us-west-2" ]},
+                             { "Fn::Equals" : [{ "Ref" : "AWS::Region" }, "eu-west-1" ]},
+                             { "Fn::Equals" : [{ "Ref" : "AWS::Region" }, "ap-northeast-1" ]},
+                             { "Fn::Equals" : [{ "Ref" : "AWS::Region" }, "ap-southeast-1" ]},
+                             { "Fn::Equals" : [{ "Ref" : "AWS::Region" }, "ap-southeast-2" ]}
+                            ]}
+  },
+
+  "Resources" : {
+    "AdministratorsTopicMCrawfordEmailSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-AdministratorsTopic" }},
+        "Protocol" : "email",
+        "Endpoint" : "mcrawford@hpe.com"
+      }
+    },
+
+    "AdministratorsTopicKMcCutchenEmailSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-AdministratorsTopic" }},
+        "Protocol" : "email",
+        "Endpoint" : "kerry.mccutchen@hpe.com"
+      }
+    },
+
+    "AdministratorsTopicGVeazeyEmailSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-AdministratorsTopic" }},
+        "Protocol" : "email",
+        "Endpoint" : "gregg.veazey@hpe.com"
+      }
+    },
+
+    "EventsTopicMCrawfordEmailSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-EventsTopic" }},
+        "Protocol" : "email",
+        "Endpoint" : "mcrawford@hpe.com"
+      }
+    },
+
+    "EventsTopicKMcCutchenEmailSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-EventsTopic" }},
+        "Protocol" : "email",
+        "Endpoint" : "kerry.mccutchen@hpe.com"
+      }
+    },
+
+    "EventsTopicGVeazeyEmailSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-EventsTopic" }},
+        "Protocol" : "email",
+        "Endpoint" : "gregg.veazey@hpe.com"
+      }
+    },
+
+    "EventsSMSTopicMCrawfordSMSSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-EventsSMSTopic" }},
+        "Protocol" : { "Fn::If" : [ "UseSMS", "sms", "email" ]},
+        "Endpoint" : { "Fn::If" : [ "UseSMS", "+14156525483", "mcrawford@hpe.com" ]}
+      }
+    },
+
+    "EventsSMSTopicKMcCutchenSMSSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-EventsSMSTopic" }},
+        "Protocol" : { "Fn::If" : [ "UseSMS", "sms", "email" ]},
+        "Endpoint" : { "Fn::If" : [ "UseSMS", "+19542421633", "kerry.mccutchen@hpe.com" ]}
+      }
+    },
+
+    "EventsSMSTopicGVeazeySMSSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-EventsSMSTopic" }},
+        "Protocol" : { "Fn::If" : [ "UseSMS", "sms", "email" ]},
+        "Endpoint" : { "Fn::If" : [ "UseSMS", "+12143920541", "gregg.veazey@hpe.com" ]}
+      }
+    },
+
+    "AlarmsTopicMCrawfordEmailSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-AlarmsTopic" }},
+        "Protocol" : "email",
+        "Endpoint" : "mcrawford@hpe.com"
+      }
+    },
+
+    "AlarmsTopicKMcCutchenEmailSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-AlarmsTopic" }},
+        "Protocol" : "email",
+        "Endpoint" : "kerry.mccutchen@hpe.com"
+      }
+    },
+
+    "AlarmsTopicGVeazeyEmailSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-AlarmsTopic" }},
+        "Protocol" : "email",
+        "Endpoint" : "gregg.veazey@hpe.com"
+      }
+    },
+
+    "AlarmsSMSTopicMCrawfordSMSSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-AlarmsSMSTopic" }},
+        "Protocol" : { "Fn::If" : [ "UseSMS", "sms", "email" ]},
+        "Endpoint" : { "Fn::If" : [ "UseSMS", "+14156525483", "mcrawford@hpe.com" ]}
+      }
+    },
+
+    "AlarmsSMSTopicKMcCutchenSMSSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-AlarmsSMSTopic" }},
+        "Protocol" : { "Fn::If" : [ "UseSMS", "sms", "email" ]},
+        "Endpoint" : { "Fn::If" : [ "UseSMS", "+19542421633", "kerry.mccutchen@hpe.com" ]}
+      }
+    },
+
+    "AlarmsSMSTopicGVeazeySMSSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-AlarmsSMSTopic" }},
+        "Protocol" : { "Fn::If" : [ "UseSMS", "sms", "email" ]},
+        "Endpoint" : { "Fn::If" : [ "UseSMS", "+12143920541", "gregg.veazey@hpe.com" ]}
+      }
+    }
+  }
+}

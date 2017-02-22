@@ -1,0 +1,227 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Identity-StandardManagedPolicies Template. This creates Standard IAM ManagedPolicies within the Identity Account.",
+
+  "Resources" : {
+    "AdministratorWithoutBillingAccess" : {
+      "Type" : "AWS::IAM::ManagedPolicy",
+      "Properties" : {
+        "Description" : "Provides full access to AWS services and resources, except for Billing information.",
+        "Path" : "/",
+        "PolicyDocument" : {
+          "Version" :"2012-10-17",
+          "Statement" : [{
+            "Sid" : "AllowAdministratorAccess",
+            "Effect" : "Allow",
+            "Action" : "*",
+            "Resource" : "*"
+          },
+          {
+            "Sid" : "DenyBillingAccess",
+            "Effect" : "Deny",
+            "Action" : [
+                "aws-portal:*Billing",
+                "aws-portal:*Usage",
+                "aws-portal:*PaymentMethods",
+                "budgets:ViewBudget",
+                "budgets:ModifyBudget"
+            ],
+            "Resource" : "*"
+          }]
+        }
+      }
+    },
+
+    "LimitedReadOnlyAccess" : {
+      "Type" : "AWS::IAM::ManagedPolicy",
+      "Properties" : {
+        "Description" : "Provides read-only access to a limited set of AWS services and resources.",
+        "Path" : "/",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Sid" : "AllowLimitedReadOnlyAccess",
+            "Effect" : "Allow",
+            "Action" : [
+              "application-autoscaling:Describe*",
+              "autoscaling:Describe*",
+              "cloudformation:Describe*",
+              "cloudformation:Get*",
+              "cloudformation:List*",
+              "cloudfront:Get*",
+              "cloudfront:List*",
+              "cloudwatch:Describe*",
+              "cloudwatch:Get*",
+              "cloudwatch:List*",
+              "codebuild:BatchGetBuilds",
+              "codebuild:BatchGetProjects",
+              "codebuild:List*",
+              "codecommit:BatchGetRepositories",
+              "codecommit:Get*",
+              "codecommit:GitPull",
+              "codecommit:List*", 
+              "codedeploy:Batch*",
+              "codedeploy:Get*",
+              "codedeploy:List*",
+              "dynamodb:BatchGetItem",
+              "dynamodb:DescribeLimits",
+              "dynamodb:DescribeTable",
+              "dynamodb:GetItem",
+              "dynamodb:ListTables",
+              "dynamodb:Query",
+              "dynamodb:Scan",
+              "ec2:Describe*",
+              "ec2:GetConsoleOutput",
+              "ec2:GetConsoleScreenshot",
+              "ecs:Describe*",
+              "ecs:List*",
+              "elasticache:Describe*",
+              "elasticache:List*",
+              "elasticfilesystem:Describe*",
+              "elasticloadbalancing:Describe*",
+              "lambda:List*",
+              "lambda:Get*", 
+              "logs:Describe*",
+              "logs:Get*",
+              "logs:FilterLogEvents",
+              "logs:TestMetricFilter",
+              "rds:Describe*",
+              "rds:ListTagsForResource",
+              "route53:Get*",
+              "route53:List*",
+              "s3:Get*",
+              "s3:List*",
+              "sns:Get*",
+              "sns:List*",
+              "tag:Get*"
+            ],
+            "Resource" : "*"
+          }]
+        }
+      }
+    },
+
+    "UserSelfManagementAccess" : {
+      "Type" : "AWS::IAM::ManagedPolicy",
+      "Properties" : {
+        "Description" : "Provides limited access to IAM services needed by a user for self-management.",
+        "Path" : "/",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Sid" : "AllowAllUsersToListAccounts",
+            "Effect" : "Allow",
+            "Action" : [
+              "iam:ListAccountAliases",
+              "iam:ListUsers",
+              "iam:GetAccountSummary"
+            ],
+            "Resource" : "*"
+          },
+          {
+            "Sid" : "AllowIndividualUserToSeeAndManageTheirOwnAccountInformation",
+            "Effect" : "Allow",
+            "Action" : [
+              "iam:ChangePassword",
+              "iam:CreateAccessKey",
+              "iam:CreateLoginProfile",
+              "iam:DeleteAccessKey",
+              "iam:DeleteLoginProfile",
+              "iam:GetAccountPasswordPolicy",
+              "iam:GetLoginProfile",
+              "iam:ListAccessKeys",
+              "iam:UpdateAccessKey",
+              "iam:UpdateLoginProfile",
+              "iam:ListSigningCertificates",
+              "iam:DeleteSigningCertificate",
+              "iam:UpdateSigningCertificate",
+              "iam:UploadSigningCertificate",
+              "iam:ListSSHPublicKeys",
+              "iam:GetSSHPublicKey",
+              "iam:DeleteSSHPublicKey",
+              "iam:UpdateSSHPublicKey",
+              "iam:UploadSSHPublicKey"
+            ],
+            "Resource" : [
+              { "Fn::Sub" : "arn:aws:iam::${AWS::AccountId}:user/${!aws:username}" }
+            ]
+          },
+          {
+            "Sid" : "AllowIndividualUserToListTheirOwnMFA",
+            "Effect" : "Allow",
+            "Action" : [
+              "iam:ListVirtualMFADevices",
+              "iam:ListMFADevices"
+            ],
+            "Resource" : [
+              { "Fn::Sub" : "arn:aws:iam::${AWS::AccountId}:mfa/*" },
+              { "Fn::Sub" : "arn:aws:iam::${AWS::AccountId}:user/${!aws:username}" }
+            ]
+          },
+          {
+            "Sid" : "AllowIndividualUserToManageTheirOwnMFA",
+            "Effect" : "Allow",
+            "Action" : [
+              "iam:CreateVirtualMFADevice",
+              "iam:DeactivateMFADevice",
+              "iam:DeleteVirtualMFADevice",
+              "iam:RequestSmsMfaRegistration",
+              "iam:FinalizeSmsMfaRegistration",
+              "iam:EnableMFADevice",
+              "iam:ResyncMFADevice"
+            ],
+            "Resource" : [
+              { "Fn::Sub" : "arn:aws:iam::${AWS::AccountId}:mfa/${!aws:username}" },
+              { "Fn::Sub" : "arn:aws:iam::${AWS::AccountId}:user/${!aws:username}" }
+            ]
+          }]
+        }
+      }
+    },
+
+    "MFARequirement" : {
+      "Type" : "AWS::IAM::ManagedPolicy",
+      "Properties" : {
+        "Description" : "Requires use of an MFA device to access services outside of IAM, which is required for a user to self-manage their account.",
+        "Path" : "/",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Sid" : "BlockAnyAccessOtherThanAboveUnlessSignedInWithMFA",
+            "Effect" : "Deny",
+            "NotAction" : "iam:*",
+            "Resource" : "*",
+            "Condition" : { "BoolIfExists" : { "aws:MultiFactorAuthPresent" : "false" }}
+          }]
+        }
+      }
+    }
+  },
+
+  "Outputs" : {
+    "AdministratorWithoutBillingAccess" : {
+      "Description" : "The AdministratorWithoutBillingAccess ManagedPolicy",
+      "Value" :  { "Ref" : "AdministratorWithoutBillingAccess" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-AdministratorWithoutBillingAccess" }}
+    },
+
+    "LimitedReadOnlyAccess" : {
+      "Description" : "The LimitedReadOnlyAccess ManagedPolicy",
+      "Value" :  { "Ref" : "LimitedReadOnlyAccess" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-LimitedReadOnlyAccess" }}
+    },
+
+    "UserSelfManagementAccess" : {
+      "Description" : "The UserSelfManagementAccess ManagedPolicy",
+      "Value" :  { "Ref" : "UserSelfManagementAccess" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-UserSelfManagementAccess" }}
+    },
+
+    "MFARequirement" : {
+      "Description" : "The MFARequirement ManagedPolicy",
+      "Value" :  { "Ref" : "MFARequirement" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-MFARequirement" }}
+    }
+  }
+}

@@ -1,0 +1,644 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Utility-LinuxBastions Template: This adds Linux Bastions to a VPC.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "VPCStackName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Application Configuration" },
+          "Parameters" : [
+            "CompanyName",
+            "SystemName",
+            "ApplicationName",
+            "UseMultiZone",
+            "UseStaticPublicAddress",
+            "UseStaticPrivateAddress",
+            "UseLogMonitoring",
+            "LogRetention",
+            "UseLocalUsers",
+            "KeyName",
+            "AdministratorNetwork"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "VPCStackName" : { "default" : "VPC Stack Name" },
+        "CompanyName" : { "default" : "Company Name" },
+        "SystemName" : { "default" : "System Name" },
+        "ApplicationName" : { "default" : "Application Name" },
+        "UseMultiZone" : { "default" : "Use Multi-Zone" },
+        "UseStaticPublicAddress" : { "default" : "Use Static Public Address" },
+        "UseStaticPrivateAddress" : { "default" : "Use Static Private Address" },
+        "UseLogMonitoring" : { "default" : "Use Log Monitoring" },
+        "LogRetention" : { "default" : "Log Retention" },
+        "UseLocalUsers" : { "default" : "Use Local Users" },
+        "KeyName" : { "default" : "Key Name" },
+        "AdministratorNetwork" : { "default" : "Administrator Network" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "VPCStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the VPC.",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-VPC",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "CompanyName" : {
+      "Description" : "Name of the Company associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "Demo",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "SystemName" : {
+      "Description" : "Name of the System associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "IROPS",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "ApplicationName" : {
+      "Description" : "Name of the Application associated with the Stack.",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "LinuxBastions",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "UseMultiZone" : {
+      "Description" : "Create Bastions in multiple Availability Zones",
+      "Type" : "String",
+      "Default" : "true",
+      "AllowedValues" : [ "true", "false" ],
+      "ConstraintDescription" : "must be either true or false."
+    },
+
+    "UseStaticPublicAddress" : {
+      "Description" : "Create and attach a separate Static Public Address",
+      "Type" : "String",
+      "Default" : "true",
+      "AllowedValues" : [ "true", "false" ],
+      "ConstraintDescription" : "must be either true or false."
+    },
+
+    "UseStaticPrivateAddress" : {
+      "Description" : "Create and attach a separate Static Private Address",
+      "Type" : "String",
+      "Default" : "true",
+      "AllowedValues" : [ "true", "false" ],
+      "ConstraintDescription" : "must be either true or false."
+    },
+
+    "UseLogMonitoring" : {
+      "Description" : "Send Logs to CloudWatch Logs",
+      "Type" : "String",
+      "Default" : "true",
+      "AllowedValues" : [ "true", "false" ],
+      "ConstraintDescription" : "must be either true or false."
+    },
+
+    "LogRetention" : {
+      "Description" : "Number of days to retain log events",
+      "Type" : "Number",
+      "Default" : 14,
+      "AllowedValues" : [ 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653 ],
+      "ConstraintDescription" : "must be: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827 or 3653."
+    },
+
+    "UseLocalUsers" : {
+      "Description" : "Synchronize IAM Users (with SSH Public Keys) to Bastion Users",
+      "Type" : "String",
+      "Default" : "true",
+      "AllowedValues" : [ "true", "false" ],
+      "ConstraintDescription" : "must be either true or false."
+    },
+
+    "KeyName" : {
+      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instances",
+      "Type" : "AWS::EC2::KeyPair::KeyName",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "demo",
+      "AllowedPattern" : "^[_a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
+    },
+
+    "AdministratorNetwork" : {
+      "Description" : "The IP address range that can be used to SSH to the EC2 instances",
+      "Type" : "String",
+      "MinLength" : "9",
+      "MaxLength" : "18",
+      "Default" : "0.0.0.0/0",
+      "AllowedPattern" : "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    }
+  },
+
+  "Mappings" : {
+    "ImageIdMap" : {
+      "ap-south-1"     : { "AMI" : "ami-9fc7b0f0" },
+      "eu-west-2"      : { "AMI" : "ami-bfe0eadb" },
+      "eu-west-1"      : { "AMI" : "ami-c51e3eb6" },
+      "ap-northeast-2" : { "AMI" : "ami-94bb6dfa" },
+      "ap-northeast-1" : { "AMI" : "ami-9f0c67f8" },
+      "sa-east-1"      : { "AMI" : "ami-bb40d8d7" },
+      "ca-central-1"   : { "AMI" : "ami-eb20928f" },
+      "ap-southeast-1" : { "AMI" : "ami-4dd6782e" },
+      "ap-southeast-2" : { "AMI" : "ami-28cff44b" },
+      "eu-central-1"   : { "AMI" : "ami-211ada4e" },
+      "us-east-1"      : { "AMI" : "ami-9be6f38c" },
+      "us-east-2"      : { "AMI" : "ami-38cd975d" },
+      "us-west-1"      : { "AMI" : "ami-b73d6cd7" },
+      "us-west-2"      : { "AMI" : "ami-1e299d7e" }
+    },
+
+    "InstanceTypeMap" : {
+      "Core"        : { "Bastion" : "t2.nano" },
+      "Build"       : { "Bastion" : "t2.nano" },
+      "Production"  : { "Bastion" : "t2.small" },
+      "Staging"     : { "Bastion" : "t2.nano" },
+      "QA"          : { "Bastion" : "t2.nano" },
+      "Development" : { "Bastion" : "t2.nano" }
+    },
+
+    "HostMap" : {
+      "Bastion" : { "ZoneA" :  "0.8", "ZoneB" :  "64.8", "ZoneC" : "128.8", "ZoneD" : "192.8" }
+    }
+  },
+
+  "Conditions" : {
+    "ConfigureMultiZone" : { "Fn::Equals" : [{ "Ref" : "UseMultiZone" }, "true" ]},
+    "ConfigureStaticPublicAddress" : { "Fn::Equals" : [{ "Ref" : "UseStaticPublicAddress" }, "true" ]},
+    "ConfigureStaticPrivateAddress" : { "Fn::Equals" : [{ "Ref" : "UseStaticPrivateAddress" }, "true" ]},
+    "ConfigureLogs" : { "Fn::Equals" : [{ "Ref" : "UseLogMonitoring" }, "true" ]},
+    "ConfigureUsers" : { "Fn::Equals" : [{ "Ref" : "UseLocalUsers" }, "true" ]},
+    "ConfigureKey" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "KeyName" }, "" ] }]},
+    "ConfigureStaticPublicAddress&MultiZone" :{ "Fn::And" : [{ "Condition" : "ConfigureStaticPublicAddress" }, { "Condition" : "ConfigureMultiZone" }]},
+    "ConfigureStaticPrivateAddress&MultiZone" :{ "Fn::And" : [{ "Condition" : "ConfigureStaticPrivateAddress" }, { "Condition" : "ConfigureMultiZone" }]}
+  },
+
+  "Resources" : {
+    "Role" : {
+      "Type" : "AWS::IAM::Role",
+      "Properties" : {
+        "AssumeRolePolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Principal" : { "Service" : [ "ec2.amazonaws.com" ]},
+            "Action" : [ "sts:AssumeRole" ]
+          }]
+        },
+        "Path" : "/"
+      }
+    },
+
+    "StaticPublicAddressPolicy" : {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "StaticPublicAddressPolicy",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [
+              "ec2:AssociateAddress",
+              "ec2:DisassociateAddress"
+            ],
+            "Resource" : "*"
+          }]
+        },
+        "Roles" : [{ "Ref" : "Role" }]
+      },
+      "Condition" : "ConfigureStaticPublicAddress"
+    },
+
+    "StaticPrivateAddressPolicy" : {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "StaticPrivateAddressPolicy",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [
+              "ec2:AttachNetworkInterface",
+              "ec2:DetachNetworkInterface"
+            ],
+            "Resource" : "*"
+          }]
+        },
+        "Roles" : [{ "Ref" : "Role" }]
+      },
+      "Condition" : "ConfigureStaticPrivateAddress"
+    },
+
+    "LogMonitoringPolicy" : {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "LogMonitoringPolicy",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [
+              "logs:CreateLogGroup",
+              "logs:CreateLogStream",
+              "logs:PutLogEvents",
+              "logs:DescribeLogStreams"
+            ],
+            "Resource" : "arn:aws:logs:*:*:*"
+          }]
+        },
+        "Roles" : [{ "Ref" : "Role" }]
+      },
+      "Condition" : "ConfigureLogs"
+    },
+
+    "LocalUsersPolicy" : {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "LocalUsersPolicy",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [
+              "iam:GetGroup"
+            ],
+            "Resource" : { "Fn::Sub" : "arn:aws:iam::${AWS::AccountId}:group/BastionUsers" }
+          },
+          {
+            "Effect" : "Allow",
+            "Action" : [
+              "iam:ListSSHPublicKeys",
+              "iam:GetSSHPublicKey"
+            ],
+            "Resource" : { "Fn::Sub" : "arn:aws:iam::${AWS::AccountId}:user/*" }
+          }]
+        },
+        "Roles" : [{ "Ref" : "Role" }]
+      },
+      "Condition" : "ConfigureUsers"
+    },
+
+    "InstanceProfile" : {
+      "Type" : "AWS::IAM::InstanceProfile",
+      "Properties" : {
+        "Path" : "/",
+        "Roles" : [{ "Ref" : "Role" }]
+      }
+    },
+
+    "Logs" : {
+      "Type" : "AWS::Logs::LogGroup",
+      "Properties" : {
+        "RetentionInDays" : { "Ref" : "LogRetention" }
+      },
+      "Condition" : "ConfigureLogs"
+    },
+
+    "SecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }, "SecurityGroup" ]]},
+        "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPC" }},
+        "SecurityGroupIngress" : [
+          { "IpProtocol" : "icmp", "FromPort" :  "-1", "ToPort" :  "-1", "CidrIp" : { "Ref" : "AdministratorNetwork" }},
+          { "IpProtocol" : "tcp",  "FromPort" :  "22", "ToPort" :  "22", "CidrIp" : { "Ref" : "AdministratorNetwork" }}
+        ],
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }, "SecurityGroup" ]]}}
+        ]
+      }
+    },
+
+    "EIPA" : {
+      "Type" : "AWS::EC2::EIP",
+      "Properties" : {
+        "Domain" : "vpc"
+      },
+      "Condition" : "ConfigureStaticPublicAddress"
+    },
+
+    "EIPB" : {
+      "Type" : "AWS::EC2::EIP",
+      "Properties" : {
+        "Domain" : "vpc"
+      },
+      "Condition" : "ConfigureStaticPublicAddress&MultiZone"
+    },
+
+    "PrivateNetworkInterfaceA" : {
+      "Type" : "AWS::EC2::NetworkInterface",
+      "Properties" : {
+        "Description" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }, "PrivateNetworkInterfaceA" ]]},
+        "PrivateIpAddress" : { "Fn::Join" : [ ".", [
+                               { "Fn::Select" : [ "0", { "Fn::Split" : [ ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCNetwork" }}]}]},
+                               { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCNetwork" }}]}]},
+                               { "Fn::FindInMap" : [ "HostMap", "Bastion", "ZoneA" ]}]]},
+        "GroupSet" : [{ "Ref" : "SecurityGroup" }],
+        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicSubnetA" }},
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }, "PrivateNetworkInterfaceA" ]]}}
+        ]
+      },
+      "Condition" : "ConfigureStaticPrivateAddress"
+    },
+
+    "PrivateNetworkInterfaceB" : {
+      "Type" : "AWS::EC2::NetworkInterface",
+      "Properties" : {
+        "Description" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }, "PublicNetworkInterfaceB" ]]},
+        "PrivateIpAddress" : { "Fn::Join" : [ ".", [
+                               { "Fn::Select" : [ "0", { "Fn::Split" : [ ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCNetwork" }}]}]},
+                               { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCNetwork" }}]}]},
+                               { "Fn::FindInMap" : [ "HostMap", "Bastion", "ZoneB" ]}]]},
+        "GroupSet" : [{ "Ref" : "SecurityGroup" }],
+        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicSubnetB" }},
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }, "PublicNetworkInterfaceB" ]]}}
+        ]
+      },
+      "Condition" : "ConfigureStaticPrivateAddress&MultiZone"
+    },
+
+    "LaunchConfiguration" : {
+      "Type" : "AWS::AutoScaling::LaunchConfiguration",
+      "Metadata" : {
+        "AWS::CloudFormation::Init" : {
+          "configSets" : {
+            "Baseline" : [
+              "UpgradeOS",
+              "ConfigureOS",
+              "ConfigureCFN"
+            ],
+            "All" : [
+              "UpgradeOS",
+              "ConfigureOS",
+              "ConfigureCFN",
+              { "Fn::If" : [ "ConfigureStaticPublicAddress", "ConfigureStaticPublicAddress", { "Ref": "AWS::NoValue" }]},
+              { "Fn::If" : [ "ConfigureStaticPrivateAddress", "ConfigureStaticPrivateAddress", { "Ref": "AWS::NoValue" }]},
+              { "Fn::If" : [ "ConfigureLogs", "ConfigureLogs", { "Ref": "AWS::NoValue" }]},
+              { "Fn::If" : [ "ConfigureUsers", "ConfigureUsers", { "Ref": "AWS::NoValue" }]}
+            ],
+          },
+          "UpgradeOS" : {
+            "commands" : {
+              "01_yum_update" : {
+                "command" : "yum update -y",
+                "ignoreErrors" : "false"
+              }
+            }
+          },
+          "ConfigureOS" : {
+            "files" : {
+              "/etc/profile.d/local.sh" : {
+                "content" : { "Fn::Join" : [ "", [
+                  "alias lsa='ls -lAF'\n"
+                ]]},
+                "mode"  : "000644",
+                "owner" : "root",
+                "group" : "root"
+              }
+            }
+          },
+          "ConfigureCFN" : {
+            "files" : {
+              "/etc/cfn/cfn-hup.conf" : {
+                "content" : { "Fn::Join" : [ "", [
+                  "[main]\n",
+                  "stack=", { "Ref" : "AWS::StackId" }, "\n",
+                  "region=", { "Ref" : "AWS::Region" }, "\n"
+                ]]},
+                "mode"  : "000400",
+                "owner" : "root",
+                "group" : "root"
+              },
+              "/etc/cfn/hooks.d/cfn-auto-reloader.conf" : {
+                "content" : { "Fn::Join" : [ "", [
+                  "[cfn-auto-reloader-hook]\n",
+                  "triggers=post.update\n",
+                  "path=Resources.LaunchConfiguration.Metadata.AWS::CloudFormation::Init\n",
+                  "action=/opt/aws/bin/cfn-init --verbose",
+                  " --configsets ", { "Fn::If" : [ "ConfigureLogs", { "Fn::If" : [ "ConfigureUsers", "LogsAndUsers", "Logs" ]}, { "Fn::If" : [ "ConfigureUsers", "Users", "Baseline" ]}]},
+                  " --stack ", { "Ref" : "AWS::StackName" },
+                  " --resource LaunchConfiguration",
+                  " --region ", { "Ref" : "AWS::Region" }, "\n"
+                ]]},
+                "mode"  : "000400",
+                "owner" : "root",
+                "group" : "root"
+              }
+            },
+            "services" : {
+              "sysvinit" : {
+                "cfn-hup" : { "enabled" : "true", "ensureRunning" : "true",
+                              "files" : [ "/etc/cfn/cfn-hup.conf", "/etc/cfn/hooks.d/cfn-auto-reloader.conf" ]}
+              }
+            }
+          },
+          "ConfigureStaticPublicAddress" : {
+            "files" : {
+              "/root/bin/associateaddress" : {
+                "content" : { "Fn::Join" : [ "", [
+                  "#!/bin/bash\n",
+                  "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)\n",
+                  "region=${zone::-1}\n",
+                  "instance=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/instance-id)\n",
+                  "case $zone in\n",
+                  "  ", { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]}, ") eipalloc=", { "Fn::If" : [ "ConfigureStaticPublicAddress", { "Fn::GetAtt" : [ "EIPA", "AllocationId" ]}, { "Ref" : "AWS::NoValue" }]}, ";;\n",
+                  "  ", { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]}, ") eipalloc=", { "Fn::If" : [ "ConfigureStaticPublicAddress&MultiZone", { "Fn::GetAtt" : [ "EIPB", "AllocationId" ]}, { "Ref" : "AWS::NoValue" }]}, ";;\n",
+                  "esac\n",
+                  "aws ec2 associate-address --instance-id $instance --allocation-id $eipalloc --region $region\n"
+                ]]},
+                "mode"  : "000700",
+                "owner" : "root",
+                "group" : "root"
+              }
+            },
+            "commands" : {
+              "01_associateaddress" : {
+                "command" : "/root/bin/associateaddress",
+                "ignoreErrors" : "false"
+              }
+            }
+          },
+          "ConfigureStaticPrivateAddress" : {
+            "files" : {
+              "/root/bin/attachnetworkinterface" : {
+                "content" : { "Fn::Join" : [ "", [
+                  "#!/bin/bash\n",
+                  "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)\n",
+                  "region=${zone::-1}\n",
+                  "instance=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/instance-id)\n",
+                  "case $zone in\n",
+                  "  ", { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]}, ") eni=", { "Fn::If" : [ "ConfigureStaticPrivateAddress", { "Ref" : "PrivateNetworkInterfaceA" }, { "Ref" : "AWS::NoValue" }]}, ";;\n",
+                  "  ", { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]}, ") eni=", { "Fn::If" : [ "ConfigureStaticPrivateAddress&MultiZone", { "Ref" : "PrivateNetworkInterfaceB" }, { "Ref" : "AWS::NoValue" }]}, ";;\n",
+                  "esac\n",
+                  "aws ec2 attach-network-interface --instance-id $instance --network-interface-id $eni --device-index 1 --region $region\n"
+                ]]},
+                "mode"  : "000700",
+                "owner" : "root",
+                "group" : "root"
+              }
+            },
+            "commands" : {
+              "01_attachnetworkinterface" : {
+                "command" : "/root/bin/attachnetworkinterface",
+                "ignoreErrors" : "false"
+              }
+            }
+          },
+          "ConfigureLogs" : {
+            "files" : {
+              "/root/logs.txt" : {
+                "content" : { "Fn::Join" : [ "", [
+                  "configuring logs\n"
+                ]]},
+                "mode"  : "000644",
+                "owner" : "root",
+                "group" : "root"
+              }
+            }
+          },
+          "ConfigureUsers" : {
+            "files" : {
+              "/root/bin/createusers" : {
+                "content" : { "Fn::Join" : [ "", [
+                  "#!/bin/bash\n",
+                  "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)\n",
+                  "region=${zone::-1}\n",
+                  "bastion_users=$(aws iam get-group --group-name BastionUsers --query 'Users[].UserName' --region $region --output text)\n",
+                  "for user in $bastion_users; do\n",
+                  "    echo \"- $user\"\n",
+                  "    /usr/sbin/useradd $user\n",
+                  "    mkdir /home/$user/.ssh\n",
+                  "    chown $user:$user /home/$user/.ssh\n",
+                  "    chmod 0700 /home/$user/.ssh\n",
+                  "    keys=$(aws iam list-ssh-public-keys --user-name $user --query 'SSHPublicKeys[].SSHPublicKeyId' --region $region --output text)\n",
+                  "    for key in $keys; do\n",
+                  "        echo \"  - $key\"\n",
+                  "        echo $(aws iam get-ssh-public-key --user-name $user --ssh-public-key-id $key --encoding SSH --query 'SSHPublicKey.SSHPublicKeyBody' --region $region --output text) >> /home/$user/.ssh/authorized_keys\n",
+                  "        chown $user:$user /home/$user/.ssh/authorized_keys\n",
+                  "        chmod 0600 /home/$user/.ssh/authorized_keys\n",
+                  "    done\n",
+                  "done\n"
+              ]]},
+                "mode"  : "000700",
+                "owner" : "root",
+                "group" : "root"
+              }
+            },
+            "commands" : {
+              "01_createusers" : {
+                "command" : "/root/bin/createusers",
+                "ignoreErrors" : "false"
+              }
+            }
+          }
+        }
+      },
+      "Properties" : {
+        "ImageId" : { "Fn::FindInMap" : [ "ImageIdMap", { "Ref" : "AWS::Region" } , "AMI" ]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Staging", "Bastion" ]},
+        "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
+        "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
+        "SecurityGroups" : [{ "Ref" : "SecurityGroup" }],
+        "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "", [
+          "#!/bin/bash -xe\n",
+          "yum update -y aws-cfn-bootstrap\n",
+          "\n",
+          "# Install the files and packages from the metadata\n",
+          "/opt/aws/bin/cfn-init --verbose",
+          " --configsets All",
+          " --stack ", { "Ref" : "AWS::StackName" },
+          " --resource LaunchConfiguration",
+          " --region ", { "Ref" : "AWS::Region" }, "\n",
+          "\n",
+          "# Signal the status from cfn-init\n",
+          "/opt/aws/bin/cfn-signal --exit-code $?",
+          " --stack ", { "Ref" : "AWS::StackName" },
+          " --resource AutoScalingGroup",
+          " --region ", { "Ref" : "AWS::Region" }, "\n"
+        ]]}}
+      }
+    },
+
+    "AutoScalingGroup" : {
+      "Type" : "AWS::AutoScaling::AutoScalingGroup",
+      "Properties" : {
+        "LaunchConfigurationName" : { "Ref" : "LaunchConfiguration" },
+        "VPCZoneIdentifier" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicSubnetA" }},
+          { "Fn::If" : [ "ConfigureMultiZone", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicSubnetB" }}, { "Ref" : "AWS::NoValue" }]}
+        ],
+        "MinSize" : { "Fn::If" : [ "ConfigureMultiZone", "2", "1" ]},
+        "MaxSize" : { "Fn::If" : [ "ConfigureMultiZone", "2", "1" ]},
+        "DesiredCapacity" : { "Fn::If" : [ "ConfigureMultiZone", "2", "1" ]},
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }, "Instance" ]]}, "PropagateAtLaunch" : "true" }
+        ]
+      },
+      "CreationPolicy" : {
+        "ResourceSignal" : {
+          "Count" : { "Fn::If" : [ "ConfigureMultiZone", "2", "1" ]},
+          "Timeout" : "PT10M"
+        }
+      },
+      "UpdatePolicy" : {
+        "AutoScalingRollingUpdate" : {
+          "MinInstancesInService" : "1",
+          "MaxBatchSize" : "1",
+          "PauseTime" : "PT10M",
+          "WaitOnResourceSignals" : "true"
+        }
+      }
+    }
+  },
+
+  "Outputs" : {
+    "SecurityGroup" : {
+      "Description" : "The SecurityGroup",
+      "Value" : { "Ref" : "SecurityGroup" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-SecurityGroup" }}
+    },
+
+    "EIPA" : {
+      "Description" : "The EIP in Availability Zone A",
+      "Value" : { "Ref" : "EIPA" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-EIPA" }},
+      "Condition" : "ConfigureStaticPublicAddress"
+    },
+
+    "EIPB" : {
+      "Description" : "The EIP in Availability Zone B",
+      "Value" : { "Ref" : "EIPB" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-EIPB" }},
+      "Condition" : "ConfigureStaticPublicAddress&MultiZone"
+    }
+  }
+}

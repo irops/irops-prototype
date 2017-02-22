@@ -1,0 +1,92 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Common-VPNConnection Template. This template adds a VPNConnection with an optional static route to an existing VPC and CustomerGateway within any Account.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "VPCStackName",
+            "CustomerGatewayStackName"
+          ]
+        },
+        {
+          "Label" : { "default" : "VPNConnection Configuration" },
+          "Parameters" : [
+          "Network" ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "VPCStackName" : { "default" : "VPC Stack Name" },
+        "CustomerGatewayStackName" : { "default" : "CustomerGateway Stack Name" },
+        "Network" : { "default" : "Network" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "VPCStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Core VPC.",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Core-VPC",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "CustomerGatewayStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the CustomerGateway.",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "CharlotteCustomerGateway",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "Network" : {
+      "Description" : "VPNConnection Network",
+      "Type" : "String",
+      "MinLength" : "9",
+      "MaxLength" : "18",
+      "Default" : "204.26.128.0/17",
+      "AllowedPattern" : "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(1[6-9]|2[0-8]))$",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form X.X.X.X/16-28."
+    }
+  },
+
+  "Conditions" : {
+    "CreateVPNConnectionRoute" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "Network" }, "" ]}]}
+  },
+
+  "Resources" : {
+    "VPNConnection" : {
+      "Type" : "AWS::EC2::VPNConnection",
+      "Properties" : {
+        "Type" : "ipsec.1",
+        "StaticRoutesOnly" : { "Fn::If" : [ "CreateVPNConnectionRoute", "true", "false" ]},
+        "VpnGatewayId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPNGateway" }},
+        "CustomerGatewayId" : { "Fn::ImportValue" : { "Fn::Sub" : "${CustomerGatewayStackName}-CustomerGateway" }},
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-",
+                                                             { "Fn::ImportValue" : { "Fn::Sub" : "${CustomerGatewayStackName}-CustomerGatewayName" }},
+                                                             "VPNConnection" ]]}}
+        ]
+      }
+    },
+
+    "VPNConnectionRoute" : {
+      "Type" : "AWS::EC2::VPNConnectionRoute",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Ref" : "Network" },
+        "VpnConnectionId" : { "Ref" : "VPNConnection" }
+      },
+      "Condition" : "CreateVPNConnectionRoute"
+    }
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Identity-StandardUsers Template. This creates Standard IAM Users within the Identity Account. Due to what appears to be a bug in the User Resource Groups Property which ignores changes during Stack Updates, we are currently listing all group memberships explicitly through separate UsertoGroupAddition Resources.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "StandardManagedPoliciesStackName",
+            "StandardGroupsStackName"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "StandardManagedPoliciesStackName" : { "default" : "Standard ManagedPolicies Stack Name" },
+        "StandardGroupsStackName" : { "default" : "Standard Groups Stack Name" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "StandardManagedPoliciesStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard ManagedPolicies.",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardManagedPolicies",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "StandardGroupsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Groups.",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardGroups",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    }
+  },
+
+  "Resources" : {
+    "AdministratorUser" : {
+      "Type" : "AWS::IAM::User",
+      "Properties" : {
+        "UserName" : "administrator",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-AdministratorsGroup" }}
+        ]
+      }
+    },
+
+    "DeveloperUser" : {
+      "Type" : "AWS::IAM::User",
+      "Properties" : {
+        "UserName" : "developer",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-DevelopersGroup" }}
+        ]
+      }
+    },
+
+    "UserUser" : {
+      "Type" : "AWS::IAM::User",
+      "Properties" : {
+        "UserName" : "user",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-UsersGroup" }}
+        ]
+      }
+    }
+  }
+}

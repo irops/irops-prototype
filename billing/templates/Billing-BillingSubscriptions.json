@@ -1,0 +1,90 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Core-BillingSubscriptions Template. This creates Billing SNS Subscriptions to Billing Topics within the Core Account.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "BillingTopicsStackName"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "BillingTopicsStackName" : { "default" : "Billing Topics Stack Name" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "BillingTopicsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Billing Topics.",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "BillingTopics",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    }
+  },
+
+  "Resources" : {
+    "BillsTopicMCrawfordEmailSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsTopic" }},
+        "Protocol" : "email",
+        "Endpoint" : "mcrawford@hpe.com"
+      }
+    },
+
+    "BillsTopicKMcCutchenEmailSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsTopic" }},
+        "Protocol" : "email",
+        "Endpoint" : "kerry.mccutchen@hpe.com"
+      }
+    },
+
+    "BillsTopicGVeazeyEmailSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsTopic" }},
+        "Protocol" : "email",
+        "Endpoint" : "gregg.veazey@hpe.com"
+      }
+    },
+
+    "BillsSMSTopicMCrawfordSMSSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsSMSTopic" }},
+        "Protocol" : "sms",
+        "Endpoint" : "+14156525483"
+      }
+    },
+
+    "BillsSMSTopicKMcCutchenSMSSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsSMSTopic" }},
+        "Protocol" : "sms",
+        "Endpoint" : "+19542421633"
+      }
+    },
+
+    "BillsSMSTopicGVeazeySMSSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsSMSTopic" }},
+        "Protocol" : "sms",
+        "Endpoint" : "+12143920541"
+      }
+    }
+  }
+}
