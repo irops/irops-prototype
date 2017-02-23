@@ -2,6 +2,9 @@
 #
 # Defines the IROPS Environment Variables for the Production Environment in Ohio
 
+# Owner
+export OWNER_EMAIL=$USER@hpe.com
+
 # Company
 export COMPANY_CODE=demo
 export COMPANY_NAME="Demo"
@@ -73,5 +76,16 @@ export SNS_ALARMS_TOPIC="arn:aws:sns:${AWS_DEFAULT_REGION}:${AWS_ACCOUNT_NUMBER}
 # Owner
 export OWNER_EMAIL=$USER@hpe.com
 
-# Home
+# Network
 export ADMINISTRATOR_NETWORK=72.215.187.176/28
+export ADMINISTRATOR_NETWORK1=
+export ADMINISTRATOR_NETWORK2=
+export ADMINISTRATOR_NETWORK3=
+export PUBLIC_NETWORK=72.215.187.176/28
+export PUBLIC_NETWORK1=
+export PUBLIC_NETWORK2=
+export PUBLIC_NETWORK3=
+export PRIVATE_NETWORK=10.0.0.0/16
+export PRIVATE_NETWORK1=
+export PRIVATE_NETWORK2=
+export PRIVATE_NETWORK3=
