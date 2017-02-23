@@ -1,0 +1,73 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Environment-HostedZone Template. This creates the Environment HostedZone within an Environment Account. Multiple Environments can co-exist.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "HostedZone Configuration" },
+          "Parameters" : [
+            "Name",
+            "Domain"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "Name" : { "default" : "Name" },
+        "Domain" : { "default" : "Domain" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "Name" : {
+      "Description" : "Name of the Environment associated with the Stack",
+      "Type" : "String",
+      "Default" : "Production",
+      "AllowedValues" : [ "Production", "Staging", "Testing", "Development" ],
+      "ConstraintDescription" : "must be one of the following: Production, Staging, Testing, Development."
+    },
+
+    "Domain" : {
+      "Description" : "Domain associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 7,
+      "MaxLength" : 64,
+      "Default" : "demo.iropshub.com",
+      "AllowedPattern" : "^((?!-)[a-z0-9-]{1,63}(?<!-)\\.)+[a-z]{2,6}$",
+      "ConstraintDescription" : "must be a valid domain name and contain only lower-case letters, numbers, dashes and periods."
+    }
+  },
+
+  "Resources" : {
+    "HostedZone" : {
+      "Type" : "AWS::Route53::HostedZone",
+      "Properties" : {
+        "HostedZoneConfig" : {
+          "Comment" : { "Fn::Sub" : "Public Zone for ${Domain}" }
+        },
+        "Name" : { "Ref" : "Domain" },
+        "HostedZoneTags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-HostedZone" }}
+        ]
+      }
+    }
+  },
+
+  "Outputs" : {
+    "HostedZone" : {
+      "Description" : "The HostedZone",
+      "Value" :  { "Ref" : "HostedZone" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-HostedZone" }}
+    },
+
+    "Domain" : { 
+      "Description" : "The Domain", 
+      "Value" :  { "Ref" : "Domain" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-Domain" }}
+    }
+  }
+}

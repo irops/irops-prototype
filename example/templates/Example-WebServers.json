@@ -76,8 +76,8 @@
       "Description" : "An environment name that will be prefixed to resource names",
       "Type" : "String",
       "Default" : "Production",
-      "AllowedValues" : [ "Production", "Staging", "QA", "Development" ],
-      "ConstraintDescription" : "must be one of the following: Production, Staging, QA, Development."
+      "AllowedValues" : [ "Production", "Staging", "Testing", "Development" ],
+      "ConstraintDescription" : "must be one of the following: Production, Staging, Testing, Development."
     },
 
     "ApplicationName" : {
@@ -167,7 +167,7 @@
     },
 
     "InstanceTypeMap" : {
-      "WebServer" : { "Production" : "t2.medium", "Staging" : "t2.small", "QA" : "t2.micro", "Development" : "t2.nano" }
+      "WebServer" : { "Production" : "t2.medium", "Staging" : "t2.small", "Testing" : "t2.micro", "Development" : "t2.nano" }
     }
   },
 

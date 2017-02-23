@@ -23,6 +23,7 @@ update_attempts=40
 interactive=1
 speed=100
 verbose=0
+override=0
 owner=${OWNER_EMAIL:-$USER@hpe.com}
 company=${COMPANY_NAME:-Demo}
 system=${SYSTEM_NAME:-IROPS}
@@ -38,7 +39,7 @@ user=${AWS_USER_NAME:-administrator}
 #  2. Define functions
 
 usage () {
-    echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v]"
+    echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v] [-o]"
     echo "                  [-O owner] [-C company ] [-S system]"
     echo "                  [-E environment]"
     echo "                  [-A application]"
@@ -48,6 +49,7 @@ usage () {
     echo "  -s              slower: increase pauses by 25%"
     echo "  -f              faster: reduce pauses by 25%"
     echo "  -v              verbose"
+    echo "  -o              override StackPolicy"
     echo "  -O owner        Owner Email (default: $owner)"
     echo "  -C company      Company Name (default: $company)"
     echo "  -S system       System Name (default: $system)"
@@ -140,12 +142,13 @@ next() {
 
 #  3. Parse command line options
 
-while getopts IsfvO:C:S:E:A:k:n:r:a:u:? arg; do
+while getopts IsfvoO:C:S:E:A:k:n:r:a:u:? arg; do
     case $arg in
     I)  interactive=0;;
     s)  ((speed < speed_max)) && ((speed=speed+25));;
     f)  ((speed > 0)) && ((speed=speed-25));;
     v)  verbose=1;;
+    o)  override=1;;
     O)  owner="$OPTARG";;
     C)  company="$OPTARG";;
     S)  system="$OPTARG";;
@@ -214,7 +217,7 @@ else
         usestaticprivateaddress=true
         uselogmonitoring=false
         uselocalusers=true;;
-      QA)
+      Testing)
         usemultizone=false
         usestaticpublicaddress=true
         usestaticprivateaddress=true
@@ -380,6 +383,9 @@ if [ ! -z $templatesbucket ]; then
 else
     template_parameter="--template-body file://$templatesdir/Utility-LinuxBastions.json"
     stack_policy_parameter="--stack-policy-body file://$templatesdir/Utility-LinuxBastions-StackPolicy.json"
+fi
+if [ $override = 1 ]; then
+    stack_policy_parameter="$stack_policy_parameter \\"$'\n'"                                --stack-policy-during-update-body file://$templatesdir/Override-StackPolicy.json"
 fi
 read -r -d '' statement << EOS
 aws cloudformation update-stack --stack-name $environment-$application \\

@@ -276,7 +276,7 @@
     },
 
     "InstanceTypeMap" : {
-      "WebServer" : { "Production" : "t2.nano", "Staging" : "t2.nano", "QA" : "t2.nano", "Development" : "t2.nano" }
+      "WebServer" : { "Production" : "t2.nano", "Staging" : "t2.nano", "Testing" : "t2.nano", "Development" : "t2.nano" }
     }
   },
 
@@ -549,6 +549,18 @@
           "Timeout" : "PT5M"
         }
       }
+    },
+
+    "RecordSet" : {
+      "Type" : "AWS::Route53::RecordSet",
+      "Properties" : {
+        "HostedZoneId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicHostedZone" }},
+        "Comment" : { "Fn::Sub" : "DNS name for ${ApplicationName} Instance." },
+        "Name" : { "Fn::Join" : [ "", [ { "Ref" : "ApplicationDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "." ]]},
+        "Type" : "A",
+        "TTL" : "900",
+        "ResourceRecords" : [{ "Fn::GetAtt" : [ "Instance", "PublicIp" ]}]
+      }
     }
   },
 
@@ -561,7 +573,7 @@
 
     "URL" : {
       "Description" : "URL of the sample website",
-      "Value" :  { "Fn::Join" : [ "", [ "http://", { "Fn::GetAtt" : [ "Instance", "PublicDnsName" ]}]]}
+      "Value" :  { "Fn::Join" : [ "", [ "http://", { "Ref" : "ApplicationDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "/" ]]}
     }
   }
 }

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Defines the IROPS Environment Variables for the Staging Environment in Oregon
+# Defines the IROPS Environment Variables for the Testing Environment in Oregon
 
 # Account
 export AWS_ACCOUNT_ALIAS=irops
@@ -69,10 +69,10 @@ export SYSTEM_CODE=irops
 export SYSTEM_NAME="IROPS"
 
 # Environment
-export ENVIRONMENT_CODE=s
-export ENVIRONMENT_NAME="Staging"
+export ENVIRONMENT_CODE=t
+export ENVIRONMENT_NAME="Testing"
 export ENVIRONMENT_DOMAIN=$ENVIRONMENT_CODE.$AWS_DEFAULT_REGION.$COMPANY_CODE.iropshub.com
-export ENVIRONMENT_NETWORK=10.41.0.0/16
+export ENVIRONMENT_NETWORK=10.42.0.0/16
 export ENVIRONMENT_HA_NAT_GATEWAYS=false
 
 # Core

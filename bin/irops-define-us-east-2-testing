@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Defines the IROPS Environment Variables for the Staging Environment in Oregon
+# Defines the IROPS Environment Variables for the Testing Environment in Ohio
 
 # Account
 export AWS_ACCOUNT_ALIAS=irops
@@ -13,7 +13,7 @@ export AWS_USER_NAME=$USER
 export AWS_DEFAULT_PROFILE=$AWS_ACCOUNT_ALIAS-$AWS_USER_NAME
 
 # Region
-export AWS_DEFAULT_REGION=us-west-2
+export AWS_DEFAULT_REGION=us-east-2
 
 # Keys
 export AWS_KEY_NAME=$USER
@@ -23,6 +23,9 @@ export AWS_KEY_FILE=${HOME}/.ssh/irops_${AWS_KEY_NAME}_id_rsa
 export SNS_ADMINISTRATOR_TOPIC="arn:aws:sns:${AWS_DEFAULT_REGION}:${AWS_ACCOUNT_NUMBER}:Administrators"
 export SNS_EVENTS_TOPIC="arn:aws:sns:${AWS_DEFAULT_REGION}:${AWS_ACCOUNT_NUMBER}:Events"
 export SNS_ALARMS_TOPIC="arn:aws:sns:${AWS_DEFAULT_REGION}:${AWS_ACCOUNT_NUMBER}:Alarms"
+
+# Owner
+export OWNER_EMAIL=$USER@hpe.com
 
 # Network
 export ADMINISTRATOR_NETWORK=72.215.187.176/28
@@ -69,24 +72,24 @@ export SYSTEM_CODE=irops
 export SYSTEM_NAME="IROPS"
 
 # Environment
-export ENVIRONMENT_CODE=s
-export ENVIRONMENT_NAME="Staging"
+export ENVIRONMENT_CODE=t
+export ENVIRONMENT_NAME="Testing"
 export ENVIRONMENT_DOMAIN=$ENVIRONMENT_CODE.$AWS_DEFAULT_REGION.$COMPANY_CODE.iropshub.com
-export ENVIRONMENT_NETWORK=10.41.0.0/16
+export ENVIRONMENT_NETWORK=10.82.0.0/16
 export ENVIRONMENT_HA_NAT_GATEWAYS=false
 
 # Core
 export CORE_CODE=c
 export CORE_NAME="Core"
 export CORE_DOMAIN=$AWS_DEFAULT_REGION.$COMPANY_CODE.iropshub.com
-export CORE_NETWORK=10.46.0.0/16
+export CORE_NETWORK=10.86.0.0/16
 export CORE_HA_NAT_GATEWAYS=false
 
 # Build
 export BUILD_CODE=b
 export BUILD_NAME="Build"
 export BUILD_DOMAIN=$AWS_DEFAULT_REGION.$COMPANY_CODE.iropshub.com
-export BUILD_NETWORK=10.47.0.0/16
+export BUILD_NETWORK=10.87.0.0/16
 export BUILD_HA_NAT_GATEWAYS=false
 
 # Identity
