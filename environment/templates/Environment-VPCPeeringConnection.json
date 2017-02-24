@@ -1,0 +1,116 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Core-VPCPeeringConnection Template. This template creates a single VPCPeeringConnection.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "VPCStackName",
+            "PeerVPCStackName"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "VPCStackName" : { "default" : "VPC Stack Name" },
+        "PeerVPCStackName" : { "default" : "Peer VPC Stack Name" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "VPCStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing a VPC.",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-VPC",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "PeerVPCStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing a VPC with which to peer.",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Staging-VPC",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    }
+  },
+
+  "Resources" : {
+    "VPCPeeringConnection" : {
+      "Type" : "AWS::EC2::VPCPeeringConnection",
+      "Properties" : {
+        "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPC" }},
+        "PeerVpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${PeerVPCStackName}-VPC" }},
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "", [
+                                      { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-",
+                                      { "Fn::ImportValue" : { "Fn::Sub" : "${PeerVPCStackName}-VPCName" }}, "VPCPeeringConnection"
+                                      ]]}}
+        ]
+      }
+    },
+
+    "PublicToPeerRoute" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${PeerVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicRouteTable" }},
+        "VpcPeeringConnectionId" : { "Ref" : "VPCPeeringConnection" }
+      }
+    },
+
+    "PublicFromPeerRoute" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${PeerVPCStackName}-PublicRouteTable" }},
+        "VpcPeeringConnectionId" : { "Ref" : "VPCPeeringConnection" }
+      }
+    },
+
+    "PrivateToPeerRouteA" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${PeerVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PrivateRouteTableA" }},
+        "VpcPeeringConnectionId" : { "Ref" : "VPCPeeringConnection" }
+      }
+    },
+
+    "PrivateFromPeerRouteA" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${PeerVPCStackName}-PrivateRouteTableA" }},
+        "VpcPeeringConnectionId" : { "Ref" : "VPCPeeringConnection" }
+      }
+    },
+
+    "PrivateToPeerRouteB" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${PeerVPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PrivateRouteTableB" }},
+        "VpcPeeringConnectionId" : { "Ref" : "VPCPeeringConnection" }
+      }
+    },
+
+    "PrivateFromPeerRouteB" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCNetwork" }},
+        "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${PeerVPCStackName}-PrivateRouteTableB" }},
+        "VpcPeeringConnectionId" : { "Ref" : "VPCPeeringConnection" }
+      }
+    }
+  }
+}
