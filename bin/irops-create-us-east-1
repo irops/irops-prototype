@@ -1,0 +1,168 @@
+#!/bin/bash
+#
+# Here's a list of the commands which need to be run to create us-east-1 (Virginia)
+#
+# We can break down the creation of a region into this order:
+#  1. Initialize Environment
+#
+#  2. Create IAM ManagedPolicies
+#      2.1 Create StandardManagedPolicies Stack
+#      2.2 Create CustomManagedPolicies Stack
+#
+#  3. Create IAM Groups
+#      3.1 Create StandardGroups Stack
+#      3.2 Create CustomGroups Stack
+#
+#  4. Create IAM Users
+#      4.1 Create StandardUsers Stack
+#      4.2 Create CustomUsers Stack
+#      4.3 Create ReviewUsers Stack
+#
+#  5. Create IAM Roles
+#      5.1 Create StandardRoles Stack
+#
+#  6. Create SNS Topics and Subscriptions
+#      6.1 Create StandardTopics Stack
+#      6.2 Create StandardSubscriptions Stack
+#      6.3 Create CustomSubscriptions Stack
+#
+#  7. Create S3 Buckets
+#      7.1 Create StandardBuckets Stack
+#
+#  8. Create SNS Billing Topics and Subscriptions
+#      8.1 Create BillingTopics Stack
+#      8.2 Create BillingSubscriptions Stack
+#
+#  9. Create CloudWatch Billing Alarms
+#      9.1 Create BillingAlarms Stack
+#
+###### OPTIONAL #########################################################
+#
+# 10. Create Identity Environment VPC
+#     10.1. Create Identity-VPC Stack
+#     10.2. Create Identity-NetworkAcls Stack
+#
+# 11. Create Bastions
+#     11.1. Create Identity-LinuxBastions Stack
+#     11.1. Create Identity-WindowsBastions Stack (future)
+#
+# 12. Create Example Applications
+#     12.1. Create Identity-WindowsDomainControllers Stack (future)
+#
+
+run() {
+    echo
+    echo -n "Run: \"${1##*/}\"? [Y/n/q]"
+    read choice
+    case "$choice" in
+      "" | "y" | "Y" | "yes" | "Yes")
+        eval $1;;
+      "n" | "N" | "no" | "No")
+        ;;
+       *) echo "cancelled"
+          exit 2;;
+    esac
+}
+
+#  1. Initalize Environment
+#     - This will initialze the environment variables to the us-west-2 Production Environment
+#     - We will be explicit on certain options below, even when the value does not need to be set due to defaults
+
+bindir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+applicationbindir=${bindir%/*}/application/bin
+billingbindir=${bindir%/*}/billing/bin
+commonbindir=${bindir%/*}/common/bin
+corebindir=${bindir%/*}/core/bin
+environmentbindir=${bindir%/*}/environment/bin
+examplebindir=${bindir%/*}/example/bin
+identitybindir=${bindir%/*}/identity/bin
+utilitybindir=${bindir%/*}/utility/bin
+
+source $bindir/irops-define-us-west-2-production
+
+
+#  2. Create IAM ManagedPolicies
+#      2.1 Create StandardManagedPolicies Stack
+#      2.2 Create CustomManagedPolicies Stack
+
+run "$identitybindir/identity-create-standardmanagedpolicies-stack -E Identity"
+run "$identitybindir/identity-create-custommanagedpolicies-stack -E Identity"
+
+
+#  3. Create IAM Groups
+#      3.1 Create StandardGroups Stack
+#      3.2 Create CustomGroups Stack
+
+run "$identitybindir/identity-create-standardgroups-stack -E Identity"
+run "$identitybindir/identity-create-customgroups-stack -E Identity"
+
+
+#  4. Create IAM Users
+#      4.1 Create StandardUsers Stack
+#      4.2 Create CustomUsers Stack
+#      4.3 Create ReviewUsers Stack
+
+run "$identitybindir/identity-create-standardusers-stack -E Identity"
+run "$identitybindir/identity-create-customusers-stack -E Identity"
+run "$identitybindir/identity-create-reviewusers-stack -E Identity"
+
+
+#  5. Create IAM Roles
+#      5.1 Create StandardRoles Stack
+
+run "$identitybindir/identity-create-standardroles-stack -E Identity"
+
+
+#  6. Create SNS Topics and Subscriptions
+#      6.1 Create StandardTopics Stack
+#      6.2 Create StandardSubscriptions Stack
+#      6.3 Create CustomSubscriptions Stack
+
+run "$corebindir/core-create-standardtopics-stack -E Identity -r us-east-1"
+run "$corebindir/core-create-standardsubscriptions-stack -E Identity -r us-east-1"
+run "$corebindir/core-create-customsubscriptions-stack -E Identity -r us-east-1"
+
+
+#  7. Create S3 Buckets
+#      7.1 Create StandardBuckets Stack
+
+run "$corebindir/core-create-standardbuckets-stack -E Identity -r us-east-1"
+
+
+#  8. Create SNS Billing Topics and Subscriptions
+#      8.1 Create BillingTopics Stack
+#      8.2 Create BillingSubscriptions Stack
+
+run "$billingbindir/billing-create-billingtopics-stack"
+run "$billingbindir/billing-create-billingsubscription-stack"
+
+
+#  9. Create CloudWatch Billing Alarms
+#      9.1 Create BillingAlarms Stack
+
+run "$billingbindir/billing-create-billingalarms-stack"
+
+
+###### OPTIONAL #########################################################
+
+# 10. Create Identity Environment VPC
+#     10.1. Create Identity-VPC Stack
+#     10.2. Create Identity-NetworkAcls Stack
+
+run "$identitybindir/identity-create-vpc-stack -E Identity -N 10.255.0.0/16 -r us-east-1"
+run "$identitybindir/identity-create-networkacls-stack -E Identity -r us-east-1"
+
+
+# 11. Create Bastions
+#     11.1. Create Identity-LinuxBastions Stack
+#     11.1. Create Identity-WindowsBastions Stack (future)
+
+run "$utilitybindir/utility-create-linuxbastions-stack -E Identity -A LinuxBastions -r us-east-1"
+#run "$utilitybindir/utility-create-windowsbastions-stack -E Identity -A LinuxBastions -r us-east-1"
+
+
+# 12. Create Example Applications
+#     12.1. Create Identity-WindowsDomainControllers Stack (future)
+
+#run "$examplebindir/example-create-windowsdomaincontrollers-stack -E Identity -r us-east-1"
+
