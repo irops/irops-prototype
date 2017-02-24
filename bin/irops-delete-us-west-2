@@ -104,7 +104,7 @@
 
 run() {
     echo
-    echo -n "Run: \"${x##*/bin/}\"? [Y/n/q]"
+    echo -n "Run: \"${1##*/bin/}\"? [Y/n/q]"
     read choice
     case "$choice" in
       "" | "y" | "Y" | "yes" | "Yes")
