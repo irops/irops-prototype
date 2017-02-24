@@ -52,7 +52,6 @@ usage () {
     echo "  -o              override StackPolicy"
     echo "  -C company      Company Name (default: $company)"
     echo "  -S system       System Name (default: $system)"
-    echo "  -E environment  Environment Name (default: $environment)"
     echo "  -r region       Region (default: $region)"
     echo "  -a account      Account (default: $account)"
     echo "  -u user         User (default: $user)"
