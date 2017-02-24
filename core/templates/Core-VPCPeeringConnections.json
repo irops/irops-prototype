@@ -359,7 +359,7 @@
       "Properties" : {
         "DestinationCidrBlock" : { "Fn::ImportValue" : { "Fn::Sub" : "${CoreVPCStackName}-VPCNetwork" }},
         "RouteTableId" : { "Fn::ImportValue" : { "Fn::Sub" : "${TestingVPCStackName}-PrivateRouteTableA" }},
-        "VpcPeeringConnectionId" : { "Ref" : "TestingTestingCPeeringConnection" }
+        "VpcPeeringConnectionId" : { "Ref" : "TestingVPCPeeringConnection" }
       },
       "Condition" : "PeerToTestingVPC"
     },

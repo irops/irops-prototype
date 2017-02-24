@@ -346,7 +346,6 @@ aws cloudformation create-stack --stack-name ${gateway}CustomerGateway \\
                                        Key=Company,Value=$company \\
                                        Key=System,Value=$system \\
                                        Key=Environment,Value=$environment \\
-                                --capabilities CAPABILITY_IAM \\
                                 --profile $profile --region $region --output table
 EOS
 run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
