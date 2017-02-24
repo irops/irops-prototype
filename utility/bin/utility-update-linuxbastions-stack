@@ -193,18 +193,6 @@ if [ -z $environment ]; then
     exit 16
 else
     case $environment in
-      Core)
-        usemultizone=false
-        usestaticpublicaddress=true
-        usestaticprivateaddress=true
-        uselogmonitoring=false
-        uselocalusers=true;;
-      Build)
-        usemultizone=false
-        usestaticpublicaddress=true
-        usestaticprivateaddress=true
-        uselogmonitoring=false
-        uselocalusers=true;;
       Production)
         usemultizone=true
         usestaticpublicaddress=true
@@ -223,9 +211,27 @@ else
         usestaticprivateaddress=true
         uselogmonitoring=false
         uselocalusers=false;;
+      Development)
+        usemultizone=false
+        usestaticpublicaddress=true
+        usestaticprivateaddress=false
+        uselogmonitoring=false
+        uselocalusers=false;;
+      Core)
+        usemultizone=false
+        usestaticpublicaddress=true
+        usestaticprivateaddress=false
+        uselogmonitoring=false
+        uselocalusers=true;;
+      Build)
+        usemultizone=false
+        usestaticpublicaddress=true
+        usestaticprivateaddress=false
+        uselogmonitoring=false
+        uselocalusers=true;;
       *)
         usemultizone=false
-        usestaticpublicaddress=false
+        usestaticpublicaddress=true
         usestaticprivateaddress=false
         uselogmonitoring=false
         uselocalusers=false;;

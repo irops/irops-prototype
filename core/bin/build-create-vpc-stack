@@ -28,7 +28,6 @@ company=${COMPANY_NAME:-Demo}
 system=${SYSTEM_NAME:-IROPS}
 environment=${BUILD_NAME:-Build}
 environment_network=${BUILD_NETWORK:-10.47.0.0/16}
-environment_ha_nat_gateways=${BUILD_HA_NAT_GATEWAYS:-false}
 region=${AWS_DEFAULT_REGION:-us-west-2}
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-administrator}
@@ -181,6 +180,9 @@ if [ -z $environment ]; then
     echo "-E environment missing!"
     echo "Could not automatically determine environment, and it was not specified as a parameter"
     exit 16
+else
+    usemultizonenatgateways=false
+    usevpngateway=true
 fi
 
 if [ -z $environment_network ]; then
@@ -330,8 +332,8 @@ aws cloudformation create-stack --stack-name $environment-VPC \\
                                 --parameters ParameterKey=HostedZoneStackName,ParameterValue=Production-HostedZone \\
                                              ParameterKey=Name,ParameterValue=$environment \\
                                              ParameterKey=Network,ParameterValue=$environment_network \\
-                                             ParameterKey=UseMultiZoneNatGateways,ParameterValue=$environment_ha_nat_gateways \\
-                                             ParameterKey=UseVPNGateway,ParameterValue=true \\
+                                             ParameterKey=UseMultiZoneNatGateways,ParameterValue=$usemultizonenatgateways \\
+                                             ParameterKey=UseVPNGateway,ParameterValue=$usevpngateway \\
                                 --tags Key=Owner,Value=$owner \\
                                        Key=Company,Value=$company \\
                                        Key=System,Value=$system \\
