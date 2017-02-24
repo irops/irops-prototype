@@ -34,7 +34,7 @@ core_vpc_stack_name=Core-VPC
 build_vpc_stack_name=Build-VPC
 production_vpc_stack_name=Production-VPC
 staging_vpc_stack_name=Staging-VPC
-qa_vpc_stack_name=QA-VPC
+testing_vpc_stack_name=Testing-VPC
 development_vpc_stack_name=Development-VPC
 
 
@@ -243,10 +243,10 @@ if ! aws cloudformation describe-stacks --stack-name Staging-VPC \
     unset staging_vpc_stack_name
 fi
 
-if ! aws cloudformation describe-stacks --stack-name QA-VPC \
+if ! aws cloudformation describe-stacks --stack-name Testing-VPC \
                                         --profile $profile --region $region --output text &> /dev/null; then
-    echo "Stack dependency missing - QA-VPC Stack does not exist!"
-    unset qa_vpc_stack_name
+    echo "Stack dependency missing - Testing-VPC Stack does not exist!"
+    unset testing_vpc_stack_name
 fi
 
 if ! aws cloudformation describe-stacks --stack-name Development-VPC \
@@ -349,7 +349,7 @@ aws cloudformation create-stack --stack-name Core-VPCPeeringConnections \\
                                              ParameterKey=BuildVPCStackName,ParameterValue=$build_vpc_stack_name \\
                                              ParameterKey=ProductionVPCStackName,ParameterValue=$production_vpc_stack_name \\
                                              ParameterKey=StagingVPCStackName,ParameterValue=$staging_vpc_stack_name \\
-                                             ParameterKey=QAVPCStackName,ParameterValue=$qa_vpc_stack_name \\
+                                             ParameterKey=TestingVPCStackName,ParameterValue=$testing_vpc_stack_name \\
                                              ParameterKey=DevelopmentVPCStackName,ParameterValue=$development_vpc_stack_name \\
                                 --tags Key=Owner,Value=$owner \\
                                        Key=Company,Value=$company \\

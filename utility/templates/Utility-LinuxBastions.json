@@ -180,7 +180,7 @@
       "Build"       : { "Bastion" : "t2.nano" },
       "Production"  : { "Bastion" : "t2.small" },
       "Staging"     : { "Bastion" : "t2.nano" },
-      "QA"          : { "Bastion" : "t2.nano" },
+      "Testing"     : { "Bastion" : "t2.nano" },
       "Development" : { "Bastion" : "t2.nano" }
     },
 

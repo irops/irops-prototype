@@ -214,7 +214,7 @@ else
         usestaticprivateaddress=true
         uselogmonitoring=false
         uselocalusers=true;;
-      QA)
+      Testing)
         usemultizone=false
         usestaticpublicaddress=true
         usestaticprivateaddress=true
