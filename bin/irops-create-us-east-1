@@ -157,12 +157,12 @@ run "$identitybindir/identity-create-networkacls-stack -E Identity -r us-east-1"
 #     11.1. Create Identity-LinuxBastions Stack
 #     11.1. Create Identity-WindowsBastions Stack (future)
 
-run "$utilitybindir/utility-create-linuxbastions-stack -E Identity -A LinuxBastions -r us-east-1"
-#run "$utilitybindir/utility-create-windowsbastions-stack -E Identity -A LinuxBastions -r us-east-1"
+run "$utilitybindir/utility-create-linuxbastions-stack -E Identity -U LinuxBastions -D ilbastion -r us-east-1"
+#run "$utilitybindir/utility-create-windowsbastions-stack -E Identity -U WindowsBastions -D iwbastion -r us-east-1"
 
 
 # 12. Create Example Applications
 #     12.1. Create Identity-WindowsDomainControllers Stack (future)
 
-#run "$examplebindir/example-create-windowsdomaincontrollers-stack -E Identity -r us-east-1"
+#run "$examplebindir/example-create-windowsdomaincontrollers-stack -E Identity -A WindowsDomainControllers -D dc -r us-east-1"
 

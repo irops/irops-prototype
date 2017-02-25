@@ -13,19 +13,28 @@
           ]
         },
         {
-          "Label" : { "default" : "Application Configuration" },
+          "Label" : { "default" : "Utility Configuration" },
           "Parameters" : [
             "CompanyName",
             "SystemName",
-            "ApplicationName",
+            "UtilityName",
+            "UtilityDomain",
             "UseMultiZone",
             "UseStaticPublicAddress",
             "UseStaticPrivateAddress",
             "UseLogMonitoring",
             "LogRetention",
-            "UseLocalUsers",
+            "UseLocalUsers"
+          ]
+        },
+        {
+          "Label" : { "default" : "Access Configuration" },
+          "Parameters" : [
             "KeyName",
-            "AdministratorNetwork"
+            "AdministratorNetwork",
+            "AdministratorNetwork1",
+            "AdministratorNetwork2",
+            "AdministratorNetwork3"
           ]
         }
       ],
@@ -34,7 +43,8 @@
         "VPCStackName" : { "default" : "VPC Stack Name" },
         "CompanyName" : { "default" : "Company Name" },
         "SystemName" : { "default" : "System Name" },
-        "ApplicationName" : { "default" : "Application Name" },
+        "UtilityName" : { "default" : "Utility Name" },
+        "UtilityDomain" : { "default" : "Utility Domain" },
         "UseMultiZone" : { "default" : "Use Multi-Zone" },
         "UseStaticPublicAddress" : { "default" : "Use Static Public Address" },
         "UseStaticPrivateAddress" : { "default" : "Use Static Private Address" },
@@ -42,7 +52,10 @@
         "LogRetention" : { "default" : "Log Retention" },
         "UseLocalUsers" : { "default" : "Use Local Users" },
         "KeyName" : { "default" : "Key Name" },
-        "AdministratorNetwork" : { "default" : "Administrator Network" }
+        "AdministratorNetwork" : { "default" : "Administrator Network" },
+        "AdministratorNetwork1" : { "default" : "Additional Administrator Network 1" },
+        "AdministratorNetwork2" : { "default" : "Additional Administrator Network 2" },
+        "AdministratorNetwork3" : { "default" : "Additional Administrator Network 3" }
       }
     }
   },
@@ -78,14 +91,23 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
-    "ApplicationName" : {
-      "Description" : "Name of the Application associated with the Stack.",
+    "UtilityName" : {
+      "Description" : "Name of the Utility associated with the Stack.",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
       "Default" : "LinuxBastions",
       "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "UtilityDomain" : {
+      "Description" : "DNS Name of the Utility associated with the Stack",
+      "Type" : "String",
+      "MaxLength" : 16,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[a-z][-a-z0-9]*$)",
+      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
     },
 
     "UseMultiZone" : {
@@ -154,6 +176,33 @@
       "Default" : "0.0.0.0/0",
       "AllowedPattern" : "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
       "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "AdministratorNetwork1" : {
+      "Description" : "An optional additional IP address range that can be used to SSH to the EC2 instances",
+      "Type" : "String",
+      "MaxLength" : "18",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "AdministratorNetwork2" : {
+      "Description" : "An optional additional IP address range that can be used to SSH to the EC2 instances",
+      "Type" : "String",
+      "MaxLength" : "18",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "AdministratorNetwork3" : {
+      "Description" : "An optional additional IP address range that can be used to SSH to the EC2 instances",
+      "Type" : "String",
+      "MaxLength" : "18",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
     }
   },
 
@@ -176,12 +225,7 @@
     },
 
     "InstanceTypeMap" : {
-      "Core"        : { "Bastion" : "t2.nano" },
-      "Build"       : { "Bastion" : "t2.nano" },
-      "Production"  : { "Bastion" : "t2.small" },
-      "Staging"     : { "Bastion" : "t2.nano" },
-      "Testing"     : { "Bastion" : "t2.nano" },
-      "Development" : { "Bastion" : "t2.nano" }
+      "Bastion" : { "Production" : "t2.nano", "Staging" : "t2.nano", "Testing" : "t2.nano", "Development" : "t2.nano" }
     },
 
     "HostMap" : {
@@ -196,8 +240,13 @@
     "ConfigureLogs" : { "Fn::Equals" : [{ "Ref" : "UseLogMonitoring" }, "true" ]},
     "ConfigureUsers" : { "Fn::Equals" : [{ "Ref" : "UseLocalUsers" }, "true" ]},
     "ConfigureKey" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "KeyName" }, "" ] }]},
-    "ConfigureStaticPublicAddress&MultiZone" :{ "Fn::And" : [{ "Condition" : "ConfigureStaticPublicAddress" }, { "Condition" : "ConfigureMultiZone" }]},
-    "ConfigureStaticPrivateAddress&MultiZone" :{ "Fn::And" : [{ "Condition" : "ConfigureStaticPrivateAddress" }, { "Condition" : "ConfigureMultiZone" }]}
+    "ConfigureDNS" : { "Fn::And" : [{ "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "UtilityDomain" }, "" ]}]}, { "Condition" : "ConfigureStaticPublicAddress" }]},
+    "ConfigureDNS&MultiZone" : { "Fn::And" : [{ "Condition" : "ConfigureDNS" }, { "Condition" : "ConfigureMultiZone" }]},
+    "ConfigureStaticPublicAddress&MultiZone" : { "Fn::And" : [{ "Condition" : "ConfigureStaticPublicAddress" }, { "Condition" : "ConfigureMultiZone" }]},
+    "ConfigureStaticPrivateAddress&MultiZone" : { "Fn::And" : [{ "Condition" : "ConfigureStaticPrivateAddress" }, { "Condition" : "ConfigureMultiZone" }]},
+    "ConfigureAdministratorNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "AdministratorNetwork1" }, "" ]}]},
+    "ConfigureAdministratorNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "AdministratorNetwork2" }, "" ]}]},
+    "ConfigureAdministratorNetwork3" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "AdministratorNetwork3" }, "" ]}]}
   },
 
   "Resources" : {
@@ -324,14 +373,20 @@
     "SecurityGroup" : {
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
-        "GroupDescription" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }, "SecurityGroup" ]]},
+        "GroupDescription" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "UtilityName" }, "SecurityGroup" ]]},
         "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPC" }},
         "SecurityGroupIngress" : [
-          { "IpProtocol" : "icmp", "FromPort" :  "-1", "ToPort" :  "-1", "CidrIp" : { "Ref" : "AdministratorNetwork" }},
-          { "IpProtocol" : "tcp",  "FromPort" :  "22", "ToPort" :  "22", "CidrIp" : { "Ref" : "AdministratorNetwork" }}
+          { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "AdministratorNetwork" }},
+          { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "AdministratorNetwork" }},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork1", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "AdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "AdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork2", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "AdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "AdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork3", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "AdministratorNetwork3" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork3", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "AdministratorNetwork3" }}, { "Ref" : "AWS::NoValue" }]}
         ],
         "Tags" : [
-          { "Key" : "Name", "Value" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }, "SecurityGroup" ]]}}
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "UtilityName" }, "SecurityGroup" ]]}}
         ]
       }
     },
@@ -355,7 +410,7 @@
     "PrivateNetworkInterfaceA" : {
       "Type" : "AWS::EC2::NetworkInterface",
       "Properties" : {
-        "Description" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }, "PrivateNetworkInterfaceA" ]]},
+        "Description" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "UtilityName" }, "PrivateNetworkInterfaceA" ]]},
         "PrivateIpAddress" : { "Fn::Join" : [ ".", [
                                { "Fn::Select" : [ "0", { "Fn::Split" : [ ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCNetwork" }}]}]},
                                { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCNetwork" }}]}]},
@@ -363,7 +418,7 @@
         "GroupSet" : [{ "Ref" : "SecurityGroup" }],
         "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicSubnetA" }},
         "Tags" : [
-          { "Key" : "Name", "Value" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }, "PrivateNetworkInterfaceA" ]]}}
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "UtilityName" }, "PrivateNetworkInterfaceA" ]]}}
         ]
       },
       "Condition" : "ConfigureStaticPrivateAddress"
@@ -372,7 +427,7 @@
     "PrivateNetworkInterfaceB" : {
       "Type" : "AWS::EC2::NetworkInterface",
       "Properties" : {
-        "Description" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }, "PublicNetworkInterfaceB" ]]},
+        "Description" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "UtilityName" }, "PublicNetworkInterfaceB" ]]},
         "PrivateIpAddress" : { "Fn::Join" : [ ".", [
                                { "Fn::Select" : [ "0", { "Fn::Split" : [ ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCNetwork" }}]}]},
                                { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCNetwork" }}]}]},
@@ -380,7 +435,7 @@
         "GroupSet" : [{ "Ref" : "SecurityGroup" }],
         "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicSubnetB" }},
         "Tags" : [
-          { "Key" : "Name", "Value" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }, "PublicNetworkInterfaceB" ]]}}
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "UtilityName" }, "PublicNetworkInterfaceB" ]]}}
         ]
       },
       "Condition" : "ConfigureStaticPrivateAddress&MultiZone"
@@ -404,7 +459,7 @@
               { "Fn::If" : [ "ConfigureStaticPrivateAddress", "ConfigureStaticPrivateAddress", { "Ref": "AWS::NoValue" }]},
               { "Fn::If" : [ "ConfigureLogs", "ConfigureLogs", { "Ref": "AWS::NoValue" }]},
               { "Fn::If" : [ "ConfigureUsers", "ConfigureUsers", { "Ref": "AWS::NoValue" }]}
-            ],
+            ]
           },
           "UpgradeOS" : {
             "commands" : {
@@ -564,7 +619,7 @@
       },
       "Properties" : {
         "ImageId" : { "Fn::FindInMap" : [ "ImageIdMap", { "Ref" : "AWS::Region" } , "AMI" ]},
-        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Staging", "Bastion" ]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Bastion", "Production" ]},
         "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
         "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
         "SecurityGroups" : [{ "Ref" : "SecurityGroup" }],
@@ -600,7 +655,7 @@
         "MaxSize" : { "Fn::If" : [ "ConfigureMultiZone", "2", "1" ]},
         "DesiredCapacity" : { "Fn::If" : [ "ConfigureMultiZone", "2", "1" ]},
         "Tags" : [
-          { "Key" : "Name", "Value" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }, "Instance" ]]}, "PropagateAtLaunch" : "true" }
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "UtilityName" }, "Instance" ]]}, "PropagateAtLaunch" : "true" }
         ]
       },
       "CreationPolicy" : {
@@ -617,6 +672,32 @@
           "WaitOnResourceSignals" : "true"
         }
       }
+    },
+
+    "PublicRecordSetA" : {
+      "Type" : "AWS::Route53::RecordSet",
+      "Properties" : {
+        "HostedZoneId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicHostedZone" }},
+        "Comment" : { "Fn::Join" : [ "", [ "DNS name for ", { "Ref" : "UtilityName" }, " Instance in ", { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]}]]},
+        "Name" : { "Fn::Join" : [ "", [ { "Ref" : "UtilityDomain" }, "a.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "." ]]},
+        "Type" : "A",
+        "TTL" : "900",
+        "ResourceRecords" : [{ "Ref" : "EIPA" }]
+      },
+      "Condition" : "ConfigureDNS"
+    },
+
+    "PublicRecordSetB" : {
+      "Type" : "AWS::Route53::RecordSet",
+      "Properties" : {
+        "HostedZoneId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicHostedZone" }},
+        "Comment" : { "Fn::Join" : [ "", [ "DNS name for ", { "Ref" : "UtilityName" }, " Instance in ", { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]}]]},
+        "Name" : { "Fn::Join" : [ "", [ { "Ref" : "UtilityDomain" }, "b.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "." ]]},
+        "Type" : "A",
+        "TTL" : "900",
+        "ResourceRecords" : [{ "Ref" : "EIPB" }]
+      },
+      "Condition" : "ConfigureDNS&MultiZone"
     }
   },
 
@@ -628,17 +709,31 @@
     },
 
     "EIPA" : {
-      "Description" : "The EIP in Availability Zone A",
+      "Description" : "The Public Address of the Bastion in Availability Zone A",
       "Value" : { "Ref" : "EIPA" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-EIPA" }},
       "Condition" : "ConfigureStaticPublicAddress"
     },
 
+    "PublicHostnameA" : {
+      "Description" : "The Public Hostname of the Bastion in Availability Zone A",
+      "Value" : { "Fn::Join" : [ "", [ { "Ref" : "UtilityDomain" }, "a.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "." ]]},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-PublicHostnameA" }},
+      "Condition" : "ConfigureDNS"
+    },
+
     "EIPB" : {
-      "Description" : "The EIP in Availability Zone B",
+      "Description" : "The Public Address of the Bastion in Availability Zone B",
       "Value" : { "Ref" : "EIPB" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-EIPB" }},
       "Condition" : "ConfigureStaticPublicAddress&MultiZone"
+    },
+
+    "PublicHostnameB" : {
+      "Description" : "The Public Hostname of the Bastion in Availability Zone B",
+      "Value" : { "Fn::Join" : [ "", [ { "Ref" : "UtilityDomain" }, "b.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "." ]]},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-PublicHostnameB" }},
+      "Condition" : "ConfigureDNS&MultiZone"
     }
   }
 }

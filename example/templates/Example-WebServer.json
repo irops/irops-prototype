@@ -560,7 +560,8 @@
         "Type" : "A",
         "TTL" : "900",
         "ResourceRecords" : [{ "Fn::GetAtt" : [ "Instance", "PublicIp" ]}]
-      }
+      },
+      "Condition" : "ConfigureDNS"
     }
   },
 
@@ -573,7 +574,8 @@
 
     "URL" : {
       "Description" : "URL of the sample website",
-      "Value" :  { "Fn::Join" : [ "", [ "http://", { "Ref" : "ApplicationDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "/" ]]}
+      "Value" :  { "Fn::Join" : [ "", [ "http://", { "Ref" : "ApplicationDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "/" ]]},
+      "Condition" : "ConfigureDNS"
     }
   }
 }

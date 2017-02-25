@@ -27,9 +27,13 @@ owner=${OWNER_EMAIL:-$USER@hpe.com}
 company=${COMPANY_NAME:-Demo}
 system=${SYSTEM_NAME:-IROPS}
 environment=${ENVIRONMENT_NAME:-Production}
-application=${APPLICATION_NAME:-LinuxBastions}
-key=${AWS_KEY_NAME:-demo}
+utility=${UTILITY_NAME:-LinuxBastions}
+utility_domain=${UTILITY_DOMAIN:-lbastion}
+key=${AWS_KEY_NAME:-example}
 network=${ADMINISTRATOR_NETWORK:-0.0.0.0/0}
+network1=${ADMINISTRATOR_NETWORK1:-}
+network2=${ADMINISTRATOR_NETWORK2:-}
+network3=${ADMINISTRATOR_NETWORK3:-}
 region=${AWS_DEFAULT_REGION:-us-west-2}
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-administrator}
@@ -41,7 +45,7 @@ usage () {
     echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v]"
     echo "                  [-O owner] [-C company ] [-S system]"
     echo "                  [-E environment]"
-    echo "                  [-A application]"
+    echo "                  [-U utility] [-D domain]"
     echo "                  [-k key] [-n network ]"
     echo "                  [-r region ] [-a account] [-u user]"
     echo "  -I              non-interactive"
@@ -52,7 +56,8 @@ usage () {
     echo "  -C company      Company Name (default: $company)"
     echo "  -S system       System Name (default: $system)"
     echo "  -E environment  Environment Name (default: $environment)"
-    echo "  -A application  Application Name (default: $application)"
+    echo "  -U utility      Utility Name (default: $utility)"
+    echo "  -D domain       Utility Domain (default: $utility_domain)"
     echo "  -k key          Key (default: $key)"
     echo "  -n network      Administrator Network (default: $network)"
     echo "  -r region       Region (default: $region)"
@@ -140,7 +145,7 @@ next() {
 
 #  3. Parse command line options
 
-while getopts IsfvO:C:S:E:A:k:n:r:a:u:? arg; do
+while getopts IsfvO:C:S:E:U:D:k:n:r:a:u:? arg; do
     case $arg in
     I)  interactive=0;;
     s)  ((speed < speed_max)) && ((speed=speed+25));;
@@ -150,7 +155,8 @@ while getopts IsfvO:C:S:E:A:k:n:r:a:u:? arg; do
     C)  company="$OPTARG";;
     S)  system="$OPTARG";;
     E)  environment="$OPTARG";;
-    A)  application="$OPTARG";;
+    U)  utility="$OPTARG";;
+    D)  utility_domain="$OPTARG";;
     k)  key="$OPTARG";;
     n)  network="$OPTARG";;
     r)  region="$OPTARG";;
@@ -235,10 +241,16 @@ else
     esac
 fi
 
-if [ -z $application ]; then
-    echo "-A application missing!"
-    echo "Could not automatically determine application, and it was not specified as a parameter"
+if [ -z $utility ]; then
+    echo "-U utility missing!"
+    echo "Could not automatically determine utility, and it was not specified as a parameter"
     exit 20
+fi
+
+if [ -z $utility_domain ]; then
+    echo "-D domain missing!"
+    echo "Could not automatically determine domain, and it was not specified as a parameter"
+    exit 22
 fi
 
 if [ -z $key ]; then
@@ -388,13 +400,14 @@ else
     stack_policy_parameter="--stack-policy-body file://$templatesdir/Utility-LinuxBastions-StackPolicy.json"
 fi
 read -r -d '' statement << EOS
-aws cloudformation create-stack --stack-name $environment-$application \\
+aws cloudformation create-stack --stack-name $environment-$utility \\
                                 $template_parameter \\
                                 $stack_policy_parameter \\
                                 --parameters ParameterKey=VPCStackName,ParameterValue=$environment-VPC \\
                                              ParameterKey=CompanyName,ParameterValue=$company \\
                                              ParameterKey=SystemName,ParameterValue=$system \\
-                                             ParameterKey=ApplicationName,ParameterValue=$application \\
+                                             ParameterKey=UtilityName,ParameterValue=$utility \\
+                                             ParameterKey=UtilityDomain,ParameterValue=$utility_domain \\
                                              ParameterKey=UseMultiZone,ParameterValue=$usemultizone \\
                                              ParameterKey=UseStaticPublicAddress,ParameterValue=$usestaticpublicaddress \\
                                              ParameterKey=UseStaticPrivateAddress,ParameterValue=$usestaticprivateaddress \\
@@ -406,6 +419,7 @@ aws cloudformation create-stack --stack-name $environment-$application \\
                                        Key=Company,Value=$company \\
                                        Key=System,Value=$system \\
                                        Key=Environment,Value=$environment \\
+                                       Key=Utility,Value=$utility \\
                                 --capabilities CAPABILITY_IAM \\
                                 --profile $profile --region $region --output table
 EOS
@@ -424,7 +438,7 @@ echo "Commands:"
 echo
 echo "$statement"
 
-if aws cloudformation describe-stacks --stack-name $environment-$application \
+if aws cloudformation describe-stacks --stack-name $environment-$utility \
                                       --profile $profile --region $region --output text &> /dev/null; then
     echo
     tput rev
@@ -448,7 +462,7 @@ fi
 
 ((++step))
 read -r -d '' statement << EOS
-aws cloudformation describe-stacks --stack-name $environment-$application \\
+aws cloudformation describe-stacks --stack-name $environment-$utility \\
                                    --query 'Stacks[].[StackName,StackStatus]' \\
                                    --profile $profile --region $region --output table
 EOS
@@ -456,7 +470,7 @@ run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
 eval_statement="${statement//\\$'\n'} 2> /dev/null"
 
 read -r -d '' statement2 << EOS
-aws cloudformation describe-stack-events --stack-name $environment-$application --max-items 5 \\
+aws cloudformation describe-stack-events --stack-name $environment-$utility --max-items 5 \\
                                          --query 'StackEvents[].[LogicalResourceId,ResourceStatus,Timestamp]' \\
                                          --profile $profile --region $region --output table
 EOS
@@ -477,7 +491,7 @@ echo "$statement"
 echo
 echo "$statement2"
 
-if [ "$(aws cloudformation describe-stacks --stack-name $environment-$application \
+if [ "$(aws cloudformation describe-stacks --stack-name $environment-$utility \
                                            --query 'Stacks[].StackStatus' \
                                            --profile $profile --region $region --output text 2> /dev/null)" = "CREATE_COMPLETE" ]; then
     echo
@@ -502,7 +516,7 @@ else
             echo "$run_statement2"
             eval "$eval_statement2"
 
-            status=$(aws cloudformation describe-stacks --stack-name $environment-$application \
+            status=$(aws cloudformation describe-stacks --stack-name $environment-$utility \
                                                         --query 'Stacks[].StackStatus' \
                                                         --profile $profile --region $region --output text 2> /dev/null)
             if [ -z "$status" -o "$status" = "CREATE_COMPLETE" -o "$status" = "CREATE_FAILED" -o "$status" = "ROLLBACK_COMPLETE" ]; then
@@ -555,7 +569,7 @@ fi
 
 ((++step))
 read -r -d '' statement << EOS
-aws cloudformation describe-stack-resources --stack-name $environment-$application \\
+aws cloudformation describe-stack-resources --stack-name $environment-$utility \\
                                             --query 'StackResources[].[ResourceType,LogicalResourceId,PhysicalResourceId,ResourceStatus]' \\
                                             --profile $profile --region $region --output table
 EOS
