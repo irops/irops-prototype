@@ -30,7 +30,7 @@ system=${SYSTEM_NAME:-IROPS}
 environment=${ENVIRONMENT_NAME:-Production}
 utility=${UTILITY_NAME:-LinuxBastions}
 utility_domain=${UTILITY_DOMAIN:-lbastion}
-key=${AWS_KEY_NAME:-demo}
+key=${AWS_KEY_NAME:-example}
 public_network=${PUBLIC_NETWORK:-0.0.0.0/0}
 public_network1=${PUBLIC_NETWORK1:-}
 private_network=${PRIVATE_NETWORK:-10.0.0.0/16}
@@ -62,6 +62,8 @@ usage () {
     echo "  -U utility      Utility Name (default: $utility)"
     echo "  -D domain       Utility Domain (default: $utility_domain)"
     echo "  -k key          Key (default: $key)"
+    echo "  -p network      Public Network (default: $public_network)"
+    echo "  -P network      Private Network (default: $private_network)"
     echo "  -r region       Region (default: $region)"
     echo "  -a account      Account (default: $account)"
     echo "  -u user         User (default: $user)"
