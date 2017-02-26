@@ -31,10 +31,10 @@ environment=${ENVIRONMENT_NAME:-Production}
 utility=${UTILITY_NAME:-LinuxBastions}
 utility_domain=${UTILITY_DOMAIN:-lbastion}
 key=${AWS_KEY_NAME:-demo}
-network=${ADMINISTRATOR_NETWORK:-0.0.0.0/0}
-network1=${ADMINISTRATOR_NETWORK1:-}
-network2=${ADMINISTRATOR_NETWORK2:-}
-network3=${ADMINISTRATOR_NETWORK3:-}
+public_network=${PUBLIC_NETWORK:-0.0.0.0/0}
+public_network1=${PUBLIC_NETWORK1:-}
+private_network=${PRIVATE_NETWORK:-10.0.0.0/16}
+private_network1=${PRIVATE_NETWORK1:-}
 region=${AWS_DEFAULT_REGION:-us-west-2}
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-administrator}
@@ -47,7 +47,8 @@ usage () {
     echo "                  [-O owner] [-C company ] [-S system]"
     echo "                  [-E environment]"
     echo "                  [-U utility] [-D domain]"
-    echo "                  [-k key] [-n network ]"
+    echo "                  [-k key]"
+    echo "                  [-p network] [-P network ]"
     echo "                  [-r region ] [-a account] [-u user]"
     echo "  -I              non-interactive"
     echo "  -s              slower: increase pauses by 25%"
@@ -61,7 +62,6 @@ usage () {
     echo "  -U utility      Utility Name (default: $utility)"
     echo "  -D domain       Utility Domain (default: $utility_domain)"
     echo "  -k key          Key (default: $key)"
-    echo "  -n network      Administrator Network (default: $network)"
     echo "  -r region       Region (default: $region)"
     echo "  -a account      Account (default: $account)"
     echo "  -u user         User (default: $user)"
@@ -147,7 +147,7 @@ next() {
 
 #  3. Parse command line options
 
-while getopts IsfvoO:C:S:E:U:D:k:n:r:a:u:? arg; do
+while getopts IsfvoO:C:S:E:U:D:k:p:P:r:a:u:? arg; do
     case $arg in
     I)  interactive=0;;
     s)  ((speed < speed_max)) && ((speed=speed+25));;
@@ -161,7 +161,8 @@ while getopts IsfvoO:C:S:E:U:D:k:n:r:a:u:? arg; do
     U)  utility="$OPTARG";;
     D)  utility_domain="$OPTARG";;
     k)  key="$OPTARG";;
-    n)  network="$OPTARG";;
+    p)  public_network="$OPTARG";;
+    P)  private_network="$OPTARG";;
     r)  region="$OPTARG";;
     a)  account="$OPTARG";;
     u)  user="$OPTARG";;
@@ -209,38 +210,38 @@ else
         usemultizone=false
         usestaticpublicaddress=true
         usestaticprivateaddress=true
-        uselogmonitoring=false
+        uselogmonitoring=true
         uselocalusers=true;;
       Testing)
         usemultizone=false
         usestaticpublicaddress=true
         usestaticprivateaddress=true
-        uselogmonitoring=false
-        uselocalusers=false;;
+        uselogmonitoring=true
+        uselocalusers=true;;
       Development)
         usemultizone=false
         usestaticpublicaddress=true
-        usestaticprivateaddress=false
-        uselogmonitoring=false
-        uselocalusers=false;;
+        usestaticprivateaddress=true
+        uselogmonitoring=true
+        uselocalusers=true;;
       Core)
         usemultizone=false
         usestaticpublicaddress=true
-        usestaticprivateaddress=false
-        uselogmonitoring=false
+        usestaticprivateaddress=true
+        uselogmonitoring=true
         uselocalusers=true;;
       Build)
         usemultizone=false
         usestaticpublicaddress=true
-        usestaticprivateaddress=false
-        uselogmonitoring=false
+        usestaticprivateaddress=true
+        uselogmonitoring=true
         uselocalusers=true;;
       *)
         usemultizone=false
         usestaticpublicaddress=true
-        usestaticprivateaddress=false
-        uselogmonitoring=false
-        uselocalusers=false;;
+        usestaticprivateaddress=true
+        uselogmonitoring=true
+        uselocalusers=true;;
     esac
 fi
 
@@ -262,10 +263,16 @@ if [ -z $key ]; then
     exit 30
 fi
 
-if [ -z $network ]; then
-    echo "-N network missing!"
-    echo "Could not automatically determine network, and it was not specified as a parameter"
-    exit 32
+if [ -z $public_network ]; then
+    echo "-p network missing!"
+    echo "Could not automatically determine public network, and it was not specified as a parameter"
+    exit 34
+fi
+
+if [ -z $private_network ]; then
+    echo "-P network missing!"
+    echo "Could not automatically determine private network, and it was not specified as a parameter"
+    exit 36
 fi
 
 if [ -z $region ]; then
@@ -410,6 +417,7 @@ aws cloudformation update-stack --stack-name $environment-$utility \\
                                 $template_parameter \\
                                 $stack_policy_parameter \\
                                 --parameters ParameterKey=VPCStackName,ParameterValue=$environment-VPC \\
+                                             ParameterKey=StandardTopicsStackName,ParameterValue=StandardTopics \\
                                              ParameterKey=CompanyName,ParameterValue=$company \\
                                              ParameterKey=SystemName,ParameterValue=$system \\
                                              ParameterKey=UtilityName,ParameterValue=$utility \\
@@ -420,7 +428,8 @@ aws cloudformation update-stack --stack-name $environment-$utility \\
                                              ParameterKey=UseLogMonitoring,ParameterValue=$uselogmonitoring \\
                                              ParameterKey=UseLocalUsers,ParameterValue=$uselocalusers \\
                                              ParameterKey=KeyName,ParameterValue=$key \\
-                                             ParameterKey=AdministratorNetwork,ParameterValue=$network \\
+                                             ParameterKey=PublicNetwork,ParameterValue=$public_network \\
+                                             ParameterKey=PrivateNetwork,ParameterValue=$private_network \\
                                 --tags Key=Owner,Value=$owner \\
                                        Key=Company,Value=$company \\
                                        Key=System,Value=$system \\
