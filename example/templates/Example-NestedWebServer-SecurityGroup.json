@@ -1,0 +1,165 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Example-NestedWebServer-SecurityGroup Template. This is an example of a layer in the NestedWebServer application, which creates a SecurityGroup.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "VPCStackName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Application Configuration" },
+          "Parameters" : [
+            "ApplicationName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Access Configuration" },
+          "Parameters" : [
+            "AdministratorNetwork",
+            "AdministratorNetwork1",
+            "PublicNetwork",
+            "PublicNetwork1",
+            "PrivateNetwork",
+            "PrivateNetwork1"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "VPCStackName" : { "default" : "VPC Stack Name" },
+        "ApplicationName" : { "default" : "Application Name" },
+        "AdministratorNetwork" : { "default" : "Administrator Network" },
+        "AdministratorNetwork1" : { "default" : "Additional Administrator Network 1" },
+        "PublicNetwork" : { "default" : "Public Network" },
+        "PublicNetwork1" : { "default" : "Additional Public Network 1" },
+        "PrivateNetwork" : { "default" : "Private Network" },
+        "PrivateNetwork1" : { "default" : "Additional Private Network 1" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "VPCStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the VPC",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-VPC",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "ApplicationName" : {
+      "Description" : "Name of the Application associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "NestedWebServer",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "AdministratorNetwork" : {
+      "Description" : "An IP address range that can be used to SSH to the EC2 instances",
+      "Type" : "String",
+      "MinLength" : "9",
+      "MaxLength" : "18",
+      "Default" : "0.0.0.0/0",
+      "AllowedPattern" : "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "AdministratorNetwork1" : {
+      "Description" : "An optional additional IP address range that can be used to SSH to the EC2 instances",
+      "Type" : "String",
+      "MaxLength" : "18",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "PublicNetwork" : {
+      "Description" : "A public IP address range that can access the application",
+      "Type" : "String",
+      "MinLength" : "9",
+      "MaxLength" : "18",
+      "Default" : "0.0.0.0/0",
+      "AllowedPattern" : "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "PublicNetwork1" : {
+      "Description" : "An optional additional public IP address range that can access the application",
+      "Type" : "String",
+      "MaxLength" : "18",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "PrivateNetwork" : {
+      "Description" : "An optional private IP address range that can access the application",
+      "Type" : "String",
+      "MaxLength" : "18",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^10\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
+    },
+
+    "PrivateNetwork1" : {
+      "Description" : "An optional additional private IP address range that can access the application",
+      "Type" : "String",
+      "MaxLength" : "18",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^10\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
+    }
+  },
+
+  "Conditions" : {
+    "ConfigureAdministratorNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "AdministratorNetwork1" }, "" ]}]},
+    "ConfigurePublicNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicNetwork1" }, "" ]}]},
+    "ConfigurePrivateNetwork" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateNetwork" }, "" ]}]},
+    "ConfigurePrivateNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateNetwork1" }, "" ]}]}
+  },
+
+  "Resources" : {
+    "SecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }, "SecurityGroup" ]]},
+        "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPC" }},
+        "SecurityGroupIngress" : [
+          { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "AdministratorNetwork" }},
+          { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "AdministratorNetwork" }},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork1", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "AdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "AdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "IpProtocol" : "icmp", "FromPort" :  "-1", "ToPort" :  "-1", "CidrIp" : { "Ref" : "PublicNetwork" }},
+          { "IpProtocol" : "tcp",  "FromPort" :  "80", "ToPort" :  "80", "CidrIp" : { "Ref" : "PublicNetwork" }},
+          { "Fn::If" : [ "ConfigurePublicNetwork1", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PublicNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "80", "ToPort" : "80", "CidrIp" : { "Ref" : "PublicNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateNetwork", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PrivateNetwork" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateNetwork", { "IpProtocol" : "tcp",  "FromPort" : "80", "ToPort" : "80", "CidrIp" : { "Ref" : "PrivateNetwork" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateNetwork1", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PrivateNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "80", "ToPort" : "80", "CidrIp" : { "Ref" : "PrivateNetwork1" }}, { "Ref" : "AWS::NoValue" }]}
+        ],
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }, "SecurityGroup" ]]}}
+        ]
+      }
+    }
+  },
+
+  "Outputs" : {
+    "SecurityGroup" : {
+      "Description" : "The SecurityGroup",
+      "Value" : { "Ref" : "SecurityGroup" }
+    }
+  }
+}

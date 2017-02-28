@@ -1,0 +1,368 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Example-NestedWebServer-Instance Template. This is an example of a layer in the NestedWebServer application, which creates the Instance.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "VPCStackName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Resource Dependencies" },
+          "Parameters" : [
+            "Role",
+            "SecurityGroup"
+          ]
+        },
+        {
+          "Label" : { "default" : "Application Configuration" },
+          "Parameters" : [
+            "ApplicationsBucket",
+            "ApplicationName",
+            "ApplicationVersion"
+          ]
+        },
+        {
+          "Label" : { "default" : "Access Configuration" },
+          "Parameters" : [
+            "KeyName"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "VPCStackName" : { "default" : "VPC Stack Name" },
+        "Role" : { "default" : "Role" },
+        "SecurityGroup" : { "default" : "SecurityGroup" },
+        "ApplicationsBucket" : { "default" : "Applications Bucket" },
+        "ApplicationName" : { "default" : "Application Name" },
+        "ApplicationVersion" : { "default" : "Application Version" },
+        "KeyName" : { "default" : "Key Name" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "VPCStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the VPC",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-VPC",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "Role" : {
+      "Description" : "Name of an existing Role which provides permissions needed by the Instance",
+      "Type" : "String",
+      "MaxLength" : 128,
+      "AllowedPattern" : "^[-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must be the name of an existing Role."
+    },
+
+    "SecurityGroup" : {
+      "Description" : "ID of an existing SecurityGroup which controls access to the Instance",
+      "Type" : "AWS::EC2::SecurityGroup::Id",
+      "MaxLength" : 32,
+      "AllowedPattern" : "^sg-[0-9a-f]{8}$",
+      "ConstraintDescription" : "must be the name of an existing SecurityGroup."
+    },
+
+    "ApplicationsBucket" : {
+      "Description" : "The S3 bucket containing Applications to be deployed",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "AllowedPattern" : "(^$|^[a-z][-a-z0-9]*$)",
+      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
+    },
+
+    "ApplicationName" : {
+      "Description" : "Name of the Application associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "NestedWebServer",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "ApplicationVersion" : {
+      "Description" : "The version of the application to be deployed",
+      "Type" : "String",
+      "MinLength" : 5,
+      "MaxLength" : 32,
+      "Default" : "1.0.0",
+      "AllowedPattern" : "^[0-9]*.[0-9]*.[0-9]*(-[a-zA-Z0-9][-a-zA-Z0-9]*)?$",
+      "ConstraintDescription" : "must follow semantic versioning conventions."
+    },
+
+    "KeyName" : {
+      "Description" : "Name of an existing KeyPair to enable SSH access to the instances",
+      "Type" : "AWS::EC2::KeyPair::KeyName",
+      "MaxLength" : 32,
+      "AllowedPattern" : "(^$|^[_a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be the name of an existing KeyPair."
+    }
+  },
+
+  "Mappings" : {
+    "ImageIdMap" : {
+      "ap-south-1"     : { "AMI" : "ami-9fc7b0f0" },
+      "eu-west-2"      : { "AMI" : "ami-bfe0eadb" },
+      "eu-west-1"      : { "AMI" : "ami-c51e3eb6" },
+      "ap-northeast-2" : { "AMI" : "ami-94bb6dfa" },
+      "ap-northeast-1" : { "AMI" : "ami-9f0c67f8" },
+      "sa-east-1"      : { "AMI" : "ami-bb40d8d7" },
+      "ca-central-1"   : { "AMI" : "ami-eb20928f" },
+      "ap-southeast-1" : { "AMI" : "ami-4dd6782e" },
+      "ap-southeast-2" : { "AMI" : "ami-28cff44b" },
+      "eu-central-1"   : { "AMI" : "ami-211ada4e" },
+      "us-east-1"      : { "AMI" : "ami-9be6f38c" },
+      "us-east-2"      : { "AMI" : "ami-38cd975d" },
+      "us-west-1"      : { "AMI" : "ami-b73d6cd7" },
+      "us-west-2"      : { "AMI" : "ami-1e299d7e" }
+    },
+
+    "InstanceTypeMap" : {
+      "WebServer" : { "Production" : "t2.nano", "Staging" : "t2.nano", "Testing" : "t2.nano", "Development" : "t2.nano" }
+    }
+  },
+
+  "Conditions" : {
+    "DownloadApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationsBucket" }, "" ]}]},
+    "ConfigureKey" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "KeyName" }, "" ]}]},
+  },
+
+  "Resources" : {
+    "InstanceProfile" : {
+      "Type" : "AWS::IAM::InstanceProfile",
+      "Properties" : {
+        "Path" : "/",
+        "Roles" : [{ "Ref" : "Role" }]
+      }
+    },
+
+    "Instance" : {
+      "Type" : "AWS::EC2::Instance",
+      "Metadata" : {
+        "AWS::CloudFormation::Authentication" : {
+          "S3Credentials" : {
+            "type" : "S3",
+            "roleName" : { "Ref" : "Role" },
+            "buckets" : [{ "Ref" : "ApplicationsBucket" }]
+          }
+        },
+
+        "AWS::CloudFormation::Init" : {
+          "configSets" : {
+            "All" : [
+              "UpgradeOS",
+              "ConfigureOS",
+              "ConfigureCFN",
+              "InstallApache",
+              { "Fn::If" : [ "DownloadApplication", "DownloadApplication", "ConfigureApplication" ]}
+            ]
+          },
+          "UpgradeOS" : {
+            "commands" : {
+              "01_yum_update" : {
+                "command" : "yum update -y",
+                "ignoreErrors" : "false"
+              }
+            }
+          },
+          "ConfigureOS" : {
+            "packages" : {
+              "yum" : {
+                "yum-cron" : [],
+                "git" : []
+              }
+            },
+            "files" : {
+              "/etc/yum/yum-cron.conf" : {
+                "content" : { "Fn::Join" : [ "", [
+                  "[commands]\n",
+                  "update_cmd = security\n",
+                  "update_messages = yes\n",
+                  "download_updates = yes\n",
+                  "apply_updates = yes\n",
+                  "random_sleep = 10\n"
+                ]]},
+                "mode"  : "000644",
+                "owner" : "root",
+                "group" : "root"
+              },
+              "/etc/profile.d/local.sh" : {
+                "content" : { "Fn::Join" : [ "", [
+                  "alias lsa='ls -lAF'\n"
+                ]]},
+                "mode"  : "000644",
+                "owner" : "root",
+                "group" : "root"
+              }
+            }
+          },
+          "ConfigureCFN" : {
+            "files" : {
+              "/etc/cfn/cfn-hup.conf" : {
+                "content" : { "Fn::Join" : [ "", [
+                  "[main]\n",
+                  "stack=", { "Ref" : "AWS::StackId" }, "\n",
+                  "region=", { "Ref" : "AWS::Region" }, "\n"
+                ]]},
+                "mode"  : "000400",
+                "owner" : "root",
+                "group" : "root"
+              },
+              "/etc/cfn/hooks.d/cfn-auto-reloader.conf" : {
+                "content" : { "Fn::Join" : [ "", [
+                  "[cfn-auto-reloader-hook]\n",
+                  "triggers=post.update\n",
+                  "path=Resources.Instance.Metadata.AWS::CloudFormation::Init\n",
+                  "action=/opt/aws/bin/cfn-init --verbose",
+                  " --configsets All",
+                  " --stack ", { "Ref" : "AWS::StackName" },
+                  " --resource Instance",
+                  " --region ", { "Ref" : "AWS::Region" }, "\n"
+                ]]},
+                "mode"  : "000400",
+                "owner" : "root",
+                "group" : "root"
+              }
+            },
+            "services" : {
+              "sysvinit" : {
+                "cfn-hup" : {
+                  "enabled" : "true",
+                  "ensureRunning" : "true",
+                  "files" : [
+                    "/etc/cfn/cfn-hup.conf",
+                    "/etc/cfn/hooks.d/cfn-auto-reloader.conf"
+                  ]
+                }
+              }
+            }
+          },
+          "InstallApache" : {
+            "packages" : {
+              "yum" : {
+                "httpd" : []
+              }
+            },
+            "commands" : {
+              "01_enable_ssi" : {
+                "command" : "sed -i -e 's/\\(^    Options Indexes FollowSymLinks$\\)/\\1 Includes\\n    XBitHack on/' /etc/httpd/conf/httpd.conf",
+                "ignoreErrors" : "false"
+              }
+            },
+            "services" : {
+              "sysvinit" : {
+                "httpd" : {
+                  "enabled" : "true",
+                  "ensureRunning" : "true",
+                  "files" : [
+                    "/etc/httpd/conf/httpd.conf"
+                  ]
+                }
+              }
+            }
+          },
+          "DownloadApplication" : {
+            "sources" : {
+              "/var/www" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ApplicationsBucket}/${ApplicationName}/${ApplicationName}-${ApplicationVersion}.tgz" }
+            }
+          },
+          "ConfigureApplication" : {
+            "files" : {
+              "/var/www/html/index.html" : {
+                "content" : { "Fn::Join" : [ "", [
+                  "<html>\n",
+                  "<head>\n",
+                  "<title>", { "Ref" : "ApplicationName" }, " Test Application</title>\n",
+                  "</head>\n",
+                  "<body>\n",
+                  "<h1>", { "Ref" : "ApplicationName" }, " (", { "Ref" : "ApplicationVersion" }, ")</h1>\n",
+                  "\n",
+                  "<p>This page displays data obtained from the meta-data service via SSI.</p>\n",
+                  "\n",
+                  "<ul>\n",
+                  "  <li>ami-id: <!--#exec cmd=\"curl http://169.254.169.254/latest/meta-data/ami-id\" --></li>\n",
+                  "  <li>instance-id: <!--#exec cmd=\"curl http://169.254.169.254/latest/meta-data/instance-id\" --></li>\n",
+                  "  <li>instance-type: <!--#exec cmd=\"curl http://169.254.169.254/latest/meta-data/instance-type\" --></li>\n",
+                  "  <li>local-hostname: <!--#exec cmd=\"curl http://169.254.169.254/latest/meta-data/local-hostname\" --></li>\n",
+                  "  <li>local-ipv4: <!--#exec cmd=\"curl http://169.254.169.254/latest/meta-data/local-ipv4\" --></li>\n",
+                  "  <li>public-hostname: <!--#exec cmd=\"curl http://169.254.169.254/latest/meta-data/public-hostname\" --></li>\n",
+                  "  <li>public-ipv4: <!--#exec cmd=\"curl http://169.254.169.254/latest/meta-data/public-ipv4\" --></li>\n",
+                  "</ul>\n",
+                  "\n",
+                  "<p>If you do not see the output values on this page, insure you have added &quot;XBitHack on&quot; to the\n",
+                  "Apache main or vhost configuration file and restarted Apache</p>\n",
+                  "</body>\n"
+                ]]},
+                "mode"  : "000755",
+                "owner" : "root",
+                "group" : "root"
+              }
+            }
+          }
+        }
+      },
+      "Properties" : {
+        "ImageId" : { "Fn::FindInMap" : [ "ImageIdMap", { "Ref" : "AWS::Region" } , "AMI" ]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "WebServer", "Production"]},
+        "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
+        "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
+        "NetworkInterfaces" : [{
+          "GroupSet"                 : [{ "Ref" :  "SecurityGroup" }],
+          "AssociatePublicIpAddress" : "true",
+          "DeviceIndex"              : "0",
+          "DeleteOnTermination"      : "true",
+          "SubnetId"                 : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-WebSubnetA" }}
+        }],
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }, "Instance" ]]} }
+        ],
+        "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "", [
+          "#!/bin/bash -xe\n",
+          "yum update -y aws-cfn-bootstrap\n",
+          "\n",
+          "# Install the files and packages from the metadata\n",
+          "/opt/aws/bin/cfn-init --verbose",
+          " --configsets All",
+          " --stack ", { "Ref" : "AWS::StackName" },
+          " --resource Instance",
+          " --region ", { "Ref" : "AWS::Region" }, "\n",
+          "\n",
+          "# Signal the status from cfn-init\n",
+          "/opt/aws/bin/cfn-signal --exit-code $?",
+          " --stack ", { "Ref" : "AWS::StackName" },
+          " --resource Instance",
+          " --region ", { "Ref" : "AWS::Region" }, "\n"
+        ]]}}
+      },
+      "CreationPolicy" : {
+        "ResourceSignal" : {
+          "Timeout" : "PT5M"
+        }
+      }
+    }
+  },
+
+  "Outputs" : {
+    "Instance" : {
+      "Description" : "The Instance",
+      "Value" : { "Ref" : "Instance" }
+    },
+
+    "InstancePublicIp" : {
+      "Description" : "The Instance PublicIp",
+      "Value" : { "Fn::GetAtt" : [ "Instance", "PublicIp" ]}
+    }
+  }
+}
