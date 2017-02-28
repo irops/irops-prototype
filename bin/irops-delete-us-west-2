@@ -104,7 +104,7 @@
 
 run() {
     echo
-    echo -n "Run: \"${1##*/}\"? [Y/n/q]"
+    echo -n "Run: \"${1##*/bin/}\"? [Y/n/q]"
     read choice
     case "$choice" in
       "" | "y" | "Y" | "yes" | "Yes")
@@ -151,25 +151,25 @@ source $bindir/irops-define-us-west-2-production
 #      2.15. Delete Production-WebServers Stack (future)
 #      2.16. Delete Production-WebServer Stack
 
-#run "$examplebindir/example-delete-windowswordpress-stack -E Development"
-#run "$examplebindir/example-delete-linuxwordpress-stack -E Development"
-#run "$examplebindir/example-delete-webservers-stack -E Development"
-run "$examplebindir/example-delete-webserver-stack -E Development"
+#run "$examplebindir/example-delete-windowswordpress-stack -E Development -A WindowsWordPress"
+#run "$examplebindir/example-delete-linuxwordpress-stack -E Development -A LinuxWordPress"
+#run "$examplebindir/example-delete-webservers-stack -E Development -A WebServers"
+run "$examplebindir/example-delete-webserver-stack -E Development -A WebServer"
 
-#run "$examplebindir/example-delete-windowswordpress-stack -E Testing"
-#run "$examplebindir/example-delete-linuxwordpress-stack -E Testing"
-#run "$examplebindir/example-delete-webservers-stack -E Testing"
-run "$examplebindir/example-delete-webserver-stack -E Testing"
+#run "$examplebindir/example-delete-windowswordpress-stack -E Testing -A WindowsWordPress"
+#run "$examplebindir/example-delete-linuxwordpress-stack -E Testing -A LinuxWordPress"
+#run "$examplebindir/example-delete-webservers-stack -E Testing -A WebServers"
+run "$examplebindir/example-delete-webserver-stack -E Testing -A WebServer"
 
-#run "$examplebindir/example-delete-windowswordpress-stack -E Staging"
-#run "$examplebindir/example-delete-linuxwordpress-stack -E Staging"
-#run "$examplebindir/example-delete-webservers-stack -E Staging"
-run "$examplebindir/example-delete-webserver-stack -E Staging"
+#run "$examplebindir/example-delete-windowswordpress-stack -E Staging -A WindowsWordPress"
+#run "$examplebindir/example-delete-linuxwordpress-stack -E Staging -A LinuxWordPress"
+#run "$examplebindir/example-delete-webservers-stack -E Staging -A WebServers"
+run "$examplebindir/example-delete-webserver-stack -E Staging -A WebServer"
 
-#run "$examplebindir/example-delete-windowswordpress-stack -E Production"
-#run "$examplebindir/example-delete-linuxwordpress-stack -E Production"
-#run "$examplebindir/example-delete-webservers-stack -E Production"
-run "$examplebindir/example-delete-webserver-stack -E Production"
+#run "$examplebindir/example-delete-windowswordpress-stack -E Production -A WindowsWordPress"
+#run "$examplebindir/example-delete-linuxwordpress-stack -E Production -A LinuxWordPress"
+#run "$examplebindir/example-delete-webservers-stack -E Production -A WebServers"
+run "$examplebindir/example-delete-webserver-stack -E Production -A WebServer"
 
 
 #  3. Delete Bastions
@@ -186,18 +186,18 @@ run "$examplebindir/example-delete-webserver-stack -E Production"
 #      3.11. Delete Production-WindowsBastions Stack (future)
 #      3.12. Delete Production-LinuxBastions Stack
 
-#run "$utilitybindir/utility-delete-windowsbastions-stack -E Build -A LinuxBastions"
-run "$utilitybindir/utility-delete-linuxbastions-stack -E Build -A LinuxBastions"
-#run "$utilitybindir/utility-delete-windowsbastions-stack -E Core -A LinuxBastions"
-run "$utilitybindir/utility-delete-linuxbastions-stack -E Core -A LinuxBastions"
-#run "$utilitybindir/utility-delete-windowsbastions-stack -E Development -A LinuxBastions"
-run "$utilitybindir/utility-delete-linuxbastions-stack -E Development -A LinuxBastions"
-#run "$utilitybindir/utility-delete-windowsbastions-stack -E Testing -A LinuxBastions"
-run "$utilitybindir/utility-delete-linuxbastions-stack -E Testing -A LinuxBastions"
-#run "$utilitybindir/utility-delete-windowsbastions-stack -E Staging -A LinuxBastions"
-run "$utilitybindir/utility-delete-linuxbastions-stack -E Staging -A LinuxBastions"
-#run "$utilitybindir/utility-delete-windowsbastions-stack -E Production -A LinuxBastions"
-run "$utilitybindir/utility-delete-linuxbastions-stack -E Production -A LinuxBastions"
+#run "$utilitybindir/utility-delete-windowsbastions-stack -E Build -U WindowsBastions"
+run "$utilitybindir/utility-delete-linuxbastions-stack -E Build -U LinuxBastions"
+#run "$utilitybindir/utility-delete-windowsbastions-stack -E Core -U WindowsBastions"
+run "$utilitybindir/utility-delete-linuxbastions-stack -E Core -U LinuxBastions"
+#run "$utilitybindir/utility-delete-windowsbastions-stack -E Development -U WindowsBastions"
+run "$utilitybindir/utility-delete-linuxbastions-stack -E Development -U LinuxBastions"
+#run "$utilitybindir/utility-delete-windowsbastions-stack -E Testing -U WindowsBastions"
+run "$utilitybindir/utility-delete-linuxbastions-stack -E Testing -U LinuxBastions"
+#run "$utilitybindir/utility-delete-windowsbastions-stack -E Staging -U WindowsBastions"
+run "$utilitybindir/utility-delete-linuxbastions-stack -E Staging -U LinuxBastions"
+#run "$utilitybindir/utility-delete-windowsbastions-stack -E Production -U WindowsBastions"
+run "$utilitybindir/utility-delete-linuxbastions-stack -E Production -U LinuxBastions"
 
 
 #  4. Delete VPNConnections

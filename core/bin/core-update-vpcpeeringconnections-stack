@@ -357,7 +357,7 @@ read -r -d '' statement << EOS
 aws cloudformation update-stack --stack-name Core-VPCPeeringConnections \\
                                 $template_parameter \\
                                 $stack_policy_parameter \\
-                                --parameters ParameterKey=CoreVPCStackName,ParameterValue=$core_vpc_stack_name \
+                                --parameters ParameterKey=CoreVPCStackName,ParameterValue=$core_vpc_stack_name \\
                                              ParameterKey=BuildVPCStackName,ParameterValue=$build_vpc_stack_name \\
                                              ParameterKey=ProductionVPCStackName,ParameterValue=$production_vpc_stack_name \\
                                              ParameterKey=StagingVPCStackName,ParameterValue=$staging_vpc_stack_name \\

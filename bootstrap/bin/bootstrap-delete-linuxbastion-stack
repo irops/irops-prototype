@@ -1,6 +1,12 @@
 #!/bin/bash
 #
-# This script deletes the Utility LinuxBastions Stack in an Environment, Core or Build VPC.
+# This script deletes the Bootstrap LinuxBastion Stack in the Default VPC in the us-east-1 Region.
+#
+# This script is designed to be run first to bootstrap an Instance which can then create the rest
+# of the IROPS Infrastructure, prior to the point when other Bastion/Management Instances exist.
+#
+# This Bootstrap Instance should be destroyed when no longer needed, as it will not exist within
+# the formal VPC infrastructure, and may present a security risk.
 #
 # This script is written in a format suitable for interactive demos,
 # but can be run non-Iteractively and more quickly with the "-I" flag.
@@ -23,27 +29,26 @@ delete_attempts=20
 interactive=1
 speed=100
 verbose=0
-environment=${ENVIRONMENT_NAME:-Production}
-utility=${UTILITY_NAME:-LinuxBastions}
-region=${AWS_DEFAULT_REGION:-us-west-2}
+monitor=1
+environment=Bootstrap # This exists outside Environments
+utility=${UTILITY_NAME:-LinuxBastion}
+region=us-east-1 # This should run only in us-east-1
 account=${AWS_ACCOUNT_ALIAS:-irops}
-user=${AWS_USER_NAME:-administrator}
+user=${AWS_USER_NAME:-tempadministrator}
 
 
 #  2. Define functions
 
 usage () {
-    echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v]"
-    echo "                  [-E environment]"
+    echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v] [-M]"
     echo "                  [-U utility]"
-    echo "                  [-r region ] [-a account] [-u user]"
+    echo "                  [-a account] [-u user]"
     echo "  -I              non-interactive"
     echo "  -s              slower: increase pauses by 25%"
     echo "  -f              faster: reduce pauses by 25%"
     echo "  -v              verbose"
-    echo "  -E environment  Environment Name (default: $environment)"
+    echo "  -M              do not monitor stack deletion"
     echo "  -U utility      Utility Name (default: $utility)"
-    echo "  -r region       Region (default: $region)"
     echo "  -a account      Account (default: $account)"
     echo "  -u user         User (default: $user)"
 }
@@ -128,15 +133,14 @@ next() {
 
 #  3. Parse command line options
 
-while getopts IsfvE:U:r:a:u:? arg; do
+while getopts IsfvMU:a:u:? arg; do
     case $arg in
     I)  interactive=0;;
     s)  ((speed < speed_max)) && ((speed=speed+25));;
     f)  ((speed > 0)) && ((speed=speed-25));;
     v)  verbose=1;;
-    E)  environment="$OPTARG";;
+    M)  monitor=0;;
     U)  utility="$OPTARG";;
-    r)  region="$OPTARG";;
     a)  account="$OPTARG";;
     u)  user="$OPTARG";;
     ?)  usage
@@ -145,15 +149,10 @@ while getopts IsfvE:U:r:a:u:? arg; do
 done
 
 shift $(($OPTIND - 1))
+[ $monitor = 0 ] && verbose=0
 
 
 #  4. Validate environment
-
-if [ -z $environment ]; then
-    echo "-E environment missing!"
-    echo "Could not automatically determine environment, and it was not specified as a parameter"
-    exit 16
-fi
 
 if [ -z $utility ]; then
     echo "-U utility missing!"
@@ -161,21 +160,7 @@ if [ -z $utility ]; then
     exit 20
 fi
 
-if [ -z $region ]; then
-    echo "-r region missing!"
-    echo "Could not automatically determine region, and it was not specified as a parameter"
-    exit 50
-else
-    case $region in
-      us-east-1)
-        s3_domain=s3.amazonaws.com;;
-      us-east-2|us-west-1|us-west-2|ca-central-1|sa-east-1|eu-west-1|eu-west-2|eu-central-1|ap-northeast-1|ap-northeast-2|ap-south-1|ap-southeast-1|ap-southeast-2)
-        s3_domain=s3-$region.amazonaws.com;;
-    *)
-        echo "-r $region invalid: Please specify a valid region"
-        exit 51;;
-    esac
-fi
+s3_domain=s3.amazonaws.com
 
 if [ -z $account ]; then
     echo "-a account missing!"
@@ -195,12 +180,6 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     echo "Could not find ($account) Account ($user) User AWSCLI profile!"
     echo "Expected to find: [profile $profile] in ~/.aws/config"
     exit 60
-fi
-
-if ! aws cloudformation describe-stacks --stack-name $environment-$utility \
-                                        --profile $profile --region $region --output text &> /dev/null; then
-    echo "Unable to delete - $environment-$utility Stack does not exist!"
-    exit 70
 fi
 
 # Prevent certain environment variables from breaking commands
@@ -306,58 +285,60 @@ EOS
 run_statement2=$(echo "$statement2" | sed -e '1s/^/# /;2,$ s/^/> /')
 eval_statement2="${statement2//\\$'\n'} 2> /dev/null"
 
-clear
-echo
-echo "============================================================"
-echo
-echo "$(printf '%2d' $step). Monitor Stack deletion"
-echo
-echo "============================================================"
-echo
-echo "Commands:"
-echo
-echo "$statement"
-echo
-echo "$statement2"
-
-if ! aws cloudformation describe-stacks --stack-name $environment-$utility \
-                                        --profile $profile --region $region &> /dev/null; then
+if [ $monitor = 1 ]; then
+    clear
     echo
-    tput rev
-    echo "Already Deleted!"
-    tput sgr0
+    echo "============================================================"
+    echo
+    echo "$(printf '%2d' $step). Monitor Stack deletion"
+    echo
+    echo "============================================================"
+    echo
+    echo "Commands:"
+    echo
+    echo "$statement"
+    echo
+    echo "$statement2"
 
-    next 50
-
-else
-    run 50
-
-    if [ $choice = y ]; then
+    if ! aws cloudformation describe-stacks --stack-name $environment-$utility \
+                                            --profile $profile --region $region &> /dev/null; then
         echo
-        echo "$run_statement"
-        eval "$eval_statement"
+        tput rev
+        echo "Already Deleted!"
+        tput sgr0
 
-        attempt=0
-        seconds=$delete_default
-        while ((attempt++ <= delete_attempts)); do
+        next 50
+
+    else
+        run 50
+
+        if [ $choice = y ]; then
             echo
-            echo "$run_statement2"
-            eval "$eval_statement2"
+            echo "$run_statement"
+            eval "$eval_statement"
 
-            status=$(aws cloudformation describe-stacks --stack-name $environment-$utility \
-                                                        --query 'Stacks[].StackStatus' \
-                                                        --profile $profile --region $region --output text 2> /dev/null)
-            if [ -z "$status" -o "$status" = "CREATE_COMPLETE" -o "$status" = "CREATE_FAILED" -o "$status" = "ROLLBACK_COMPLETE" ]; then
-                break
-            else
+            attempt=0
+            seconds=$delete_default
+            while ((attempt++ <= delete_attempts)); do
                 echo
-                echo -n "Not finished ($status). Waiting $seconds seconds..."
-                sleep $seconds
-                echo " Done"
-            fi
-        done
+                echo "$run_statement2"
+                eval "$eval_statement2"
 
-        next
+                status=$(aws cloudformation describe-stacks --stack-name $environment-$utility \
+                                                            --query 'Stacks[].StackStatus' \
+                                                            --profile $profile --region $region --output text 2> /dev/null)
+                if [ -z "$status" -o "$status" = "CREATE_COMPLETE" -o "$status" = "CREATE_FAILED" -o "$status" = "ROLLBACK_COMPLETE" ]; then
+                    break
+                else
+                    echo
+                    echo -n "Not finished ($status). Waiting $seconds seconds..."
+                    sleep $seconds
+                    echo " Done"
+                fi
+            done
+
+            next
+        fi
     fi
 fi
 
