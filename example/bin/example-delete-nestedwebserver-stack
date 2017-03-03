@@ -18,7 +18,7 @@ run_default=10
 pause_default=2
 next_default=5
 delete_default=15
-delete_attempts=20
+delete_attempts=40
 
 interactive=1
 speed=100

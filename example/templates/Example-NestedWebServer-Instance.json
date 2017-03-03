@@ -15,8 +15,15 @@
         {
           "Label" : { "default" : "Resource Dependencies" },
           "Parameters" : [
+            "KeyName",
             "Role",
             "SecurityGroup"
+          ]
+        },
+        {
+          "Label" : { "default" : "Environment Configuration" },
+          "Parameters" : [
+            "EnvironmentSize"
           ]
         },
         {
@@ -26,23 +33,18 @@
             "ApplicationName",
             "ApplicationVersion"
           ]
-        },
-        {
-          "Label" : { "default" : "Access Configuration" },
-          "Parameters" : [
-            "KeyName"
-          ]
         }
       ],
 
       "ParameterLabels" : {
         "VPCStackName" : { "default" : "VPC Stack Name" },
+        "KeyName" : { "default" : "Key Name" },
         "Role" : { "default" : "Role" },
         "SecurityGroup" : { "default" : "SecurityGroup" },
+        "EnvironmentSize" : { "default" : "Environment Size" },
         "ApplicationsBucket" : { "default" : "Applications Bucket" },
         "ApplicationName" : { "default" : "Application Name" },
-        "ApplicationVersion" : { "default" : "Application Version" },
-        "KeyName" : { "default" : "Key Name" }
+        "ApplicationVersion" : { "default" : "Application Version" }
       }
     }
   },
@@ -56,6 +58,15 @@
       "Default" : "Production-VPC",
       "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "KeyName" : {
+      "Description" : "Name of an existing KeyPair to enable SSH access to the Instance",
+      "Type" : "AWS::EC2::KeyPair::KeyName",
+      "MaxLength" : 32,
+      "Default" : "example",
+      "AllowedPattern" : "(^$|^[_a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
     },
 
     "Role" : {
@@ -74,10 +85,19 @@
       "ConstraintDescription" : "must be the name of an existing SecurityGroup."
     },
 
+    "EnvironmentSize" : {
+      "Description" : "Size of the Environment to build. Used to select size-related options in Mappings",
+      "Type" : "String",
+      "Default" : "micro",
+      "AllowedValues" : [ "micro", "small", "medium", "large", "xlarge" ],
+      "ConstraintDescription" : "must be micro, small, medium, large or xlarge."
+    },
+
     "ApplicationsBucket" : {
-      "Description" : "The S3 bucket containing Applications to be deployed",
+      "Description" : "S3 bucket containing Applications to be deployed",
       "Type" : "String",
       "MaxLength" : 64,
+      "Default" : "",
       "AllowedPattern" : "(^$|^[a-z][-a-z0-9]*$)",
       "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
     },
@@ -93,50 +113,42 @@
     },
 
     "ApplicationVersion" : {
-      "Description" : "The version of the application to be deployed",
+      "Description" : "Version of the Application",
       "Type" : "String",
       "MinLength" : 5,
       "MaxLength" : 32,
       "Default" : "1.0.0",
       "AllowedPattern" : "^[0-9]*.[0-9]*.[0-9]*(-[a-zA-Z0-9][-a-zA-Z0-9]*)?$",
       "ConstraintDescription" : "must follow semantic versioning conventions."
-    },
-
-    "KeyName" : {
-      "Description" : "Name of an existing KeyPair to enable SSH access to the instances",
-      "Type" : "AWS::EC2::KeyPair::KeyName",
-      "MaxLength" : 32,
-      "AllowedPattern" : "(^$|^[_a-zA-Z0-9]*$)",
-      "ConstraintDescription" : "must be the name of an existing KeyPair."
     }
   },
 
   "Mappings" : {
     "ImageIdMap" : {
-      "ap-south-1"     : { "AMI" : "ami-9fc7b0f0" },
-      "eu-west-2"      : { "AMI" : "ami-bfe0eadb" },
-      "eu-west-1"      : { "AMI" : "ami-c51e3eb6" },
-      "ap-northeast-2" : { "AMI" : "ami-94bb6dfa" },
-      "ap-northeast-1" : { "AMI" : "ami-9f0c67f8" },
-      "sa-east-1"      : { "AMI" : "ami-bb40d8d7" },
-      "ca-central-1"   : { "AMI" : "ami-eb20928f" },
-      "ap-southeast-1" : { "AMI" : "ami-4dd6782e" },
-      "ap-southeast-2" : { "AMI" : "ami-28cff44b" },
-      "eu-central-1"   : { "AMI" : "ami-211ada4e" },
       "us-east-1"      : { "AMI" : "ami-9be6f38c" },
       "us-east-2"      : { "AMI" : "ami-38cd975d" },
       "us-west-1"      : { "AMI" : "ami-b73d6cd7" },
-      "us-west-2"      : { "AMI" : "ami-1e299d7e" }
+      "us-west-2"      : { "AMI" : "ami-1e299d7e" },
+      "ca-central-1"   : { "AMI" : "ami-eb20928f" },
+      "sa-east-1"      : { "AMI" : "ami-bb40d8d7" },
+      "eu-west-1"      : { "AMI" : "ami-c51e3eb6" },
+      "eu-west-2"      : { "AMI" : "ami-bfe0eadb" },
+      "eu-central-1"   : { "AMI" : "ami-211ada4e" },
+      "ap-northeast-1" : { "AMI" : "ami-9f0c67f8" },
+      "ap-northeast-2" : { "AMI" : "ami-94bb6dfa" },
+      "ap-southeast-1" : { "AMI" : "ami-4dd6782e" },
+      "ap-southeast-2" : { "AMI" : "ami-28cff44b" },
+      "ap-south-1"     : { "AMI" : "ami-9fc7b0f0" }
     },
 
     "InstanceTypeMap" : {
-      "WebServer" : { "Production" : "t2.nano", "Staging" : "t2.nano", "Testing" : "t2.nano", "Development" : "t2.nano" }
+      "WebServer" : { "micro" : "t2.nano", "small" : "t2.small", "medium" : "t2.medium", "large" : "t2.large", "xlarge" : "t2.xlarge" }
     }
   },
 
   "Conditions" : {
-    "DownloadApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationsBucket" }, "" ]}]},
     "ConfigureKey" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "KeyName" }, "" ]}]},
+    "DownloadApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationsBucket" }, "" ]}]}
   },
 
   "Resources" : {
@@ -158,7 +170,6 @@
             "buckets" : [{ "Ref" : "ApplicationsBucket" }]
           }
         },
-
         "AWS::CloudFormation::Init" : {
           "configSets" : {
             "All" : [
@@ -315,7 +326,7 @@
       },
       "Properties" : {
         "ImageId" : { "Fn::FindInMap" : [ "ImageIdMap", { "Ref" : "AWS::Region" } , "AMI" ]},
-        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "WebServer", "Production"]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "WebServer", { "Ref" : "EnvironmentSize" }]},
         "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
         "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
         "NetworkInterfaces" : [{
@@ -326,7 +337,7 @@
           "SubnetId"                 : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-WebSubnetA" }}
         }],
         "Tags" : [
-          { "Key" : "Name", "Value" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }, "Instance" ]]} }
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }, "Instance" ]]}}
         ],
         "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "", [
           "#!/bin/bash -xe\n",
