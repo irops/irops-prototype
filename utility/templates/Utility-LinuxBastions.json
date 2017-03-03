@@ -94,7 +94,7 @@
 
   "Parameters" : {
     "VPCStackName" : {
-      "Description" : "Name of the CloudFormation Stack containing the VPC.",
+      "Description" : "Name of the CloudFormation Stack containing the VPC",
       "Type" : "String",
       "MinLength" : 8,
       "MaxLength" : 64,
@@ -104,7 +104,7 @@
     },
 
     "StandardTopicsStackName" : {
-      "Description" : "Name of the CloudFormation Stack containing Standard Topics.",
+      "Description" : "Name of the CloudFormation Stack containing Standard Topics",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 64,
@@ -164,6 +164,7 @@
       "Description" : "DNS Name of the Utility associated with the Stack",
       "Type" : "String",
       "MaxLength" : 16,
+      "Default" : "",
       "AllowedPattern" : "(^$|^[a-z][-a-z0-9]*$)",
       "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
     },
@@ -655,7 +656,7 @@
                 "owner" : "root",
                 "group" : "root"
               }
-            },
+            }
           },
           "ConfigureCFN" : {
             "files" : {
@@ -675,7 +676,7 @@
                   "triggers=post.update\n",
                   "path=Resources.LaunchConfiguration.Metadata.AWS::CloudFormation::Init\n",
                   "action=/opt/aws/bin/cfn-init --verbose",
-                  " --configsets ", { "Fn::If" : [ "ConfigureLogs", { "Fn::If" : [ "ConfigureUsers", "LogsAndUsers", "Logs" ]}, { "Fn::If" : [ "ConfigureUsers", "Users", "Baseline" ]}]},
+                  " --configsets All",
                   " --stack ", { "Ref" : "AWS::StackName" },
                   " --resource LaunchConfiguration",
                   " --region ", { "Ref" : "AWS::Region" }, "\n"
