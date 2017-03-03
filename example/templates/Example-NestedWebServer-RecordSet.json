@@ -71,7 +71,7 @@
       "Type" : "String",
       "MaxLength" : 16,
       "Default" : "",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
+      "AllowedPattern" : "(^$|^[a-z][-a-z0-9]*$)",
       "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
     }
   },
