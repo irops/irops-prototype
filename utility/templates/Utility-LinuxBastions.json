@@ -541,9 +541,9 @@
           { "Fn::If" : [ "ConfigurePrivateNetwork", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PrivateNetwork" }}, { "Ref" : "AWS::NoValue" }]},
           { "Fn::If" : [ "ConfigurePrivateNetwork", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "PrivateNetwork" }}, { "Ref" : "AWS::NoValue" }]},
           { "Fn::If" : [ "ConfigurePrivateNetwork1", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PrivateNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "PrivateNetwork1" }}, { "Ref" : "AWS::NoValue" }]}
+          { "Fn::If" : [ "ConfigurePrivateNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "PrivateNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
           { "Fn::If" : [ "ConfigurePrivateNetwork2", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PrivateNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "PrivateNetwork2" }}, { "Ref" : "AWS::NoValue" }]}
+          { "Fn::If" : [ "ConfigurePrivateNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "PrivateNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
           { "Fn::If" : [ "ConfigurePrivateNetwork3", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PrivateNetwork3" }}, { "Ref" : "AWS::NoValue" }]},
           { "Fn::If" : [ "ConfigurePrivateNetwork3", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "PrivateNetwork3" }}, { "Ref" : "AWS::NoValue" }]}
         ],
@@ -656,19 +656,6 @@
                 "group" : "root"
               }
             },
-
-            "/etc/motd" : {
-              "content" : { "Fn::Join" : [ "", [
-                "+-------------------------------------+\n",
-                "|                                     |\n",
-                "|   Welcome to IROPS LinuxBastion!    |\n",
-                "|                                     |\n",
-                "+-------------------------------------+\n"
-              ]]},
-              "mode"  : "000644",
-              "owner" : "root",
-              "group" : "root"
-            }
           },
           "ConfigureCFN" : {
             "files" : {
