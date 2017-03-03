@@ -1,4 +1,4 @@
-#!/bin/bash
+111111111111111111111111111111#!/bin/bash
 #
 # This script creates the Example WebServer Stack in an Environment Account.
 #
@@ -31,19 +31,12 @@ environment=${ENVIRONMENT_NAME:-Production}
 application=${APPLICATION_NAME:-WebServer}
 application_domain=${APPLICATION_DOMAIN:-ws}
 application_version=${APPLICATION_VERSION:-1.0.0}
-key=${AWS_KEY_NAME:-example}
 network=${ADMINISTRATOR_NETWORK:-0.0.0.0/0}
 network1=${ADMINISTRATOR_NETWORK1:-}
-network2=${ADMINISTRATOR_NETWORK2:-}
-network3=${ADMINISTRATOR_NETWORK3:-}
 public_network=${PUBLIC_NETWORK:-0.0.0.0/0}
 public_network1=${PUBLIC_NETWORK1:-}
-public_network2=${PUBLIC_NETWORK2:-}
-public_network3=${PUBLIC_NETWORK3:-}
-private_network=${PRIVATE_NETWORK:-}
+private_network=${PRIVATE_NETWORK:-10.0.0.0/16}
 private_network1=${PRIVATE_NETWORK1:-}
-private_network2=${PRIVATE_NETWORK2:-}
-private_network3=${PRIVATE_NETWORK3:-}
 region=${AWS_DEFAULT_REGION:-us-west-2}
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-administrator}
@@ -213,6 +206,23 @@ if [ -z $environment ]; then
     echo "-E environment missing!"
     echo "Could not automatically determine environment, and it was not specified as a parameter"
     exit 16
+else
+    case $environment in
+      Production)
+        environmentsize=medium;;
+      Staging)
+        environment_size=small;;
+      Testing)
+        environment_size=micro;;
+      Development)
+        environment_size=micro;;
+      Core)
+        environment_size=micro;;
+      Build)
+        environment_size=micro;;
+      *)
+        environment_size=micro;;
+    esac
 fi
 
 if [ -z $application ]; then
@@ -408,16 +418,16 @@ aws cloudformation create-stack --stack-name $environment-$application \\
                                 $template_parameter \\
                                 $stack_policy_parameter \\
                                 --parameters ParameterKey=VPCStackName,ParameterValue=$environment-VPC \\
-                                             ParameterKey=CompanyName,ParameterValue=$company \\
-                                             ParameterKey=SystemName,ParameterValue=$system \\
+                                             ParameterKey=KeyName,ParameterValue=$key \\
+                                             ParameterKey=EnvironmentSize,ParameterValue=$environment_size \\
+                                             ParameterKey=ApplicationsBucket,ParameterValue=$examplesbucket \\
                                              ParameterKey=ApplicationName,ParameterValue=$application \\
                                              ParameterKey=ApplicationDomain,ParameterValue=$application_domain \\
                                              ParameterKey=ApplicationVersion,ParameterValue=$application_version \\
-                                             ParameterKey=ApplicationBucket,ParameterValue=$examplesbucket \\
-                                             ParameterKey=KeyName,ParameterValue=$key \\
                                              ParameterKey=AdministratorNetwork,ParameterValue=$network \\
                                              ParameterKey=PublicNetwork,ParameterValue=$public_network \\
                                              ParameterKey=PrivateNetwork,ParameterValue=$private_network \\
+                                             ParameterKey=PrivateNetwork1,ParameterValue=$private_network1 \\
                                 --tags Key=Owner,Value=$owner \\
                                        Key=Company,Value=$company \\
                                        Key=System,Value=$system \\

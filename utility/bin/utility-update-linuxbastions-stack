@@ -203,42 +203,49 @@ if [ -z $environment ]; then
 else
     case $environment in
       Production)
+        environment_size=medium
         usemultizone=true
         usestaticpublicaddress=true
         usestaticprivateaddress=true
         uselogmonitoring=true
         uselocalusers=true;;
       Staging)
+        environment_size=small
         usemultizone=false
         usestaticpublicaddress=true
         usestaticprivateaddress=true
         uselogmonitoring=true
         uselocalusers=true;;
       Testing)
+        environment_size=micro
         usemultizone=false
         usestaticpublicaddress=true
         usestaticprivateaddress=true
         uselogmonitoring=true
         uselocalusers=true;;
       Development)
+        environment_size=micro
         usemultizone=false
         usestaticpublicaddress=true
         usestaticprivateaddress=true
         uselogmonitoring=true
         uselocalusers=true;;
       Core)
+        environment_size=micro
         usemultizone=false
         usestaticpublicaddress=true
         usestaticprivateaddress=true
         uselogmonitoring=true
         uselocalusers=true;;
       Build)
+        environment_size=micro
         usemultizone=false
         usestaticpublicaddress=true
         usestaticprivateaddress=true
         uselogmonitoring=true
         uselocalusers=true;;
       *)
+        environment_size=micro
         usemultizone=false
         usestaticpublicaddress=true
         usestaticprivateaddress=true
@@ -420,8 +427,8 @@ aws cloudformation update-stack --stack-name $environment-$utility \\
                                 $stack_policy_parameter \\
                                 --parameters ParameterKey=VPCStackName,ParameterValue=$environment-VPC \\
                                              ParameterKey=StandardTopicsStackName,ParameterValue=StandardTopics \\
-                                             ParameterKey=CompanyName,ParameterValue=$company \\
-                                             ParameterKey=SystemName,ParameterValue=$system \\
+                                             ParameterKey=KeyName,ParameterValue=$key \\
+                                             ParameterKey=EnvironmentSize,ParameterValue=$environment_size \\
                                              ParameterKey=UtilityName,ParameterValue=$utility \\
                                              ParameterKey=UtilityDomain,ParameterValue=$utility_domain \\
                                              ParameterKey=UseMultiZone,ParameterValue=$usemultizone \\
@@ -429,9 +436,9 @@ aws cloudformation update-stack --stack-name $environment-$utility \\
                                              ParameterKey=UseStaticPrivateAddress,ParameterValue=$usestaticprivateaddress \\
                                              ParameterKey=UseLogMonitoring,ParameterValue=$uselogmonitoring \\
                                              ParameterKey=UseLocalUsers,ParameterValue=$uselocalusers \\
-                                             ParameterKey=KeyName,ParameterValue=$key \\
                                              ParameterKey=PublicNetwork,ParameterValue=$public_network \\
                                              ParameterKey=PrivateNetwork,ParameterValue=$private_network \\
+                                             ParameterKey=PrivateNetwork1,ParameterValue=$private_network1 \\
                                 --tags Key=Owner,Value=$owner \\
                                        Key=Company,Value=$company \\
                                        Key=System,Value=$system \\
