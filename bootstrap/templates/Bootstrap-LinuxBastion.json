@@ -577,7 +577,7 @@
                   "triggers=post.update\n",
                   "path=Resources.LaunchConfiguration.Metadata.AWS::CloudFormation::Init\n",
                   "action=/opt/aws/bin/cfn-init --verbose",
-                  " --configsets All\n",
+                  " --configsets All",
                   " --stack ", { "Ref" : "AWS::StackName" },
                   " --resource LaunchConfiguration",
                   " --region ", { "Ref" : "AWS::Region" }, "\n"
