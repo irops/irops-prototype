@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Defines the IROPS Environment Variables for the Staging Environment in Oregon
+# Defines the IROPS Environment Variables for the Production Environment in Ireland
 
 # Account
 export AWS_ACCOUNT_ALIAS=irops
@@ -13,7 +13,7 @@ export AWS_USER_NAME=$USER
 export AWS_DEFAULT_PROFILE=$AWS_ACCOUNT_ALIAS-$AWS_USER_NAME
 
 # Region
-export AWS_DEFAULT_REGION=us-west-2
+export AWS_DEFAULT_REGION=eu-west-1
 
 # Keys
 export AWS_KEY_NAME=$USER
@@ -75,24 +75,24 @@ export SYSTEM_CODE=irops
 export SYSTEM_NAME="IROPS"
 
 # Environment
-export ENVIRONMENT_CODE=s
-export ENVIRONMENT_NAME="Staging"
-export ENVIRONMENT_DOMAIN=$ENVIRONMENT_CODE.$AWS_DEFAULT_REGION.$COMPANY_CODE.iropshub.com
-export ENVIRONMENT_NETWORK=10.41.0.0/16
+export ENVIRONMENT_CODE=p
+export ENVIRONMENT_NAME="Production"
+export ENVIRONMENT_DOMAIN=$AWS_DEFAULT_REGION.$COMPANY_CODE.iropshub.com
+export ENVIRONMENT_NETWORK=10.56.0.0/16
 export ENVIRONMENT_SIZE=micro
 
 # Core
 export CORE_CODE=c
 export CORE_NAME="Core"
 export CORE_DOMAIN=$AWS_DEFAULT_REGION.$COMPANY_CODE.iropshub.com
-export CORE_NETWORK=10.46.0.0/16
+export CORE_NETWORK=10.62.0.0/16
 export CORE_SIZE=micro
 
 # Build
 export BUILD_CODE=b
 export BUILD_NAME="Build"
 export BUILD_DOMAIN=$AWS_DEFAULT_REGION.$COMPANY_CODE.iropshub.com
-export BUILD_NETWORK=10.47.0.0/16
+export BUILD_NETWORK=10.63.0.0/16
 export BUILD_SIZE=micro
 
 # Identity
