@@ -43,6 +43,7 @@
             "UseLogMonitoring",
             "LogRetention",
             "UseLocalUsers",
+            "UseSchedule",
             "StartTime",
             "StopTime"
           ]
