@@ -226,6 +226,44 @@ if [ -z $environment ]; then
     echo "-E environment missing!"
     echo "Could not automatically determine environment, and it was not specified as a parameter"
     exit 16
+else
+    case $environment in
+      Production)
+        uselogmonitoring=true
+        useschedule=false
+        normalschedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
+        reducedschedule="0 4 * * *";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
+      Staging)
+        uselogmonitoring=true
+        useschedule=true
+        normalschedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
+        reducedschedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
+      Testing)
+        uselogmonitoring=false
+        useschedule=true
+        normalschedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
+        reducedschedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
+      Development)
+        uselogmonitoring=false
+        useschedule=true
+        normalschedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
+        reducedschedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
+      Core)
+        uselogmonitoring=true
+        useschedule=true
+        normalschedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
+        reducedschedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
+      Build)
+        uselogmonitoring=false
+        useschedule=true
+        normalschedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
+        reducedschedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
+      *)
+        uselogmonitoring=false
+        useschedule=true
+        normalschedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
+        reducedschedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
+    esac
 fi
 
 if [ -z $environment_size ]; then
@@ -436,6 +474,10 @@ aws cloudformation create-stack --stack-name $environment-$application \\
                                              ParameterKey=ApplicationName,ParameterValue=$application \\
                                              ParameterKey=ApplicationDomain,ParameterValue=$application_domain \\
                                              ParameterKey=ApplicationVersion,ParameterValue=$application_version \\
+                                             ParameterKey=UseLogMonitoring,ParameterValue=$uselogmonitoring \\
+                                             ParameterKey=UseSchedule,ParameterValue=$useschedule \\
+                                             ParameterKey=NormalSchedule,ParameterValue="$normalschedule" \\
+                                             ParameterKey=ReducedSchedule,ParameterValue="$reducedschedule" \\
                                              ParameterKey=AdministratorNetwork,ParameterValue=$network \\
                                              ParameterKey=AdministratorNetwork1,ParameterValue=$network1 \\
                                              ParameterKey=AdministratorNetwork2,ParameterValue=$network2 \\

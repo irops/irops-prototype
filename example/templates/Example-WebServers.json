@@ -42,8 +42,8 @@
             "UseLogMonitoring",
             "LogRetention",
             "UseSchedule",
-            "IncreaseTime",
-            "DecreaseTime"
+            "NormalSchedule",
+            "ReducedSchedule"
           ]
         },
         {
@@ -217,20 +217,20 @@
       "ConstraintDescription" : "must be either true or false."
     },
 
-    "IncreaseTime" : {
-      "Description" : "Hour in UTC to Increase Capacity",
-      "Type" : "Number",
-      "Default" : 11,
-      "AllowedValues" : [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 ,16, 17, 18, 19, 20, 21, 22, 23 ],
-      "ConstraintDescription" : "must be: 0 - 23."
+    "NormalSchedule" : {
+      "Description" : "Normal Schedule in constrained Cron format (UTC)",
+      "Type" : "String",
+      "Default" : "0 11 * * 1-5",
+      "AllowedPattern" : "(^0 ([5-9]|1[0-6]) \\* \\* 1-5$)",
+      "ConstraintDescription" : "must follow constrained cron syntax: \"0 H * * 1-5\", where H = 5-16."
     },
 
-    "DecreaseTime" : {
-      "Description" : "Hour in UTC to Decrease Capacity",
-      "Type" : "Number",
-      "Default" : 4,
-      "AllowedValues" : [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 ,16, 17, 18, 19, 20, 21, 22, 23 ],
-      "ConstraintDescription" : "must be: 0 - 23."
+    "ReducedSchedule" : {
+      "Description" : "Off Schedule in constrained Cron format (UTC)",
+      "Type" : "String",
+      "Default" : "0 4 * * *",
+      "AllowedPattern" : "(^0 [0-7] \\* \\* \\*$)",
+      "ConstraintDescription" : "must follow constrained cron syntax: \"0 H * * *\", where H = 0-7."
     },
 
     "AdministratorNetwork" : {
@@ -896,26 +896,26 @@
       }
     },
 
-    "IncreaseScheduledAction" : {
+    "NormalScheduledAction" : {
       "Type" : "AWS::AutoScaling::ScheduledAction",
       "Properties" : {
         "AutoScalingGroupName" : { "Ref" : "AutoScalingGroup" },
         "MinSize" : { "Fn::FindInMap" : [ "MinSizeMap", "WebServer", { "Ref" : "EnvironmentSize" }]},
         "DesiredCapacity" : { "Fn::FindInMap" : [ "MinSizeMap", "WebServer", { "Ref" : "EnvironmentSize" }]},
         "MaxSize" : { "Fn::FindInMap" : [ "MaxSizeMap", "WebServer", { "Ref" : "EnvironmentSize" }]},
-        "Recurrence" : { "Fn::Sub" : "0 ${IncreaseTime} * * *" }
+        "Recurrence" : { "Ref" : "NormalSchedule" }
       },
       "Condition" : "ConfigureSchedule"
     },
 
-    "DecreaseScheduledAction" : {
+    "ReducedScheduledAction" : {
       "Type" : "AWS::AutoScaling::ScheduledAction",
       "Properties" : {
         "AutoScalingGroupName" : { "Ref" : "AutoScalingGroup" },
         "MinSize" : { "Fn::FindInMap" : [ "ReducedMinSizeMap", "WebServer", { "Ref" : "EnvironmentSize" }]},
         "DesiredCapacity" : { "Fn::FindInMap" : [ "ReducedMinSizeMap", "WebServer", { "Ref" : "EnvironmentSize" }]},
         "MaxSize" : { "Fn::FindInMap" : [ "ReducedMaxSizeMap", "WebServer", { "Ref" : "EnvironmentSize" }]},
-        "Recurrence" : { "Fn::Sub" : "0 ${DecreaseTime} * * *" }
+        "Recurrence" : { "Ref" : "ReducedSchedule" }
       },
       "Condition" : "ConfigureSchedule"
     },

@@ -37,8 +37,8 @@
             "LogAlarmEmail",
             "UseLocalUsers",
             "UseSchedule",
-            "StartTime",
-            "StopTime"
+            "OnSchedule",
+            "OffSchedule"
           ]
         },
         {
@@ -66,8 +66,8 @@
         "LogAlarmEmail" : { "default" : "Log Alarm Email" },
         "UseLocalUsers" : { "default" : "Use Local Users" },
         "UseSchedule" : { "default" : "Use Schedule" },
-        "StartTime" : { "default" : "Start Time" },
-        "StopTime" : { "default" : "Stop Time" },
+        "OnSchedule" : { "default" : "On Schedule" },
+        "OffSchedule" : { "default" : "Off Schedule" },
         "PublicNetwork" : { "default" : "Public Network" },
         "PublicNetwork1" : { "default" : "Additional Public Network 1" },
         "PublicNetwork2" : { "default" : "Additional Public Network 2" },
@@ -188,20 +188,20 @@
       "ConstraintDescription" : "must be either true or false."
     },
 
-    "StartTime" : {
-      "Description" : "Hour in UTC to Start Bastions",
-      "Type" : "Number",
-      "Default" : 11,
-      "AllowedValues" : [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 ,16, 17, 18, 19, 20, 21, 22, 23 ],
-      "ConstraintDescription" : "must be: 0 - 23."
+    "OnSchedule" : {
+      "Description" : "On Schedule in constrained Cron format (UTC)",
+      "Type" : "String",
+      "Default" : "0 11 * * 1-5",
+      "AllowedPattern" : "(^0 ([5-9]|1[0-6]) \\* \\* 1-5$)",
+      "ConstraintDescription" : "must follow constrained cron syntax: \"0 H * * 1-5\", where H = 5-16."
     },
 
-    "StopTime" : {
-      "Description" : "Hour in UTC to Stop Bastions",
-      "Type" : "Number",
-      "Default" : 4,
-      "AllowedValues" : [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 ,16, 17, 18, 19, 20, 21, 22, 23 ],
-      "ConstraintDescription" : "must be: 0 - 23."
+    "OffSchedule" : {
+      "Description" : "Off Schedule in constrained Cron format (UTC)",
+      "Type" : "String",
+      "Default" : "0 4 * * *",
+      "AllowedPattern" : "(^0 [0-7] \\* \\* \\*$)",
+      "ConstraintDescription" : "must follow constrained cron syntax: \"0 H * * *\", where H = 0-7."
     },
 
     "PublicNetwork" : {
@@ -894,7 +894,7 @@
         "MinSize" : 1,
         "MaxSize" : 1,
         "DesiredCapacity" : 1,
-        "Recurrence" : { "Fn::Sub" : "0 ${StartTime} * * *" }
+        "Recurrence" : { "Ref" : "OnSchedule" }
       },
       "Condition" : "ConfigureSchedule"
     },
@@ -906,7 +906,7 @@
         "MinSize" : 0,
         "MaxSize" : 0,
         "DesiredCapacity" : 0,
-        "Recurrence" : { "Fn::Sub" : "0 ${StopTime} * * *" }
+        "Recurrence" : { "Ref" : "OffSchedule" }
       },
       "Condition" : "ConfigureSchedule"
     }

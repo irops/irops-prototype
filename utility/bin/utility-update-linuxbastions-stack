@@ -223,8 +223,8 @@ else
         uselogmonitoring=true
         uselocalusers=true
         useschedule=false
-        starttime=11 # 11:00 UTC = 3:00 AM PST = 6:00 AM EST
-        stoptime=4;; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST
+        onschedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
+        offschedule="0 4 * * *";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
       Staging)
         usemultizone=false
         usestaticpublicaddress=true
@@ -232,8 +232,8 @@ else
         uselogmonitoring=true
         uselocalusers=true
         useschedule=true
-        starttime=13 # 13:00 UTC = 5:00 AM PST = 8:00 AM EST
-        stoptime=2;; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST
+        onschedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
+        offschedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
       Testing)
         usemultizone=false
         usestaticpublicaddress=true
@@ -241,8 +241,8 @@ else
         uselogmonitoring=true
         uselocalusers=true
         useschedule=true
-        starttime=13 # 13:00 UTC = 5:00 AM PST = 8:00 AM EST
-        stoptime=2;; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST
+        onschedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
+        offschedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
       Development)
         usemultizone=false
         usestaticpublicaddress=true
@@ -250,17 +250,17 @@ else
         uselogmonitoring=true
         uselocalusers=true
         useschedule=true
-        starttime=13 # 13:00 UTC = 5:00 AM PST = 8:00 AM EST
-        stoptime=2;; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST
+        onschedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
+        offschedule="0 4 * * *";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
       Core)
         usemultizone=false
         usestaticpublicaddress=true
         usestaticprivateaddress=true
         uselogmonitoring=true
         uselocalusers=true
-        useschedule=true
-        starttime=11 # 11:00 UTC = 3:00 AM PST = 6:00 AM EST
-        stoptime=4;; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST
+        useschedule=false
+        onschedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
+        offschedule="0 4 * * *";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
       Build)
         usemultizone=false
         usestaticpublicaddress=true
@@ -268,8 +268,8 @@ else
         uselogmonitoring=true
         uselocalusers=true
         useschedule=true
-        starttime=13 # 13:00 UTC = 5:00 AM PST = 8:00 AM EST
-        stoptime=2;; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST
+        onschedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
+        offschedule="0 4 * * *";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
       *)
         usemultizone=false
         usestaticpublicaddress=true
@@ -277,8 +277,8 @@ else
         uselogmonitoring=true
         uselocalusers=true
         useschedule=true
-        starttime=13 # 13:00 UTC = 5:00 AM PST = 8:00 AM EST
-        stoptime=2;; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST
+        onschedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
+        offschedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
     esac
 fi
 
@@ -473,8 +473,8 @@ aws cloudformation update-stack --stack-name $environment-$utility \\
                                              ParameterKey=UseLogMonitoring,ParameterValue=$uselogmonitoring \\
                                              ParameterKey=UseLocalUsers,ParameterValue=$uselocalusers \\
                                              ParameterKey=UseSchedule,ParameterValue=$useschedule \\
-                                             ParameterKey=StartTime,ParameterValue=$starttime \\
-                                             ParameterKey=StopTime,ParameterValue=$stoptime \\
+                                             ParameterKey=OnSchedule,ParameterValue="$onschedule" \\
+                                             ParameterKey=OffSchedule,ParameterValue="$offschedule" \\
                                              ParameterKey=PublicNetwork,ParameterValue=$public_network \\
                                              ParameterKey=PublicNetwork1,ParameterValue=$public_network1 \\
                                              ParameterKey=PublicNetwork2,ParameterValue=$public_network2 \\

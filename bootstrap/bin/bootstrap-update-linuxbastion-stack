@@ -54,8 +54,8 @@ logretention=7
 logalarmemail=mcrawford@hpe.com
 uselocalusers=true
 useschedule=false
-starttime=11 # 11:00 UTC = 3:00 AM PST = 6:00 AM EST
-stoptime=4 # 4:00 UTC = 8:00 PM PST = 11:00 PM EST
+onschedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
+offschedule="0 4 * * *" # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
 
 
 #  2. Define functions
@@ -330,8 +330,8 @@ aws cloudformation update-stack --stack-name $environment-$utility \\
                                              ParameterKey=LogAlarmEmail,ParameterValue=$logalarmemail \\
                                              ParameterKey=UseLocalUsers,ParameterValue=$uselocalusers \\
                                              ParameterKey=UseSchedule,ParameterValue=$useschedule \\
-                                             ParameterKey=StartTime,ParameterValue=$starttime \\
-                                             ParameterKey=StopTime,ParameterValue=$stoptime \\
+                                             ParameterKey=OnSchedule,ParameterValue="$onschedule" \\
+                                             ParameterKey=OffSchedule,ParameterValue="$offschedule" \\
                                              ParameterKey=PublicNetwork,ParameterValue=$public_network \\
                                              ParameterKey=PublicNetwork1,ParameterValue=$public_network1 \\
                                              ParameterKey=PublicNetwork2,ParameterValue=$public_network2 \\
