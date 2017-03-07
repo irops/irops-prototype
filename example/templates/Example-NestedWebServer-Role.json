@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
 
-  "Description" : "Example-NestedWebServer-Role Template. This is an example of a layer in the NestedWebServer application, which creates the Role, Policies and an InstanceProfile.",
+  "Description" : "Example-NestedWebServer-Role Template. This is an example of a layer in the NestedWebServer application, which creates the Role and attached Policies.",
 
   "Metadata" : {
     "AWS::CloudFormation::Interface" : {
