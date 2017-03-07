@@ -13,20 +13,36 @@
           ]
         },
         {
-          "Label" : { "default" : "Application Configuration" },
+          "Label" : { "default" : "Resource Dependencies" },
           "Parameters" : [
-            "CompanyName",
-            "SystemName",
-            "ApplicationName",
-            "ApplicationDomain",
-            "ApplicationVersion",
-            "ApplicationBucket"
+            "KeyName"
           ]
         },
         {
-          "Label" : { "default" : "Access Configuration" },
+          "Label" : { "default" : "System Configuration" },
           "Parameters" : [
-            "KeyName",
+            "CompanyName",
+            "SystemName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Environment Configuration" },
+          "Parameters" : [
+            "EnvironmentSize"
+          ]
+        },
+        {
+          "Label" : { "default" : "Application Configuration" },
+          "Parameters" : [
+            "ApplicationsBucket",
+            "ApplicationName",
+            "ApplicationDomain",
+            "ApplicationVersion"
+          ]
+        },
+        {
+          "Label" : { "default" : "Security Configuration" },
+          "Parameters" : [
             "AdministratorNetwork",
             "AdministratorNetwork1",
             "AdministratorNetwork2",
@@ -45,13 +61,14 @@
 
       "ParameterLabels" : {
         "VPCStackName" : { "default" : "VPC Stack Name" },
+        "KeyName" : { "default" : "Key Name" },
         "CompanyName" : { "default" : "Company Name" },
         "SystemName" : { "default" : "System Name" },
+        "EnvironmentSize" : { "default" : "Environment Size" },
+        "ApplicationsBucket" : { "default" : "Applications Bucket" },
         "ApplicationName" : { "default" : "Application Name" },
         "ApplicationDomain" : { "default" : "Application Domain Name" },
         "ApplicationVersion" : { "default" : "Application Version" },
-        "ApplicationBucket" : { "default" : "Application Bucket" },
-        "KeyName" : { "default" : "Key Name" },
         "AdministratorNetwork" : { "default" : "Administrator Network" },
         "AdministratorNetwork1" : { "default" : "Additional Administrator Network 1" },
         "AdministratorNetwork2" : { "default" : "Additional Administrator Network 2" },
@@ -79,6 +96,15 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
+    "KeyName" : {
+      "Description" : "Name of an existing KeyPair to enable SSH access to the Instance",
+      "Type" : "AWS::EC2::KeyPair::KeyName",
+      "MaxLength" : 32,
+      "Default" : "example",
+      "AllowedPattern" : "(^$|^[_a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
+    },
+
     "CompanyName" : {
       "Description" : "Name of the Company associated with the Stack",
       "Type" : "String",
@@ -97,6 +123,23 @@
       "Default" : "IROPS",
       "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "EnvironmentSize" : {
+      "Description" : "Size of the Environment to build. Used to select size-related options in Mappings",
+      "Type" : "String",
+      "Default" : "micro",
+      "AllowedValues" : [ "micro", "small", "medium", "large", "xlarge" ],
+      "ConstraintDescription" : "must be micro, small, medium, large or xlarge."
+    },
+
+    "ApplicationsBucket" : {
+      "Description" : "S3 bucket containing Applications to be deployed",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[a-z][-a-z0-9]*$)",
+      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
     },
 
     "ApplicationName" : {
@@ -119,7 +162,7 @@
     },
 
     "ApplicationVersion" : {
-      "Description" : "The version of the application to be deployed",
+      "Description" : "Version of the Application",
       "Type" : "String",
       "MinLength" : 5,
       "MaxLength" : 32,
@@ -128,162 +171,130 @@
       "ConstraintDescription" : "must follow semantic versioning conventions."
     },
 
-    "ApplicationBucket" : {
-      "Description" : "The S3 bucket containing the version of the application to be deployed",
-      "Type" : "String",
-      "MaxLength" : 64,
-      "Default" : "",
-      "AllowedPattern" : "(^$|^[a-z][-a-z0-9]*$)",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
-    },
-
-    "KeyName" : {
-      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instances",
-      "Type" : "AWS::EC2::KeyPair::KeyName",
-      "MaxLength" : 32,
-      "Default" : "",
-      "AllowedPattern" : "(^$|^[_a-zA-Z0-9]*$)",
-      "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
-    },
-
     "AdministratorNetwork" : {
-      "Description" : "An IP address range that can be used to SSH to the EC2 instances",
+      "Description" : "Network that can administer the Application",
       "Type" : "String",
-      "MinLength" : "9",
-      "MaxLength" : "18",
       "Default" : "0.0.0.0/0",
-      "AllowedPattern" : "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "AllowedPattern" : "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$",
       "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
     },
 
     "AdministratorNetwork1" : {
-      "Description" : "An optional additional IP address range that can be used to SSH to the EC2 instances",
+      "Description" : "Additional network that can administer the Application",
       "Type" : "String",
-      "MaxLength" : "18",
       "Default" : "",
-      "AllowedPattern" : "(^$|^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})$)",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
       "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
     },
 
     "AdministratorNetwork2" : {
-      "Description" : "An optional additional IP address range that can be used to SSH to the EC2 instances",
+      "Description" : "Additional network that can administer the Application",
       "Type" : "String",
-      "MaxLength" : "18",
       "Default" : "",
-      "AllowedPattern" : "(^$|^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})$)",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
       "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
     },
 
     "AdministratorNetwork3" : {
-      "Description" : "An optional additional IP address range that can be used to SSH to the EC2 instances",
+      "Description" : "Additional network that can administer the Application",
       "Type" : "String",
-      "MaxLength" : "18",
       "Default" : "",
-      "AllowedPattern" : "(^$|^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})$)",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
       "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
     },
 
     "PublicNetwork" : {
-      "Description" : "A public IP address range that can access the application",
+      "Description" : "Public network that can access the Application",
       "Type" : "String",
-      "MinLength" : "9",
-      "MaxLength" : "18",
       "Default" : "0.0.0.0/0",
-      "AllowedPattern" : "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "AllowedPattern" : "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$",
       "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
     },
 
     "PublicNetwork1" : {
-      "Description" : "An optional additional public IP address range that can access the application",
+      "Description" : "Additional public network that can access the Application",
       "Type" : "String",
-      "MaxLength" : "18",
       "Default" : "",
-      "AllowedPattern" : "(^$|^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})$)",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
       "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
     },
 
     "PublicNetwork2" : {
-      "Description" : "An optional additional public IP address range that can access the application",
+      "Description" : "Additional public network that can access the Application",
       "Type" : "String",
-      "MaxLength" : "18",
       "Default" : "",
-      "AllowedPattern" : "(^$|^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})$)",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
       "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
     },
 
     "PublicNetwork3" : {
-      "Description" : "An optional additional public IP address range that can access the application",
+      "Description" : "Additional public network that can access the Application",
       "Type" : "String",
-      "MaxLength" : "18",
       "Default" : "",
-      "AllowedPattern" : "(^$|^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})$)",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
       "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
     },
 
     "PrivateNetwork" : {
-      "Description" : "An optional private IP address range that can access the application",
+      "Description" : "Private network that can access the Application",
       "Type" : "String",
-      "MaxLength" : "18",
-      "Default" : "",
-      "AllowedPattern" : "(^$|^10\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})$)",
+      "Default" : "10.0.0.0/16",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
       "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
     },
 
     "PrivateNetwork1" : {
-      "Description" : "An optional additional private IP address range that can access the application",
+      "Description" : "Additional private network that can access the Application",
       "Type" : "String",
-      "MaxLength" : "18",
       "Default" : "",
-      "AllowedPattern" : "(^$|^10\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})$)",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
       "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
     },
 
     "PrivateNetwork2" : {
-      "Description" : "An optional additional private IP address range that can access the application",
+      "Description" : "Additional private network that can access the Application",
       "Type" : "String",
-      "MaxLength" : "18",
       "Default" : "",
-      "AllowedPattern" : "(^$|^10\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})$)",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
       "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
     },
 
     "PrivateNetwork3" : {
-      "Description" : "An optional additional private IP address range that can access the application",
+      "Description" : "Additional private network that can access the Application",
       "Type" : "String",
-      "MaxLength" : "18",
       "Default" : "",
-      "AllowedPattern" : "(^$|^10\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})$)",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
       "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
     }
   },
 
   "Mappings" : {
     "ImageIdMap" : {
-      "ap-south-1"     : { "AMI" : "ami-9fc7b0f0" },
-      "eu-west-2"      : { "AMI" : "ami-bfe0eadb" },
-      "eu-west-1"      : { "AMI" : "ami-c51e3eb6" },
-      "ap-northeast-2" : { "AMI" : "ami-94bb6dfa" },
-      "ap-northeast-1" : { "AMI" : "ami-9f0c67f8" },
-      "sa-east-1"      : { "AMI" : "ami-bb40d8d7" },
-      "ca-central-1"   : { "AMI" : "ami-eb20928f" },
-      "ap-southeast-1" : { "AMI" : "ami-4dd6782e" },
-      "ap-southeast-2" : { "AMI" : "ami-28cff44b" },
-      "eu-central-1"   : { "AMI" : "ami-211ada4e" },
       "us-east-1"      : { "AMI" : "ami-9be6f38c" },
       "us-east-2"      : { "AMI" : "ami-38cd975d" },
       "us-west-1"      : { "AMI" : "ami-b73d6cd7" },
-      "us-west-2"      : { "AMI" : "ami-1e299d7e" }
+      "us-west-2"      : { "AMI" : "ami-1e299d7e" },
+      "ca-central-1"   : { "AMI" : "ami-eb20928f" },
+      "sa-east-1"      : { "AMI" : "ami-bb40d8d7" },
+      "eu-west-1"      : { "AMI" : "ami-c51e3eb6" },
+      "eu-west-2"      : { "AMI" : "ami-bfe0eadb" },
+      "eu-central-1"   : { "AMI" : "ami-211ada4e" },
+      "ap-northeast-1" : { "AMI" : "ami-9f0c67f8" },
+      "ap-northeast-2" : { "AMI" : "ami-94bb6dfa" },
+      "ap-southeast-1" : { "AMI" : "ami-4dd6782e" },
+      "ap-southeast-2" : { "AMI" : "ami-28cff44b" },
+      "ap-south-1"     : { "AMI" : "ami-9fc7b0f0" }
     },
 
     "InstanceTypeMap" : {
-      "WebServer" : { "Production" : "t2.nano", "Staging" : "t2.nano", "Testing" : "t2.nano", "Development" : "t2.nano" }
+      "WebServer" : { "micro" : "t2.nano", "small" : "t2.small", "medium" : "t2.medium", "large" : "t2.large", "xlarge" : "t2.xlarge" }
     }
   },
 
   "Conditions" : {
-    "ConfigureDNS" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationDomain" }, "" ]}]},
-    "DownloadApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationBucket" }, "" ]}]},
     "ConfigureKey" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "KeyName" }, "" ]}]},
+    "DownloadApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationsBucket" }, "" ]}]},
+    "ConfigureDNS" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationDomain" }, "" ]}]},
     "ConfigureAdministratorNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "AdministratorNetwork1" }, "" ]}]},
     "ConfigureAdministratorNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "AdministratorNetwork2" }, "" ]}]},
     "ConfigureAdministratorNetwork3" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "AdministratorNetwork3" }, "" ]}]},
@@ -323,7 +334,7 @@
             "Action" : [
               "s3:GetObject"
             ],
-            "Resource" : { "Fn::Sub" : "arn:aws:s3:::${ApplicationBucket}/${ApplicationName}/*" }
+            "Resource" : { "Fn::Sub" : "arn:aws:s3:::${ApplicationsBucket}/${ApplicationName}/*" }
           }]
         },
         "Roles" : [{ "Ref" : "Role" }]
@@ -368,7 +379,7 @@
           { "Fn::If" : [ "ConfigurePrivateNetwork2", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PrivateNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
           { "Fn::If" : [ "ConfigurePrivateNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "80", "ToPort" : "80", "CidrIp" : { "Ref" : "PrivateNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
           { "Fn::If" : [ "ConfigurePrivateNetwork3", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PrivateNetwork3" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateNetwork3", { "IpProtocol" : "tcp",  "FromPort" : "80", "ToPort" : "80", "CidrIp" : { "Ref" : "PrivateNetwork3" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateNetwork3", { "IpProtocol" : "tcp",  "FromPort" : "80", "ToPort" : "80", "CidrIp" : { "Ref" : "PrivateNetwork3" }}, { "Ref" : "AWS::NoValue" }]}
         ],
         "Tags" : [
           { "Key" : "Name", "Value" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }, "SecurityGroup" ]]}}
@@ -383,10 +394,9 @@
           "S3Credentials" : {
             "type" : "S3",
             "roleName" : { "Ref" : "Role" },
-            "buckets" : [{ "Ref" : "ApplicationBucket" }]
+            "buckets" : [{ "Ref" : "ApplicationsBucket" }]
           }
         },
-
         "AWS::CloudFormation::Init" : {
           "configSets" : {
             "All" : [
@@ -406,7 +416,26 @@
             }
           },
           "ConfigureOS" : {
+            "packages" : {
+              "yum" : {
+                "yum-cron" : [],
+                "git" : []
+              }
+            },
             "files" : {
+              "/etc/yum/yum-cron.conf" : {
+                "content" : { "Fn::Join" : [ "", [
+                  "[commands]\n",
+                  "update_cmd = security\n",
+                  "update_messages = yes\n",
+                  "download_updates = yes\n",
+                  "apply_updates = yes\n",
+                  "random_sleep = 10\n"
+                ]]},
+                "mode"  : "000644",
+                "owner" : "root",
+                "group" : "root"
+              },
               "/etc/profile.d/local.sh" : {
                 "content" : { "Fn::Join" : [ "", [
                   "alias lsa='ls -lAF'\n"
@@ -447,8 +476,14 @@
             },
             "services" : {
               "sysvinit" : {
-                "cfn-hup" : { "enabled" : "true", "ensureRunning" : "true",
-                              "files" : [ "/etc/cfn/cfn-hup.conf", "/etc/cfn/hooks.d/cfn-auto-reloader.conf" ]}
+                "cfn-hup" : {
+                  "enabled" : "true",
+                  "ensureRunning" : "true",
+                  "files" : [
+                    "/etc/cfn/cfn-hup.conf",
+                    "/etc/cfn/hooks.d/cfn-auto-reloader.conf"
+                  ]
+                }
               }
             }
           },
@@ -466,14 +501,19 @@
             },
             "services" : {
               "sysvinit" : {
-                "httpd" : { "enabled" : "true", "ensureRunning" : "true",
-                            "files" : [ "/etc/httpd/conf/httpd.conf" ]}
+                "httpd" : {
+                  "enabled" : "true",
+                  "ensureRunning" : "true",
+                  "files" : [
+                    "/etc/httpd/conf/httpd.conf"
+                  ]
+                }
               }
             }
           },
           "DownloadApplication" : {
             "sources" : {
-              "/var/www" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ApplicationBucket}/${ApplicationName}/${ApplicationName}-${ApplicationVersion}.tgz" }
+              "/var/www" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ApplicationsBucket}/${ApplicationName}/${ApplicationName}-${ApplicationVersion}.tgz" }
             }
           },
           "ConfigureApplication" : {
@@ -513,7 +553,7 @@
       },
       "Properties" : {
         "ImageId" : { "Fn::FindInMap" : [ "ImageIdMap", { "Ref" : "AWS::Region" } , "AMI" ]},
-        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "WebServer", "Production"]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "WebServer", { "Ref" : "EnvironmentSize" }]},
         "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
         "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
         "NetworkInterfaces" : [{
@@ -524,24 +564,24 @@
           "SubnetId"                 : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-WebSubnetA" }}
         }],
         "Tags" : [
-          { "Key" : "Name", "Value" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }, "Instance" ]]} }
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }, "Instance" ]]}}
         ],
         "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "", [
-             "#!/bin/bash -xe\n",
-             "yum update -y aws-cfn-bootstrap\n",
-             "\n",
-             "# Install the files and packages from the metadata\n",
-             "/opt/aws/bin/cfn-init --verbose",
-             " --configsets All",
-             " --stack ", { "Ref" : "AWS::StackName" },
-             " --resource Instance",
-             " --region ", { "Ref" : "AWS::Region" }, "\n",
-             "\n",
-             "# Signal the status from cfn-init\n",
-             "/opt/aws/bin/cfn-signal --exit-code $?",
-             " --stack ", { "Ref" : "AWS::StackName" },
-             " --resource Instance",
-             " --region ", { "Ref" : "AWS::Region" }, "\n"
+          "#!/bin/bash -xe\n",
+          "yum update -y aws-cfn-bootstrap\n",
+          "\n",
+          "# Install the files and packages from the metadata\n",
+          "/opt/aws/bin/cfn-init --verbose",
+          " --configsets All",
+          " --stack ", { "Ref" : "AWS::StackName" },
+          " --resource Instance",
+          " --region ", { "Ref" : "AWS::Region" }, "\n",
+          "\n",
+          "# Signal the status from cfn-init\n",
+          "/opt/aws/bin/cfn-signal --exit-code $?",
+          " --stack ", { "Ref" : "AWS::StackName" },
+          " --resource Instance",
+          " --region ", { "Ref" : "AWS::Region" }, "\n"
         ]]}}
       },
       "CreationPolicy" : {
@@ -555,7 +595,7 @@
       "Type" : "AWS::Route53::RecordSet",
       "Properties" : {
         "HostedZoneId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicHostedZone" }},
-        "Comment" : { "Fn::Sub" : "DNS name for ${ApplicationName} Instance." },
+        "Comment" : { "Fn::Sub" : "Public DNS name for ${ApplicationName} Instance." },
         "Name" : { "Fn::Join" : [ "", [ { "Ref" : "ApplicationDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "." ]]},
         "Type" : "A",
         "TTL" : "900",
@@ -573,7 +613,7 @@
     },
 
     "URL" : {
-      "Description" : "URL of the sample website",
+      "Description" : "The Sample Website URL",
       "Value" :  { "Fn::Join" : [ "", [ "http://", { "Ref" : "ApplicationDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "/" ]]},
       "Condition" : "ConfigureDNS"
     }

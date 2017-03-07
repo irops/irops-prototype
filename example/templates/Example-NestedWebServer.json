@@ -1,0 +1,383 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Example-NestedWebServer Template. This is an example of a minimal web server based application, showing installation and configuration via cfn-init, using the Nested Stack model to separate Resources into logical groups.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "VPCStackName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Resource Dependencies" },
+          "Parameters" : [
+            "KeyName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Template Configuration" },
+          "Parameters" : [
+            "TemplatesBucket",
+            "TemplatesPath"
+          ]
+        },
+        {
+          "Label" : { "default" : "System Configuration" },
+          "Parameters" : [
+            "CompanyName",
+            "SystemName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Environment Configuration" },
+          "Parameters" : [
+            "EnvironmentSize"
+          ]
+        },
+        {
+          "Label" : { "default" : "Application Configuration" },
+          "Parameters" : [
+            "ApplicationsBucket",
+            "ApplicationName",
+            "ApplicationDomain",
+            "ApplicationVersion"
+          ]
+        },
+        {
+          "Label" : { "default" : "Security Configuration" },
+          "Parameters" : [
+            "AdministratorNetwork",
+            "AdministratorNetwork1",
+            "AdministratorNetwork2",
+            "AdministratorNetwork3",
+            "PublicNetwork",
+            "PublicNetwork1",
+            "PublicNetwork2",
+            "PublicNetwork3",
+            "PrivateNetwork",
+            "PrivateNetwork1",
+            "PrivateNetwork2",
+            "PrivateNetwork3"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "VPCStackName" : { "default" : "VPC Stack Name" },
+        "KeyName" : { "default" : "Key Name" },
+        "TemplatesBucket" : { "default" : "Templates Bucket" },
+        "TemplatesPath" : { "default" : "Templates Path" },
+        "CompanyName" : { "default" : "Company Name" },
+        "SystemName" : { "default" : "System Name" },
+        "EnvironmentSize" : { "default" : "Environment Size" },
+        "ApplicationsBucket" : { "default" : "Applications Bucket" },
+        "ApplicationName" : { "default" : "Application Name" },
+        "ApplicationDomain" : { "default" : "Application Domain Name" },
+        "ApplicationVersion" : { "default" : "Application Version" },
+        "AdministratorNetwork" : { "default" : "Administrator Network" },
+        "AdministratorNetwork1" : { "default" : "Additional Administrator Network 1" },
+        "AdministratorNetwork2" : { "default" : "Additional Administrator Network 2" },
+        "AdministratorNetwork3" : { "default" : "Additional Administrator Network 3" },
+        "PublicNetwork" : { "default" : "Public Network" },
+        "PublicNetwork1" : { "default" : "Additional Public Network 1" },
+        "PublicNetwork2" : { "default" : "Additional Public Network 2" },
+        "PublicNetwork3" : { "default" : "Additional Public Network 3" },
+        "PrivateNetwork" : { "default" : "Private Network" },
+        "PrivateNetwork1" : { "default" : "Additional Private Network 1" },
+        "PrivateNetwork2" : { "default" : "Additional Private Network 2" },
+        "PrivateNetwork3" : { "default" : "Additional Private Network 3" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "VPCStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the VPC",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-VPC",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "KeyName" : {
+      "Description" : "Name of an existing KeyPair to enable SSH access to the Instance",
+      "Type" : "AWS::EC2::KeyPair::KeyName",
+      "MaxLength" : 32,
+      "Default" : "example",
+      "AllowedPattern" : "(^$|^[_a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
+    },
+
+    "TemplatesBucket" : {
+      "Description" : "S3 bucket containing Templates referenced by this Template",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "templates-us-west-2-irops",
+      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
+      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
+    },
+
+    "TemplatesPath" : {
+      "Description" : "Path within the S3 bucket containing Templates referenced by this Template",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "/example",
+      "AllowedPattern" : "(^$|/[-/a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must begin with a slash, and contain alphanumeric characters, slashes and dashes, if specified."
+    },
+
+    "CompanyName" : {
+      "Description" : "Name of the Company associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "Demo",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "SystemName" : {
+      "Description" : "Name of the System associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "IROPS",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "EnvironmentSize" : {
+      "Description" : "Size of the Environment to build. Used to select size-related options in Mappings",
+      "Type" : "String",
+      "Default" : "micro",
+      "AllowedValues" : [ "micro", "small", "medium", "large", "xlarge" ],
+      "ConstraintDescription" : "must be micro, small, medium, large or xlarge."
+    },
+
+    "ApplicationsBucket" : {
+      "Description" : "S3 bucket containing Applications to be deployed",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[a-z][-a-z0-9]*$)",
+      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
+    },
+
+    "ApplicationName" : {
+      "Description" : "Name of the Application associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "WebServer",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "ApplicationDomain" : {
+      "Description" : "DNS Name of the Application associated with the Stack",
+      "Type" : "String",
+      "MaxLength" : 16,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[a-z][-a-z0-9]*$)",
+      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
+    },
+
+    "ApplicationVersion" : {
+      "Description" : "Version of the Application",
+      "Type" : "String",
+      "MinLength" : 5,
+      "MaxLength" : 32,
+      "Default" : "1.0.0",
+      "AllowedPattern" : "^[0-9]*.[0-9]*.[0-9]*(-[a-zA-Z0-9][-a-zA-Z0-9]*)?$",
+      "ConstraintDescription" : "must follow semantic versioning conventions."
+    },
+
+    "AdministratorNetwork" : {
+      "Description" : "Network that can administer the Application",
+      "Type" : "String",
+      "Default" : "0.0.0.0/0",
+      "AllowedPattern" : "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "AdministratorNetwork1" : {
+      "Description" : "Additional network that can administer the Application",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "AdministratorNetwork2" : {
+      "Description" : "Additional network that can administer the Application",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "AdministratorNetwork3" : {
+      "Description" : "Additional network that can administer the Application",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "PublicNetwork" : {
+      "Description" : "Public network that can access the Application",
+      "Type" : "String",
+      "Default" : "0.0.0.0/0",
+      "AllowedPattern" : "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "PublicNetwork1" : {
+      "Description" : "Additional public network that can access the Application",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "PublicNetwork2" : {
+      "Description" : "Additional public network that can access the Application",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "PublicNetwork3" : {
+      "Description" : "Additional public network that can access the Application",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "PrivateNetwork" : {
+      "Description" : "Private network that can access the Application",
+      "Type" : "String",
+      "Default" : "10.0.0.0/16",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
+    },
+
+    "PrivateNetwork1" : {
+      "Description" : "Additional private network that can access the Application",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
+    },
+
+    "PrivateNetwork2" : {
+      "Description" : "Additional private network that can access the Application",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
+    },
+
+    "PrivateNetwork3" : {
+      "Description" : "Additional private network that can access the Application",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
+    }
+  },
+
+  "Conditions" : {
+    "ConfigureGlobalS3" : { "Fn::Equals" : [{ "Ref" : "AWS::Region" }, "us-east-1" ]},
+    "ConfigureDNS" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationDomain" }, "" ]}]}
+  },
+
+  "Resources" : {
+    "Role" : {
+      "Type" : "AWS::CloudFormation::Stack",
+      "Properties" : {
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, { "Ref" : "TemplatesPath" }, "/Example-NestedWebServer-Role.json" ]]},
+        "Parameters" : {
+          "ApplicationsBucket" : { "Ref" : "ApplicationsBucket" },
+          "ApplicationName" : { "Ref" : "ApplicationName" }
+        }
+      }
+    },
+
+    "SecurityGroup" : {
+      "Type" : "AWS::CloudFormation::Stack",
+      "Properties" : {
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, { "Ref" : "TemplatesPath" }, "/Example-NestedWebServer-SecurityGroup.json" ]]},
+        "Parameters" : {
+          "VPCStackName" : { "Ref" : "VPCStackName" },
+          "ApplicationName" : { "Ref" : "ApplicationName" },
+          "AdministratorNetwork" : { "Ref" : "AdministratorNetwork" },
+          "AdministratorNetwork1" : { "Ref" : "AdministratorNetwork1" },
+          "AdministratorNetwork2" : { "Ref" : "AdministratorNetwork2" },
+          "AdministratorNetwork3" : { "Ref" : "AdministratorNetwork3" },
+          "PublicNetwork" : { "Ref" : "PublicNetwork" },
+          "PublicNetwork1" : { "Ref" : "PublicNetwork1" },
+          "PublicNetwork2" : { "Ref" : "PublicNetwork2" },
+          "PublicNetwork3" : { "Ref" : "PublicNetwork3" },
+          "PrivateNetwork" : { "Ref" : "PrivateNetwork" },
+          "PrivateNetwork1" : { "Ref" : "PrivateNetwork1" },
+          "PrivateNetwork2" : { "Ref" : "PrivateNetwork2" },
+          "PrivateNetwork3" : { "Ref" : "PrivateNetwork3" }
+        }
+      }
+    },
+
+    "Instance" : {
+      "Type" : "AWS::CloudFormation::Stack",
+      "Properties" : {
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, { "Ref" : "TemplatesPath" }, "/Example-NestedWebServer-Instance.json" ]]},
+        "Parameters" : {
+          "VPCStackName" : { "Ref" : "VPCStackName" },
+          "KeyName" : { "Ref" : "KeyName" },
+          "Role" : { "Fn::GetAtt" : [ "Role", "Outputs.Role" ]},
+          "SecurityGroup" : { "Fn::GetAtt" : [ "SecurityGroup", "Outputs.SecurityGroup" ]},
+          "EnvironmentSize" : { "Ref" : "EnvironmentSize" },
+          "ApplicationsBucket" : { "Ref" : "ApplicationsBucket" },
+          "ApplicationName" : { "Ref" : "ApplicationName" },
+          "ApplicationVersion" : { "Ref" : "ApplicationVersion" }
+        }
+      }
+    },
+
+    "RecordSet" : {
+      "Type" : "AWS::CloudFormation::Stack",
+      "Properties" : {
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, { "Ref" : "TemplatesPath" }, "/Example-NestedWebServer-RecordSet.json" ]]},
+        "Parameters" : {
+          "VPCStackName" : { "Ref" : "VPCStackName" },
+          "InstancePublicIp" : { "Fn::GetAtt" : [ "Instance", "Outputs.InstancePublicIp" ]},
+          "ApplicationName" : { "Ref" : "ApplicationName" },
+          "ApplicationDomain" : { "Ref" : "ApplicationDomain" }
+        }
+      },
+      "Condition" : "ConfigureDNS"
+    }
+  },
+
+  "Outputs" : {
+    "SecurityGroup" : {
+      "Description" : "The SecurityGroup",
+      "Value" : { "Fn::GetAtt" : [ "SecurityGroup", "Outputs.SecurityGroup" ]},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-SecurityGroup" }}
+    },
+
+    "URL" : {
+      "Description" : "The Sample Website URL",
+      "Value" :  { "Fn::Join" : [ "", [ "http://", { "Ref" : "ApplicationDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "/" ]]},
+      "Condition" : "ConfigureDNS"
+    }
+  }
+}

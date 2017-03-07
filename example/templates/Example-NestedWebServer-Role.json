@@ -1,0 +1,92 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Example-NestedWebServer-Role Template. This is an example of a layer in the NestedWebServer application, which creates the Role and attached Policies.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Application Configuration" },
+          "Parameters" : [
+            "ApplicationsBucket",
+            "ApplicationName"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "ApplicationsBucket" : { "default" : "Applications Bucket" },
+        "ApplicationName" : { "default" : "Application Name" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "ApplicationsBucket" : {
+      "Description" : "S3 bucket containing Applications to be deployed",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[a-z][-a-z0-9]*$)",
+      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
+    },
+
+    "ApplicationName" : {
+      "Description" : "Name of the Application associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "WebServer",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    }
+  },
+
+  "Conditions" : {
+    "DownloadApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationsBucket" }, "" ]}]}
+  },
+
+  "Resources" : {
+    "Role" : {
+      "Type" : "AWS::IAM::Role",
+      "Properties" : {
+        "AssumeRolePolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Principal" : { "Service" : [ "ec2.amazonaws.com" ]},
+            "Action" : [ "sts:AssumeRole" ]
+          }]
+        },
+        "Path" : "/"
+      }
+    },
+
+    "DownloadApplicationFromS3Policy" : {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "DownloadApplicationFromS3Policy",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [
+              "s3:GetObject"
+            ],
+            "Resource" : { "Fn::Sub" : "arn:aws:s3:::${ApplicationsBucket}/${ApplicationName}/*" }
+          }]
+        },
+        "Roles" : [{ "Ref" : "Role" }]
+      },
+      "Condition" : "DownloadApplication"
+    }
+  },
+
+  "Outputs" : {
+    "Role" : {
+      "Description" : "The Role",
+      "Value" : { "Ref" : "Role" }
+    }
+  }
+}

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# This script updates the Utility LinuxBastions Stack in an Environment, Core or Build VPC.
+# This script updates the Example NestedWebServers Stack in an Environment Account.
 #
 # This script is written in a format suitable for interactive demos,
 # but can be run non-Iteractively and more quickly with the "-I" flag.
@@ -24,14 +24,20 @@ interactive=1
 speed=100
 verbose=0
 override=0
+dummy=0
 owner=${OWNER_EMAIL:-$USER@hpe.com}
 company=${COMPANY_NAME:-Demo}
 system=${SYSTEM_NAME:-IROPS}
 environment=${ENVIRONMENT_NAME:-Production}
 environment_size=${ENVIRONMENT_SIZE:-micro}
-utility=${UTILITY_NAME:-LinuxBastions}
-utility_domain=${UTILITY_DOMAIN:-lbastion}
+application=${APPLICATION_NAME:-NestedWebServers}
+application_domain=${APPLICATION_DOMAIN:-nmws}
+application_version=${APPLICATION_VERSION:-1.0.0}
 key=${AWS_KEY_NAME:-example}
+network=${ADMINISTRATOR_NETWORK:-0.0.0.0/0}
+network1=${ADMINISTRATOR_NETWORK1:-}
+network2=${ADMINISTRATOR_NETWORK2:-}
+network3=${ADMINISTRATOR_NETWORK3:-}
 public_network=${PUBLIC_NETWORK:-0.0.0.0/0}
 public_network1=${PUBLIC_NETWORK1:-}
 public_network2=${PUBLIC_NETWORK2:-}
@@ -48,11 +54,11 @@ user=${AWS_USER_NAME:-administrator}
 #  2. Define functions
 
 usage () {
-    echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v] [-o]"
+    echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v] [-o] [-d]"
     echo "                  [-O owner] [-C company ] [-S system]"
     echo "                  [-E environment] [-Z size]"
-    echo "                  [-U utility] [-D domain]"
-    echo "                  [-k key]"
+    echo "                  [-A application ] [-D domain] [-V version]"
+    echo "                  [-k key] [-n network ]"
     echo "                  [-p network] [-P network ]"
     echo "                  [-r region ] [-a account] [-u user]"
     echo "  -I              non-interactive"
@@ -60,14 +66,17 @@ usage () {
     echo "  -f              faster: reduce pauses by 25%"
     echo "  -v              verbose"
     echo "  -o              override StackPolicy"
+    echo "  -d              use dummy application"
     echo "  -O owner        Owner Email (default: $owner)"
     echo "  -C company      Company Name (default: $company)"
     echo "  -S system       System Name (default: $system)"
     echo "  -E environment  Environment Name (default: $environment)"
     echo "  -Z size         Environment Size (default: $environment_size)"
-    echo "  -U utility      Utility Name (default: $utility)"
-    echo "  -D domain       Utility Domain (default: $utility_domain)"
+    echo "  -A application  Application Name (default: $application)"
+    echo "  -D domain       Application Domain (default: $application_domain)"
+    echo "  -V version      Application Version (default: $application_version)"
     echo "  -k key          Key (default: $key)"
+    echo "  -n network      Administrator Network (default: $network)"
     echo "  -p network      Public Network (default: $public_network)"
     echo "  -P network      Private Network (default: $private_network)"
     echo "  -r region       Region (default: $region)"
@@ -156,21 +165,27 @@ next() {
 #  3. Parse command line options
 #     - Note, using options 1-9 as hidden options to set additional network ranges
 
-while getopts IsfvoO:C:S:E:Z:U:D:k:p:4:5:6:P:7:8:9:r:a:u:? arg; do
+while getopts IsfvodO:C:S:E:Z:A:D:V:k:n:1:2:3:p:4:5:6:P:7:8:9:r:a:u:? arg; do
     case $arg in
     I)  interactive=0;;
     s)  ((speed < speed_max)) && ((speed=speed+25));;
     f)  ((speed > 0)) && ((speed=speed-25));;
     v)  verbose=1;;
     o)  override=1;;
+    d)  dummy=1;;
     O)  owner="$OPTARG";;
     C)  company="$OPTARG";;
     S)  system="$OPTARG";;
     E)  environment="$OPTARG";;
     Z)  environment_size="$OPTARG";;
-    U)  utility="$OPTARG";;
-    D)  utility_domain="$OPTARG";;
+    A)  application="$OPTARG";;
+    D)  application_domain="$OPTARG";;
+    V)  application_version="$OPTARG";;
     k)  key="$OPTARG";;
+    n)  network="$OPTARG";;
+    1)  network1="$OPTARG";;
+    2)  network2="$OPTARG";;
+    3)  network3="$OPTARG";;
     p)  public_network="$OPTARG";;
     4)  public_network1="$OPTARG";;
     5)  public_network2="$OPTARG";;
@@ -217,68 +232,40 @@ if [ -z $environment ]; then
 else
     case $environment in
       Production)
-        usemultizone=true
-        usestaticpublicaddress=true
-        usestaticprivateaddress=true
         uselogmonitoring=true
-        uselocalusers=true
         useschedule=false
-        onschedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
-        offschedule="0 4 * * *";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
+        normalschedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
+        reducedschedule="0 4 * * *";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
       Staging)
-        usemultizone=false
-        usestaticpublicaddress=true
-        usestaticprivateaddress=true
         uselogmonitoring=true
-        uselocalusers=true
         useschedule=true
-        onschedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
-        offschedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
+        normalschedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
+        reducedschedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
       Testing)
-        usemultizone=false
-        usestaticpublicaddress=true
-        usestaticprivateaddress=true
-        uselogmonitoring=true
-        uselocalusers=true
+        uselogmonitoring=false
         useschedule=true
-        onschedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
-        offschedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
+        normalschedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
+        reducedschedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
       Development)
-        usemultizone=false
-        usestaticpublicaddress=true
-        usestaticprivateaddress=true
-        uselogmonitoring=true
-        uselocalusers=true
+        uselogmonitoring=false
         useschedule=true
-        onschedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
-        offschedule="0 4 * * *";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
+        normalschedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
+        reducedschedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
       Core)
-        usemultizone=false
-        usestaticpublicaddress=true
-        usestaticprivateaddress=true
         uselogmonitoring=true
-        uselocalusers=true
-        useschedule=false
-        onschedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
-        offschedule="0 4 * * *";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
+        useschedule=true
+        normalschedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
+        reducedschedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
       Build)
-        usemultizone=false
-        usestaticpublicaddress=true
-        usestaticprivateaddress=true
-        uselogmonitoring=true
-        uselocalusers=true
+        uselogmonitoring=false
         useschedule=true
-        onschedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
-        offschedule="0 4 * * *";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
+        normalschedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
+        reducedschedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
       *)
-        usemultizone=false
-        usestaticpublicaddress=true
-        usestaticprivateaddress=true
-        uselogmonitoring=true
-        uselocalusers=true
+        uselogmonitoring=false
         useschedule=true
-        onschedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
-        offschedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
+        normalschedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
+        reducedschedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
     esac
 fi
 
@@ -288,22 +275,34 @@ if [ -z $environment_size ]; then
     exit 18
 fi
 
-if [ -z $utility ]; then
-    echo "-U utility missing!"
-    echo "Could not automatically determine utility, and it was not specified as a parameter"
+if [ -z $application ]; then
+    echo "-A application missing!"
+    echo "Could not automatically determine application, and it was not specified as a parameter"
     exit 20
 fi
 
-if [ -z $utility_domain ]; then
+if [ -z $application_domain ]; then
     echo "-D domain missing!"
     echo "Could not automatically determine domain, and it was not specified as a parameter"
     exit 22
 fi
 
+if [ -z $application_version ]; then
+    echo "-V version missing!"
+    echo "Could not automatically determine version, and it was not specified as a parameter"
+    exit 24
+fi
+
 if [ -z $key ]; then
-    echo "-K key missing!"
+    echo "-k key missing!"
     echo "Could not automatically determine key, and it was not specified as a parameter"
     exit 30
+fi
+
+if [ -z $network ]; then
+    echo "-n network missing!"
+    echo "Could not automatically determine network, and it was not specified as a parameter"
+    exit 32
 fi
 
 if [ -z $public_network ]; then
@@ -355,15 +354,24 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
 fi
 
 templatesbucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
-templatespath=/utility
+templatespath=/example
 
 if ! aws s3api head-bucket --bucket $templatesbucket --profile $profile --region $region 2> /dev/null; then
-    unset templatesbucket
+    echo "$templatesbucket S3 bucket does not exist!"
+    exit 62
 fi
 
-if ! aws cloudformation describe-stacks --stack-name $environment-$utility \
+examplesbucket=${AWS_EXAMPLES_BUCKET:-examples-$region-$account}
+examplespath=/$application
+
+if ! aws s3api head-bucket --bucket $examplesbucket --profile $profile --region $region 2> /dev/null; then
+    echo "$examplesbucket S3 bucket does not exist!"
+    exit 68
+fi
+
+if ! aws cloudformation describe-stacks --stack-name $environment-$application \
                                         --profile $profile --region $region --output text &> /dev/null; then
-    echo "Unable to update - $environment-$utility Stack does not exist!"
+    echo "Unable to update - $environment-$application Stack does not exist!"
     exit 70
 fi
 
@@ -415,66 +423,73 @@ fi
 read -r -d '' statement << EOS
 aws s3 sync $templatesdir \\
             s3://$templatesbucket$templatespath \\
-            --exclude '*' --include 'Utility-LinuxBastions.json' --include 'Utility-LinuxBastions-StackPolicy.json' \\
+            --exclude '*' --include 'Example-NestedWebServers.json' --include 'Example-NestedWebServers-StackPolicy.json' \\
+            --include 'Example-NestedWebServers-Role.json' \\
+            --include 'Example-NestedWebServers-Logs.json' \\
+            --include 'Example-NestedWebServers-SecurityGroups.json' \\
+            --include 'Example-NestedWebServers-LoadBalancer.json' \\
+            --include 'Example-NestedWebServers-WebServers.json' \\
+            --include 'Example-NestedWebServers-DNS.json' \\
             --profile $profile --region $region --output table
 EOS
 run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
 eval_statement="${statement//\\$'\n'}"
 
-if [ ! -z $templatesbucket ]; then
-    clear
-    echo
-    echo "============================================================"
-    echo
-    echo "$(printf '%2d' $step). Sync Template and Policy to ($templatesbucket) Bucket"
-    echo
-    echo "============================================================"
-    echo
-    echo "Commands:"
-    echo
-    echo "$statement"
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Sync Template and Policy to ($templatesbucket) Bucket"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
 
-    next 50
+next 50
 
-    echo
-    echo "$run_statement"
-    eval "$eval_statement"
+echo
+echo "$run_statement"
+eval "$eval_statement"
 
-    next 50
-fi
+next 50
 
 
 ((++step))
-if [ ! -z $templatesbucket ]; then
-    template_parameter="--template-url https://$s3_domain/$templatesbucket$templatespath/Utility-LinuxBastions.json"
-    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templatesbucket$templatespath/Utility-LinuxBastions-StackPolicy.json"
-else
-    template_parameter="--template-body file://$templatesdir/Utility-LinuxBastions.json"
-    stack_policy_parameter="--stack-policy-body file://$templatesdir/Utility-LinuxBastions-StackPolicy.json"
+if [ $dummy = 1 ]; then
+    # unset download location, which triggers creation of dummy application page within the template
+    unset examplesbucket
 fi
+
+template_parameter="--template-url https://$s3_domain/$templatesbucket$templatespath/Example-NestedWebServers.json"
+stack_policy_parameter="--stack-policy-url https://$s3_domain/$templatesbucket$templatespath/Example-NestedWebServers-StackPolicy.json"
 if [ $override = 1 ]; then
     stack_policy_parameter="$stack_policy_parameter \\"$'\n'"                                --stack-policy-during-update-body file://$templatesdir/Override-StackPolicy.json"
 fi
 read -r -d '' statement << EOS
-aws cloudformation update-stack --stack-name $environment-$utility \\
+aws cloudformation update-stack --stack-name $environment-$application \\
                                 $template_parameter \\
                                 $stack_policy_parameter \\
                                 --parameters ParameterKey=VPCStackName,ParameterValue=$environment-VPC \\
-                                             ParameterKey=StandardTopicsStackName,ParameterValue=StandardTopics \\
                                              ParameterKey=KeyName,ParameterValue=$key \\
+                                             ParameterKey=TemplatesBucket,ParameterValue=$templatesbucket \\
+                                             ParameterKey=TemplatesPath,ParameterValue=$templatespath \\
                                              ParameterKey=CompanyName,ParameterValue=$company \\
                                              ParameterKey=SystemName,ParameterValue=$system \\
                                              ParameterKey=EnvironmentSize,ParameterValue=$environment_size \\
-                                             ParameterKey=UtilityName,ParameterValue=$utility \\
-                                             ParameterKey=UtilityDomain,ParameterValue=$utility_domain \\
-                                             ParameterKey=UseMultiZone,ParameterValue=$usemultizone \\
-                                             ParameterKey=UseStaticPublicAddress,ParameterValue=$usestaticpublicaddress \\
-                                             ParameterKey=UseStaticPrivateAddress,ParameterValue=$usestaticprivateaddress \\
+                                             ParameterKey=ApplicationsBucket,ParameterValue=$examplesbucket \\
+                                             ParameterKey=ApplicationName,ParameterValue=$application \\
+                                             ParameterKey=ApplicationDomain,ParameterValue=$application_domain \\
+                                             ParameterKey=ApplicationVersion,ParameterValue=$application_version \\
                                              ParameterKey=UseLogMonitoring,ParameterValue=$uselogmonitoring \\
-                                             ParameterKey=UseLocalUsers,ParameterValue=$uselocalusers \\
                                              ParameterKey=UseSchedule,ParameterValue=$useschedule \\
-                                             ParameterKey=OnSchedule,ParameterValue="$onschedule" \\
-                                             ParameterKey=OffSchedule,ParameterValue="$offschedule" \\
+                                             ParameterKey=NormalSchedule,ParameterValue="$normalschedule" \\
+                                             ParameterKey=ReducedSchedule,ParameterValue="$reducedschedule" \\
+                                             ParameterKey=AdministratorNetwork,ParameterValue=$network \\
+                                             ParameterKey=AdministratorNetwork1,ParameterValue=$network1 \\
+                                             ParameterKey=AdministratorNetwork2,ParameterValue=$network2 \\
+                                             ParameterKey=AdministratorNetwork3,ParameterValue=$network3 \\
                                              ParameterKey=PublicNetwork,ParameterValue=$public_network \\
                                              ParameterKey=PublicNetwork1,ParameterValue=$public_network1 \\
                                              ParameterKey=PublicNetwork2,ParameterValue=$public_network2 \\
@@ -487,7 +502,7 @@ aws cloudformation update-stack --stack-name $environment-$utility \\
                                        Key=Company,Value=$company \\
                                        Key=System,Value=$system \\
                                        Key=Environment,Value=$environment \\
-                                       Key=Utility,Value=$utility \\
+                                       Key=Application,Value=$application \\
                                 --capabilities CAPABILITY_IAM \\
                                 --profile $profile --region $region --output table
 EOS
@@ -519,7 +534,7 @@ fi
 
 ((++step))
 read -r -d '' statement << EOS
-aws cloudformation describe-stacks --stack-name $environment-$utility \\
+aws cloudformation describe-stacks --stack-name $environment-$application \\
                                    --query 'Stacks[].[StackName,StackStatus]' \\
                                    --profile $profile --region $region --output table
 EOS
@@ -527,7 +542,7 @@ run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
 eval_statement="${statement//\\$'\n'} 2> /dev/null"
 
 read -r -d '' statement2 << EOS
-aws cloudformation describe-stack-events --stack-name $environment-$utility --max-items 5 \\
+aws cloudformation describe-stack-events --stack-name $environment-$application --max-items 5 \\
                                          --query 'StackEvents[].[LogicalResourceId,ResourceStatus,Timestamp]' \\
                                          --profile $profile --region $region --output table
 EOS
@@ -548,7 +563,7 @@ echo "$statement"
 echo
 echo "$statement2"
 
-if [ "$(aws cloudformation describe-stacks --stack-name $environment-$utility \
+if [ "$(aws cloudformation describe-stacks --stack-name $environment-$application \
                                            --query 'Stacks[].StackStatus' \
                                            --profile $profile --region $region --output text 2> /dev/null)" = "UPDATE_COMPLETE" ]; then
     echo
@@ -573,7 +588,7 @@ else
             echo "$run_statement2"
             eval "$eval_statement2"
 
-            status=$(aws cloudformation describe-stacks --stack-name $environment-$utility \
+            status=$(aws cloudformation describe-stacks --stack-name $environment-$application \
                                                         --query 'Stacks[].StackStatus' \
                                                         --profile $profile --region $region --output text 2> /dev/null)
             if [ -z "$status" -o "$status" = "UPDATE_COMPLETE" -o "$status" = "UPDATE_FAILED" -o "$status" = "ROLLBACK_COMPLETE" ]; then
@@ -597,7 +612,7 @@ aws cloudformation describe-stacks --query 'Stacks[].[StackName,StackStatus]' \\
                                    --profile $profile --region $region --output table
 EOS
 run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
-eval_statement="${statement//\\$'\n'}"
+eval_statement="${statement//\\$'\n'} 2> /dev/null"
 
 if [ $verbose = 1 ]; then
     clear
@@ -626,7 +641,7 @@ fi
 
 ((++step))
 read -r -d '' statement << EOS
-aws cloudformation describe-stack-resources --stack-name $environment-$utility \\
+aws cloudformation describe-stack-resources --stack-name $environment-$application \\
                                             --query 'StackResources[].[ResourceType,LogicalResourceId,PhysicalResourceId,ResourceStatus]' \\
                                             --profile $profile --region $region --output table
 EOS

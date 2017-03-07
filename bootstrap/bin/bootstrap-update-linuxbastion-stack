@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# This script updates the Bootstrap LinuxBastion Stack in the Default VPC in the us-east-1-Region.
+# This script updates the Bootstrap LinuxBastion Stack in the Default VPC in the us-east-1 Region.
 #
 # This script is designed to be run first to bootstrap an Instance which can then create the rest
 # of the IROPS Infrastructure, prior to the point when other Bastion/Management Instances exist.
@@ -35,10 +35,14 @@ owner=${OWNER_EMAIL:-$USER@hpe.com}
 company=${COMPANY_NAME:-Demo}
 system=${SYSTEM_NAME:-IROPS}
 environment=Bootstrap # This exists outside Environments
+environment_size=${ENVIRONMENT_SIZE:-micro}
 utility=${UTILITY_NAME:-LinuxBastion}
-homesnapshot=
+home_snapshot=
 key=${AWS_KEY_NAME:-bootstrap}
 public_network=${PUBLIC_NETWORK:-0.0.0.0/0}
+public_network1=${PUBLIC_NETWORK1:-}
+public_network2=${PUBLIC_NETWORK2:-}
+public_network3=${PUBLIC_NETWORK3:-}
 region=us-east-1 # This should run only in us-east-1
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-bootstrapadministrator}
@@ -49,6 +53,9 @@ uselogmonitoring=true
 logretention=7
 logalarmemail=mcrawford@hpe.com
 uselocalusers=true
+useschedule=false
+onschedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
+offschedule="0 4 * * *" # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
 
 
 #  2. Define functions
@@ -56,6 +63,7 @@ uselocalusers=true
 usage () {
     echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v] [-M] [-o]"
     echo "                  [-O owner] [-C company ] [-S system]"
+    echo "                  [-Z size]"
     echo "                  [-U utility] [-h snapshot]"
     echo "                  [-k key]"
     echo "                  [-p network]"
@@ -69,8 +77,9 @@ usage () {
     echo "  -O owner        Owner Email (default: $owner)"
     echo "  -C company      Company Name (default: $company)"
     echo "  -S system       System Name (default: $system)"
+    echo "  -Z size         Environment Size (default: $environment_size)"
     echo "  -U utility      Utility Name (default: $utility)"
-    echo "  -h snapshot     Home Snapshot (default: $homesnapshot)"
+    echo "  -h snapshot     Home Snapshot (default: $home_snapshot)"
     echo "  -k key          Key (default: $key)"
     echo "  -p network      Public Network (default: $public_network)"
     echo "  -a account      Account (default: $account)"
@@ -156,8 +165,9 @@ next() {
 
 
 #  3. Parse command line options
+#     - Note, using options 1-9 as hidden options to set additional network ranges
 
-while getopts IsfvMoO:C:S:U:h:k:p:a:u:? arg; do
+while getopts IsfvMoO:C:S:Z:U:h:k:p:4:5:6:a:u:? arg; do
     case $arg in
     I)  interactive=0;;
     s)  ((speed < speed_max)) && ((speed=speed+25));;
@@ -168,10 +178,14 @@ while getopts IsfvMoO:C:S:U:h:k:p:a:u:? arg; do
     O)  owner="$OPTARG";;
     C)  company="$OPTARG";;
     S)  system="$OPTARG";;
+    Z)  environment_size="$OPTARG";;
     U)  utility="$OPTARG";;
-    h)  homesnapshot="$OPTARG";;
+    h)  home_snapshot="$OPTARG";;
     k)  key="$OPTARG";;
     p)  public_network="$OPTARG";;
+    4)  public_network1="$OPTARG";;
+    5)  public_network2="$OPTARG";;
+    6)  public_network3="$OPTARG";;
     a)  account="$OPTARG";;
     u)  user="$OPTARG";;
     ?)  usage
@@ -201,6 +215,12 @@ if [ -z $system ]; then
     echo "-S system missing!"
     echo "Could not automatically determine system, and it was not specified as a parameter"
     exit 14
+fi
+
+if [ -z $environment_size ]; then
+    echo "-Z size missing!"
+    echo "Could not automatically determine size, and it was not specified as a parameter"
+    exit 18
 fi
 
 if [ -z $utility ]; then
@@ -297,18 +317,25 @@ read -r -d '' statement << EOS
 aws cloudformation update-stack --stack-name $environment-$utility \\
                                 $template_parameter \\
                                 $stack_policy_parameter \\
-                                --parameters ParameterKey=CompanyName,ParameterValue=$company \\
+                                --parameters ParameterKey=KeyName,ParameterValue=$key \\
+                                             ParameterKey=CompanyName,ParameterValue=$company \\
                                              ParameterKey=SystemName,ParameterValue=$system \\
+                                             ParameterKey=EnvironmentSize,ParameterValue=$environment_size \\
                                              ParameterKey=UtilityName,ParameterValue=$utility \\
                                              ParameterKey=UseStaticPublicAddress,ParameterValue=$usestaticpublicaddress \\
                                              ParameterKey=UseStaticHomeVolume,ParameterValue=$usestatichomevolume \\
-                                             ParameterKey=HomeSnapshot,ParameterValue=$homesnapshot \\
+                                             ParameterKey=HomeSnapshot,ParameterValue=$home_snapshot \\
                                              ParameterKey=UseLogMonitoring,ParameterValue=$uselogmonitoring \\
                                              ParameterKey=LogRetention,ParameterValue=$logretention \\
                                              ParameterKey=LogAlarmEmail,ParameterValue=$logalarmemail \\
                                              ParameterKey=UseLocalUsers,ParameterValue=$uselocalusers \\
-                                             ParameterKey=KeyName,ParameterValue=$key \\
+                                             ParameterKey=UseSchedule,ParameterValue=$useschedule \\
+                                             ParameterKey=OnSchedule,ParameterValue="$onschedule" \\
+                                             ParameterKey=OffSchedule,ParameterValue="$offschedule" \\
                                              ParameterKey=PublicNetwork,ParameterValue=$public_network \\
+                                             ParameterKey=PublicNetwork1,ParameterValue=$public_network1 \\
+                                             ParameterKey=PublicNetwork2,ParameterValue=$public_network2 \\
+                                             ParameterKey=PublicNetwork3,ParameterValue=$public_network3 \\
                                 --tags Key=Owner,Value=$owner \\
                                        Key=Company,Value=$company \\
                                        Key=System,Value=$system \\

@@ -34,7 +34,7 @@ environment=Bootstrap # This exists outside Environments
 utility=${UTILITY_NAME:-LinuxBastion}
 region=us-east-1 # This should run only in us-east-1
 account=${AWS_ACCOUNT_ALIAS:-irops}
-user=${AWS_USER_NAME:-tempadministrator}
+user=${AWS_USER_NAME:-bootstrapadministrator}
 
 
 #  2. Define functions
