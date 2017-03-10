@@ -204,6 +204,17 @@
           { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-UsersGroup" }}
         ]
       }
+    },
+
+    "TFloresUser" : {
+      "Type": "AWS::IAM::User",
+      "Properties": {
+        "UserName": "tflores",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-UsersGroup" }}
+        ]
+      }
     }
   }
 }
