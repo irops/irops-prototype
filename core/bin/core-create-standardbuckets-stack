@@ -233,8 +233,6 @@ unset EC2_CERT
 
 start=$(date +%s)
 
-start=$(date +%s)
-
 ((++step))
 read -r -d '' statement << EOS
 aws cloudformation describe-stacks --query 'Stacks[].[StackName,StackStatus]' \\

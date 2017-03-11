@@ -241,7 +241,7 @@ unset EC2_CERT
 #  5. Run
 
 start=$(date +%s)
-o((++step))
+((++step))
 read -r -d '' statement << EOS
 aws cloudformation describe-stacks --query 'Stacks[].[StackName,StackStatus]' \\
                                    --profile $profile --region $region --output table
