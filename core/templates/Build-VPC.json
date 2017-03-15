@@ -78,16 +78,17 @@
 
   "Mappings" : {
     "SubnetMap" : {
-      "Public"        : { "ZoneA" :  "0.0/24", "ZoneB" :  "64.0/24", "ZoneC" : "128.0/24", "ZoneD" : "192.0/24" },
-      "Web"           : { "ZoneA" :  "8.0/24", "ZoneB" :  "72.0/24", "ZoneC" : "136.0/24", "ZoneD" : "200.0/24" },
-      "Application"   : { "ZoneA" : "16.0/24", "ZoneB" :  "80.0/24", "ZoneC" : "144.0/24", "ZoneD" : "208.0/24" },
-      "Cache"         : { "ZoneA" : "32.0/24", "ZoneB" :  "96.0/24", "ZoneC" : "160.0/24", "ZoneD" : "224.0/24" },
-      "Database"      : { "ZoneA" : "40.0/24", "ZoneB" : "104.0/24", "ZoneC" : "168.0/24", "ZoneD" : "232.0/24" },
-      "Queue"         : { "ZoneA" : "48.0/24", "ZoneB" : "112.0/24", "ZoneC" : "176.0/24", "ZoneD" : "240.0/24" },
-      "Log"           : { "ZoneA" : "56.0/24", "ZoneB" : "120.0/24", "ZoneC" : "184.0/24", "ZoneD" : "248.0/24" },
-      "Build"         : { "ZoneA" : "58.0/24", "ZoneB" : "122.0/24", "ZoneC" : "186.0/24", "ZoneD" : "250.0/24" },
-      "Identity"      : { "ZoneA" : "60.0/24", "ZoneB" : "124.0/24", "ZoneC" : "188.0/24", "ZoneD" : "252.0/24" },
-      "Management"    : { "ZoneA" : "62.0/24", "ZoneB" : "126.0/24", "ZoneC" : "190.0/24", "ZoneD" : "254.0/24" }
+      "Public"        : { "ZoneA" :  "0.0/26", "ZoneB" :  "64.0/26", "ZoneC" : "128.0/26", "ZoneD" : "192.0/26" },
+      "Public1"       : { "ZoneA" :  "1.0/26", "ZoneB" :  "65.0/26", "ZoneC" : "129.0/26", "ZoneD" : "193.0/26" },
+      "Web"           : { "ZoneA" :  "8.0/26", "ZoneB" :  "72.0/26", "ZoneC" : "136.0/26", "ZoneD" : "200.0/26" },
+      "Application"   : { "ZoneA" : "16.0/26", "ZoneB" :  "80.0/26", "ZoneC" : "144.0/26", "ZoneD" : "208.0/26" },
+      "Cache"         : { "ZoneA" : "32.0/26", "ZoneB" :  "96.0/26", "ZoneC" : "160.0/26", "ZoneD" : "224.0/26" },
+      "Database"      : { "ZoneA" : "40.0/26", "ZoneB" : "104.0/26", "ZoneC" : "168.0/26", "ZoneD" : "232.0/26" },
+      "Queue"         : { "ZoneA" : "48.0/26", "ZoneB" : "112.0/26", "ZoneC" : "176.0/26", "ZoneD" : "240.0/26" },
+      "Log"           : { "ZoneA" : "56.0/26", "ZoneB" : "120.0/26", "ZoneC" : "184.0/26", "ZoneD" : "248.0/26" },
+      "Build"         : { "ZoneA" : "58.0/26", "ZoneB" : "122.0/26", "ZoneC" : "186.0/26", "ZoneD" : "250.0/26" },
+      "Identity"      : { "ZoneA" : "60.0/26", "ZoneB" : "124.0/26", "ZoneC" : "188.0/26", "ZoneD" : "252.0/26" },
+      "Management"    : { "ZoneA" : "62.0/26", "ZoneB" : "126.0/26", "ZoneC" : "190.0/26", "ZoneD" : "254.0/26" }
     }
   },
 
@@ -127,42 +128,6 @@
       "Properties" : {
         "VpcId" : { "Ref" : "VPC" },
         "DhcpOptionsId" : { "Ref" : "DHCPOptions" }
-      },
-      "Condition" : "ConfigureDNS"
-    },
-
-    "PrivateHostedZone" : {
-      "Type" : "AWS::Route53::HostedZone",
-      "Properties" : {
-        "HostedZoneConfig" : {
-          "Comment" : { "Fn::Join" : [ "", [ "Private Zone for ", { "Fn::ImportValue" : { "Fn::Sub" : "${HostedZoneStackName}-Domain" }}]]}
-        },
-        "Name" : { "Fn::ImportValue" : { "Fn::Sub" : "${HostedZoneStackName}-Domain" }},
-        "VPCs" : [{
-          "VPCId" : { "Ref" : "VPC" },
-          "VPCRegion" : { "Ref" : "AWS::Region" }
-        }],
-        "HostedZoneTags" : [
-          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-PrivateHostedZone" }}
-        ]
-      },
-      "Condition" : "ConfigureDNS"
-    },
-
-    "PrivateReverseHostedZone" : {
-      "Type" : "AWS::Route53::HostedZone",
-      "Properties" : {
-        "HostedZoneConfig" : {
-          "Comment" : { "Fn::Join" : [ "", [ "Private Reverse Zone for ", { "Fn::ImportValue" : { "Fn::Sub" : "${HostedZoneStackName}-Domain" }}]]}
-        },
-        "Name" : { "Fn::Join" : [ ".", [ { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]}, "10.in-addr.arpa" ]]},
-        "VPCs" : [{
-          "VPCId" : { "Ref" : "VPC" },
-          "VPCRegion" : { "Ref" : "AWS::Region" }
-        }],
-        "HostedZoneTags" : [
-          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-PrivateReverseHostedZone" }}
-        ]
       },
       "Condition" : "ConfigureDNS"
     },
@@ -208,6 +173,34 @@
         "MapPublicIpOnLaunch" : "true",
         "Tags" : [
           { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-PublicSubnetB" }}
+        ]
+      }
+    },
+
+    "Public1SubnetA" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Public1", "ZoneA" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "true",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-Public1SubnetA" }}
+        ]
+      }
+    },
+
+    "Public1SubnetB" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Public1", "ZoneB" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "true",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-Public1SubnetB" }}
         ]
       }
     },
@@ -356,6 +349,22 @@
       "Type" : "AWS::EC2::SubnetRouteTableAssociation",
       "Properties" : {
         "SubnetId" : { "Ref" : "PublicSubnetB" },
+        "RouteTableId" : { "Ref" : "PublicRouteTable" }
+      }
+    },
+
+    "Public1SubnetARouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "Public1SubnetA" },
+        "RouteTableId" : { "Ref" : "PublicRouteTable" }
+      }
+    },
+
+    "Public1SubnetBRouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "Public1SubnetB" },
         "RouteTableId" : { "Ref" : "PublicRouteTable" }
       }
     },
@@ -536,7 +545,7 @@
 
     "VPCName" : {
       "Description" : "The VPC Name",
-      "Value" :  "Build",
+      "Value" : "Build",
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-VPCName" }}
     },
 
@@ -567,20 +576,6 @@
       "Condition" : "ConfigureDNS"
     },
 
-    "PrivateHostedZone" : {
-      "Description" : "The Private HostedZone",
-      "Value" :  { "Ref" : "PrivateHostedZone" },
-      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-PrivateHostedZone" }},
-      "Condition" : "ConfigureDNS"
-    },
-
-    "PrivateReverseHostedZone" : {
-      "Description" : "The Private Reverse HostedZone",
-      "Value" :  { "Ref" : "PrivateReverseHostedZone" },
-      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-PrivateReverseHostedZone" }},
-      "Condition" : "ConfigureDNS"
-    },
-
     "VPNGateway" : {
       "Description" : "The VPNGateway",
       "Value" :  { "Ref" : "VPNGateway" },
@@ -590,61 +585,73 @@
 
     "PublicSubnetA" : {
       "Description" : "The Public Subnet in Availability Zone A",
-      "Value" : { "Ref" : "PublicSubnetA" },
+      "Value" :  { "Ref" : "PublicSubnetA" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-PublicSubnetA" }}
     },
 
     "PublicSubnetB" : {
       "Description" : "The Public Subnet in Availability Zone B",
-      "Value" : { "Ref" : "PublicSubnetB" },
+      "Value" :  { "Ref" : "PublicSubnetB" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-PublicSubnetB" }}
+    },
+
+    "Public1SubnetA" : {
+      "Description" : "The Public1 Subnet in Availability Zone A",
+      "Value" :  { "Ref" : "Public1SubnetA" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-Public1SubnetA" }}
+    },
+
+    "Public1SubnetB" : {
+      "Description" : "The Public1 Subnet in Availability Zone B",
+      "Value" :  { "Ref" : "Public1SubnetB" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-Public1SubnetB" }}
     },
 
     "WebSubnetA" : {
       "Description" : "The Web Subnet in Availability Zone A",
-      "Value" : { "Ref" : "WebSubnetA" },
+      "Value" :  { "Ref" : "WebSubnetA" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-WebSubnetA" }}
     },
 
     "WebSubnetB" : {
       "Description" : "The Web Subnet in Availability Zone B",
-      "Value" : { "Ref" : "WebSubnetB" },
+      "Value" :  { "Ref" : "WebSubnetB" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-WebSubnetB" }}
     },
 
     "ApplicationSubnetA" : {
       "Description" : "The Application Subnet in Availability Zone A",
-      "Value" : { "Ref" : "ApplicationSubnetA" },
+      "Value" :  { "Ref" : "ApplicationSubnetA" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-ApplicationSubnetA" }}
     },
 
     "ApplicationSubnetB" : {
       "Description" : "The Application Subnet in Availability Zone B",
-      "Value" : { "Ref" : "ApplicationSubnetB" },
+      "Value" :  { "Ref" : "ApplicationSubnetB" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-ApplicationSubnetB" }}
     },
 
     "DatabaseSubnetA" : {
       "Description" : "The Database Subnet in Availability Zone A",
-      "Value" : { "Ref" : "DatabaseSubnetA" },
+      "Value" :  { "Ref" : "DatabaseSubnetA" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-DatabaseSubnetA" }}
     },
 
     "DatabaseSubnetB" : {
       "Description" : "The Database Subnet in Availability Zone B",
-      "Value" : { "Ref" : "DatabaseSubnetB" },
+      "Value" :  { "Ref" : "DatabaseSubnetB" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-DatabaseSubnetB" }}
     },
 
     "BuildSubnetA" : {
       "Description" : "The Build Subnet in Availability Zone A",
-      "Value" : { "Ref" : "BuildSubnetA" },
+      "Value" :  { "Ref" : "BuildSubnetA" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-BuildSubnetA" }}
     },
 
     "BuildSubnetB" : {
       "Description" : "The Build Subnet in Availability Zone B",
-      "Value" : { "Ref" : "BuildSubnetB" },
+      "Value" :  { "Ref" : "BuildSubnetB" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-BuildSubnetB" }}
     },
 

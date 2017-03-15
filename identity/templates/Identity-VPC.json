@@ -78,8 +78,8 @@
 
   "Mappings" : {
     "SubnetMap" : {
-      "Public"        : { "ZoneA" :  "0.0/24", "ZoneB" :  "64.0/24", "ZoneC" : "128.0/24", "ZoneD" : "192.0/24" },
-      "Identity"      : { "ZoneA" : "60.0/24", "ZoneB" : "124.0/24", "ZoneC" : "188.0/24", "ZoneD" : "252.0/24" }
+      "Public"        : { "ZoneA" :  "0.0/26", "ZoneB" :  "64.0/26", "ZoneC" : "128.0/26", "ZoneD" : "192.0/26" },
+      "Identity"      : { "ZoneA" : "60.0/26", "ZoneB" : "124.0/26", "ZoneC" : "188.0/26", "ZoneD" : "252.0/26" }
     }
   },
 
@@ -119,42 +119,6 @@
       "Properties" : {
         "VpcId" : { "Ref" : "VPC" },
         "DhcpOptionsId" : { "Ref" : "DHCPOptions" }
-      },
-      "Condition" : "ConfigureDNS"
-    },
-
-    "PrivateHostedZone" : {
-      "Type" : "AWS::Route53::HostedZone",
-      "Properties" : {
-        "HostedZoneConfig" : {
-          "Comment" : { "Fn::Join" : [ "", [ "Private Zone for ", { "Fn::ImportValue" : { "Fn::Sub" : "${HostedZoneStackName}-Domain" }}]]}
-        },
-        "Name" : { "Fn::ImportValue" : { "Fn::Sub" : "${HostedZoneStackName}-Domain" }},
-        "VPCs" : [{
-          "VPCId" : { "Ref" : "VPC" },
-          "VPCRegion" : { "Ref" : "AWS::Region" }
-        }],
-        "HostedZoneTags" : [
-          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-PrivateHostedZone" }}
-        ]
-      },
-      "Condition" : "ConfigureDNS"
-    },
-
-    "PrivateReverseHostedZone" : {
-      "Type" : "AWS::Route53::HostedZone",
-      "Properties" : {
-        "HostedZoneConfig" : {
-          "Comment" : { "Fn::Join" : [ "", [ "Private Reverse Zone for ", { "Fn::ImportValue" : { "Fn::Sub" : "${HostedZoneStackName}-Domain" }}]]}
-        },
-        "Name" : { "Fn::Join" : [ ".", [ { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]}, "10.in-addr.arpa" ]]},
-        "VPCs" : [{
-          "VPCId" : { "Ref" : "VPC" },
-          "VPCRegion" : { "Ref" : "AWS::Region" }
-        }],
-        "HostedZoneTags" : [
-          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-PrivateReverseHostedZone" }}
-        ]
       },
       "Condition" : "ConfigureDNS"
     },
@@ -424,20 +388,6 @@
       "Description" : "The Public HostedZone",
       "Value" : { "Fn::ImportValue" : { "Fn::Sub" : "${HostedZoneStackName}-HostedZone" }},
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-PublicHostedZone" }},
-      "Condition" : "ConfigureDNS"
-    },
-
-    "PrivateHostedZone" : {
-      "Description" : "The Private HostedZone",
-      "Value" :  { "Ref" : "PrivateHostedZone" },
-      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-PrivateHostedZone" }},
-      "Condition" : "ConfigureDNS"
-    },
-
-    "PrivateReverseHostedZone" : {
-      "Description" : "The Private Reverse HostedZone",
-      "Value" :  { "Ref" : "PrivateReverseHostedZone" },
-      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-PrivateReverseHostedZone" }},
       "Condition" : "ConfigureDNS"
     },
 
