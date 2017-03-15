@@ -25,13 +25,13 @@ speed=100
 verbose=0
 override=0
 owner=${OWNER_EMAIL:-$USER@hpe.com}
-company=${COMPANY_NAME:-Demo}
+company=${COMPANY_NAME:-Travel}
 system=${SYSTEM_NAME:-IROPS}
 environment=${ENVIRONMENT_NAME:-Production}
 environment_size=${ENVIRONMENT_SIZE:-micro}
 utility=${UTILITY_NAME:-LinuxBastions}
 utility_domain=${UTILITY_DOMAIN:-lbastion}
-key=${AWS_KEY_NAME:-example}
+key=${AWS_KEY_NAME:-administrator}
 public_network=${PUBLIC_NETWORK:-0.0.0.0/0}
 public_network1=${PUBLIC_NETWORK1:-}
 public_network2=${PUBLIC_NETWORK2:-}
@@ -217,68 +217,68 @@ if [ -z $environment ]; then
 else
     case $environment in
       Production)
-        usemultizone=true
-        usestaticpublicaddress=true
-        usestaticprivateaddress=true
-        uselogmonitoring=true
-        uselocalusers=true
-        useschedule=false
-        onschedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
-        offschedule="0 4 * * *";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
+        use_multizone=true
+        use_static_public_address=true
+        use_static_private_address=true
+        use_log_monitoring=true
+        use_local_users=true
+        use_schedule=false
+        on_schedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
+        off_schedule="0 4 * * *";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
       Staging)
-        usemultizone=false
-        usestaticpublicaddress=true
-        usestaticprivateaddress=true
-        uselogmonitoring=true
-        uselocalusers=true
-        useschedule=true
-        onschedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
-        offschedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
+        use_multizone=false
+        use_static_public_address=true
+        use_static_private_address=true
+        use_log_monitoring=true
+        use_local_users=true
+        use_schedule=true
+        on_schedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
+        off_schedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
       Testing)
-        usemultizone=false
-        usestaticpublicaddress=true
-        usestaticprivateaddress=true
-        uselogmonitoring=true
-        uselocalusers=true
-        useschedule=true
-        onschedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
-        offschedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
+        use_multizone=false
+        use_static_public_address=true
+        use_static_private_address=true
+        use_log_monitoring=true
+        use_local_users=true
+        use_schedule=true
+        on_schedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
+        off_schedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
       Development)
-        usemultizone=false
-        usestaticpublicaddress=true
-        usestaticprivateaddress=true
-        uselogmonitoring=true
-        uselocalusers=true
-        useschedule=true
-        onschedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
-        offschedule="0 4 * * *";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
+        use_multizone=false
+        use_static_public_address=true
+        use_static_private_address=true
+        use_log_monitoring=true
+        use_local_users=true
+        use_schedule=true
+        on_schedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
+        off_schedule="0 4 * * *";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
       Core)
-        usemultizone=false
-        usestaticpublicaddress=true
-        usestaticprivateaddress=true
-        uselogmonitoring=true
-        uselocalusers=true
-        useschedule=false
-        onschedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
-        offschedule="0 4 * * *";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
+        use_multizone=false
+        use_static_public_address=true
+        use_static_private_address=true
+        use_log_monitoring=true
+        use_local_users=true
+        use_schedule=false
+        on_schedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
+        off_schedule="0 4 * * *";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
       Build)
-        usemultizone=false
-        usestaticpublicaddress=true
-        usestaticprivateaddress=true
-        uselogmonitoring=true
-        uselocalusers=true
-        useschedule=true
-        onschedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
-        offschedule="0 4 * * *";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
+        use_multizone=false
+        use_static_public_address=true
+        use_static_private_address=true
+        use_log_monitoring=true
+        use_local_users=true
+        use_schedule=true
+        on_schedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
+        off_schedule="0 4 * * *";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
       *)
-        usemultizone=false
-        usestaticpublicaddress=true
-        usestaticprivateaddress=true
-        uselogmonitoring=true
-        uselocalusers=true
-        useschedule=true
-        onschedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
-        offschedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
+        use_multizone=false
+        use_static_public_address=true
+        use_static_private_address=true
+        use_log_monitoring=true
+        use_local_users=true
+        use_schedule=true
+        on_schedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
+        off_schedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
     esac
 fi
 
@@ -354,11 +354,11 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     exit 60
 fi
 
-templatesbucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
-templatespath=/utility
+templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
+templates_path=/utility
 
-if ! aws s3api head-bucket --bucket $templatesbucket --profile $profile --region $region 2> /dev/null; then
-    unset templatesbucket
+if ! aws s3api head-bucket --bucket $templates_bucket --profile $profile --region $region 2> /dev/null; then
+    unset templates_bucket
 fi
 
 if ! aws cloudformation describe-stacks --stack-name $environment-$utility \
@@ -414,19 +414,19 @@ fi
 ((++step))
 read -r -d '' statement << EOS
 aws s3 sync $templatesdir \\
-            s3://$templatesbucket$templatespath \\
+            s3://$templates_bucket$templates_path \\
             --exclude '*' --include 'Utility-LinuxBastions.json' --include 'Utility-LinuxBastions-StackPolicy.json' \\
             --profile $profile --region $region --output table
 EOS
 run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
 eval_statement="${statement//\\$'\n'}"
 
-if [ ! -z $templatesbucket ]; then
+if [ ! -z $templates_bucket ]; then
     clear
     echo
     echo "============================================================"
     echo
-    echo "$(printf '%2d' $step). Sync Template and Policy to ($templatesbucket) Bucket"
+    echo "$(printf '%2d' $step). Sync Template and Policy to ($templates_bucket) Bucket"
     echo
     echo "============================================================"
     echo
@@ -445,9 +445,9 @@ fi
 
 
 ((++step))
-if [ ! -z $templatesbucket ]; then
-    template_parameter="--template-url https://$s3_domain/$templatesbucket$templatespath/Utility-LinuxBastions.json"
-    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templatesbucket$templatespath/Utility-LinuxBastions-StackPolicy.json"
+if [ ! -z $templates_bucket ]; then
+    template_parameter="--template-url https://$s3_domain/$templates_bucket$templates_path/Utility-LinuxBastions.json"
+    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket$templates_path/Utility-LinuxBastions-StackPolicy.json"
 else
     template_parameter="--template-body file://$templatesdir/Utility-LinuxBastions.json"
     stack_policy_parameter="--stack-policy-body file://$templatesdir/Utility-LinuxBastions-StackPolicy.json"
@@ -467,14 +467,14 @@ aws cloudformation update-stack --stack-name $environment-$utility \\
                                              ParameterKey=EnvironmentSize,ParameterValue=$environment_size \\
                                              ParameterKey=UtilityName,ParameterValue=$utility \\
                                              ParameterKey=UtilityDomain,ParameterValue=$utility_domain \\
-                                             ParameterKey=UseMultiZone,ParameterValue=$usemultizone \\
-                                             ParameterKey=UseStaticPublicAddress,ParameterValue=$usestaticpublicaddress \\
-                                             ParameterKey=UseStaticPrivateAddress,ParameterValue=$usestaticprivateaddress \\
-                                             ParameterKey=UseLogMonitoring,ParameterValue=$uselogmonitoring \\
-                                             ParameterKey=UseLocalUsers,ParameterValue=$uselocalusers \\
-                                             ParameterKey=UseSchedule,ParameterValue=$useschedule \\
-                                             ParameterKey=OnSchedule,ParameterValue="$onschedule" \\
-                                             ParameterKey=OffSchedule,ParameterValue="$offschedule" \\
+                                             ParameterKey=UseMultiZone,ParameterValue=$use_multizone \\
+                                             ParameterKey=UseStaticPublicAddress,ParameterValue=$use_static_public_address \\
+                                             ParameterKey=UseStaticPrivateAddress,ParameterValue=$use_static_private_address \\
+                                             ParameterKey=UseLogMonitoring,ParameterValue=$use_log_monitoring \\
+                                             ParameterKey=UseLocalUsers,ParameterValue=$use_local_users \\
+                                             ParameterKey=UseSchedule,ParameterValue=$use_schedule \\
+                                             ParameterKey=OnSchedule,ParameterValue="$on_schedule" \\
+                                             ParameterKey=OffSchedule,ParameterValue="$off_schedule" \\
                                              ParameterKey=PublicNetwork,ParameterValue=$public_network \\
                                              ParameterKey=PublicNetwork1,ParameterValue=$public_network1 \\
                                              ParameterKey=PublicNetwork2,ParameterValue=$public_network2 \\
