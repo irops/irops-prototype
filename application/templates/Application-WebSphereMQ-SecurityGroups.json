@@ -1,0 +1,225 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Application-WebSphereMQ-SecurityGroups Template. This is a layer in the WebSphereMQ application, which creates SecurityGroups. The Environment's LinuxBastions Stack must exist before creating this stack.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "VPCStackName",
+            "LinuxBastionsStackName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Application Configuration" },
+          "Parameters" : [
+            "ApplicationName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Security Configuration" },
+          "Parameters" : [
+            "AdministratorNetwork",
+            "AdministratorNetwork1",
+            "AdministratorNetwork2",
+            "AdministratorNetwork3",
+            "PrivateNetwork",
+            "PrivateNetwork1",
+            "PrivateNetwork2",
+            "PrivateNetwork3"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "VPCStackName" : { "default" : "VPC Stack Name" },
+        "LinuxBastionsStackName" : { "default" : "LinuxBastions Stack Name" },
+        "ApplicationName" : { "default" : "Application Name" },
+        "AdministratorNetwork" : { "default" : "Administrator Network" },
+        "AdministratorNetwork1" : { "default" : "Additional Administrator Network 1" },
+        "AdministratorNetwork2" : { "default" : "Additional Administrator Network 2" },
+        "AdministratorNetwork3" : { "default" : "Additional Administrator Network 3" },
+        "PrivateNetwork" : { "default" : "Private Network" },
+        "PrivateNetwork1" : { "default" : "Additional Private Network 1" },
+        "PrivateNetwork2" : { "default" : "Additional Private Network 2" },
+        "PrivateNetwork3" : { "default" : "Additional Private Network 3" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "VPCStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the VPC",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-VPC",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "LinuxBastionsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Linux Bastions",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "Production-LinuxBastions",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "ApplicationName" : {
+      "Description" : "Name of the Application associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "WebSphereMQ",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "AdministratorNetwork" : {
+      "Description" : "Network that can administer the Application",
+      "Type" : "String",
+      "Default" : "0.0.0.0/0",
+      "AllowedPattern" : "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "AdministratorNetwork1" : {
+      "Description" : "Additional network that can administer the Application",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "AdministratorNetwork2" : {
+      "Description" : "Additional network that can administer the Application",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "AdministratorNetwork3" : {
+      "Description" : "Additional network that can administer the Application",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "PrivateNetwork" : {
+      "Description" : "Private network that can access the Application",
+      "Type" : "String",
+      "Default" : "10.0.0.0/16",
+      "AllowedPattern" : "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
+    },
+
+    "PrivateNetwork1" : {
+      "Description" : "Additional private network that can access the Application",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
+    },
+
+    "PrivateNetwork2" : {
+      "Description" : "Additional private network that can access the Application",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
+    },
+
+    "PrivateNetwork3" : {
+      "Description" : "Additional private network that can access the Application",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
+    }
+  },
+
+  "Conditions" : {
+    "ConfigureAdministratorNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "AdministratorNetwork1" }, "" ]}]},
+    "ConfigureAdministratorNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "AdministratorNetwork2" }, "" ]}]},
+    "ConfigureAdministratorNetwork3" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "AdministratorNetwork3" }, "" ]}]},
+    "ConfigurePrivateNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateNetwork1" }, "" ]}]},
+    "ConfigurePrivateNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateNetwork2" }, "" ]}]},
+    "ConfigurePrivateNetwork3" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateNetwork3" }, "" ]}]}
+  },
+
+  "Resources" : {
+    "InstanceSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "InstanceSecurityGroup" ]]},
+        "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPC" }},
+        "SecurityGroupIngress" : [
+          { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${LinuxBastionsStackName}-SecurityGroup" }}},
+          { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${LinuxBastionsStackName}-SecurityGroup" }}},
+          { "IpProtocol" : "tcp",  "FromPort" : "1414", "ToPort" : "1414", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${LinuxBastionsStackName}-SecurityGroup" }}},
+          { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "AdministratorNetwork" }},
+          { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "CidrIp" : { "Ref" : "AdministratorNetwork" }},
+          { "IpProtocol" : "tcp",  "FromPort" : "1414", "ToPort" : "1414", "CidrIp" : { "Ref" : "AdministratorNetwork" }},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork1", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "AdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "CidrIp" : { "Ref" : "AdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "1414", "ToPort" : "1414", "CidrIp" : { "Ref" : "AdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork2", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "AdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "CidrIp" : { "Ref" : "AdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "1414", "ToPort" : "1414", "CidrIp" : { "Ref" : "AdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork3", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "AdministratorNetwork3" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork3", { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "CidrIp" : { "Ref" : "AdministratorNetwork3" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork3", { "IpProtocol" : "tcp",  "FromPort" : "1414", "ToPort" : "1414", "CidrIp" : { "Ref" : "AdministratorNetwork3" }}, { "Ref" : "AWS::NoValue" }]},
+          { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateNetwork" }},
+          { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "CidrIp" : { "Ref" : "PrivateNetwork" }},
+          { "IpProtocol" : "tcp",  "FromPort" : "1414", "ToPort" : "1414", "CidrIp" : { "Ref" : "PrivateNetwork" }},
+          { "Fn::If" : [ "ConfigurePrivateNetwork1", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateNetwork1", { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "CidrIp" : { "Ref" : "PrivateNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "1414", "ToPort" : "1414", "CidrIp" : { "Ref" : "PrivateNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateNetwork2", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateNetwork2", { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "CidrIp" : { "Ref" : "PrivateNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "1414", "ToPort" : "1414", "CidrIp" : { "Ref" : "PrivateNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateNetwork3", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateNetwork3" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateNetwork3", { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "CidrIp" : { "Ref" : "PrivateNetwork3" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateNetwork3", { "IpProtocol" : "tcp",  "FromPort" : "1414", "ToPort" : "1414", "CidrIp" : { "Ref" : "PrivateNetwork3" }}, { "Ref" : "AWS::NoValue" }]}
+        ],
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "InstanceSecurityGroup" ]]}}
+        ]
+      }
+    },
+
+    "MountTargetSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "MountTargetSecurityGroup" ]]},
+        "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPC" }},
+        "SecurityGroupIngress" : [
+          { "IpProtocol" : "tcp",  "FromPort" : "2049", "ToPort" : "2049", "SourceSecurityGroupId" : { "Ref" : "InstanceSecurityGroup" }}
+        ],
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "MountTargetSecurityGroup" ]]}}
+        ]
+      }
+    }
+  },
+
+  "Outputs" : {
+    "InstanceSecurityGroup" : {
+      "Description" : "The Instance SecurityGroup",
+      "Value" : { "Ref" : "InstanceSecurityGroup" }
+    },
+
+    "MountTargetSecurityGroup" : {
+      "Description" : "The MountTarget SecurityGroup",
+      "Value" : { "Ref" : "MountTargetSecurityGroup" }
+    }
+  }
+}

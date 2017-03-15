@@ -1,0 +1,127 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Application-WebSphereMQ-FileSystem Template. This is a layer in the WebSphereMQ application, which creates the EFS FileSystem and MountTargets.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "VPCStackName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Resource Dependencies" },
+          "Parameters" : [
+            "MountTargetSecurityGroup"
+          ]
+        },
+        {
+          "Label" : { "default" : "Application Configuration" },
+          "Parameters" : [
+            "ApplicationName"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "VPCStackName" : { "default" : "VPC Stack Name" },
+        "MountTargetSecurityGroup" : { "default" : "MountTarget SecurityGroup" },
+        "ApplicationName" : { "default" : "Application Name" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "VPCStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the VPC",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-VPC",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "MountTargetSecurityGroup" : {
+      "Description" : "ID of an existing SecurityGroup which controls access to the MountTargets",
+      "Type" : "AWS::EC2::SecurityGroup::Id",
+      "MaxLength" : 32,
+      "AllowedPattern" : "^sg-[0-9a-f]{8}$",
+      "ConstraintDescription" : "must be the name of an existing SecurityGroup."
+    },
+
+    "ApplicationName" : {
+      "Description" : "Name of the Application associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "WebSphereMQ",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    }
+  },
+
+  "Mappings" : {
+    "HostMap" : {
+      "MountTarget" : { "ZoneA" :  "48.4", "ZoneB" :  "112.4", "ZoneC" : "176.4", "ZoneD" : "240.4" }
+    }
+  },
+
+  "Resources" : {
+    "FileSystem" : {
+      "Type" : "AWS::EFS::FileSystem",
+      "Properties" : {
+        "PerformanceMode" : "generalPurpose",
+        "FileSystemTags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "Volume" ]]}}
+        ]
+      }
+    },
+
+    "MountTargetA" : {
+      "Type" : "AWS::EFS::MountTarget",
+      "Properties" : {
+        "FileSystemId" : { "Ref" : "FileSystem" },
+        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-QueueSubnetA" }},
+        "IpAddress" : { "Fn::Join" : [ ".", [
+                      { "Fn::Select" : [ "0", { "Fn::Split" : [ ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCNetwork" }}]}]},
+                      { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCNetwork" }}]}]},
+                      { "Fn::FindInMap" : [ "HostMap", "MountTarget", "ZoneA" ]}]]},
+        "SecurityGroups" : [{ "Ref" : "MountTargetSecurityGroup" }]
+      }
+    },
+
+    "MountTargetB" : {
+      "Type" : "AWS::EFS::MountTarget",
+      "Properties" : {
+        "FileSystemId" : { "Ref" : "FileSystem" },
+        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-QueueSubnetB" }},
+        "IpAddress" : { "Fn::Join" : [ ".", [
+                      { "Fn::Select" : [ "0", { "Fn::Split" : [ ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCNetwork" }}]}]},
+                      { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCNetwork" }}]}]},
+                      { "Fn::FindInMap" : [ "HostMap", "MountTarget", "ZoneB" ]}]]},
+        "SecurityGroups" : [{ "Ref" : "MountTargetSecurityGroup" }]
+      }
+    }
+  },
+
+  "Outputs" : {
+    "FileSystem" : {
+      "Description" : "The FileSystem",
+      "Value" : { "Ref" : "FileSystem" }
+    },
+
+    "MountTargetA" : {
+      "Description" : "The MountTargetA",
+      "Value" : { "Ref" : "MountTargetA" }
+    },
+
+    "MountTargetB" : {
+      "Description" : "The MountTargetB",
+      "Value" : { "Ref" : "MountTargetB" }
+    }
+  }
+}
