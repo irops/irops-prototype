@@ -158,7 +158,7 @@ run "$commonbindir/common-create-customergateway-stack -E Core -G SantaBarbara -
 #      5.2. Create Production-VPC Stack
 #      5.3. Create Production-NetworkAcls Stack
 
-run "$environmentbindir/environment-create-hostedzone-stack -E Production -D eu-west-1.demo.iropshub.com"
+run "$environmentbindir/environment-create-hostedzone-stack -E Production -D eu-west-1.tvl.iropshub.com"
 run "$environmentbindir/environment-create-vpc-stack -E Production -N 10.56.0.0/16"
 run "$environmentbindir/environment-create-networkacls-stack -E Production"
 
@@ -168,7 +168,7 @@ run "$environmentbindir/environment-create-networkacls-stack -E Production"
 #      6.2. Create Staging-VPC Stack
 #      6.3. Create Staging-NetworkAcls Stack
 
-run "$environmentbindir/environment-create-hostedzone-stack -E Staging -D s.eu-west-1.demo.iropshub.com"
+run "$environmentbindir/environment-create-hostedzone-stack -E Staging -D s.eu-west-1.tvl.iropshub.com"
 run "$environmentbindir/environment-create-vpc-stack -E Staging -N 10.57.0.0/16"
 run "$environmentbindir/environment-create-networkacls-stack -E Staging"
 
@@ -178,7 +178,7 @@ run "$environmentbindir/environment-create-networkacls-stack -E Staging"
 #      7.2. Create Testing-VPC Stack
 #      7.3. Create Testing-NetworkAcls Stack
 
-run "$environmentbindir/environment-create-hostedzone-stack -E Testing -D t.eu-west-1.demo.iropshub.com"
+run "$environmentbindir/environment-create-hostedzone-stack -E Testing -D t.eu-west-1.tvl.iropshub.com"
 run "$environmentbindir/environment-create-vpc-stack -E Testing -N 10.58.0.0/16"
 run "$environmentbindir/environment-create-networkacls-stack -E Testing"
 
@@ -188,7 +188,7 @@ run "$environmentbindir/environment-create-networkacls-stack -E Testing"
 #      8.2. Create Development-VPC Stack
 #      8.3. Create Development-NetworkAcls Stack
 
-run "$environmentbindir/environment-create-hostedzone-stack -E Development -D d.eu-west-1.demo.iropshub.com"
+run "$environmentbindir/environment-create-hostedzone-stack -E Development -D d.eu-west-1.tvl.iropshub.com"
 run "$environmentbindir/environment-create-vpc-stack -E Development -N 10.59.0.0/16"
 run "$environmentbindir/environment-create-networkacls-stack -E Development"
 
