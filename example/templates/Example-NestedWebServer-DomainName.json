@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
 
-  "Description" : "Example-NestedWebServer-RecordSet Template. This is an example of a layer in the NestedWebServer application, which creates the Public DNS RecordSet.",
+  "Description" : "Example-NestedWebServer-DomainName Template. This is an example of a layer in the NestedWebServer application, which creates the Public RecordSet.",
 
   "Metadata" : {
     "AWS::CloudFormation::Interface" : {

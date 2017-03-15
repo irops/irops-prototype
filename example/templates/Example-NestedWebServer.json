@@ -35,7 +35,8 @@
         {
           "Label" : { "default" : "Environment Configuration" },
           "Parameters" : [
-            "EnvironmentSize"
+            "EnvironmentSize",
+            "InstanceOS"
           ]
         },
         {
@@ -74,6 +75,7 @@
         "CompanyName" : { "default" : "Company Name" },
         "SystemName" : { "default" : "System Name" },
         "EnvironmentSize" : { "default" : "Environment Size" },
+        "InstanceOS" : { "default" : "Instance Operating System" },
         "ApplicationsBucket" : { "default" : "Applications Bucket" },
         "ApplicationName" : { "default" : "Application Name" },
         "ApplicationDomain" : { "default" : "Application Domain Name" },
@@ -137,7 +139,7 @@
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
-      "Default" : "Demo",
+      "Default" : "Travel",
       "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
@@ -158,6 +160,14 @@
       "Default" : "micro",
       "AllowedValues" : [ "micro", "small", "medium", "large", "xlarge" ],
       "ConstraintDescription" : "must be micro, small, medium, large or xlarge."
+    },
+
+    "InstanceOS" : {
+      "Description" : "The Operating System to use for Instances",
+      "Type" : "String",
+      "Default" : "AMZN",
+      "AllowedValues" : [ "AMZN", "RHEL", "UBNT" ],
+      "ConstraintDescription" : "must be AMZN = \"Amazon Linux 2016.09.1\", RHEL = \"RHEL 7.3\" or UBNT = \"Ubuntu 16.04\"."
     },
 
     "ApplicationsBucket" : {
@@ -297,7 +307,7 @@
 
   "Conditions" : {
     "ConfigureGlobalS3" : { "Fn::Equals" : [{ "Ref" : "AWS::Region" }, "us-east-1" ]},
-    "ConfigureDNS" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationDomain" }, "" ]}]}
+    "ConfigureDomainNames" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationDomain" }, "" ]}]}
   },
 
   "Resources" : {
@@ -347,15 +357,16 @@
           "EnvironmentSize" : { "Ref" : "EnvironmentSize" },
           "ApplicationsBucket" : { "Ref" : "ApplicationsBucket" },
           "ApplicationName" : { "Ref" : "ApplicationName" },
+          "ApplicationDomain" : { "Ref" : "ApplicationDomain" },
           "ApplicationVersion" : { "Ref" : "ApplicationVersion" }
         }
       }
     },
 
-    "RecordSet" : {
+    "DomainName" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, { "Ref" : "TemplatesPath" }, "/Example-NestedWebServer-RecordSet.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, { "Ref" : "TemplatesPath" }, "/Example-NestedWebServer-DomainName.json" ]]},
         "Parameters" : {
           "VPCStackName" : { "Ref" : "VPCStackName" },
           "InstancePublicIp" : { "Fn::GetAtt" : [ "Instance", "Outputs.InstancePublicIp" ]},
@@ -363,7 +374,7 @@
           "ApplicationDomain" : { "Ref" : "ApplicationDomain" }
         }
       },
-      "Condition" : "ConfigureDNS"
+      "Condition" : "ConfigureDomainNames"
     }
   },
 
@@ -377,7 +388,7 @@
     "URL" : {
       "Description" : "The Sample Website URL",
       "Value" :  { "Fn::Join" : [ "", [ "http://", { "Ref" : "ApplicationDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "/" ]]},
-      "Condition" : "ConfigureDNS"
+      "Condition" : "ConfigureDomainNames"
     }
   }
 }
