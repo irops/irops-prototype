@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
 
-  "Description" : "Example-WebServers Template. This is an example of an auto-scaled web server based application, showing installation and configuration via cfn-init.",
+  "Description" : "Example-NestedWebServers-DomainNames Template. This is an example of a layer in the NestedWebServers application, which creates the RecordSetGroup.",
 
   "Metadata" : {
     "AWS::CloudFormation::Interface" : {
