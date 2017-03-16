@@ -437,7 +437,6 @@
       }
     },
 
-
     "Instances" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
@@ -448,7 +447,7 @@
           "KeyName" : { "Ref" : "KeyName" },
           "Role" : { "Fn::GetAtt" : [ "Role", "Outputs.Role" ]},
           "InstanceSecurityGroup" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.InstanceSecurityGroup" ]},
-          "LogGroup" : { "Fn::GetAtt" : [ "Logs", "Outputs.LogGroup" ]},
+          "LogGroup" : { "Fn::If" : [ "ConfigureLogs", { "Fn::GetAtt" : [ "Logs", "Outputs.LogGroup" ]}, "" ]},
           "LoadBalancer" : { "Fn::GetAtt" : [ "LoadBalancer", "Outputs.LoadBalancer" ]},
           "EnvironmentSize" : { "Ref" : "EnvironmentSize" },
           "InstanceOS" : { "Ref" : "InstanceOS" },

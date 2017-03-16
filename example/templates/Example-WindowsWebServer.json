@@ -28,7 +28,8 @@
         {
           "Label" : { "default" : "Environment Configuration" },
           "Parameters" : [
-            "EnvironmentSize"
+            "EnvironmentSize",
+            "InstanceOS"
           ]
         },
         {
@@ -65,6 +66,7 @@
         "CompanyName" : { "default" : "Company Name" },
         "SystemName" : { "default" : "System Name" },
         "EnvironmentSize" : { "default" : "Environment Size" },
+        "InstanceOS" : { "default" : "Instance Operating System" },
         "ApplicationsBucket" : { "default" : "Applications Bucket" },
         "ApplicationName" : { "default" : "Application Name" },
         "ApplicationDomain" : { "default" : "Application Domain Name" },
@@ -110,7 +112,7 @@
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
-      "Default" : "Demo",
+      "Default" : "Travel",
       "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
@@ -131,6 +133,14 @@
       "Default" : "micro",
       "AllowedValues" : [ "micro", "small", "medium", "large", "xlarge", "mlarge", "mxlarge", "m2xlarge", "clarge", "cxlarge", "c2xlarge" ],
       "ConstraintDescription" : "must be micro, small, medium, large, xlarge, mlarge, mxlarge, m2xlarge, clarge, cxlarge or c2xlarge."
+    },
+
+    "InstanceOS" : {
+      "Description" : "The Operating System to use for Instances",
+      "Type" : "String",
+      "Default" : "WS2012R2",
+      "AllowedValues" : [ "WS2012R2", "WS2016" ],
+      "ConstraintDescription" : "must be WS2012R2 = \"Windows Server 2012R2\" or WS2016 = \"Windows Server 2016\"."
     },
 
     "ApplicationsBucket" : {
@@ -270,20 +280,21 @@
 
   "Mappings" : {
     "ImageIdMap" : {
-      "us-east-1"      : { "Windows2012r2" : "ami-abf616bd" },
-      "us-east-2"      : { "Windows2012r2" : "ami-c06d48a5" },
-      "us-west-1"      : { "Windows2012r2" : "ami-76227116" },
-      "us-west-2"      : { "Windows2012r2" : "ami-1562d075" },
-      "ca-central-1"   : { "Windows2012r2" : "ami-7805b71c" },
-      "sa-east-1"      : { "Windows2012r2" : "ami-f4d84298" },
-      "eu-west-1"      : { "Windows2012r2" : "ami-dd9eb6ae" },
-      "eu-west-2"      : { "Windows2012r2" : "ami-738a8017" },
-      "eu-central-1"   : { "Windows2012r2" : "ami-6f559800" },
-      "ap-northeast-1" : { "Windows2012r2" : "ami-7accbe1d" },
-      "ap-northeast-2" : { "Windows2012r2" : "ami-e979af87" },
-      "ap-southeast-1" : { "Windows2012r2" : "ami-89e74cea" },
-      "ap-southeast-2" : { "Windows2012r2" : "ami-059d9866" },
-      "ap-south-1"     : { "Windows2012r2" : "ami-31a6d05e" }
+      "AMI"            : { "WS2012R2" : "Windows Server 2012r2", "WS2016" : "Windows Server 2016" },
+      "us-east-1"      : { "WS2012R2" : "ami-abf616bd", "WS2016" : "ami-188d6e0e" },
+      "us-east-2"      : { "WS2012R2" : "ami-c06d48a5", "WS2016" : "ami-057d5860" },
+      "us-west-1"      : { "WS2012R2" : "ami-76227116", "WS2016" : "ami-179ac977" },
+      "us-west-2"      : { "WS2012R2" : "ami-1562d075", "WS2016" : "ami-6e833e0e" },
+      "ca-central-1"   : { "WS2012R2" : "ami-7805b71c", "WS2016" : "ami-00f84564" },
+      "eu-west-1"      : { "WS2012R2" : "ami-dd9eb6ae", "WS2016" : "ami-29f7dd5a" },
+      "eu-central-1"   : { "WS2012R2" : "ami-6f559800", "WS2016" : "ami-88ec20e7" },
+      "eu-west-2"      : { "WS2012R2" : "ami-738a8017", "WS2016" : "ami-64999300" },
+      "ap-southeast-1" : { "WS2012R2" : "ami-89e74cea", "WS2016" : "ami-49963d2a" },
+      "ap-southeast-2" : { "WS2012R2" : "ami-059d9866", "WS2016" : "ami-b47175d7" },
+      "ap-northeast-2" : { "WS2012R2" : "ami-e979af87", "WS2016" : "ami-819e4fef" },
+      "ap-northeast-1" : { "WS2012R2" : "ami-7accbe1d", "WS2016" : "ami-834e32e4" },
+      "ap-south-1"     : { "WS2012R2" : "ami-31a6d05e", "WS2016" : "ami-2c9aec43" },
+      "sa-east-1"      : { "WS2012R2" : "ami-f4d84298", "WS2016" : "ami-9e79e3f2" }
     },
 
     "InstanceTypeMap" : {
@@ -295,7 +306,7 @@
 
   "Conditions" : {
     "DownloadApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationsBucket" }, "" ]}]},
-    "ConfigureDNS" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationDomain" }, "" ]}]},
+    "ConfigureDomainNames" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationDomain" }, "" ]}]},
     "ConfigureAdministratorNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "AdministratorNetwork1" }, "" ]}]},
     "ConfigureAdministratorNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "AdministratorNetwork2" }, "" ]}]},
     "ConfigureAdministratorNetwork3" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "AdministratorNetwork3" }, "" ]}]},
@@ -346,7 +357,7 @@
     "SecurityGroup" : {
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
-        "GroupDescription" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }, "SecurityGroup" ]]},
+        "GroupDescription" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "SecurityGroup" ]]},
         "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPC" }},
         "SecurityGroupIngress" : [
           { "IpProtocol" : "icmp", "FromPort" : "-1",   "ToPort" : "-1",   "CidrIp" : { "Ref" : "AdministratorNetwork" }},
@@ -375,7 +386,7 @@
           { "Fn::If" : [ "ConfigurePrivateNetwork3", { "IpProtocol" : "tcp",  "FromPort" : "80", "ToPort" : "80", "CidrIp" : { "Ref" : "PrivateNetwork3" }}, { "Ref" : "AWS::NoValue" }]}
         ],
         "Tags" : [
-          { "Key" : "Name", "Value" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }, "SecurityGroup" ]]}}
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "SecurityGroup" ]]}}
         ]
       }
     },
@@ -402,6 +413,7 @@
           "configSets" : {
             "All" : [
               "ConfigureOS",
+              "ConfigureHostname",
               "ConfigureCFN",
               "InstallWebServer",
               { "Fn::If" : [ "DownloadApplication", "DownloadApplication", "ConfigureApplication" ]}
@@ -416,6 +428,14 @@
               "02_set_execution_policy" : {
                 "command" : "powershell.exe -Command \"Set-ExecutionPolicy RemoteSigned -Force\"",
                 "waitAfterCompletion" : "0"
+              }
+            }
+          },
+          "ConfigureHostname" : {
+            "commands" : {
+              "01_sethostname" : {
+                "command" : { "Fn::Sub" : "powershell.exe Rename-Computer -NewName ${ApplicationDomain} -Restart" },
+                "waitAfterCompletion" : "forever"
               }
             }
           },
@@ -486,19 +506,20 @@
         }
       },
       "Properties" : {
-        "ImageId" : { "Fn::FindInMap" : [ "ImageIdMap", { "Ref" : "AWS::Region" }, "Windows2012r2" ]},
+        "ImageId" : { "Fn::FindInMap" : [ "ImageIdMap", { "Ref" : "AWS::Region" }, { "Ref" : "InstanceOS" }]},
         "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "WindowsServer", { "Ref" : "EnvironmentSize" }]},
         "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
         "KeyName" : { "Ref" : "KeyName" },
         "NetworkInterfaces" : [{
+          "Description"              : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "NetworkInterface0" ]]},
+          "DeviceIndex"              : "0",
+          "SubnetId"                 : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-WebSubnetA" }},
           "GroupSet"                 : [{ "Ref" :  "SecurityGroup" }],
           "AssociatePublicIpAddress" : "true",
-          "DeviceIndex"              : "0",
-          "DeleteOnTermination"      : "true",
-          "SubnetId"                 : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-WebSubnetA" }}
+          "DeleteOnTermination"      : "true"
         }],
         "Tags" : [
-          { "Key" : "Name", "Value" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }, "Instance" ]]}}
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "Instance" ]]}}
         ],
         "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "", [
           "<script>\n",
@@ -533,7 +554,7 @@
         "TTL" : "900",
         "ResourceRecords" : [{ "Fn::GetAtt" : [ "Instance", "PublicIp" ]}]
       },
-      "Condition" : "ConfigureDNS"
+      "Condition" : "ConfigureDomainNames"
     }
   },
 
@@ -547,7 +568,7 @@
     "URL" : {
       "Description" : "The Sample Website URL",
       "Value" :  { "Fn::Join" : [ "", [ "http://", { "Ref" : "ApplicationDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "/" ]]},
-      "Condition" : "ConfigureDNS"
+      "Condition" : "ConfigureDomainNames"
     }
   }
 }

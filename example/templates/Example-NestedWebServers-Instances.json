@@ -52,6 +52,7 @@
         "Role" : { "default" : "Role" },
         "InstanceSecurityGroup" : { "default" : "Instance SecurityGroup" },
         "LogGroup" : { "default" : "LogGroup" },
+        "LoadBalancer" : { "default" : "LoadBalancer" },
         "EnvironmentSize" : { "default" : "Environment Size" },
         "InstanceOS" : { "default" : "Instance Operating System" },
         "ApplicationsBucket" : { "default" : "Applications Bucket" },
@@ -116,7 +117,7 @@
       "Description" : "Name of an existing LogGroup which provides access to CloudWatch Logs",
       "Type" : "String",
       "MaxLength" : 128,
-      "AllowedPattern" : "^[-a-zA-Z0-9]*$",
+      "AllowedPattern" : "(^$|^[-a-zA-Z0-9]*$)",
       "ConstraintDescription" : "must be the name of an existing LogGroup."
     },
 
@@ -339,7 +340,7 @@
                   "#!/bin/bash\n",
                   "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)\n",
                   "region=${zone::-1}\n",
-                  "hostname=", { "Fn::Join" : [ "", [ { "Ref" : "ApplicationDomain" }, { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]}, "\n",
+                  "hostname=", { "Fn::Join" : [ "", [ { "Ref" : "ApplicationDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]}, "\n",
                   "address=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)\n",
                   "sed -i -e \"/^$address/d\" -e \"$ a$address $hostname\" /etc/hosts\n",
                   "hostname $hostname\n"
