@@ -25,13 +25,13 @@ speed=100
 verbose=0
 dummy=0
 owner=${OWNER_EMAIL:-$USER@hpe.com}
-company=${COMPANY_NAME:-Demo}
+company=${COMPANY_NAME:-Travel}
 system=${SYSTEM_NAME:-IROPS}
 environment=${ENVIRONMENT_NAME:-Production}
 environment_size=${ENVIRONMENT_SIZE:-micro}
 application=${APPLICATION_NAME:-WebServer}
 application_domain=${APPLICATION_DOMAIN:-ws}
-application_version=${APPLICATION_VERSION:-1.0.0}
+application_version=${APPLICATION_VERSION:-2.0.0}
 key=${AWS_KEY_NAME:-example}
 network=${ADMINISTRATOR_NETWORK:-0.0.0.0/0}
 network1=${ADMINISTRATOR_NETWORK1:-}
@@ -48,6 +48,8 @@ private_network3=${PRIVATE_NETWORK3:-}
 region=${AWS_DEFAULT_REGION:-us-west-2}
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-administrator}
+
+instance_os=RHEL
 
 
 #  2. Define functions
@@ -312,18 +314,18 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     exit 60
 fi
 
-templatesbucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
-templatespath=/example
+templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
+templates_path=/example
 
-if ! aws s3api head-bucket --bucket $templatesbucket --profile $profile --region $region 2> /dev/null; then
-    unset templatesbucket
+if ! aws s3api head-bucket --bucket $templates_bucket --profile $profile --region $region 2> /dev/null; then
+    unset templates_bucket
 fi
 
-examplesbucket=${AWS_EXAMPLES_BUCKET:-examples-$region-$account}
-examplespath=/$application
+examples_bucket=${AWS_EXAMPLES_BUCKET:-examples-$region-$account}
+examples_path=/$application
 
-if ! aws s3api head-bucket --bucket $examplesbucket --profile $profile --region $region 2> /dev/null; then
-    echo "$examplesbucket S3 bucket does not exist!"
+if ! aws s3api head-bucket --bucket $examples_bucket --profile $profile --region $region 2> /dev/null; then
+    echo "$examples_bucket S3 bucket does not exist!"
     exit 68
 fi
 
@@ -380,19 +382,19 @@ fi
 ((++step))
 read -r -d '' statement << EOS
 aws s3 sync $templatesdir \\
-            s3://$templatesbucket$templatespath \\
+            s3://$templates_bucket$templates_path \\
             --exclude '*' --include 'Example-WebServer.json' --include 'Example-WebServer-StackPolicy.json' \\
             --profile $profile --region $region --output table
 EOS
 run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
 eval_statement="${statement//\\$'\n'}"
 
-if [ ! -z $templatesbucket ]; then
+if [ ! -z $templates_bucket ]; then
     clear
     echo
     echo "============================================================"
     echo
-    echo "$(printf '%2d' $step). Sync Template and Policy to ($templatesbucket) Bucket"
+    echo "$(printf '%2d' $step). Sync Template and Policy to ($templates_bucket) Bucket"
     echo
     echo "============================================================"
     echo
@@ -413,12 +415,12 @@ fi
 ((++step))
 if [ $dummy = 1 ]; then
     # unset download location, which triggers creation of dummy application page within the template
-    unset examplesbucket
+    unset examples_bucket
 fi
 
-if [ ! -z $templatesbucket ]; then
-    template_parameter="--template-url https://$s3_domain/$templatesbucket$templatespath/Example-WebServer.json"
-    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templatesbucket$templatespath/Example-WebServer-StackPolicy.json"
+if [ ! -z $templates_bucket ]; then
+    template_parameter="--template-url https://$s3_domain/$templates_bucket$templates_path/Example-WebServer.json"
+    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket$templates_path/Example-WebServer-StackPolicy.json"
 else
     template_parameter="--template-body file://$templatesdir/Example-WebServer.json"
     stack_policy_parameter="--stack-policy-body file://$templatesdir/Example-WebServer-StackPolicy.json"
@@ -432,7 +434,8 @@ aws cloudformation create-stack --stack-name $environment-$application \\
                                              ParameterKey=CompanyName,ParameterValue=$company \\
                                              ParameterKey=SystemName,ParameterValue=$system \\
                                              ParameterKey=EnvironmentSize,ParameterValue=$environment_size \\
-                                             ParameterKey=ApplicationsBucket,ParameterValue=$examplesbucket \\
+                                             ParameterKey=InstanceOS,ParameterValue=$instance_os \\
+                                             ParameterKey=ApplicationsBucket,ParameterValue=$examples_bucket \\
                                              ParameterKey=ApplicationName,ParameterValue=$application \\
                                              ParameterKey=ApplicationDomain,ParameterValue=$application_domain \\
                                              ParameterKey=ApplicationVersion,ParameterValue=$application_version \\
