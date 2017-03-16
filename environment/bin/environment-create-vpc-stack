@@ -242,11 +242,11 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     exit 60
 fi
 
-templatesbucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
-templatespath=/environment
+templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
+templates_folder=environment
 
-if ! aws s3api head-bucket --bucket $templatesbucket --profile $profile --region $region 2> /dev/null; then
-    unset templatesbucket
+if ! aws s3api head-bucket --bucket $templates_bucket --profile $profile --region $region 2> /dev/null; then
+    unset templates_bucket
 fi
 
 if ! aws cloudformation describe-stacks --stack-name $environment-HostedZone \
@@ -302,19 +302,19 @@ fi
 ((++step))
 read -r -d '' statement << EOS
 aws s3 sync $templatesdir \\
-            s3://$templatesbucket$templatespath \\
+            s3://$templates_bucket/$templates_folder \\
             --exclude '*' --include 'Environment-VPC.json' --include 'Environment-VPC-StackPolicy.json' \\
             --profile $profile --region $region --output table
 EOS
 run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
 eval_statement="${statement//\\$'\n'}"
 
-if [ ! -z $templatesbucket ]; then
+if [ ! -z $templates_bucket ]; then
     clear
     echo
     echo "============================================================"
     echo
-    echo "$(printf '%2d' $step). Sync Template and Policy to ($templatesbucket) Bucket"
+    echo "$(printf '%2d' $step). Sync Template and Policy to ($templates_bucket) Bucket"
     echo
     echo "============================================================"
     echo
@@ -333,9 +333,9 @@ fi
 
 
 ((++step))
-if [ ! -z $templatesbucket ]; then
-    template_parameter="--template-url https://$s3_domain/$templatesbucket$templatespath/Environment-VPC.json"
-    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templatesbucket$templatespath/Environment-VPC-StackPolicy.json"
+if [ ! -z $templates_bucket ]; then
+    template_parameter="--template-url https://$s3_domain/$templates_bucket/$templates_folder/Environment-VPC.json"
+    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$templates_folder/Environment-VPC-StackPolicy.json"
 else
     template_parameter="--template-body file://$templatesdir/Environment-VPC.json"
     stack_policy_parameter="--stack-policy-body file://$templatesdir/Environment-VPC-StackPolicy.json"

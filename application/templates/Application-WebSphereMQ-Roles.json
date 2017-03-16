@@ -10,9 +10,9 @@
           "Label" : { "default" : "Application Dependencies Configuration" },
           "Parameters" : [
             "ProductsBucket",
-            "WebSphereMQProductPath",
+            "ProductWebSphereMQFolder",
             "ConfigurationsBucket",
-            "WebSphereMQConfigurationPath"
+            "ConfigurationWebSphereMQFolder"
           ]
         },
         {
@@ -27,9 +27,9 @@
 
       "ParameterLabels" : {
         "ProductsBucket" : { "default" : "Products Bucket" },
-        "WebSphereMQProductPath" : { "default" : "WebSphereMQ Product Path" },
+        "ProductWebSphereMQFolder" : { "default" : "Product WebSphereMQ Folder" },
         "ConfigurationsBucket" : { "default" : "Configurations Bucket" },
-        "WebSphereMQConfigurationPath" : { "default" : "WebSphereMQ Configuration Path" },
+        "ConfigurationWebSphereMQFolder" : { "default" : "Configuration WebSphereMQ Folder" },
         "ApplicationName" : { "default" : "Application Name" },
         "UseFileSystemMonitoring" : { "default" : "Use FileSystem Monitoring" },
         "UseLogMonitoring" : { "default" : "Use Log Monitoring" }
@@ -47,8 +47,8 @@
       "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
     },
 
-    "WebSphereMQProductPath" : {
-      "Description" : "Path within S3 bucket containing WebSphereMQ product files",
+    "ProductWebSphereMQFolder" : {
+      "Description" : "Folder within S3 bucket containing WebSphereMQ product objects",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -66,8 +66,8 @@
       "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
     },
 
-    "WebSphereMQConfigurationPath" : {
-      "Description" : "Path within S3 bucket containing WebSphereMQ configuration files",
+    "ConfigurationWebSphereMQFolder" : {
+      "Description" : "Folder within S3 bucket containing WebSphereMQ configuration objects",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -137,7 +137,7 @@
             "Action" : [
               "s3:GetObject"
             ],
-            "Resource" : { "Fn::Sub" : "arn:aws:s3:::${ProductsBucket}/${WebSphereMQProductPath}/*" }
+            "Resource" : { "Fn::Sub" : "arn:aws:s3:::${ProductsBucket}/${ProductWebSphereMQFolder}/*" }
           }]
         },
         "Roles" : [{ "Ref" : "Role" }]
@@ -156,7 +156,7 @@
             "Action" : [
               "s3:GetObject"
             ],
-            "Resource" : { "Fn::Sub" : "arn:aws:s3:::${ConfigurationsBucket}/${WebSphereMQConfigurationPath}/*" }
+            "Resource" : { "Fn::Sub" : "arn:aws:s3:::${ConfigurationsBucket}/${ConfigurationWebSphereMQFolder}/*" }
           }]
         },
         "Roles" : [{ "Ref" : "Role" }]

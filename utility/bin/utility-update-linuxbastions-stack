@@ -355,7 +355,7 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
 fi
 
 templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
-templates_path=/utility
+templates_folder=utility
 
 if ! aws s3api head-bucket --bucket $templates_bucket --profile $profile --region $region 2> /dev/null; then
     unset templates_bucket
@@ -414,7 +414,7 @@ fi
 ((++step))
 read -r -d '' statement << EOS
 aws s3 sync $templatesdir \\
-            s3://$templates_bucket$templates_path \\
+            s3://$templates_bucket/$templates_folder \\
             --exclude '*' --include 'Utility-LinuxBastions.json' --include 'Utility-LinuxBastions-StackPolicy.json' \\
             --profile $profile --region $region --output table
 EOS
@@ -446,8 +446,8 @@ fi
 
 ((++step))
 if [ ! -z $templates_bucket ]; then
-    template_parameter="--template-url https://$s3_domain/$templates_bucket$templates_path/Utility-LinuxBastions.json"
-    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket$templates_path/Utility-LinuxBastions-StackPolicy.json"
+    template_parameter="--template-url https://$s3_domain/$templates_bucket/$templates_folder/Utility-LinuxBastions.json"
+    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$templates_folder/Utility-LinuxBastions-StackPolicy.json"
 else
     template_parameter="--template-body file://$templatesdir/Utility-LinuxBastions.json"
     stack_policy_parameter="--stack-policy-body file://$templatesdir/Utility-LinuxBastions-StackPolicy.json"

@@ -34,11 +34,11 @@
           "Label" : { "default" : "Application Dependencies Configuration" },
           "Parameters" : [
             "ProductsBucket",
-            "WebSphereMQProductPath",
-            "WebSphereMQProductFile",
+            "ProductWebSphereMQFolder",
+            "ProductWebSphereMQObject",
             "ConfigurationsBucket",
-            "WebSphereMQConfigurationPath",
-            "WebSphereMQConfigurationFile"
+            "ConfigurationWebSphereMQFolder",
+            "ConfigurationWebSphereMQObject"
           ]
         },
         {
@@ -66,13 +66,14 @@
         "EnvironmentSize" : { "default" : "Environment Size" },
         "InstanceOS" : { "default" : "Instance Operating System" },
         "ProductsBucket" : { "default" : "Products Bucket" },
-        "WebSphereMQProductPath" : { "default" : "WebSphereMQ Product Path" },
-        "WebSphereMQProductFile" : { "default" : "WebSphereMQ Product File" },
+        "ProductWebSphereMQFolder" : { "default" : "Product WebSphereMQ Folder" },
+        "ProductWebSphereMQObject" : { "default" : "Product WebSphereMQ Object" },
         "ConfigurationsBucket" : { "default" : "Configurations Bucket" },
-        "WebSphereMQConfigurationPath" : { "default" : "WebSphereMQ Configuration Path" },
-        "WebSphereMQConfigurationFile" : { "default" : "WebSphereMQ Configuration File" },
+        "ConfigurationWebSphereMQFolder" : { "default" : "Configuration WebSphereMQ Folder" },
+        "ConfigurationWebSphereMQObject" : { "default" : "Configuration WebSphereMQ Object" },
         "ApplicationName" : { "default" : "Application Name" },
         "ApplicationDomain" : { "default" : "Application Domain Name" },
+        "ApplicationVersion" : { "default" : "Application Version" },
         "UseFileSystemMonitoring" : { "default" : "Use FileSystem Monitoring" },
         "UseLogMonitoring" : { "default" : "Use Log Monitoring" },
         "UseSchedule" : { "default" : "Use Schedule" },
@@ -169,8 +170,8 @@
       "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
     },
 
-    "WebSphereMQProductPath" : {
-      "Description" : "Path within S3 bucket containing WebSphereMQ product files",
+    "ProductWebSphereMQFolder" : {
+      "Description" : "Folder within S3 bucket containing WebSphereMQ product objects",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -179,8 +180,8 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
-    "WebSphereMQProductFile" : {
-      "Description" : "File within S3 bucket and path containing WebSphereMQ installer",
+    "ProductWebSphereMQObject" : {
+      "Description" : "Object within S3 bucket and folder containing WebSphereMQ installer",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 64,
@@ -198,8 +199,8 @@
       "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
     },
 
-    "WebSphereMQConfigurationPath" : {
-      "Description" : "Path within S3 bucket containing WebSphereMQ configuration files",
+    "ConfigurationWebSphereMQFolder" : {
+      "Description" : "Folder within S3 bucket containing WebSphereMQ configuration objects",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -208,8 +209,8 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
-    "WebSphereMQConfigurationFile" : {
-      "Description" : "File within S3 bucket and path containing WebSphereMQ configuration",
+    "ConfigurationWebSphereMQObject" : {
+      "Description" : "Object within S3 bucket and folder containing WebSphereMQ configuration",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 64,
@@ -235,6 +236,16 @@
       "Default" : "",
       "AllowedPattern" : "(^$|^[a-z][-a-z0-9]*$)",
       "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
+    },
+
+    "ApplicationVersion" : {
+      "Description" : "Version of the Application",
+      "Type" : "String",
+      "MinLength" : 5,
+      "MaxLength" : 32,
+      "Default" : "1.0.0",
+      "AllowedPattern" : "^[0-9]*.[0-9]*.[0-9]*(-[a-zA-Z0-9][-a-zA-Z0-9]*)?$",
+      "ConstraintDescription" : "must follow semantic versioning conventions."
     },
 
     "UseFileSystemMonitoring" : {
@@ -501,12 +512,12 @@
           },
           "InstallWebSphereMQ" : {
             "sources" : {
-              "/opt" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ProductsBucket}/${WebSphereMQProductPath}/${WebSphereMQProductFile}" }
+              "/opt" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ProductsBucket}/${ProductWebSphereMQFolder}/${ProductWebSphereMQObject}" }
             }
           },
           "ConfigureWebSphereMQ" : {
             "sources" : {
-              "/etc" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ConfigurationsBucket}/${WebSphereMQConfigurationPath}/${WebSphereMQConfigurationFile}" }
+              "/etc" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ConfigurationsBucket}/${ConfigurationWebSphereMQFolder}/${ConfigurationWebSphereMQObject}" }
             }
           },
           "ConfigureFileSystemMonitoring" : {
@@ -717,11 +728,6 @@
           " --resource InstanceA",
           " --region ", { "Ref" : "AWS::Region" }, "\n"
         ]]}}
-      },
-      "CreationPolicy" : {
-        "ResourceSignal" : {
-          "Timeout" : "PT10M"
-        }
       }
     },
 
@@ -902,12 +908,12 @@
           },
           "InstallWebSphereMQ" : {
             "sources" : {
-              "/opt" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ProductsBucket}/${WebSphereMQProductPath}/${WebSphereMQProductFile}" }
+              "/opt" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ProductsBucket}/${ProductWebSphereMQFolder}/${ProductWebSphereMQObject}" }
             }
           },
           "ConfigureWebSphereMQ" : {
             "sources" : {
-              "/etc" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ConfigurationsBucket}/${WebSphereMQConfigurationPath}/${WebSphereMQConfigurationFile}" }
+              "/etc" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ConfigurationsBucket}/${ConfigurationWebSphereMQFolder}/${ConfigurationWebSphereMQObject}" }
             }
           },
           "ConfigureFileSystemMonitoring" : {
@@ -1118,11 +1124,6 @@
           " --resource InstanceB",
           " --region ", { "Ref" : "AWS::Region" }, "\n"
         ]]}}
-      },
-      "CreationPolicy" : {
-        "ResourceSignal" : {
-          "Timeout" : "PT10M"
-        }
       }
     }
   },

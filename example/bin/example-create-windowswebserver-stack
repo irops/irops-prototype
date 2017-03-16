@@ -313,7 +313,7 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
 fi
 
 templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
-templates_path=/example
+templates_folder=example
 
 if ! aws s3api head-bucket --bucket $templates_bucket --profile $profile --region $region 2> /dev/null; then
     unset templates_bucket
@@ -380,7 +380,7 @@ fi
 ((++step))
 read -r -d '' statement << EOS
 aws s3 sync $templatesdir \\
-            s3://$templates_bucket$templates_path \\
+            s3://$templates_bucket/$templates_folder \\
             --exclude '*' --include 'Example-WindowsWebServer.json' --include 'Example-WindowsWebServer-StackPolicy.json' \\
             --profile $profile --region $region --output table
 EOS
@@ -417,8 +417,8 @@ if [ $dummy = 1 ]; then
 fi
 
 if [ ! -z $templates_bucket ]; then
-    template_parameter="--template-url https://$s3_domain/$templates_bucket$templates_path/Example-WindowsWebServer.json"
-    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket$templates_path/Example-WindowsWebServer-StackPolicy.json"
+    template_parameter="--template-url https://$s3_domain/$templates_bucket/$templates_folder/Example-WindowsWebServer.json"
+    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$templates_folder/Example-WindowsWebServer-StackPolicy.json"
 else
     template_parameter="--template-body file://$templatesdir/Example-WindowsWebServer.json"
     stack_policy_parameter="--stack-policy-body file://$templatesdir/Example-WindowsWebServer-StackPolicy.json"

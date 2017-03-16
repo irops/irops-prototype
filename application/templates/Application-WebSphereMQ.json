@@ -24,7 +24,7 @@
           "Label" : { "default" : "Template Configuration" },
           "Parameters" : [
             "TemplatesBucket",
-            "TemplatesPath"
+            "TemplatesFolder"
           ]
         },
         {
@@ -45,11 +45,11 @@
           "Label" : { "default" : "Application Dependencies Configuration" },
           "Parameters" : [
             "ProductsBucket",
-            "WebSphereMQProductPath",
-            "WebSphereMQProductFile",
+            "ProductWebSphereMQFolder",
+            "ProductWebSphereMQObject",
             "ConfigurationsBucket",
-            "WebSphereMQConfigurationPath",
-            "WebSphereMQConfigurationFile"
+            "ConfigurationWebSphereMQFolder",
+            "ConfigurationWebSphereMQObject"
           ]
         },
         {
@@ -57,6 +57,7 @@
           "Parameters" : [
             "ApplicationName",
             "ApplicationDomain",
+            "ApplicationVersion",
             "UseFileSystemMonitoring",
             "UseLogMonitoring",
             "LogRetention",
@@ -86,19 +87,20 @@
         "StandardTopicsStackName" : { "default" : "StandardTopics Stack Name" },
         "KeyName" : { "default" : "Key Name" },
         "TemplatesBucket" : { "default" : "Templates Bucket" },
-        "TemplatesPath" : { "default" : "Templates Path" },
+        "TemplatesFolder" : { "default" : "Templates Folder" },
         "CompanyName" : { "default" : "Company Name" },
         "SystemName" : { "default" : "System Name" },
         "EnvironmentSize" : { "default" : "Environment Size" },
         "InstanceOS" : { "default" : "Instance Operating System" },
         "ProductsBucket" : { "default" : "Products Bucket" },
-        "WebSphereMQProductPath" : { "default" : "WebSphereMQ Product Path" },
-        "WebSphereMQProductFile" : { "default" : "WebSphereMQ Product File" },
+        "ProductWebSphereMQFolder" : { "default" : "Product WebSphereMQ Folder" },
+        "ProductWebSphereMQObject" : { "default" : "Product WebSphereMQ Object" },
         "ConfigurationsBucket" : { "default" : "Configurations Bucket" },
-        "WebSphereMQConfigurationPath" : { "default" : "WebSphereMQ Configuration Path" },
-        "WebSphereMQConfigurationFile" : { "default" : "WebSphereMQ Configuration File" },
+        "ConfigurationWebSphereMQFolder" : { "default" : "Configuration WebSphereMQ Folder" },
+        "ConfigurationWebSphereMQObject" : { "default" : "Configuration WebSphereMQ Object" },
         "ApplicationName" : { "default" : "Application Name" },
         "ApplicationDomain" : { "default" : "Application Domain Name" },
+        "ApplicationVersion" : { "default" : "Application Version" },
         "UseFileSystemMonitoring" : { "default" : "Use FileSystem Monitoring" },
         "UseLogMonitoring" : { "default" : "Use Log Monitoring" },
         "LogRetention" : { "default" : "Log Retention" },
@@ -166,13 +168,13 @@
       "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
     },
 
-    "TemplatesPath" : {
-      "Description" : "Path within the S3 bucket containing Templates referenced by this Template",
+    "TemplatesFolder" : {
+      "Description" : "Folder within the S3 bucket containing Templates referenced by this Template",
       "Type" : "String",
       "MaxLength" : 64,
-      "Default" : "/application",
-      "AllowedPattern" : "(^$|/[-/a-zA-Z0-9]*$)",
-      "ConstraintDescription" : "must begin with a slash, and contain alphanumeric characters, slashes and dashes, if specified."
+      "Default" : "application",
+      "AllowedPattern" : "^[-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must contain alphanumeric characters and dashes."
     },
 
     "CompanyName" : {
@@ -220,8 +222,8 @@
       "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
     },
 
-    "WebSphereMQProductPath" : {
-      "Description" : "Path within S3 bucket containing WebSphereMQ product files",
+    "ProductWebSphereMQFolder" : {
+      "Description" : "Folder within S3 bucket containing WebSphereMQ product objects",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -230,8 +232,8 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
-    "WebSphereMQProductFile" : {
-      "Description" : "File within S3 bucket and path containing WebSphereMQ installer",
+    "ProductWebSphereMQObject" : {
+      "Description" : "Object within S3 bucket and folder containing WebSphereMQ installer",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 64,
@@ -249,8 +251,8 @@
       "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
     },
 
-    "WebSphereMQConfigurationPath" : {
-      "Description" : "Path within S3 bucket containing WebSphereMQ configuration files",
+    "ConfigurationWebSphereMQFolder" : {
+      "Description" : "Folder within S3 bucket containing WebSphereMQ configuration objects",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -259,8 +261,8 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
-    "WebSphereMQConfigurationFile" : {
-      "Description" : "File within S3 bucket and path containing WebSphereMQ configuration",
+    "ConfigurationWebSphereMQObject" : {
+      "Description" : "Object within S3 bucket and folder containing WebSphereMQ configuration",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 64,
@@ -286,6 +288,16 @@
       "Default" : "",
       "AllowedPattern" : "(^$|^[a-z][-a-z0-9]*$)",
       "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
+    },
+
+    "ApplicationVersion" : {
+      "Description" : "Version of the Application",
+      "Type" : "String",
+      "MinLength" : 5,
+      "MaxLength" : 32,
+      "Default" : "1.0.0",
+      "AllowedPattern" : "^[0-9]*.[0-9]*.[0-9]*(-[a-zA-Z0-9][-a-zA-Z0-9]*)?$",
+      "ConstraintDescription" : "must follow semantic versioning conventions."
     },
 
     "UseFileSystemMonitoring" : {
@@ -412,12 +424,12 @@
     "Roles" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, { "Ref" : "TemplatesPath" }, "/Application-WebSphereMQ-Roles.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplatesFolder" }, "/Application-WebSphereMQ-Roles.json" ]]},
         "Parameters" : {
           "ProductsBucket" : { "Ref" : "ProductsBucket" },
-          "WebSphereMQProductPath" : { "Ref" : "WebSphereMQProductPath" },
+          "ProductWebSphereMQFolder" : { "Ref" : "ProductWebSphereMQFolder" },
           "ConfigurationsBucket" : { "Ref" : "ConfigurationsBucket" },
-          "WebSphereMQConfigurationPath" : { "Ref" : "WebSphereMQConfigurationPath" },
+          "ConfigurationWebSphereMQFolder" : { "Ref" : "ConfigurationWebSphereMQFolder" },
           "ApplicationName" : { "Ref" : "ApplicationName" },
           "UseFileSystemMonitoring" : { "Ref" : "UseFileSystemMonitoring" },
           "UseLogMonitoring" : { "Ref" : "UseLogMonitoring" }
@@ -428,7 +440,7 @@
     "SecurityGroups" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, { "Ref" : "TemplatesPath" }, "/Application-WebSphereMQ-SecurityGroups.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplatesFolder" }, "/Application-WebSphereMQ-SecurityGroups.json" ]]},
         "Parameters" : {
           "VPCStackName" : { "Ref" : "VPCStackName" },
           "LinuxBastionsStackName" : { "Ref" : "LinuxBastionsStackName" },
@@ -448,7 +460,7 @@
     "Logs" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, { "Ref" : "TemplatesPath" }, "/Application-WebSphereMQ-Logs.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplatesFolder" }, "/Application-WebSphereMQ-Logs.json" ]]},
         "Parameters" : {
           "VPCStackName" : { "Ref" : "VPCStackName" },
           "StandardTopicsStackName" : { "Ref" : "StandardTopicsStackName" },
@@ -464,7 +476,7 @@
     "FileSystem" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, { "Ref" : "TemplatesPath" }, "/Application-WebSphereMQ-FileSystem.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplatesFolder" }, "/Application-WebSphereMQ-FileSystem.json" ]]},
         "Parameters" : {
           "VPCStackName" : { "Ref" : "VPCStackName" },
           "MountTargetSecurityGroup" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.MountTargetSecurityGroup" ]},
@@ -476,7 +488,7 @@
     "Instances" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, { "Ref" : "TemplatesPath" }, "/Application-WebSphereMQ-Instances.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplatesFolder" }, "/Application-WebSphereMQ-Instances.json" ]]},
         "Parameters" : {
           "VPCStackName" : { "Ref" : "VPCStackName" },
           "StandardTopicsStackName" : { "Ref" : "StandardTopicsStackName" },
@@ -488,13 +500,14 @@
           "EnvironmentSize" : { "Ref" : "EnvironmentSize" },
           "InstanceOS" : { "Ref" : "InstanceOS" },
           "ProductsBucket" : { "Ref" : "ProductsBucket" },
-          "WebSphereMQProductPath" : { "Ref" : "WebSphereMQProductPath" },
-          "WebSphereMQProductFile" : { "Ref" : "WebSphereMQProductFile" },
+          "ProductWebSphereMQFolder" : { "Ref" : "ProductWebSphereMQFolder" },
+          "ProductWebSphereMQObject" : { "Ref" : "ProductWebSphereMQObject" },
           "ConfigurationsBucket" : { "Ref" : "ConfigurationsBucket" },
-          "WebSphereMQConfigurationPath" : { "Ref" : "WebSphereMQConfigurationPath" },
-          "WebSphereMQConfigurationFile" : { "Ref" : "WebSphereMQConfigurationFile" },
+          "ConfigurationWebSphereMQFolder" : { "Ref" : "ConfigurationWebSphereMQFolder" },
+          "ConfigurationWebSphereMQObject" : { "Ref" : "ConfigurationWebSphereMQObject" },
           "ApplicationName" : { "Ref" : "ApplicationName" },
           "ApplicationDomain" : { "Ref" : "ApplicationDomain" },
+          "ApplicationVersion" : { "Ref" : "ApplicationVersion" },
           "UseFileSystemMonitoring" : { "Ref" : "UseFileSystemMonitoring" },
           "UseLogMonitoring" : { "Ref" : "UseLogMonitoring" },
           "UseSchedule" : { "Ref" : "UseSchedule" },

@@ -22,7 +22,7 @@
           "Label" : { "default" : "Template Configuration" },
           "Parameters" : [
             "TemplatesBucket",
-            "TemplatesPath"
+            "TemplatesFolder"
           ]
         },
         {
@@ -71,7 +71,7 @@
         "VPCStackName" : { "default" : "VPC Stack Name" },
         "KeyName" : { "default" : "Key Name" },
         "TemplatesBucket" : { "default" : "Templates Bucket" },
-        "TemplatesPath" : { "default" : "Templates Path" },
+        "TemplatesFolder" : { "default" : "Templates Folder" },
         "CompanyName" : { "default" : "Company Name" },
         "SystemName" : { "default" : "System Name" },
         "EnvironmentSize" : { "default" : "Environment Size" },
@@ -125,13 +125,13 @@
       "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
     },
 
-    "TemplatesPath" : {
-      "Description" : "Path within the S3 bucket containing Templates referenced by this Template",
+    "TemplatesFolder" : {
+      "Description" : "Folder within the S3 bucket containing Templates referenced by this Template",
       "Type" : "String",
       "MaxLength" : 64,
-      "Default" : "/example",
-      "AllowedPattern" : "(^$|/[-/a-zA-Z0-9]*$)",
-      "ConstraintDescription" : "must begin with a slash, and contain alphanumeric characters, slashes and dashes, if specified."
+      "Default" : "example",
+      "AllowedPattern" : "^[-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must contain alphanumeric characters and dashes."
     },
 
     "CompanyName" : {
@@ -314,7 +314,7 @@
     "Role" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, { "Ref" : "TemplatesPath" }, "/Example-NestedWebServer-Role.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplatesFolder" }, "/Example-NestedWebServer-Role.json" ]]},
         "Parameters" : {
           "ApplicationsBucket" : { "Ref" : "ApplicationsBucket" },
           "ApplicationName" : { "Ref" : "ApplicationName" }
@@ -325,7 +325,7 @@
     "SecurityGroup" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, { "Ref" : "TemplatesPath" }, "/Example-NestedWebServer-SecurityGroup.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplatesFolder" }, "/Example-NestedWebServer-SecurityGroup.json" ]]},
         "Parameters" : {
           "VPCStackName" : { "Ref" : "VPCStackName" },
           "ApplicationName" : { "Ref" : "ApplicationName" },
@@ -348,7 +348,7 @@
     "Instance" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, { "Ref" : "TemplatesPath" }, "/Example-NestedWebServer-Instance.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplatesFolder" }, "/Example-NestedWebServer-Instance.json" ]]},
         "Parameters" : {
           "VPCStackName" : { "Ref" : "VPCStackName" },
           "KeyName" : { "Ref" : "KeyName" },
@@ -366,7 +366,7 @@
     "DomainName" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, { "Ref" : "TemplatesPath" }, "/Example-NestedWebServer-DomainName.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplatesFolder" }, "/Example-NestedWebServer-DomainName.json" ]]},
         "Parameters" : {
           "VPCStackName" : { "Ref" : "VPCStackName" },
           "InstancePublicIp" : { "Fn::GetAtt" : [ "Instance", "Outputs.InstancePublicIp" ]},

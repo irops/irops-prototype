@@ -316,7 +316,7 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
 fi
 
 templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
-templates_path=/example
+templates_folder=example
 
 if ! aws s3api head-bucket --bucket $templates_bucket --profile $profile --region $region 2> /dev/null; then
     echo "$templates_bucket S3 bucket does not exist!"
@@ -324,7 +324,7 @@ if ! aws s3api head-bucket --bucket $templates_bucket --profile $profile --regio
 fi
 
 examples_bucket=${AWS_EXAMPLES_BUCKET:-examples-$region-$account}
-examples_path=/$application
+examples_folder=$application
 
 if ! aws s3api head-bucket --bucket $examples_bucket --profile $profile --region $region 2> /dev/null; then
     echo "$examples_bucket S3 bucket does not exist!"
@@ -384,7 +384,7 @@ fi
 ((++step))
 read -r -d '' statement << EOS
 aws s3 sync $templatesdir \\
-            s3://$templates_bucket$templates_path \\
+            s3://$templates_bucket/$templates_folder \\
             --exclude '*' --include 'Example-NestedWebServer.json' --include 'Example-NestedWebServer-StackPolicy.json' \\
             --include 'Example-NestedWebServer-Role.json' \\
             --include 'Example-NestedWebServer-SecurityGroup.json' \\
@@ -422,8 +422,8 @@ if [ $dummy = 1 ]; then
     unset examples_bucket
 fi
 
-template_parameter="--template-url https://$s3_domain/$templates_bucket$templates_path/Example-NestedWebServer.json"
-stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket$templates_path/Example-NestedWebServer-StackPolicy.json"
+template_parameter="--template-url https://$s3_domain/$templates_bucket/$templates_folder/Example-NestedWebServer.json"
+stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$templates_folder/Example-NestedWebServer-StackPolicy.json"
 if [ $override = 1 ]; then
     stack_policy_parameter="$stack_policy_parameter \\"$'\n'"                                --stack-policy-during-update-body file://$templatesdir/Override-StackPolicy.json"
 fi
@@ -434,7 +434,7 @@ aws cloudformation update-stack --stack-name $environment-$application \\
                                 --parameters ParameterKey=VPCStackName,ParameterValue=$environment-VPC \\
                                              ParameterKey=KeyName,ParameterValue=$key \\
                                              ParameterKey=TemplatesBucket,ParameterValue=$templates_bucket \\
-                                             ParameterKey=TemplatesPath,ParameterValue=$templates_path \\
+                                             ParameterKey=TemplatesFolder,ParameterValue=$templates_folder \\
                                              ParameterKey=CompanyName,ParameterValue=$company \\
                                              ParameterKey=SystemName,ParameterValue=$system \\
                                              ParameterKey=EnvironmentSize,ParameterValue=$environment_size \\
