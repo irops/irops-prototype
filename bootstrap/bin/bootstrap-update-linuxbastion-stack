@@ -32,7 +32,7 @@ verbose=0
 monitor=1
 override=0
 owner=${OWNER_EMAIL:-$USER@hpe.com}
-company=${COMPANY_NAME:-Demo}
+company=${COMPANY_NAME:-Travel}
 system=${SYSTEM_NAME:-IROPS}
 environment=Bootstrap # This exists outside Environments
 environment_size=${ENVIRONMENT_SIZE:-micro}
@@ -47,15 +47,15 @@ region=us-east-1 # This should run only in us-east-1
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-bootstrapadministrator}
 
-usestaticpublicaddress=true
-usestatichomevolume=true
-uselogmonitoring=true
-logretention=7
-logalarmemail=mcrawford@hpe.com
-uselocalusers=true
-useschedule=false
-onschedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
-offschedule="0 4 * * *" # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
+use_static_public_address=true
+use_static_home_volume=true
+use_log_monitoring=true
+log_retention=7
+log_alarm_email=mcrawford@hpe.com
+use_local_users=true
+use_schedule=false
+on_schedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
+off_schedule="0 4 * * *" # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
 
 
 #  2. Define functions
@@ -322,16 +322,16 @@ aws cloudformation update-stack --stack-name $environment-$utility \\
                                              ParameterKey=SystemName,ParameterValue=$system \\
                                              ParameterKey=EnvironmentSize,ParameterValue=$environment_size \\
                                              ParameterKey=UtilityName,ParameterValue=$utility \\
-                                             ParameterKey=UseStaticPublicAddress,ParameterValue=$usestaticpublicaddress \\
-                                             ParameterKey=UseStaticHomeVolume,ParameterValue=$usestatichomevolume \\
+                                             ParameterKey=UseStaticPublicAddress,ParameterValue=$use_static_public_address \\
+                                             ParameterKey=UseStaticHomeVolume,ParameterValue=$use_static_home_volume \\
                                              ParameterKey=HomeSnapshot,ParameterValue=$home_snapshot \\
-                                             ParameterKey=UseLogMonitoring,ParameterValue=$uselogmonitoring \\
-                                             ParameterKey=LogRetention,ParameterValue=$logretention \\
-                                             ParameterKey=LogAlarmEmail,ParameterValue=$logalarmemail \\
-                                             ParameterKey=UseLocalUsers,ParameterValue=$uselocalusers \\
-                                             ParameterKey=UseSchedule,ParameterValue=$useschedule \\
-                                             ParameterKey=OnSchedule,ParameterValue="$onschedule" \\
-                                             ParameterKey=OffSchedule,ParameterValue="$offschedule" \\
+                                             ParameterKey=UseLogMonitoring,ParameterValue=$use_log_monitoring \\
+                                             ParameterKey=LogRetention,ParameterValue=$log_retention \\
+                                             ParameterKey=LogAlarmEmail,ParameterValue=$log_alarm_email \\
+                                             ParameterKey=UseLocalUsers,ParameterValue=$use_local_users \\
+                                             ParameterKey=UseSchedule,ParameterValue=$use_schedule \\
+                                             ParameterKey=OnSchedule,ParameterValue="$on_schedule" \\
+                                             ParameterKey=OffSchedule,ParameterValue="$off_schedule" \\
                                              ParameterKey=PublicNetwork,ParameterValue=$public_network \\
                                              ParameterKey=PublicNetwork1,ParameterValue=$public_network1 \\
                                              ParameterKey=PublicNetwork2,ParameterValue=$public_network2 \\
