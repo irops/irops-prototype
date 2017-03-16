@@ -50,7 +50,7 @@ region=${AWS_DEFAULT_REGION:-us-west-2}
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-administrator}
 
-instance_os=RHEL
+instance_os=AMZN
 
 
 #  2. Define functions
