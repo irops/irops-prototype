@@ -28,6 +28,99 @@
           }]
         }
       }
+    },
+
+    "WebSphereMQAdministratorAccess" : {
+      "Type" : "AWS::IAM::ManagedPolicy",
+      "Properties" : {
+        "Description" : "Provides partial access to WebSphereMQ AWS services and resources, needed for WebSphereMQ Administrators.",
+        "Path" : "/",
+        "PolicyDocument" : {
+          "Version" :"2012-10-17",
+          "Statement" : [{
+            "Sid" : "AllowUserToListBucketsInTheConsole",
+            "Effect" : "Allow",
+            "Action" : [
+              "s3:ListAllMyBuckets",
+              "s3:GetBucketLocation"
+            ],
+            "Resource" : [
+              "arn:aws:s3:::*"
+            ]
+          },
+          {
+            "Sid" : "AllowRootListingOfBucketsContainingWebSphereMQObjects",
+            "Effect" : "Allow",
+            "Action" : [
+              "s3:ListBucket"
+            ],
+            "Resource" : [
+              "arn:aws:s3:::products-us-east-1-irops",
+              "arn:aws:s3:::products-us-east-2-irops",
+              "arn:aws:s3:::products-us-west-2-irops",
+              "arn:aws:s3:::configurations-us-east-1-irops",
+              "arn:aws:s3:::configurations-us-east-2-irops",
+              "arn:aws:s3:::configurations-us-west-2-irops"
+            ],
+            "Condition" : {
+              "StringEquals" : { "s3:prefix" : [ "" ], "s3:delimiter" : [ "/" ]}
+            }
+          },
+          {
+            "Sid" : "AllowListingOfWebSphereMQFolder",
+            "Effect" : "Allow",
+            "Action" : [
+              "s3:ListBucket"
+            ],
+            "Resource" : [
+              "arn:aws:s3:::products-us-east-1-irops",
+              "arn:aws:s3:::products-us-east-2-irops",
+              "arn:aws:s3:::products-us-west-2-irops",
+              "arn:aws:s3:::configurations-us-east-1-irops",
+              "arn:aws:s3:::configurations-us-east-2-irops",
+              "arn:aws:s3:::configurations-us-west-2-irops"
+            ],
+            "Condition" : {
+              "StringLike" : { "s3:prefix" : [ "WebSphereMQ/*" ]}
+            }
+          },
+          {
+            "Sid" : "AllowReadWriteActionsInWebSphereMQFolder",
+            "Effect" : "Allow",
+            "Action" : [
+              "s3:PutObject",
+              "s3:GetObject",
+              "s3:GetObjectVersion",
+              "s3:DeleteObject",
+              "s3:DeleteObjectVersion"
+            ],
+            "Resource" : [
+              "arn:aws:s3:::products-us-east-1-irops/WebSphereMQ/*",
+              "arn:aws:s3:::products-us-east-2-irops/WebSphereMQ/*",
+              "arn:aws:s3:::products-us-west-2-irops/WebSphereMQ/*",
+              "arn:aws:s3:::configurations-us-east-1-irops/WebSphereMQ/*",
+              "arn:aws:s3:::configurations-us-east-2-irops/WebSphereMQ/*",
+              "arn:aws:s3:::configurations-us-west-2-irops/WebSphereMQ/*"
+            ]
+          },
+          {
+            "Sid" : "AllowStartStopRebootOfWebSphereMQInstancesInNonProduction",
+            "Effect" : "Allow",
+            "Action" : [
+              "ec2:StartInstances",
+              "ec2:StopInstances",
+              "ec2:RebootInstances"
+            ],
+            "Condition" : {
+              "StringEquals" : { "ec2:ResourceTag/Application" : "WebSphereMQ" },
+              "ForAnyValue:StringEquals" : { "ec2:ResourceTag/Environment" : [ "Staging", "Testing", "Development" ]}
+            },
+            "Resource": [
+              { "Fn::Sub" : "arn:aws:ec2::${AWS::AccountId}:instance/*" }
+            ],
+          }]
+        }
+      }
     }
   },
 
@@ -36,6 +129,12 @@
       "Description" : "The ApplictionAdministratorAccess ManagedPolicy ARN",
       "Value" :  { "Ref" : "ApplicationAdministratorAccess" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-ApplicationAdministratorAccess" }}
+    },
+
+    "WebSphereMQAdministratorAccess" : {
+      "Description" : "The WebSphereMQAdministratorAccess ManagedPolicy ARN",
+      "Value" :  { "Ref" : "WebSphereMQAdministratorAccess" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-WebSphereMQAdministratorAccess" }}
     }
   }
 }

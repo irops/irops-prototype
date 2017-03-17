@@ -38,7 +38,7 @@
       "Properties" : {
         "GroupName" : "Administrators",
         "Path" : "/",
-        "ManagedPolicyArns" : [ 
+        "ManagedPolicyArns" : [
           "arn:aws:iam::aws:policy/AdministratorAccess"
         ]
       }
@@ -95,7 +95,8 @@
         "Path" : "/",
         "ManagedPolicyArns" : [
           "arn:aws:iam::aws:policy/PowerUserAccess",
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardManagedPoliciesStackName}-UserSelfManagementAccess" }}
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardManagedPoliciesStackName}-UserSelfManagementAccess" }},
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardManagedPoliciesStackName}-UserFolderAccess" }}
         ]
       }
     },
@@ -107,8 +108,17 @@
         "Path" : "/",
         "ManagedPolicyArns" : [
           "arn:aws:iam::aws:policy/ReadOnlyAccess",
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardManagedPoliciesStackName}-UserSelfManagementAccess" }}
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardManagedPoliciesStackName}-UserSelfManagementAccess" }},
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardManagedPoliciesStackName}-UserFolderAccess" }}
         ]
+      }
+    },
+
+    "BastionAdministratorsGroup" : {
+      "Type" : "AWS::IAM::Group",
+      "Properties" : {
+        "GroupName" : "BastionAdministrators",
+        "Path" : "/"
       }
     },
 
@@ -162,6 +172,12 @@
       "Description" : "The UsersGroup Name",
       "Value" :  { "Ref" : "UsersGroup" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-UsersGroup" }}
+    },
+
+    "BastionAdministratorsGroup" : {
+      "Description" : "The BastionAdministratorsGroup Name",
+      "Value" :  { "Ref" : "BastionAdministratorsGroup" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-BastionAdministratorsGroup" }}
     },
 
     "BastionUsersGroup" : {

@@ -60,7 +60,7 @@
               "codecommit:BatchGetRepositories",
               "codecommit:Get*",
               "codecommit:GitPull",
-              "codecommit:List*", 
+              "codecommit:List*",
               "codedeploy:Batch*",
               "codedeploy:Get*",
               "codedeploy:List*",
@@ -81,7 +81,7 @@
               "elasticfilesystem:Describe*",
               "elasticloadbalancing:Describe*",
               "lambda:List*",
-              "lambda:Get*", 
+              "lambda:Get*",
               "logs:Describe*",
               "logs:Get*",
               "logs:FilterLogEvents",
@@ -180,6 +180,70 @@
       }
     },
 
+    "UserFolderAccess" : {
+      "Type" : "AWS::IAM::ManagedPolicy",
+      "Properties" : {
+        "Description" : "Provides access to S3 for per-Region, per-User S3 Folders.",
+        "Path" : "/",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Sid" : "AllowUserToListBucketsInTheConsole",
+            "Effect" : "Allow",
+            "Action" : [
+              "s3:ListAllMyBuckets",
+              "s3:GetBucketLocation"
+            ],
+            "Resource" : [
+              "arn:aws:s3:::*"
+            ]
+          },
+          {
+            "Sid" : "AllowRootListingOfUsersBucket",
+            "Effect" : "Allow",
+            "Action" : [
+              "s3:ListBucket"
+            ],
+            "Resource" : [
+              "arn:aws:s3:::users-us-east-1-irops",
+              "arn:aws:s3:::users-us-east-2-irops",
+              "arn:aws:s3:::users-us-west-2-irops"
+            ],
+            "Condition" : {
+              "StringEquals" : { "s3:prefix" : [ "" ], "s3:delimiter" : [ "/" ]}
+            }
+          },
+          {
+            "Sid" : "AllowListingOfUserFolder",
+            "Effect" : "Allow",
+            "Action" : [
+              "s3:ListBucket"
+            ],
+            "Resource" : [
+              "arn:aws:s3:::users-us-east-1-irops",
+              "arn:aws:s3:::users-us-east-2-irops",
+              "arn:aws:s3:::users-us-west-2-irops"
+            ],
+            "Condition" : {
+              "StringLike" : { "s3:prefix" : [ "${aws:username}/*" ]}
+            }
+          },
+          {
+            "Sid" : "AllowAllS3ActionsInUserFolder",
+            "Effect" : "Allow",
+            "Action" : [
+              "s3:*"
+            ],
+            "Resource" : [
+              "arn:aws:s3:::users-us-east-1-irops/${aws:username}/*",
+              "arn:aws:s3:::users-us-east-2-irops/${aws:username}/*",
+              "arn:aws:s3:::users-us-west-2-irops/${aws:username}/*"
+            ]
+          }]
+        }
+      }
+    },
+
     "MFARequirement" : {
       "Type" : "AWS::IAM::ManagedPolicy",
       "Properties" : {
@@ -216,6 +280,12 @@
       "Description" : "The UserSelfManagementAccess ManagedPolicy",
       "Value" :  { "Ref" : "UserSelfManagementAccess" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-UserSelfManagementAccess" }}
+    },
+
+    "UserFolderAccess" : {
+      "Description" : "The UserFolderAccess ManagedPolicy",
+      "Value" :  { "Ref" : "UserFolderAccess" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-UserFolderAccess" }}
     },
 
     "MFARequirement" : {

@@ -214,6 +214,36 @@
         ]
       },
       "DeletionPolicy" : "Retain"
+    },
+
+    "UsersBucket" : {
+      "Type" : "AWS::S3::Bucket",
+      "Properties" : {
+        "BucketName" : { "Fn::Join" : [ "-", [ "users", { "Ref" : "AWS::Region"}, { "Fn::If" : [ "AppendAccountId", { "Ref" : "AWS::AccountId" }, { "Ref" : "AccountAlias" }]}]]},
+        "AccessControl" : "PublicRead",
+        "VersioningConfiguration" : { "Status" : "Enabled" },
+        "LifecycleConfiguration" : {
+          "Rules" : [{
+            "Id" : "ReduceStorageCostsThenDeletePriorVersions",
+            "Status" : "Enabled",
+            "Prefix" : "",
+            "Transitions" : [{
+              "StorageClass" : "STANDARD_IA",
+              "TransitionInDays" : 30
+            }],
+            "ExpirationInDays" : 425,
+            "NoncurrentVersionTransitions" : [{
+              "StorageClass" : "STANDARD_IA",
+              "TransitionInDays" : 30
+            }],
+            "NoncurrentVersionExpirationInDays" : 395
+          }]
+        },
+        "Tags" : [
+          { "Key" : "Name", "Value" : "Core-UsersBucket" }
+        ]
+      },
+      "DeletionPolicy" : "Retain"
     }
   },
 
@@ -252,6 +282,12 @@
       "Description" : "The Demos Bucket Name",
       "Value" :  { "Ref" : "DemosBucket" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-DemosBucket" }}
+    },
+
+    "UsersBucket" : {
+      "Description" : "The Users Bucket Name",
+      "Value" :  { "Ref" : "UsersBucket" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-UsersBucket" }}
     }
   }
 }

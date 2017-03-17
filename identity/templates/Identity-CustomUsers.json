@@ -80,6 +80,17 @@
       }
     },
 
+    "WebSphereMQAdministratorUser" : {
+      "Type" : "AWS::IAM::User",
+      "Properties" : {
+        "UserName" : "webspheremqadministrator",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${CustomGroupsStackName}-WebSphereMQAdministratorsGroup" }}
+        ]
+      }
+    },
+
     "MCrawfordUser" : {
       "Type" : "AWS::IAM::User",
       "Properties" : {
@@ -87,7 +98,7 @@
         "Path" : "/",
         "Groups" : [
           { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-AdministratorsGroup" }},
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-BastionUsersGroup" }}
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-BastionAdministratorsGroup" }}
         ]
       }
     },
@@ -99,7 +110,7 @@
         "Path" : "/",
         "Groups" : [
           { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-AdministratorsGroup" }},
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-BastionUsersGroup" }}
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-BastionAdministratorsGroup" }}
         ]
       }
     },
@@ -111,7 +122,7 @@
         "Path" : "/",
         "Groups" : [
           { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-AdministratorsGroup" }},
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-BastionUsersGroup" }}
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-BastionAdministratorsGroup" }}
         ]
       }
     },
@@ -191,7 +202,8 @@
         "Path" : "/",
         "Groups" : [
           { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-UsersGroup" }},
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-BastionUsersGroup" }}
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-BastionUsersGroup" }},
+          { "Fn::ImportValue" : { "Fn::Sub" : "${CustomGroupsStackName}-WebSphereMQAdministratorsGroup" }}
         ]
       }
     },
@@ -225,7 +237,8 @@
         "Path" : "/",
         "Groups" : [
           { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-UsersGroup" }},
-          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-BastionUsersGroup" }}
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-BastionUsersGroup" }},
+          { "Fn::ImportValue" : { "Fn::Sub" : "${CustomGroupsStackName}-WebSphereMQAdministratorsGroup" }}
         ]
       }
     }

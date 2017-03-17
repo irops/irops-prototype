@@ -54,6 +54,17 @@
           { "Fn::ImportValue" : { "Fn::Sub" : "${CustomManagedPoliciesStackName}-ApplicationAdministratorAccess" }}
         ]
       }
+    },
+
+    "WebSphereMQAdministratorsGroup" : {
+      "Type" : "AWS::IAM::Group",
+      "Properties" : {
+        "GroupName" : "WebSphereMQAdministrators",
+        "Path" : "/",
+        "ManagedPolicyArns" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${CustomManagedPoliciesStackName}-WebSphereMQAdministratorAccess" }}
+        ]
+      }
     }
   },
 
@@ -62,6 +73,12 @@
       "Description" : "The ApplicationAdministratorsGroup Name",
       "Value" :  { "Ref" : "ApplicationAdministratorsGroup" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-ApplicationAdministratorsGroup" }}
+    },
+
+    "WebSphereMQAdministratorsGroup" : {
+      "Description" : "The WebSphereMQAdministratorsGroup Name",
+      "Value" :  { "Ref" : "WebSphereMQAdministratorsGroup" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-WebSphereMQAdministratorsGroup" }}
     }
   }
 }
