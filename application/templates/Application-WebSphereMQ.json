@@ -495,7 +495,7 @@
           "KeyName" : { "Ref" : "KeyName" },
           "Role" : { "Fn::GetAtt" : [ "Roles", "Outputs.Role" ]},
           "InstanceSecurityGroup" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.InstanceSecurityGroup" ]},
-          "LogGroup" : { "Fn::GetAtt" : [ "Logs", "Outputs.LogGroup" ]},
+          "LogGroup" : { "Fn::If" : [ "ConfigureLogs", { "Fn::GetAtt" : [ "Logs", "Outputs.LogGroup" ]}, "" ]},
           "FileSystem" : { "Fn::GetAtt" : [ "FileSystem", "Outputs.FileSystem" ]},
           "EnvironmentSize" : { "Ref" : "EnvironmentSize" },
           "InstanceOS" : { "Ref" : "InstanceOS" },
