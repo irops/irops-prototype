@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
 
-  "Description" : "Utility-LinuxBastions Template: This adds Linux Bastions to a VPC. These Bastions are wrapped in an AutoScalingGroup, so if they fail, they are re-created automatically. Optionally, static public and private IP addresses can be requested, and optionally registered in public and private DNS. Optionally, logs can be uploaded to CloudWatch Logs, with an Alarm to monitor invalid users. Optionally, users who are members of the BastionUsers IAM group can be created on this server, with any SSH keys they have imported setup for remote access.",
+  "Description" : "Utility-LinuxBastions Template: This adds Linux Bastions to a VPC. These Bastions are wrapped in an AutoScalingGroup, so if they fail, they are re-created automatically. Optionally, static public and private IP addresses can be requested, and optionally registered in public and private DNS. Optionally, logs can be uploaded to CloudWatch Logs, with an Alarm to monitor invalid users. Optionally, users who are members of the BastionAdministrators and BastionUsers IAM groups can be created on this server, with any SSH keys they have imported setup for remote access.",
 
   "Metadata" : {
     "AWS::CloudFormation::Interface" : {
@@ -30,6 +30,14 @@
           "Label" : { "default" : "Environment Configuration" },
           "Parameters" : [
             "EnvironmentSize"
+          ]
+        },
+        {
+          "Label" : { "default" : "Utility Dependencies Configuration" },
+          "Parameters" : [
+            "ConfigurationsBucket",
+            "ConfigurationLinuxBastionsFolder",
+            "ConfigurationLinuxBastionsObject"
           ]
         },
         {
@@ -70,6 +78,9 @@
         "CompanyName" : { "default" : "Company Name" },
         "SystemName" : { "default" : "System Name" },
         "EnvironmentSize" : { "default" : "Environment Size" },
+        "ConfigurationsBucket" : { "default" : "Configurations Bucket" },
+        "ConfigurationLinuxBastionsFolder" : { "default" : "Configuration LinuxBastions Folder" },
+        "ConfigurationLinuxBastionsObject" : { "default" : "Configuration LinuxBastions Object" },
         "UtilityName" : { "default" : "Utility Name" },
         "UtilityDomain" : { "default" : "Utility Domain" },
         "UseMultiZone" : { "default" : "Use Multi-Zone" },
@@ -151,6 +162,35 @@
       "ConstraintDescription" : "must be micro, small, medium, large or xlarge."
     },
 
+    "ConfigurationsBucket" : {
+      "Description" : "S3 bucket containing Configurations to be deployed",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[a-z][-a-z0-9]*$)",
+      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
+    },
+
+    "ConfigurationLinuxBastionsFolder" : {
+      "Description" : "Folder within S3 bucket containing LinuxBastions configuration objects",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "LinuxBastions",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "ConfigurationLinuxBastionsObject" : {
+      "Description" : "Object within S3 bucket and folder containing LinuxBastions configuration",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "Production-etc-hosts",
+      "AllowedPattern" : "^[-_.a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must be a valid filename, not containing slashes."
+    },
+
     "UtilityName" : {
       "Description" : "Name of the Utility associated with the Stack",
       "Type" : "String",
@@ -211,7 +251,7 @@
     },
 
     "UseLocalUsers" : {
-      "Description" : "Synchronize Members of BastionUsers IAM Group (with SSH Keys) to Local Unix Users",
+      "Description" : "Synchronize Members of BastionAdministrators and BastionUsers IAM Groups (with SSH Keys) to Local Unix Users",
       "Type" : "String",
       "Default" : "true",
       "AllowedValues" : [ "true", "false" ],
@@ -336,6 +376,7 @@
 
   "Conditions" : {
     "ConfigureKey" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "KeyName" }, "" ] }]},
+    "DownloadConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ConfigurationsBucket" }, "" ]}]},
     "ConfigureMultiZone" : { "Fn::Equals" : [{ "Ref" : "UseMultiZone" }, "true" ]},
     "ConfigureStaticPublicAddress" : { "Fn::Equals" : [{ "Ref" : "UseStaticPublicAddress" }, "true" ]},
     "ConfigureStaticPrivateAddress" : { "Fn::Equals" : [{ "Ref" : "UseStaticPrivateAddress" }, "true" ]},
@@ -371,6 +412,25 @@
         },
         "Path" : "/"
       }
+    },
+
+    "DownloadConfigurationFromS3Policy" : {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "DownloadConfigurationFromS3Policy",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [
+              "s3:GetObject"
+            ],
+            "Resource" : { "Fn::Sub" : "arn:aws:s3:::${ConfigurationsBucket}/${ConfigurationLinuxBastionsFolder}/*" }
+          }]
+        },
+        "Roles" : [{ "Ref" : "Role" }]
+      },
+      "Condition" : "DownloadConfiguration"
     },
 
     "StaticPublicAddressPolicy" : {
@@ -448,7 +508,10 @@
             "Action" : [
               "iam:GetGroup"
             ],
-            "Resource" : { "Fn::Sub" : "arn:aws:iam::${AWS::AccountId}:group/BastionUsers" }
+            "Resource" : [
+              { "Fn::Sub" : "arn:aws:iam::${AWS::AccountId}:group/BastionAdministrators" },
+              { "Fn::Sub" : "arn:aws:iam::${AWS::AccountId}:group/BastionUsers" }
+            ]
           },
           {
             "Effect" : "Allow",
@@ -608,6 +671,15 @@
     "LaunchConfiguration" : {
       "Type" : "AWS::AutoScaling::LaunchConfiguration",
       "Metadata" : {
+        "AWS::CloudFormation::Authentication" : {
+          "S3Credentials" : {
+            "type" : "S3",
+            "roleName" : { "Ref" : "Role" },
+            "buckets" : [
+              { "Ref" : "ConfigurationsBucket" }
+            ]
+          }
+        },
         "AWS::CloudFormation::Init" : {
           "configSets" : {
             "All" : [
@@ -615,6 +687,7 @@
               "ConfigureOS",
               "ConfigureHostname",
               "ConfigureCFN",
+              { "Fn::If" : [ "DownloadConfiguration", "ConfigureLinuxBastions", { "Ref": "AWS::NoValue" }]},
               { "Fn::If" : [ "ConfigureStaticPublicAddress", "ConfigureStaticPublicAddress", { "Ref": "AWS::NoValue" }]},
               { "Fn::If" : [ "ConfigureStaticPrivateAddress", "ConfigureStaticPrivateAddress", { "Ref": "AWS::NoValue" }]},
               { "Fn::If" : [ "ConfigureLogs", "ConfigureLogs", { "Ref": "AWS::NoValue" }]},
@@ -725,6 +798,22 @@
                     "/etc/cfn/hooks.d/cfn-auto-reloader.conf"
                   ]
                 }
+              }
+            }
+          },
+          "ConfigureLinuxBastions" : {
+            "files" : {
+              "/var/tmp/hosts" : {
+                "source" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ConfigurationsBucket}/${ConfigurationLinuxBastionsFolder}/${ConfigurationLinuxBastionsObject}" },
+                "mode"  : "000600",
+                "owner" : "root",
+                "group" : "root"
+              }
+            },
+            "commands" : {
+              "01_appendhosts" : {
+                "command" : "cat /var/tmp/hosts >> /etc/hosts",
+                "ignoreErrors" : "false"
               }
             }
           },
@@ -872,31 +961,74 @@
                   "#!/bin/bash\n",
                   "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)\n",
                   "region=${zone::-1}\n",
-                  "bastion_users=$(aws iam get-group --group-name BastionUsers --query 'Users[].UserName' --region $region --output text)\n",
                   "echo\n",
-                  "echo $(date +\"%Y-%m-%d %H:%M:%S,%3N\") [DEBUG] Adding local users based on membership in BastionUsers IAM Group:\n",
-                  "for user in $bastion_users; do\n",
-                  "    echo -n \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] - $user\"\n",
-                  "    keys=$(aws iam list-ssh-public-keys --user-name $user --query 'SSHPublicKeys[].SSHPublicKeyId' --region $region --output text)\n",
+                  "echo $(date +\"%Y-%m-%d %H:%M:%S,%3N\") [DEBUG] Obtaining members of BastionAdministrators IAM Group:\n",
+                  "bastion_administrators=$(aws iam get-group --group-name BastionAdministrators --query 'Users[].UserName' --region $region --output text)\n",
+                  "echo $(date +\"%Y-%m-%d %H:%M:%S,%3N\") [DEBUG] Adding local administrators based on membership in BastionAdministrators IAM Group:\n",
+                  "for administrator in $bastion_administrators; do\n",
+                  "    echo -n \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] - $administrator\"\n",
+                  "    keys=$(aws iam list-ssh-public-keys --user-name $administrator --query 'SSHPublicKeys[].SSHPublicKeyId' --region $region --output text)\n",
                   "    if [ ! \"$keys\" = \"\" ]; then\n",
-                  "        if [ -d /home/$user ]; then\n",
-                  "            /usr/sbin/useradd -M $user\n",
+                  "        if [ -d /home/$administrator ]; then\n",
+                  "            /usr/sbin/useradd -M $administrator\n",
                   "        else\n",
-                  "            /usr/sbin/useradd $user\n",
+                  "            /usr/sbin/useradd $administrator\n",
                   "        fi\n",
-                  "        mkdir -p /home/$user/.ssh\n",
-                  "        rm -f /home/$user/.ssh/authorized_keys\n",
-                  "        touch /home/$user/.ssh/authorized_keys\n",
-                  "        chown -R $user:$user /home/$user/.ssh\n",
-                  "        chmod 0700 /home/$user/.ssh\n",
-                  "        chmod 0600 /home/$user/.ssh/authorized_keys\n",
+                  "        echo \"$administrator ALL=(ALL) NOPASSWD:ALL\" > /etc/sudoers.d/$administrator\n",
+                  "        chmod 0400 /etc/sudoers.d/$administrator\n",
+                  "        mkdir -p /home/$administrator/.ssh\n",
+                  "        chmod 0700 /home/$administrator/.ssh\n",
+                  "        rm -f /home/$administrator/.ssh/authorized_keys\n",
                   "        for key in $keys; do\n",
                   "            echo -n \" - $key\"\n",
-                  "            echo $(aws iam get-ssh-public-key --user-name $user --ssh-public-key-id $key --encoding SSH --query 'SSHPublicKey.SSHPublicKeyBody' --region $region --output text) >> /home/$user/.ssh/authorized_keys\n",
+                  "            echo $(aws iam get-ssh-public-key --user-name $administrator --ssh-public-key-id $key --encoding SSH --query 'SSHPublicKey.SSHPublicKeyBody' --region $region --output text) >> /home/$administrator/.ssh/authorized_keys\n",
                   "        done\n",
+                  "        chmod 0600 /home/$administrator/.ssh/authorized_keys\n",
+                  "        rm -f /home/$administrator/.ssh/config\n",
+                  "        echo \"Host *\" >> /home/$administrator/.ssh/config\n",
+                  "        echo \"  ForwardAgent yes\" >> /home/$administrator/.ssh/config\n",
+                  "        echo \"  User ec2-user\" >> /home/$administrator/.ssh/config\n",
+                  "        chmod 0600 /home/$administrator/.ssh/config\n",
+                  "        chown -R $administrator:$administrator /home/$administrator/.ssh\n",
                   "        echo\n",
                   "    else\n",
                   "        echo \" - skipped (no SSH Key)\"\n",
+                  "    fi\n",
+                  "done\n",
+                  "\n",
+                  "echo $(date +\"%Y-%m-%d %H:%M:%S,%3N\") [DEBUG] Obtaining members of BastionUsers IAM Group:\n",
+                  "bastion_users=$(aws iam get-group --group-name BastionUsers --query 'Users[].UserName' --region $region --output text)\n",
+                  "echo $(date +\"%Y-%m-%d %H:%M:%S,%3N\") [DEBUG] Adding local users based on membership in BastionUsers IAM Group:\n",
+                  "for user in $bastion_users; do\n",
+                  "    echo -n \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] - $user\"\n",
+                  "    if ! id $user &> /dev/null; then\n",
+                  "        keys=$(aws iam list-ssh-public-keys --user-name $user --query 'SSHPublicKeys[].SSHPublicKeyId' --region $region --output text)\n",
+                  "        if [ ! \"$keys\" = \"\" ]; then\n",
+                  "            if [ -d /home/$user ]; then\n",
+                  "                /usr/sbin/useradd -M $user\n",
+                  "            else\n",
+                  "                /usr/sbin/useradd $user\n",
+                  "            fi\n",
+                  "            mkdir -p /home/$user/.ssh\n",
+                  "            chmod 0700 /home/$user/.ssh\n",
+                  "            rm -f /home/$user/.ssh/authorized_keys\n",
+                  "            for key in $keys; do\n",
+                  "                echo -n \" - $key\"\n",
+                  "                echo $(aws iam get-ssh-public-key --user-name $user --ssh-public-key-id $key --encoding SSH --query 'SSHPublicKey.SSHPublicKeyBody' --region $region --output text) >> /home/$user/.ssh/authorized_keys\n",
+                  "            done\n",
+                  "            chmod 0600 /home/$user/.ssh/authorized_keys\n",
+                  "            rm -f /home/$user/.ssh/config\n",
+                  "            echo \"Host *\" >> /home/$user/.ssh/config\n",
+                  "            echo \"  ForwardAgent yes\" >> /home/$user/.ssh/config\n",
+                  "            echo \"  User ec2-user\" >> /home/$user/.ssh/config\n",
+                  "            chmod 0600 /home/$user/.ssh/config\n",
+                  "            chown -R $user:$user /home/$user/.ssh\n",
+                  "            echo\n",
+                  "        else\n",
+                  "            echo \" - skipped (no SSH Key)\"\n",
+                  "        fi\n",
+                  "    else\n",
+                  "        echo \" - skipped (user created as administrator)\"\n",
                   "    fi\n",
                   "done\n"
               ]]},

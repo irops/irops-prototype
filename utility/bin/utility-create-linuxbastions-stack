@@ -358,6 +358,15 @@ if ! aws s3api head-bucket --bucket $templates_bucket --profile $profile --regio
     unset templates_bucket
 fi
 
+configurations_bucket=${AWS_CONFIGURATIONS_BUCKET:-configurations-$region-$account}
+configurations_folder=$utility
+configurations_object=$environment-$utility-etc-hosts
+
+if ! aws s3api head-bucket --bucket $configurations_bucket --profile $profile --region $region 2> /dev/null; then
+    echo "$configurations_bucket S3 bucket does not exist!"
+    exit 66
+fi
+
 if ! aws cloudformation describe-stacks --stack-name $environment-VPC \
                                         --profile $profile --region $region --output text &> /dev/null; then
     echo "$environment-VPC Stack does not exist!"
@@ -459,6 +468,9 @@ aws cloudformation create-stack --stack-name $environment-$utility \\
                                              ParameterKey=CompanyName,ParameterValue=$company \\
                                              ParameterKey=SystemName,ParameterValue=$system \\
                                              ParameterKey=EnvironmentSize,ParameterValue=$environment_size \\
+                                             ParameterKey=ConfigurationsBucket,ParameterValue=$configurations_bucket \\
+                                             ParameterKey=ConfigurationLinuxBastionsFolder,ParameterValue=$configurations_folder \\
+                                             ParameterKey=ConfigurationLinuxBastionsObject,ParameterValue=$configurations_object \\
                                              ParameterKey=UtilityName,ParameterValue=$utility \\
                                              ParameterKey=UtilityDomain,ParameterValue=$utility_domain \\
                                              ParameterKey=UseMultiZone,ParameterValue=$use_multizone \\
