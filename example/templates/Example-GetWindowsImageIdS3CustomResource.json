@@ -1,0 +1,56 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Example-GetWindowsImageIdCustomResource Template. This demonstrates how to dynamically get the most recent Windows ImageId, given the Windows OS type and Region. This template provisions an EC2 instance with an AMI ID that is based on the selected InstanceType, Region and Windows OS version.",
+
+  "Parameters" : {
+    "InstanceType" : {
+      "Description" : "EC2 instance type",
+      "Type" : "String",
+      "Default" : "t2.medium",
+      "AllowedValues" : [ "t2.micro", "t2.small", "t2.medium" ],
+      "ConstraintDescription" : "Must be a valid EC2 instance type."
+    },
+
+    "WindowsVersion" : {
+      "Description" : "Windows Version",
+      "Type" : "String",
+      "Default" : "Windows Server 2012 R2 English 64-bit",
+      "AllowedValues" : [
+        "Windows Server 2008 SP2 English 32-bit",
+        "Windows Server 2008 SP2 English 64-bit",
+        "Windows Server 2008 R2 English 64-bit",
+        "Windows Server 2012 RTM English 64-bit",
+        "Windows Server 2012 R2 English 64-bit"
+      ],
+      "ConstraintDescription" : "Must be a valid Windows version."
+    }
+  },
+
+  "Resources" : {
+    "GetWindowsImageIdS3" : {
+      "Type" : "Custom::GetWindowsImageIdS3",
+      "Properties" : {
+        "ServiceToken" : { "Fn::Sub" : "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GetWindowsImageIdS3" },
+        "Region" : { "Ref" : "AWS::Region" },
+        "OSName" : { "Ref" : "WindowsVersion" }
+      }
+    },
+
+    "Instance" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "InstanceType" : { "Ref" : "InstanceType" },
+        "ImageId" : { "Fn::GetAtt" : [ "GetWindowsImageIdS3", "ImageId" ]}
+      }
+    },
+
+  },
+
+  "Outputs" : {
+    "ImageId" : {
+      "Description" : "The ImageId",
+      "Value" : { "Fn::GetAtt" : [ "GetWindowsImageIdS3", "ImageId" ]}
+    }
+  }
+}
