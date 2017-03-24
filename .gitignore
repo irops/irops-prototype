@@ -26,5 +26,7 @@ certs/*.pfx.passphrase
 keys-private/
 urls.xlsx
 
-# Old files
+# Old and new files
 old/
+new/
+save/

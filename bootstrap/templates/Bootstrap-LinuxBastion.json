@@ -91,7 +91,7 @@
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
-      "Default" : "Demo",
+      "Default" : "Travel",
       "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
@@ -383,34 +383,24 @@
       "Condition" : "ConfigureUsers"
     },
 
-    "InstanceProfile" : {
-      "Type" : "AWS::IAM::InstanceProfile",
+    "SecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
-        "Path" : "/",
-        "Roles" : [{ "Ref" : "Role" }]
-      }
-    },
-
-    "EIP" : {
-      "Type" : "AWS::EC2::EIP",
-      "Properties" : {
-        "Domain" : "vpc"
-      },
-      "Condition" : "ConfigureStaticPublicAddress"
-    },
-
-    "HomeVolume" : {
-      "Type" : "AWS::EC2::Volume",
-      "Properties" : {
-        "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]},
-        "Size" : "10",
-        "SnapshotId" : { "Fn::If" : [ "ConfigureStaticHomeSnapshot", { "Ref" : "HomeSnapshot" }, { "Ref" : "AWS::NoValue" }]},
+        "GroupDescription" : { "Fn::Join" : [ "-", [ "Bootstrap", { "Ref" : "UtilityName" }, "SecurityGroup" ]]},
+        "SecurityGroupIngress" : [
+          { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PublicNetwork" }},
+          { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "PublicNetwork" }},
+          { "Fn::If" : [ "ConfigurePublicNetwork1", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PublicNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "PublicNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicNetwork2", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PublicNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "PublicNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicNetwork3", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PublicNetwork3" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicNetwork3", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "PublicNetwork3" }}, { "Ref" : "AWS::NoValue" }]}
+        ],
         "Tags" : [
-          { "Key" : "Name", "Value" : { "Fn::Join" : [ "", [ "Bootstrap-", { "Ref" : "UtilityName" }, "HomeVolume" ]]}}
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ "Bootstrap", { "Ref" : "UtilityName" }, "SecurityGroup" ]]}}
         ]
-      },
-      "Condition" : "ConfigureStaticHomeVolume",
-      "DeletionPolicy" : "Snapshot"
+      }
     },
 
     "LogGroup" : {
@@ -463,23 +453,33 @@
       "Condition" : "ConfigureLogs"
     },
 
-    "SecurityGroup" : {
-      "Type" : "AWS::EC2::SecurityGroup",
+    "HomeVolume" : {
+      "Type" : "AWS::EC2::Volume",
       "Properties" : {
-        "GroupDescription" : { "Fn::Join" : [ "", [ "Bootstrap-", { "Ref" : "UtilityName" }, "SecurityGroup" ]]},
-        "SecurityGroupIngress" : [
-          { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PublicNetwork" }},
-          { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "PublicNetwork" }},
-          { "Fn::If" : [ "ConfigurePublicNetwork1", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PublicNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "PublicNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicNetwork2", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PublicNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "PublicNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicNetwork3", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PublicNetwork3" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicNetwork3", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "PublicNetwork3" }}, { "Ref" : "AWS::NoValue" }]}
-        ],
+        "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]},
+        "Size" : "10",
+        "SnapshotId" : { "Fn::If" : [ "ConfigureStaticHomeSnapshot", { "Ref" : "HomeSnapshot" }, { "Ref" : "AWS::NoValue" }]},
         "Tags" : [
-          { "Key" : "Name", "Value" : { "Fn::Join" : [ "", [ "Bootstrap-", { "Ref" : "UtilityName" }, "SecurityGroup" ]]}}
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ "Bootstrap", { "Ref" : "UtilityName" }, "HomeVolume" ]]}}
         ]
+      },
+      "Condition" : "ConfigureStaticHomeVolume",
+      "DeletionPolicy" : "Snapshot"
+    },
+
+    "EIP" : {
+      "Type" : "AWS::EC2::EIP",
+      "Properties" : {
+        "Domain" : "vpc"
+      },
+      "Condition" : "ConfigureStaticPublicAddress"
+    },
+
+    "InstanceProfile" : {
+      "Type" : "AWS::IAM::InstanceProfile",
+      "Properties" : {
+        "Path" : "/",
+        "Roles" : [{ "Ref" : "Role" }]
       }
     },
 
@@ -491,6 +491,7 @@
             "All" : [
               "UpgradeOS",
               "ConfigureOS",
+              "ConfigureHostname",
               "ConfigureCFN",
               { "Fn::If" : [ "ConfigureStaticPublicAddress", "ConfigureStaticPublicAddress", { "Ref": "AWS::NoValue" }]},
               { "Fn::If" : [ "ConfigureStaticHomeVolume", "ConfigureStaticHomeVolume", { "Ref": "AWS::NoValue" }]},
@@ -547,14 +548,28 @@
                 "owner" : "root",
                 "group" : "root"
               }
+            }
+          },
+          "ConfigureHostname" : {
+            "files" : {
+              "/root/bin/sethostname" : {
+                "content" : { "Fn::Join" : [ "", [
+                  "#!/bin/bash\n",
+                  "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)\n",
+                  "region=${zone::-1}\n",
+                  "hostname=bootstrap.iropshub.com\n",
+                  "address=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)\n",
+                  "sed -i -e \"/^$address/d\" -e \"$ a$address $hostname\" /etc/hosts\n",
+                  "hostname $hostname\n"
+                ]]},
+                "mode"  : "000700",
+                "owner" : "root",
+                "group" : "root"
+              }
             },
             "commands" : {
-              "01_edithosts" : {
-                "command" : "echo \"$(hostname -i) bootstrap.iropshub.com\" >> /etc/hosts",
-                "ignoreErrors" : "false"
-              },
-              "02_sethostname" : {
-                "command" : "hostname bootstrap.iropshub.com",
+              "01_sethostname" : {
+                "command" : "/root/bin/sethostname",
                 "ignoreErrors" : "false"
               }
             }
@@ -789,30 +804,30 @@
                   "#!/bin/bash\n",
                   "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)\n",
                   "region=${zone::-1}\n",
-                  "bootstrap_users=$(aws iam get-group --group-name BootstrapAdministrators --query 'Users[].UserName' --region $region --output text)\n",
                   "echo\n",
-                  "echo $(date +\"%Y-%m-%d %H:%M:%S,%3N\") [DEBUG] Adding local users based on membership in BootstrapAdministrators IAM Group:\n",
-                  "for user in $bootstrap_users; do\n",
-                  "    echo -n \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] - $user\"\n",
-                  "    keys=$(aws iam list-ssh-public-keys --user-name $user --query 'SSHPublicKeys[].SSHPublicKeyId' --region $region --output text)\n",
+                  "echo $(date +\"%Y-%m-%d %H:%M:%S,%3N\") [DEBUG] Obtaining members of BootstrapAdministrators IAM Group:\n",
+                  "bootstrap_administrators=$(aws iam get-group --group-name BootstrapAdministrators --query 'Users[].UserName' --region $region --output text)\n",
+                  "echo $(date +\"%Y-%m-%d %H:%M:%S,%3N\") [DEBUG] Adding local administrators based on membership in BootstrapAdministrators IAM Group:\n",
+                  "for administrator in $bastion_administrators; do\n",
+                  "    echo -n \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] - $administrator\"\n",
+                  "    keys=$(aws iam list-ssh-public-keys --user-name $administrator --query 'SSHPublicKeys[].SSHPublicKeyId' --region $region --output text)\n",
                   "    if [ ! \"$keys\" = \"\" ]; then\n",
-                  "        if [ -d /home/$user ]; then\n",
-                  "            /usr/sbin/useradd -M $user\n",
+                  "        if [ -d /home/$administrator ]; then\n",
+                  "            /usr/sbin/useradd -M $administrator\n",
                   "        else\n",
-                  "            /usr/sbin/useradd $user\n",
+                  "            /usr/sbin/useradd $administrator\n",
                   "        fi\n",
-                  "        echo \"$user ALL=(ALL) NOPASSWD:ALL\" > /etc/sudoers.d/$user\n",
-                  "        chmod 0400 /etc/sudoers.d/$user\n",
-                  "        mkdir -p /home/$user/.ssh\n",
-                  "        rm -f /home/$user/.ssh/authorized_keys\n",
-                  "        touch /home/$user/.ssh/authorized_keys\n",
-                  "        chown -R $user:$user /home/$user/.ssh\n",
-                  "        chmod 0700 /home/$user/.ssh\n",
-                  "        chmod 0600 /home/$user/.ssh/authorized_keys\n",
+                  "        echo \"$administrator ALL=(ALL) NOPASSWD:ALL\" > /etc/sudoers.d/$administrator\n",
+                  "        chmod 0400 /etc/sudoers.d/$administrator\n",
+                  "        mkdir -p /home/$administrator/.ssh\n",
+                  "        chmod 0700 /home/$administrator/.ssh\n",
+                  "        rm -f /home/$administrator/.ssh/authorized_keys\n",
                   "        for key in $keys; do\n",
                   "            echo -n \" - $key\"\n",
-                  "            echo $(aws iam get-ssh-public-key --user-name $user --ssh-public-key-id $key --encoding SSH --query 'SSHPublicKey.SSHPublicKeyBody' --region $region --output text) >> /home/$user/.ssh/authorized_keys\n",
+                  "            echo $(aws iam get-ssh-public-key --user-name $administrator --ssh-public-key-id $key --encoding SSH --query 'SSHPublicKey.SSHPublicKeyBody' --region $region --output text) >> /home/$administrator/.ssh/authorized_keys\n",
                   "        done\n",
+                  "        chmod 0600 /home/$administrator/.ssh/authorized_keys\n",
+                  "        chown -R $administrator:$administrator /home/$administrator/.ssh\n",
                   "        echo\n",
                   "    else\n",
                   "        echo \" - skipped (no SSH Key)\"\n",
@@ -868,7 +883,7 @@
         "MaxSize" : 1,
         "DesiredCapacity" : 1,
         "Tags" : [
-          { "Key" : "Name", "Value" : { "Fn::Join" : [ "", [ "Bootstrap-", { "Ref" : "UtilityName" }, "Instance" ]]}, "PropagateAtLaunch" : "true" }
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ "Bootstrap", { "Ref" : "UtilityName" }, "Instance" ]]}, "PropagateAtLaunch" : "true" }
         ]
       },
       "CreationPolicy" : {

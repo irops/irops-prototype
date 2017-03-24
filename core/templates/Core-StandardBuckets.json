@@ -24,16 +24,15 @@
     "AccountAlias" : {
       "Description" : "Unique Alias of the Account (if defined). If specified, the Alias instead of the AccountID is appended to bucket names to insure uniqueness.",
       "Type" : "String",
-      "MinLength" : 2,
       "MaxLength" : 32,
-      "Default" : "noalias",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[a-z][-a-z0-9]*$)",
       "ConstraintDescription" : "must begin with a lower case letter and contain lower case letters, numbers and dashes."
     }
   },
 
   "Conditions" : {
-    "AppendAccountId" : { "Fn::Equals" : [{ "Ref" : "AccountAlias" }, "noalias" ]}
+    "AppendAccountId" : { "Fn::Equals" : [{ "Ref" : "AccountAlias" }, "" ]}
   },
 
   "Resources" : {
@@ -62,6 +61,96 @@
         },
         "Tags" : [
           { "Key" : "Name", "Value" : "Core-TemplatesBucket" }
+        ]
+      },
+      "DeletionPolicy" : "Retain"
+    },
+
+    "FunctionsBucket" : {
+      "Type" : "AWS::S3::Bucket",
+      "Properties" : {
+        "BucketName" : { "Fn::Join" : [ "-", [ "functions", { "Ref" : "AWS::Region"}, { "Fn::If" : [ "AppendAccountId", { "Ref" : "AWS::AccountId" }, { "Ref" : "AccountAlias" }]}]]},
+        "AccessControl" : "PublicRead",
+        "VersioningConfiguration" : { "Status" : "Enabled" },
+        "LifecycleConfiguration" : {
+          "Rules" : [{
+            "Id" : "ReduceStorageCostsThenDeletePriorVersions",
+            "Status" : "Enabled",
+            "Prefix" : "",
+            "Transitions" : [{
+              "StorageClass" : "STANDARD_IA",
+              "TransitionInDays" : 30
+            }],
+            "ExpirationInDays" : 425,
+            "NoncurrentVersionTransitions" : [{
+              "StorageClass" : "STANDARD_IA",
+              "TransitionInDays" : 30
+            }],
+            "NoncurrentVersionExpirationInDays" : 395
+          }]
+        },
+        "Tags" : [
+          { "Key" : "Name", "Value" : "Core-FunctionsBucket" }
+        ]
+      },
+      "DeletionPolicy" : "Retain"
+    },
+
+    "ProductsBucket" : {
+      "Type" : "AWS::S3::Bucket",
+      "Properties" : {
+        "BucketName" : { "Fn::Join" : [ "-", [ "products", { "Ref" : "AWS::Region"}, { "Fn::If" : [ "AppendAccountId", { "Ref" : "AWS::AccountId" }, { "Ref" : "AccountAlias" }]}]]},
+        "AccessControl" : "PublicRead",
+        "VersioningConfiguration" : { "Status" : "Enabled" },
+        "LifecycleConfiguration" : {
+          "Rules" : [{
+            "Id" : "ReduceStorageCostsThenDeletePriorVersions",
+            "Status" : "Enabled",
+            "Prefix" : "",
+            "Transitions" : [{
+              "StorageClass" : "STANDARD_IA",
+              "TransitionInDays" : 30
+            }],
+            "ExpirationInDays" : 425,
+            "NoncurrentVersionTransitions" : [{
+              "StorageClass" : "STANDARD_IA",
+              "TransitionInDays" : 30
+            }],
+            "NoncurrentVersionExpirationInDays" : 395
+          }]
+        },
+        "Tags" : [
+          { "Key" : "Name", "Value" : "Core-ProductsBucket" }
+        ]
+      },
+      "DeletionPolicy" : "Retain"
+    },
+
+    "ConfigurationsBucket" : {
+      "Type" : "AWS::S3::Bucket",
+      "Properties" : {
+        "BucketName" : { "Fn::Join" : [ "-", [ "configurations", { "Ref" : "AWS::Region"}, { "Fn::If" : [ "AppendAccountId", { "Ref" : "AWS::AccountId" }, { "Ref" : "AccountAlias" }]}]]},
+        "AccessControl" : "PublicRead",
+        "VersioningConfiguration" : { "Status" : "Enabled" },
+        "LifecycleConfiguration" : {
+          "Rules" : [{
+            "Id" : "ReduceStorageCostsThenDeletePriorVersions",
+            "Status" : "Enabled",
+            "Prefix" : "",
+            "Transitions" : [{
+              "StorageClass" : "STANDARD_IA",
+              "TransitionInDays" : 30
+            }],
+            "ExpirationInDays" : 425,
+            "NoncurrentVersionTransitions" : [{
+              "StorageClass" : "STANDARD_IA",
+              "TransitionInDays" : 30
+            }],
+            "NoncurrentVersionExpirationInDays" : 395
+          }]
+        },
+        "Tags" : [
+          { "Key" : "Name", "Value" : "Core-ConfigurationsBucket" }
         ]
       },
       "DeletionPolicy" : "Retain"
@@ -125,6 +214,66 @@
         ]
       },
       "DeletionPolicy" : "Retain"
+    },
+
+    "DemosBucket" : {
+      "Type" : "AWS::S3::Bucket",
+      "Properties" : {
+        "BucketName" : { "Fn::Join" : [ "-", [ "demos", { "Ref" : "AWS::Region"}, { "Fn::If" : [ "AppendAccountId", { "Ref" : "AWS::AccountId" }, { "Ref" : "AccountAlias" }]}]]},
+        "AccessControl" : "PublicRead",
+        "VersioningConfiguration" : { "Status" : "Enabled" },
+        "LifecycleConfiguration" : {
+          "Rules" : [{
+            "Id" : "ReduceStorageCostsThenDeletePriorVersions",
+            "Status" : "Enabled",
+            "Prefix" : "",
+            "Transitions" : [{
+              "StorageClass" : "STANDARD_IA",
+              "TransitionInDays" : 30
+            }],
+            "ExpirationInDays" : 425,
+            "NoncurrentVersionTransitions" : [{
+              "StorageClass" : "STANDARD_IA",
+              "TransitionInDays" : 30
+            }],
+            "NoncurrentVersionExpirationInDays" : 395
+          }]
+        },
+        "Tags" : [
+          { "Key" : "Name", "Value" : "Core-DemosBucket" }
+        ]
+      },
+      "DeletionPolicy" : "Retain"
+    },
+
+    "UsersBucket" : {
+      "Type" : "AWS::S3::Bucket",
+      "Properties" : {
+        "BucketName" : { "Fn::Join" : [ "-", [ "users", { "Ref" : "AWS::Region"}, { "Fn::If" : [ "AppendAccountId", { "Ref" : "AWS::AccountId" }, { "Ref" : "AccountAlias" }]}]]},
+        "AccessControl" : "PublicRead",
+        "VersioningConfiguration" : { "Status" : "Enabled" },
+        "LifecycleConfiguration" : {
+          "Rules" : [{
+            "Id" : "ReduceStorageCostsThenDeletePriorVersions",
+            "Status" : "Enabled",
+            "Prefix" : "",
+            "Transitions" : [{
+              "StorageClass" : "STANDARD_IA",
+              "TransitionInDays" : 30
+            }],
+            "ExpirationInDays" : 425,
+            "NoncurrentVersionTransitions" : [{
+              "StorageClass" : "STANDARD_IA",
+              "TransitionInDays" : 30
+            }],
+            "NoncurrentVersionExpirationInDays" : 395
+          }]
+        },
+        "Tags" : [
+          { "Key" : "Name", "Value" : "Core-UsersBucket" }
+        ]
+      },
+      "DeletionPolicy" : "Retain"
     }
   },
 
@@ -133,6 +282,24 @@
       "Description" : "The Templates Bucket Name",
       "Value" :  { "Ref" : "TemplatesBucket" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-TemplatesBucket" }}
+    },
+
+    "FunctionsBucket" : {
+      "Description" : "The Functions Bucket Name",
+      "Value" :  { "Ref" : "FunctionsBucket" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-FunctionsBucket" }}
+    },
+
+    "ProductsBucket" : {
+      "Description" : "The Products Bucket Name",
+      "Value" :  { "Ref" : "ProductsBucket" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-ProductsBucket" }}
+    },
+
+    "ConfigurationsBucket" : {
+      "Description" : "The Configurations Bucket Name",
+      "Value" :  { "Ref" : "ConfigurationsBucket" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-ConfigurationsBucket" }}
     },
 
     "ApplicationsBucket" : {
@@ -145,6 +312,18 @@
       "Description" : "The Examples Bucket Name",
       "Value" :  { "Ref" : "ExamplesBucket" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-ExamplesBucket" }}
+    },
+
+    "DemosBucket" : {
+      "Description" : "The Demos Bucket Name",
+      "Value" :  { "Ref" : "DemosBucket" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-DemosBucket" }}
+    },
+
+    "UsersBucket" : {
+      "Description" : "The Users Bucket Name",
+      "Value" :  { "Ref" : "UsersBucket" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-UsersBucket" }}
     }
   }
 }

@@ -1,0 +1,1233 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Environment-VPC Template. This creates the Environment VPC within an Environment Account. Multiple Environments can co-exist. The VPC is always Multi-Zone. It can optionally be Multi-NAT Gateway. It can optionally have a VPN Gateway.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "HostedZoneStackName"
+          ]
+        },
+        {
+          "Label" : { "default" : "VPC Configuration" },
+          "Parameters" : [
+            "Name",
+            "Network",
+            "UseMultiZoneNatGateways",
+            "UseVPNGateway"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "HostedZoneStackName" : { "default" : "HostedZone Stack Name" },
+        "Name" : { "default" : "Name" },
+        "Network" : { "default" : "Network" },
+        "UseMultiZoneNatGateways" : { "default" : "Use Multi-Zone NAT Gateways" },
+        "UseVPNGateway" : { "default" : "Use a VPN Gateway" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "HostedZoneStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Environment HostedZone",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "Production-HostedZone",
+      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "Name" : {
+      "Description" : "Name of the Environment associated with the Stack",
+      "Type" : "String",
+      "Default" : "Production",
+      "AllowedValues" : [ "Production", "Staging", "Testing", "Development" ],
+      "ConstraintDescription" : "must be one of the following: Production, Staging, Testing, Development."
+    },
+
+    "Network" : {
+      "Description" : "VPC /16 Network",
+      "Type" : "String",
+      "Default" : "10.40.0.0/16",
+      "AllowedPattern" : "^(10\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.0\\.0/16)$",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.X.0.0/16."
+    },
+
+    "UseMultiZoneNatGateways" : {
+      "Description" : "Create NAT Gateways in multiple Availability Zones",
+      "Type" : "String",
+      "Default" : "true",
+      "AllowedValues" : [ "true", "false" ],
+      "ConstraintDescription" : "must be either true or false."
+    },
+
+    "UseVPNGateway" : {
+      "Description" : "Create VPNGateway",
+      "Type" : "String",
+      "Default" : "true",
+      "AllowedValues" : [ "true", "false" ],
+      "ConstraintDescription" : "must be either true or false."
+    }
+  },
+
+  "Mappings" : {
+    "SubnetMap" : {
+      "Public"        : { "ZoneA" :  "0.0/26", "ZoneB" :  "64.0/26", "ZoneC" : "128.0/26", "ZoneD" : "192.0/26" },
+      "Public1"       : { "ZoneA" :  "1.0/26", "ZoneB" :  "65.0/26", "ZoneC" : "129.0/26", "ZoneD" : "193.0/26" },
+      "Public2"       : { "ZoneA" :  "2.0/26", "ZoneB" :  "66.0/26", "ZoneC" : "130.0/26", "ZoneD" : "194.0/26" },
+      "Public3"       : { "ZoneA" :  "3.0/26", "ZoneB" :  "67.0/26", "ZoneC" : "131.0/26", "ZoneD" : "195.0/26" },
+      "Public4"       : { "ZoneA" :  "4.0/26", "ZoneB" :  "68.0/26", "ZoneC" : "132.0/26", "ZoneD" : "196.0/26" },
+      "Public5"       : { "ZoneA" :  "5.0/26", "ZoneB" :  "69.0/26", "ZoneC" : "133.0/26", "ZoneD" : "197.0/26" },
+      "Public6"       : { "ZoneA" :  "6.0/26", "ZoneB" :  "70.0/26", "ZoneC" : "134.0/26", "ZoneD" : "198.0/26" },
+      "Public7"       : { "ZoneA" :  "7.0/26", "ZoneB" :  "71.0/26", "ZoneC" : "135.0/26", "ZoneD" : "199.0/26" },
+      "Web"           : { "ZoneA" :  "8.0/26", "ZoneB" :  "72.0/26", "ZoneC" : "136.0/26", "ZoneD" : "200.0/26" },
+      "Web1"          : { "ZoneA" :  "9.0/26", "ZoneB" :  "73.0/26", "ZoneC" : "137.0/26", "ZoneD" : "201.0/26" },
+      "Web2"          : { "ZoneA" : "10.0/26", "ZoneB" :  "74.0/26", "ZoneC" : "138.0/26", "ZoneD" : "202.0/26" },
+      "Web3"          : { "ZoneA" : "11.0/26", "ZoneB" :  "75.0/26", "ZoneC" : "139.0/26", "ZoneD" : "203.0/26" },
+      "Web4"          : { "ZoneA" : "12.0/26", "ZoneB" :  "76.0/26", "ZoneC" : "140.0/26", "ZoneD" : "204.0/26" },
+      "Web5"          : { "ZoneA" : "13.0/26", "ZoneB" :  "77.0/26", "ZoneC" : "141.0/26", "ZoneD" : "205.0/26" },
+      "Web6"          : { "ZoneA" : "14.0/26", "ZoneB" :  "78.0/26", "ZoneC" : "142.0/26", "ZoneD" : "206.0/26" },
+      "Web7"          : { "ZoneA" : "15.0/26", "ZoneB" :  "79.0/26", "ZoneC" : "143.0/26", "ZoneD" : "207.0/26" },
+      "Application"   : { "ZoneA" : "16.0/26", "ZoneB" :  "80.0/26", "ZoneC" : "144.0/26", "ZoneD" : "208.0/26" },
+      "Application1"  : { "ZoneA" : "17.0/26", "ZoneB" :  "81.0/26", "ZoneC" : "145.0/26", "ZoneD" : "209.0/26" },
+      "Application2"  : { "ZoneA" : "18.0/26", "ZoneB" :  "82.0/26", "ZoneC" : "146.0/26", "ZoneD" : "210.0/26" },
+      "Application3"  : { "ZoneA" : "19.0/26", "ZoneB" :  "83.0/26", "ZoneC" : "147.0/26", "ZoneD" : "211.0/26" },
+      "Application4"  : { "ZoneA" : "20.0/26", "ZoneB" :  "84.0/26", "ZoneC" : "148.0/26", "ZoneD" : "212.0/26" },
+      "Application5"  : { "ZoneA" : "21.0/26", "ZoneB" :  "85.0/26", "ZoneC" : "149.0/26", "ZoneD" : "213.0/26" },
+      "Application6"  : { "ZoneA" : "22.0/26", "ZoneB" :  "86.0/26", "ZoneC" : "150.0/26", "ZoneD" : "214.0/26" },
+      "Application7"  : { "ZoneA" : "23.0/26", "ZoneB" :  "87.0/26", "ZoneC" : "151.0/26", "ZoneD" : "215.0/26" },
+      "Application8"  : { "ZoneA" : "24.0/26", "ZoneB" :  "88.0/26", "ZoneC" : "152.0/26", "ZoneD" : "216.0/26" },
+      "Application9"  : { "ZoneA" : "25.0/26", "ZoneB" :  "89.0/26", "ZoneC" : "153.0/26", "ZoneD" : "217.0/26" },
+      "Application10" : { "ZoneA" : "26.0/26", "ZoneB" :  "90.0/26", "ZoneC" : "154.0/26", "ZoneD" : "218.0/26" },
+      "Application11" : { "ZoneA" : "27.0/26", "ZoneB" :  "91.0/26", "ZoneC" : "155.0/26", "ZoneD" : "219.0/26" },
+      "Application12" : { "ZoneA" : "28.0/26", "ZoneB" :  "92.0/26", "ZoneC" : "156.0/26", "ZoneD" : "220.0/26" },
+      "Application13" : { "ZoneA" : "29.0/26", "ZoneB" :  "93.0/26", "ZoneC" : "157.0/26", "ZoneD" : "221.0/26" },
+      "Application14" : { "ZoneA" : "30.0/26", "ZoneB" :  "94.0/26", "ZoneC" : "158.0/26", "ZoneD" : "222.0/26" },
+      "Application15" : { "ZoneA" : "31.0/26", "ZoneB" :  "95.0/26", "ZoneC" : "159.0/26", "ZoneD" : "223.0/26" },
+      "Cache"         : { "ZoneA" : "32.0/26", "ZoneB" :  "96.0/26", "ZoneC" : "160.0/26", "ZoneD" : "224.0/26" },
+      "Cache1"        : { "ZoneA" : "33.0/26", "ZoneB" :  "97.0/26", "ZoneC" : "161.0/26", "ZoneD" : "225.0/26" },
+      "Cache2"        : { "ZoneA" : "34.0/26", "ZoneB" :  "98.0/26", "ZoneC" : "162.0/26", "ZoneD" : "226.0/26" },
+      "Cache3"        : { "ZoneA" : "35.0/26", "ZoneB" :  "99.0/26", "ZoneC" : "163.0/26", "ZoneD" : "227.0/26" },
+      "Cache4"        : { "ZoneA" : "36.0/26", "ZoneB" : "100.0/26", "ZoneC" : "164.0/26", "ZoneD" : "228.0/26" },
+      "Cache6"        : { "ZoneA" : "37.0/26", "ZoneB" : "101.0/26", "ZoneC" : "165.0/26", "ZoneD" : "229.0/26" },
+      "Cache3"        : { "ZoneA" : "38.0/26", "ZoneB" : "102.0/26", "ZoneC" : "166.0/26", "ZoneD" : "230.0/26" },
+      "Cache7"        : { "ZoneA" : "39.0/26", "ZoneB" : "103.0/26", "ZoneC" : "167.0/26", "ZoneD" : "231.0/26" },
+      "Database"      : { "ZoneA" : "40.0/26", "ZoneB" : "104.0/26", "ZoneC" : "168.0/26", "ZoneD" : "232.0/26" },
+      "Database1"     : { "ZoneA" : "41.0/26", "ZoneB" : "105.0/26", "ZoneC" : "169.0/26", "ZoneD" : "233.0/26" },
+      "Database2"     : { "ZoneA" : "42.0/26", "ZoneB" : "106.0/26", "ZoneC" : "170.0/26", "ZoneD" : "234.0/26" },
+      "Database3"     : { "ZoneA" : "43.0/26", "ZoneB" : "107.0/26", "ZoneC" : "171.0/26", "ZoneD" : "235.0/26" },
+      "Database4"     : { "ZoneA" : "44.0/26", "ZoneB" : "108.0/26", "ZoneC" : "172.0/26", "ZoneD" : "236.0/26" },
+      "Database5"     : { "ZoneA" : "45.0/26", "ZoneB" : "109.0/26", "ZoneC" : "173.0/26", "ZoneD" : "237.0/26" },
+      "Database6"     : { "ZoneA" : "46.0/26", "ZoneB" : "110.0/26", "ZoneC" : "174.0/26", "ZoneD" : "238.0/26" },
+      "Database7"     : { "ZoneA" : "47.0/26", "ZoneB" : "111.0/26", "ZoneC" : "175.0/26", "ZoneD" : "239.0/26" },
+      "Queue"         : { "ZoneA" : "48.0/26", "ZoneB" : "112.0/26", "ZoneC" : "176.0/26", "ZoneD" : "240.0/26" },
+      "Queue1"        : { "ZoneA" : "49.0/26", "ZoneB" : "113.0/26", "ZoneC" : "177.0/26", "ZoneD" : "241.0/26" },
+      "Queue2"        : { "ZoneA" : "50.0/26", "ZoneB" : "114.0/26", "ZoneC" : "178.0/26", "ZoneD" : "242.0/26" },
+      "Queue3"        : { "ZoneA" : "51.0/26", "ZoneB" : "115.0/26", "ZoneC" : "179.0/26", "ZoneD" : "243.0/26" },
+      "Queue4"        : { "ZoneA" : "52.0/26", "ZoneB" : "116.0/26", "ZoneC" : "180.0/26", "ZoneD" : "244.0/26" },
+      "Queue5"        : { "ZoneA" : "53.0/26", "ZoneB" : "117.0/26", "ZoneC" : "181.0/26", "ZoneD" : "245.0/26" },
+      "Queue6"        : { "ZoneA" : "54.0/26", "ZoneB" : "118.0/26", "ZoneC" : "182.0/26", "ZoneD" : "246.0/26" },
+      "Queue7"        : { "ZoneA" : "55.0/26", "ZoneB" : "119.0/26", "ZoneC" : "183.0/26", "ZoneD" : "247.0/26" },
+      "Log"           : { "ZoneA" : "56.0/26", "ZoneB" : "120.0/26", "ZoneC" : "184.0/26", "ZoneD" : "248.0/26" },
+      "Log1"          : { "ZoneA" : "57.0/26", "ZoneB" : "121.0/26", "ZoneC" : "185.0/26", "ZoneD" : "249.0/26" },
+      "Build"         : { "ZoneA" : "58.0/26", "ZoneB" : "122.0/26", "ZoneC" : "186.0/26", "ZoneD" : "250.0/26" },
+      "Build1"        : { "ZoneA" : "59.0/26", "ZoneB" : "123.0/26", "ZoneC" : "187.0/26", "ZoneD" : "251.0/26" },
+      "Identity"      : { "ZoneA" : "60.0/26", "ZoneB" : "124.0/26", "ZoneC" : "188.0/26", "ZoneD" : "252.0/26" },
+      "Identity1"     : { "ZoneA" : "61.0/26", "ZoneB" : "125.0/26", "ZoneC" : "189.0/26", "ZoneD" : "253.0/26" },
+      "Management"    : { "ZoneA" : "62.0/26", "ZoneB" : "126.0/26", "ZoneC" : "190.0/26", "ZoneD" : "254.0/26" },
+      "Management1"   : { "ZoneA" : "63.0/26", "ZoneB" : "127.0/26", "ZoneC" : "191.0/26", "ZoneD" : "255.0/26" }
+    }
+  },
+
+  "Conditions" : {
+    "ConfigureDNS" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "HostedZoneStackName" }, "" ]}]},
+    "ConfigureMultiZoneNatGateways" : { "Fn::Equals" : [{ "Ref" : "UseMultiZoneNatGateways" }, "true" ]},
+    "ConfigureVPNGateway" : { "Fn::Equals" : [{ "Ref" : "UseVPNGateway" }, "true" ]}
+  },
+
+  "Resources" : {
+    "VPC" : {
+      "Type" : "AWS::EC2::VPC",
+      "Properties" : {
+        "EnableDnsSupport" : "true",
+        "EnableDnsHostnames" : "true",
+        "CidrBlock" : { "Ref" : "Network" },
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-VPC" }}
+        ]
+      }
+    },
+
+    "DHCPOptions" : {
+      "Type" : "AWS::EC2::DHCPOptions",
+      "Properties" : {
+        "DomainName" : { "Fn::ImportValue" : { "Fn::Sub" : "${HostedZoneStackName}-Domain" }},
+        "DomainNameServers" : [ "AmazonProvidedDNS" ],
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-DHCPOptions" }}
+        ]
+      },
+      "Condition" : "ConfigureDNS"
+    },
+
+    "VPCDHCPOptionsAssociation" : {
+      "Type" : "AWS::EC2::VPCDHCPOptionsAssociation",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "DhcpOptionsId" : { "Ref" : "DHCPOptions" }
+      },
+      "Condition" : "ConfigureDNS"
+    },
+
+    "InternetGateway" : {
+      "Type" : "AWS::EC2::InternetGateway",
+      "Properties" : {
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-InternetGateway" }}
+        ]
+      }
+    },
+
+    "InternetGatewayAttachment" : {
+       "Type" : "AWS::EC2::VPCGatewayAttachment",
+       "Properties" : {
+         "VpcId" : { "Ref" : "VPC" },
+         "InternetGatewayId" : { "Ref" : "InternetGateway" }
+       }
+    },
+
+    "PublicSubnetA" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Public", "ZoneA" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "true",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-PublicSubnetA" }}
+        ]
+      }
+    },
+
+    "PublicSubnetB" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Public", "ZoneB" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "true",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-PublicSubnetB" }}
+        ]
+      }
+    },
+
+    "Public1SubnetA" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Public1", "ZoneA" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "true",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-Public1SubnetA" }}
+        ]
+      }
+    },
+
+    "Public1SubnetB" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Public1", "ZoneB" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "true",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-Public1SubnetB" }}
+        ]
+      }
+    },
+
+    "WebSubnetA" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Web", "ZoneA" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "true",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-WebSubnetA" }}
+        ]
+      }
+    },
+
+    "WebSubnetB" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Web", "ZoneB" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "true",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-WebSubnetB" }}
+        ]
+      }
+    },
+
+    "ApplicationSubnetA" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Application", "ZoneA" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "false",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-ApplicationSubnetA" }}
+        ]
+      }
+    },
+
+    "ApplicationSubnetB" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Application", "ZoneB" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "false",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-ApplicationSubnetB" }}
+        ]
+      }
+    },
+
+    "Application1SubnetA" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Application1", "ZoneA" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "false",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-Application1SubnetA" }}
+        ]
+      }
+    },
+
+    "Application1SubnetB" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Application1", "ZoneB" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "false",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-Application1SubnetB" }}
+        ]
+      }
+    },
+
+    "Application2SubnetA" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Application2", "ZoneA" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "false",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-Application2SubnetA" }}
+        ]
+      }
+    },
+
+    "Application2SubnetB" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Application2", "ZoneB" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "false",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-Application2SubnetB" }}
+        ]
+      }
+    },
+
+    "Application3SubnetA" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Application3", "ZoneA" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "false",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-Application3SubnetA" }}
+        ]
+      }
+    },
+
+    "Application3SubnetB" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Application3", "ZoneB" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "false",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-Application3SubnetB" }}
+        ]
+      }
+    },
+
+    "DatabaseSubnetA" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Database", "ZoneA" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "false",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-DatabaseSubnetA" }}
+        ]
+      }
+    },
+
+    "DatabaseSubnetB" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Database", "ZoneB" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "false",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-DatabaseSubnetB" }}
+        ]
+      }
+    },
+
+    "Database1SubnetA" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Database1", "ZoneA" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "false",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-Database1SubnetA" }}
+        ]
+      }
+    },
+
+    "Database1SubnetB" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Database1", "ZoneB" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "false",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-Database1SubnetB" }}
+        ]
+      }
+    },
+
+    "QueueSubnetA" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Queue", "ZoneA" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "false",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-QueueSubnetA" }}
+        ]
+      }
+    },
+
+    "QueueSubnetB" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Queue", "ZoneB" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "false",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-QueueSubnetB" }}
+        ]
+      }
+    },
+
+    "Queue1SubnetA" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Queue1", "ZoneA" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "false",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-Queue1SubnetA" }}
+        ]
+      }
+    },
+
+    "Queue1SubnetB" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Queue1", "ZoneB" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "false",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-Queue1SubnetB" }}
+        ]
+      }
+    },
+
+    "LogSubnetA" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Log", "ZoneA" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "false",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-LogSubnetA" }}
+        ]
+      }
+    },
+
+    "LogSubnetB" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Log", "ZoneB" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "false",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-LogSubnetB" }}
+        ]
+      }
+    },
+
+    "Log1SubnetA" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Log1", "ZoneA" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "false",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-Log1SubnetA" }}
+        ]
+      }
+    },
+
+    "Log1SubnetB" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Log1", "ZoneB" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "false",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-Log1SubnetB" }}
+        ]
+      }
+    },
+
+    "BuildSubnetA" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Build", "ZoneA" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "false",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-BuildSubnetA" }}
+        ]
+      }
+    },
+
+    "BuildSubnetB" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Build", "ZoneB" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "false",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-BuildSubnetB" }}
+        ]
+      }
+    },
+
+    "IdentitySubnetA" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Identity", "ZoneA" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "false",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-IdentitySubnetA" }}
+        ]
+      }
+    },
+
+    "IdentitySubnetB" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::Join" : [ ".", [ "10", { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Ref" : "Network" }]}]},
+                                              { "Fn::FindInMap" : [ "SubnetMap", "Identity", "ZoneB" ]}]]},
+        "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "false",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-IdentitySubnetB" }}
+        ]
+      }
+    },
+
+    "PublicRouteTable" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-PublicRouteTable" }}
+        ]
+      }
+    },
+
+    "PublicDefaultRoute" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PublicRouteTable" },
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "GatewayId" : { "Ref" : "InternetGateway" }
+      },
+      "DependsOn" : "InternetGatewayAttachment"
+    },
+
+    "PublicSubnetARouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "PublicSubnetA" },
+        "RouteTableId" : { "Ref" : "PublicRouteTable" }
+      }
+    },
+
+    "PublicSubnetBRouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "PublicSubnetB" },
+        "RouteTableId" : { "Ref" : "PublicRouteTable" }
+      }
+    },
+
+    "Public1SubnetARouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "Public1SubnetA" },
+        "RouteTableId" : { "Ref" : "PublicRouteTable" }
+      }
+    },
+
+    "Public1SubnetBRouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "Public1SubnetB" },
+        "RouteTableId" : { "Ref" : "PublicRouteTable" }
+      }
+    },
+
+    "WebSubnetARouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "WebSubnetA" },
+        "RouteTableId" : { "Ref" : "PublicRouteTable" }
+      }
+    },
+
+    "WebSubnetBRouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "WebSubnetB" },
+        "RouteTableId" : { "Ref" : "PublicRouteTable" }
+      }
+    },
+
+    "NatGatewayAEIP" : {
+      "Type" : "AWS::EC2::EIP",
+      "Properties" : {
+        "Domain" : "vpc"
+      },
+      "DependsOn" : "InternetGatewayAttachment"
+    },
+
+    "NatGatewayBEIP" : {
+      "Type" : "AWS::EC2::EIP",
+      "Properties" : {
+        "Domain" : "vpc"
+      },
+      "DependsOn" : "InternetGatewayAttachment",
+      "Condition" : "ConfigureMultiZoneNatGateways"
+    },
+
+    "NatGatewayA" : {
+      "Type" : "AWS::EC2::NatGateway",
+      "Properties" : {
+        "AllocationId" : { "Fn::GetAtt" : [ "NatGatewayAEIP", "AllocationId" ]},
+        "SubnetId" : { "Ref" : "PublicSubnetA" }
+      }
+    },
+
+    "NatGatewayB" : {
+      "Type" : "AWS::EC2::NatGateway",
+      "Properties" : {
+        "AllocationId" : { "Fn::GetAtt" : [ "NatGatewayBEIP", "AllocationId" ]},
+        "SubnetId" : { "Ref" : "PublicSubnetB" }
+      },
+      "Condition" : "ConfigureMultiZoneNatGateways"
+    },
+
+    "PrivateRouteTableA" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-PrivateRouteTableA" }}
+        ]
+      }
+    },
+
+    "PrivateDefaultRouteA" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PrivateRouteTableA" },
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "NatGatewayId" : { "Ref" : "NatGatewayA" }
+      }
+    },
+
+    "ApplicationSubnetARouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PrivateRouteTableA" },
+        "SubnetId" : { "Ref" : "ApplicationSubnetA" }
+      }
+    },
+
+    "Application1SubnetARouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PrivateRouteTableA" },
+        "SubnetId" : { "Ref" : "Application1SubnetA" }
+      }
+    },
+
+    "Application2SubnetARouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PrivateRouteTableA" },
+        "SubnetId" : { "Ref" : "Application2SubnetA" }
+      }
+    },
+
+    "Application3SubnetARouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PrivateRouteTableA" },
+        "SubnetId" : { "Ref" : "Application3SubnetA" }
+      }
+    },
+
+    "DatabaseSubnetARouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PrivateRouteTableA" },
+        "SubnetId" : { "Ref" : "DatabaseSubnetA" }
+      }
+    },
+
+    "Database1SubnetARouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PrivateRouteTableA" },
+        "SubnetId" : { "Ref" : "Database1SubnetA" }
+      }
+    },
+
+    "QueueSubnetARouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PrivateRouteTableA" },
+        "SubnetId" : { "Ref" : "QueueSubnetA" }
+      }
+    },
+
+    "Queue1SubnetARouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PrivateRouteTableA" },
+        "SubnetId" : { "Ref" : "Queue1SubnetA" }
+      }
+    },
+
+    "LogSubnetARouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PrivateRouteTableA" },
+        "SubnetId" : { "Ref" : "LogSubnetA" }
+      }
+    },
+
+    "Log1SubnetARouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PrivateRouteTableA" },
+        "SubnetId" : { "Ref" : "Log1SubnetA" }
+      }
+    },
+
+    "BuildSubnetARouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PrivateRouteTableA" },
+        "SubnetId" : { "Ref" : "BuildSubnetA" }
+      }
+    },
+
+    "IdentitySubnetARouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PrivateRouteTableA" },
+        "SubnetId" : { "Ref" : "IdentitySubnetA" }
+      }
+    },
+
+    "PrivateRouteTableB" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-PrivateRouteTableB" }}
+        ]
+      }
+    },
+
+    "PrivateDefaultRouteB" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PrivateRouteTableB" },
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "NatGatewayId" : { "Fn::If" : [ "ConfigureMultiZoneNatGateways", { "Ref" : "NatGatewayB" }, { "Ref" : "NatGatewayA" }]}
+      }
+    },
+
+    "ApplicationSubnetBRouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PrivateRouteTableB" },
+        "SubnetId" : { "Ref" : "ApplicationSubnetB" }
+      }
+    },
+
+    "Application1SubnetBRouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PrivateRouteTableB" },
+        "SubnetId" : { "Ref" : "Application1SubnetB" }
+      }
+    },
+
+    "Application2SubnetBRouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PrivateRouteTableB" },
+        "SubnetId" : { "Ref" : "Application2SubnetB" }
+      }
+    },
+
+    "Application3SubnetBRouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PrivateRouteTableB" },
+        "SubnetId" : { "Ref" : "Application3SubnetB" }
+      }
+    },
+
+    "DatabaseSubnetBRouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PrivateRouteTableB" },
+        "SubnetId" : { "Ref" : "DatabaseSubnetB" }
+      }
+    },
+
+    "Database1SubnetBRouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PrivateRouteTableB" },
+        "SubnetId" : { "Ref" : "Database1SubnetB" }
+      }
+    },
+
+    "QueueSubnetBRouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PrivateRouteTableB" },
+        "SubnetId" : { "Ref" : "QueueSubnetB" }
+      }
+    },
+
+    "Queue1SubnetBRouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PrivateRouteTableB" },
+        "SubnetId" : { "Ref" : "Queue1SubnetB" }
+      }
+    },
+
+    "LogSubnetBRouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PrivateRouteTableB" },
+        "SubnetId" : { "Ref" : "LogSubnetB" }
+      }
+    },
+
+    "Log1SubnetBRouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PrivateRouteTableB" },
+        "SubnetId" : { "Ref" : "Log1SubnetB" }
+      }
+    },
+
+    "BuildSubnetBRouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PrivateRouteTableB" },
+        "SubnetId" : { "Ref" : "BuildSubnetB" }
+      }
+    },
+
+    "IdentitySubnetBRouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PrivateRouteTableB" },
+        "SubnetId" : { "Ref" : "IdentitySubnetB" }
+      }
+    },
+
+    "VPNGateway" : {
+      "Type" : "AWS::EC2::VPNGateway",
+      "Properties" : {
+        "Type" : "ipsec.1",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-VPNGateway" }}
+        ]
+      },
+      "Condition" : "ConfigureVPNGateway"
+    },
+
+    "VPNGatewayAttachment" : {
+      "Type" : "AWS::EC2::VPCGatewayAttachment",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "VpnGatewayId" : { "Ref" : "VPNGateway" }
+      },
+      "Condition" : "ConfigureVPNGateway"
+    },
+
+    "VPNGatewayRoutePropagation" : {
+      "Type" : "AWS::EC2::VPNGatewayRoutePropagation",
+      "Properties" : {
+        "VpnGatewayId" : { "Ref" : "VPNGateway" },
+        "RouteTableIds" : [{ "Ref" : "PublicRouteTable" }, { "Ref" : "PrivateRouteTableA" }, { "Ref" : "PrivateRouteTableB" }]
+      },
+      "DependsOn" : "VPNGatewayAttachment",
+      "Condition" : "ConfigureVPNGateway"
+    }
+  },
+
+  "Outputs" : {
+    "VPC" : {
+      "Description" : "The VPC",
+      "Value" :  { "Ref" : "VPC" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-VPC" }}
+    },
+
+    "VPCName" : {
+      "Description" : "The VPC Name",
+      "Value" :  { "Ref" : "Name" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-VPCName" }}
+    },
+
+    "VPCNetwork" : {
+      "Description" : "The VPC Network",
+      "Value" :  { "Fn::GetAtt" : [ "VPC", "CidrBlock" ]},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-VPCNetwork" }}
+    },
+
+    "VPCDomain" : {
+      "Description" : "The VPC Domain",
+      "Value" :  { "Fn::ImportValue" : { "Fn::Sub" : "${HostedZoneStackName}-Domain" }},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-VPCDomain" }},
+      "Condition" : "ConfigureDNS"
+    },
+
+    "DHCPOptions" : {
+      "Description" : "The DHCPOptions",
+      "Value" :  { "Ref" : "DHCPOptions" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-DHCPOptions" }},
+      "Condition" : "ConfigureDNS"
+    },
+
+    "PublicHostedZone" : {
+      "Description" : "The Public HostedZone",
+      "Value" : { "Fn::ImportValue" : { "Fn::Sub" : "${HostedZoneStackName}-HostedZone" }},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-PublicHostedZone" }},
+      "Condition" : "ConfigureDNS"
+    },
+
+    "VPNGateway" : {
+      "Description" : "The VPNGateway",
+      "Value" :  { "Ref" : "VPNGateway" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-VPNGateway" }},
+      "Condition" : "ConfigureVPNGateway"
+    },
+
+    "PublicSubnetA" : {
+      "Description" : "The Public Subnet in Availability Zone A",
+      "Value" :  { "Ref" : "PublicSubnetA" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-PublicSubnetA" }}
+    },
+
+    "PublicSubnetB" : {
+      "Description" : "The Public Subnet in Availability Zone B",
+      "Value" :  { "Ref" : "PublicSubnetB" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-PublicSubnetB" }}
+    },
+
+    "Public1SubnetA" : {
+      "Description" : "The Public1 Subnet in Availability Zone A",
+      "Value" :  { "Ref" : "Public1SubnetA" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-Public1SubnetA" }}
+    },
+
+    "Public1SubnetB" : {
+      "Description" : "The Public1 Subnet in Availability Zone B",
+      "Value" :  { "Ref" : "Public1SubnetB" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-Public1SubnetB" }}
+    },
+
+    "WebSubnetA" : {
+      "Description" : "The Web Subnet in Availability Zone A",
+      "Value" :  { "Ref" : "WebSubnetA" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-WebSubnetA" }}
+    },
+
+    "WebSubnetB" : {
+      "Description" : "The Web Subnet in Availability Zone B",
+      "Value" :  { "Ref" : "WebSubnetB" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-WebSubnetB" }}
+    },
+
+    "ApplicationSubnetA" : {
+      "Description" : "The Application Subnet in Availability Zone A",
+      "Value" :  { "Ref" : "ApplicationSubnetA" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-ApplicationSubnetA" }}
+    },
+
+    "ApplicationSubnetB" : {
+      "Description" : "The Application Subnet in Availability Zone B",
+      "Value" :  { "Ref" : "ApplicationSubnetB" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-ApplicationSubnetB" }}
+    },
+
+    "Application1SubnetA" : {
+      "Description" : "The Application1 Subnet in Availability Zone A",
+      "Value" :  { "Ref" : "Application1SubnetA" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-Application1SubnetA" }}
+    },
+
+    "Application1SubnetB" : {
+      "Description" : "The Application1 Subnet in Availability Zone B",
+      "Value" :  { "Ref" : "Application1SubnetB" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-Application1SubnetB" }}
+    },
+
+    "Application2SubnetA" : {
+      "Description" : "The Application2 Subnet in Availability Zone A",
+      "Value" :  { "Ref" : "Application2SubnetA" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-Application2SubnetA" }}
+    },
+
+    "Application2SubnetB" : {
+      "Description" : "The Application2 Subnet in Availability Zone B",
+      "Value" :  { "Ref" : "Application2SubnetB" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-Application2SubnetB" }}
+    },
+
+    "Application3SubnetA" : {
+      "Description" : "The Application3 Subnet in Availability Zone A",
+      "Value" :  { "Ref" : "Application3SubnetA" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-Application3SubnetA" }}
+    },
+
+    "Application3SubnetB" : {
+      "Description" : "The Application3 Subnet in Availability Zone B",
+      "Value" :  { "Ref" : "Application3SubnetB" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-Application3SubnetB" }}
+    },
+
+    "DatabaseSubnetA" : {
+      "Description" : "The Database Subnet in Availability Zone A",
+      "Value" :  { "Ref" : "DatabaseSubnetA" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-DatabaseSubnetA" }}
+    },
+
+    "DatabaseSubnetB" : {
+      "Description" : "The Database Subnet in Availability Zone B",
+      "Value" :  { "Ref" : "DatabaseSubnetB" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-DatabaseSubnetB" }}
+    },
+
+    "Database1SubnetA" : {
+      "Description" : "The Database1 Subnet in Availability Zone A",
+      "Value" :  { "Ref" : "Database1SubnetA" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-Database1SubnetA" }}
+    },
+
+    "Database1SubnetB" : {
+      "Description" : "The Database1 Subnet in Availability Zone B",
+      "Value" :  { "Ref" : "Database1SubnetB" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-Database1SubnetB" }}
+    },
+
+    "QueueSubnetA" : {
+      "Description" : "The Queue Subnet in Availability Zone A",
+      "Value" :  { "Ref" : "QueueSubnetA" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-QueueSubnetA" }}
+    },
+
+    "QueueSubnetB" : {
+      "Description" : "The Queue Subnet in Availability Zone B",
+      "Value" :  { "Ref" : "QueueSubnetB" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-QueueSubnetB" }}
+    },
+
+    "Queue1SubnetA" : {
+      "Description" : "The Queue1 Subnet in Availability Zone A",
+      "Value" :  { "Ref" : "Queue1SubnetA" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-Queue1SubnetA" }}
+    },
+
+    "Queue1SubnetB" : {
+      "Description" : "The Queue1 Subnet in Availability Zone B",
+      "Value" :  { "Ref" : "Queue1SubnetB" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-Queue1SubnetB" }}
+    },
+
+    "LogSubnetA" : {
+      "Description" : "The Log Subnet in Availability Zone A",
+      "Value" :  { "Ref" : "LogSubnetA" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-LogSubnetA" }}
+    },
+
+    "LogSubnetB" : {
+      "Description" : "The Log Subnet in Availability Zone B",
+      "Value" :  { "Ref" : "LogSubnetB" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-LogSubnetB" }}
+    },
+
+    "Log1SubnetA" : {
+      "Description" : "The Log1 Subnet in Availability Zone A",
+      "Value" :  { "Ref" : "Log1SubnetA" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-Log1SubnetA" }}
+    },
+
+    "Log1SubnetB" : {
+      "Description" : "The Log1 Subnet in Availability Zone B",
+      "Value" :  { "Ref" : "Log1SubnetB" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-Log1SubnetB" }}
+    },
+
+    "BuildSubnetA" : {
+      "Description" : "The Build Subnet in Availability Zone A",
+      "Value" :  { "Ref" : "BuildSubnetA" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-BuildSubnetA" }}
+    },
+
+    "BuildSubnetB" : {
+      "Description" : "The Build Subnet in Availability Zone B",
+      "Value" :  { "Ref" : "BuildSubnetB" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-BuildSubnetB" }}
+    },
+
+    "IdentitySubnetA" : {
+      "Description" : "The Identity Subnet in Availability Zone A",
+      "Value" :  { "Ref" : "IdentitySubnetA" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-IdentitySubnetA" }}
+    },
+
+    "IdentitySubnetB" : {
+      "Description" : "The Identity Subnet in Availability Zone B",
+      "Value" :  { "Ref" : "IdentitySubnetB" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-IdentitySubnetB" }}
+    },
+
+    "PublicRouteTable" : {
+      "Description" : "The Public RouteTable",
+      "Value" :  { "Ref" : "PublicRouteTable" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-PublicRouteTable" }}
+    },
+
+    "PrivateRouteTableA" : {
+      "Description" : "The Private RouteTable in Availability Zone A",
+      "Value" :  { "Ref" : "PrivateRouteTableA" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-PrivateRouteTableA" }}
+    },
+
+    "PrivateRouteTableB" : {
+      "Description" : "The Private RouteTable in Availability Zone B",
+      "Value" :  { "Ref" : "PrivateRouteTableB" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-PrivateRouteTableB" }}
+    }
+  }
+}

@@ -1,0 +1,166 @@
+``{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Core-StandardAMIFunctions Template. This creates Standard Lambda Functions related to AMIs within the Core Account.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "StandardBucketsStackName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Function Configuration" },
+          "Parameters" : [
+            "FunctionAMIFolder",
+            "FunctionGetAmazonLinuxImageIdObject",
+            "FunctionGetWindowsImageIdObject"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "StandardBucketsStackName" : { "default" : "StandardBuckets Stack Name" },
+        "FunctionAMIFolder" : { "default" : "Function AMI Folder" },
+        "FunctionGetAmazonLinuxImageIdObject" : { "default" : "Function GetAmazonLinuxImageId Object" },
+        "FunctionGetWindowsImageIdBucket" : { "default" : "Function GetWindowsImageId Object" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "StandardBucketsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Buckets",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardBuckets",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "FunctionAMIFolder" : {
+      "Description" : "Folder within S3 bucket containing AMI function objects",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "AMI",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "FunctionGetAmazonLinuxImageIdObject" : {
+      "Description" : "Object within S3 bucket and folder containing GetAmazonLinuxImageId function zipfile",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "getamazonlinuximageid.zip",
+      "AllowedPattern" : "^[-_.a-zA-Z0-9]*\\.zip$",
+      "ConstraintDescription" : "must be a valid zipfilename, not containing slashes."
+    },
+
+    "FunctionGetWindowsImageIdObject" : {
+      "Description" : "Object within S3 bucket and folder containing FunctionGetWindowsImageId function zipfile",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "getwindowsimageid.zip",
+      "AllowedPattern" : "^[-_.a-zA-Z0-9]*\\.zip$",
+      "ConstraintDescription" : "must be a valid zipfilename, not containing slashes."
+    }
+  },
+
+  "Resources" : {
+    "Role" : {
+      "Type" : "AWS::IAM::Role",
+      "Properties" : {
+        "AssumeRolePolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Principal" : { "Service" : [ "lambda.amazonaws.com" ]},
+            "Action" : [ "sts:AssumeRole" ]
+          }]
+        },
+        "Path" : "/",
+        "Policies" : [{
+          "PolicyName" : "DescribeImagesPolicy",
+          "PolicyDocument" : {
+            "Version" : "2012-10-17",
+            "Statement" : [{
+              "Effect" : "Allow",
+              "Action" : [
+                "ec2:DescribeImages"
+              ],
+              "Resource" : "*"
+            }]
+          }
+        },
+        {
+          "PolicyName" : "PutLambdaLogEventsPolicy",
+          "PolicyDocument" : {
+            "Version" : "2012-10-17",
+            "Statement" : [{
+              "Effect" : "Allow",
+              "Action" : [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+              ],
+              "Resource" : "arn:aws:logs:*:*:*"
+            }]
+          }
+        }]
+      }
+    },
+
+    "GetAmazonLinuxImageIdS3Function" : {
+      "Type" : "AWS::Lambda::Function",
+      "Properties" : {
+        "FunctionName" : "GetAmazonLinuxImageIdS3",
+        "Description" : "A Lambda function that looks up the latest Amazon Linux AMI ID for a given region and architecture.",
+        "Role" : { "Fn::GetAtt" : [ "Role", "Arn" ]},
+        "Runtime" : "nodejs4.3",
+        "Timeout" : "30",
+        "Handler" : "getamazonlinuximageid.handler",
+        "Code" : {
+          "S3Bucket" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-FunctionsBucket" }},
+          "S3Key" : { "Fn::Sub" : "${FunctionAMIFolder}/${FunctionGetAmazonLinuxImageIdObject}" }
+        }
+      }
+    },
+
+    "GetWindowsImageIdS3Function" : {
+      "Type" : "AWS::Lambda::Function",
+      "Properties" : {
+        "FunctionName" : "GetWindowsImageIdS3",
+        "Description" : "A Lambda function that looks up the latest Windows AMI ID for a given region and architecture.",
+        "Role" : { "Fn::GetAtt" : [ "Role", "Arn" ]},
+        "Runtime" : "nodejs4.3",
+        "Timeout" : "30",
+        "Handler" : "getwindowsimageid.handler",
+        "Code" : {
+          "S3Bucket" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-FunctionsBucket" }},
+          "S3Key" : { "Fn::Sub" : "${FunctionAMIFolder}/${FunctionGetWindowsImageIdObject}" }
+        }
+      }
+    }
+  },
+
+  "Outputs" : {
+    "GetAmazonLinuxImageIdS3FunctionArn" : {
+      "Description" : "The GetAmazonLinuxImageIdS3 Lambda Function ARN",
+      "Value" :  { "Fn::GetAtt" : [ "GetAmazonLinuxImageIdS3Function", "Arn" ]},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-GetAmazonLinuxImageIdS3FunctionArn" }}
+    },
+
+    "GetWindowsImageIdS3FunctionArn" : {
+      "Description" : "The GetWindowsImageIdS3 Lambda Function ARN",
+      "Value" :  { "Fn::GetAtt" : [ "GetWindowsImageIdS3Function", "Arn" ]},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-GetWindowsImageIdS3FunctionArn" }}
+    }
+  }
+}

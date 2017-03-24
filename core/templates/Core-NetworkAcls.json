@@ -83,6 +83,22 @@
       }
     },
 
+    "Public1SubnetANetworkAclAssociation" : {
+      "Type" : "AWS::EC2::SubnetNetworkAclAssociation",
+      "Properties" : {
+        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-Public1SubnetA" }},
+        "NetworkAclId" : { "Ref" : "PublicNetworkAcl" }
+      }
+    },
+
+    "Public1SubnetBNetworkAclAssociation" : {
+      "Type" : "AWS::EC2::SubnetNetworkAclAssociation",
+      "Properties" : {
+        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-Public1SubnetB" }},
+        "NetworkAclId" : { "Ref" : "PublicNetworkAcl" }
+      }
+    },
+
     "WebSubnetANetworkAclAssociation" : {
       "Type" : "AWS::EC2::SubnetNetworkAclAssociation",
       "Properties" : {
@@ -165,66 +181,34 @@
       }
     },
 
-    "ProductionQueueSubnetANetworkAclAssociation" : {
+    "QueueSubnetANetworkAclAssociation" : {
       "Type" : "AWS::EC2::SubnetNetworkAclAssociation",
       "Properties" : {
-        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-ProductionQueueSubnetA" }},
+        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-QueueSubnetA" }},
         "NetworkAclId" : { "Ref" : "PrivateNetworkAcl" }
       }
     },
 
-    "ProductionQueueSubnetBNetworkAclAssociation" : {
+    "QueueSubnetBNetworkAclAssociation" : {
       "Type" : "AWS::EC2::SubnetNetworkAclAssociation",
       "Properties" : {
-        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-ProductionQueueSubnetB" }},
+        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-QueueSubnetB" }},
         "NetworkAclId" : { "Ref" : "PrivateNetworkAcl" }
       }
     },
 
-    "StagingQueueSubnetANetworkAclAssociation" : {
+    "IdentitySubnetANetworkAclAssociation" : {
       "Type" : "AWS::EC2::SubnetNetworkAclAssociation",
       "Properties" : {
-        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-StagingQueueSubnetA" }},
+        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-IdentitySubnetA" }},
         "NetworkAclId" : { "Ref" : "PrivateNetworkAcl" }
       }
     },
 
-    "StagingQueueSubnetBNetworkAclAssociation" : {
+    "IdentitySubnetBNetworkAclAssociation" : {
       "Type" : "AWS::EC2::SubnetNetworkAclAssociation",
       "Properties" : {
-        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-StagingQueueSubnetB" }},
-        "NetworkAclId" : { "Ref" : "PrivateNetworkAcl" }
-      }
-    },
-
-    "TestingQueueSubnetANetworkAclAssociation" : {
-      "Type" : "AWS::EC2::SubnetNetworkAclAssociation",
-      "Properties" : {
-        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-TestingQueueSubnetA" }},
-        "NetworkAclId" : { "Ref" : "PrivateNetworkAcl" }
-      }
-    },
-
-    "TestingQueueSubnetBNetworkAclAssociation" : {
-      "Type" : "AWS::EC2::SubnetNetworkAclAssociation",
-      "Properties" : {
-        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-TestingQueueSubnetB" }},
-        "NetworkAclId" : { "Ref" : "PrivateNetworkAcl" }
-      }
-    },
-
-    "DevelopmentQueueSubnetANetworkAclAssociation" : {
-      "Type" : "AWS::EC2::SubnetNetworkAclAssociation",
-      "Properties" : {
-        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-DevelopmentQueueSubnetA" }},
-        "NetworkAclId" : { "Ref" : "PrivateNetworkAcl" }
-      }
-    },
-
-    "DevelopmentQueueSubnetBNetworkAclAssociation" : {
-      "Type" : "AWS::EC2::SubnetNetworkAclAssociation",
-      "Properties" : {
-        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-DevelopmentQueueSubnetB" }},
+        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-IdentitySubnetB" }},
         "NetworkAclId" : { "Ref" : "PrivateNetworkAcl" }
       }
     }

@@ -1,0 +1,125 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Example-SubnetCalculatorCustomResource Template. This demonstrates how to use the SubnetCalculator to generate a Map of Subnet CIDRs, based on a VPC CIDR, the number of Addresses in each Subnet, the number of Tiers, and the number of Availabliity Zones.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "VPC Configuration" },
+          "Parameters" : [
+            "Name",
+            "Network",
+            "Addresses",
+            "Subnets",
+            "AvailabilityZones"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "Name" : { "default" : "Name" },
+        "Network" : { "default" : "Network" },
+        "Addresses" : { "default" : "Addresses" },
+        "Subnets" : { "default" : "Subnets" },
+        "AvailabilityZones" : { "default" : "Availability Zones" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "Name" : {
+      "Description" : "Name of the Environment associated with the Stack",
+      "Type" : "String",
+      "Default" : "Production",
+      "AllowedValues" : [ "Production", "Staging", "Testing", "Development" ],
+      "ConstraintDescription" : "must be one of the following: Production, Staging, Testing, Development."
+    },
+
+    "Network" : {
+      "Description" : "VPC Network",
+      "Type" : "String",
+      "Default" : "172.21.0.0/21"
+    },
+
+    "Addresses" : {
+      "Description" : "Number of Addresses per Subnet",
+      "Type" : "Number",
+      "Default" : 32,
+      "AllowedValues" : [ 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 ],
+      "ConstraintDescription" : "must be one of the following: 16, 32, 64, 128, 256, 512, 1024, 2048 or 4096."
+    },
+
+    "Subnets" : {
+      "Description" : "Number of Subnets per AvailabilityZone",
+      "Type" : "Number",
+      "Default" : 32,
+      "AllowedValues" : [ 2, 4, 8, 16, 32, 64 ],
+      "ConstraintDescription" : "must be one of the following: 2, 4, 8, 16, 32 or 64."
+    },
+
+    "AvailabilityZones" : {
+      "Description" : "Number of AvailabilityZones",
+      "Type" : "String",
+      "Default" : "2",
+      "AllowedValues" : [ 1, 2, 4 ],
+      "ConstraintDescription" : "must be one of the following: 1, 2 or 4."
+    }
+  },
+
+  "Resources" : {
+    "SubnetCalculator" : {
+      "Type" : "Custom::SubnetCalculator",
+      "Properties" : {
+        "ServiceToken" : { "Fn::Sub" : "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:SubnetCalculator" },
+        "VpcCidrBlock" : { "Ref" : "Network" },
+        "Addresses" : { "Ref" : "Addresses" },
+        "Subnets" : { "Ref" : "Subnets" },
+        "AvailabilityZones" : { "Ref" : "AvailabilityZones" }
+      }
+    }
+  },
+
+  "Outputs" : {
+    "Subnet0A" : {
+      "Description" : "The Subnet0A Subnet",
+      "Value" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet0A" ]}
+    },
+
+    "Subnet1A" : {
+      "Description" : "The Subnet1A Subnet",
+      "Value" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet1A" ]}
+    },
+
+    "Subnet2A" : {
+      "Description" : "The Subnet2A Subnet",
+      "Value" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet2A" ]}
+    },
+
+    "Subnet3A" : {
+      "Description" : "The Subnet3A Subnet",
+      "Value" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet3A" ]}
+    },
+
+    "Subnet0B" : {
+      "Description" : "The Subnet0B Subnet",
+      "Value" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet0B" ]}
+    },
+
+    "Subnet1B" : {
+      "Description" : "The Subnet1B Subnet",
+      "Value" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet1B" ]}
+    },
+
+    "Subnet2B" : {
+      "Description" : "The Subnet2B Subnet",
+      "Value" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet2B" ]}
+    },
+
+    "Subnet3B" : {
+      "Description" : "The Subnet3B Subnet",
+      "Value" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet3B" ]}
+    }
+  }
+}

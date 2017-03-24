@@ -28,7 +28,8 @@
         {
           "Label" : { "default" : "Environment Configuration" },
           "Parameters" : [
-            "EnvironmentSize"
+            "EnvironmentSize",
+            "InstanceOS"
           ]
         },
         {
@@ -65,6 +66,7 @@
         "CompanyName" : { "default" : "Company Name" },
         "SystemName" : { "default" : "System Name" },
         "EnvironmentSize" : { "default" : "Environment Size" },
+        "InstanceOS" : { "default" : "Instance Operating System" },
         "ApplicationsBucket" : { "default" : "Applications Bucket" },
         "ApplicationName" : { "default" : "Application Name" },
         "ApplicationDomain" : { "default" : "Application Domain Name" },
@@ -110,7 +112,7 @@
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
-      "Default" : "Demo",
+      "Default" : "Travel",
       "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
@@ -131,6 +133,14 @@
       "Default" : "micro",
       "AllowedValues" : [ "micro", "small", "medium", "large", "xlarge" ],
       "ConstraintDescription" : "must be micro, small, medium, large or xlarge."
+    },
+
+    "InstanceOS" : {
+      "Description" : "The Operating System to use for Instances",
+      "Type" : "String",
+      "Default" : "AMZN",
+      "AllowedValues" : [ "AMZN", "RHEL", "UBNT" ],
+      "ConstraintDescription" : "must be AMZN = \"Amazon Linux 2016.09.1\", RHEL = \"RHEL 7.3\" or UBNT = \"Ubuntu 16.04\"."
     },
 
     "ApplicationsBucket" : {
@@ -270,20 +280,21 @@
 
   "Mappings" : {
     "ImageIdMap" : {
-      "us-east-1"      : { "AMI" : "ami-9be6f38c" },
-      "us-east-2"      : { "AMI" : "ami-38cd975d" },
-      "us-west-1"      : { "AMI" : "ami-b73d6cd7" },
-      "us-west-2"      : { "AMI" : "ami-1e299d7e" },
-      "ca-central-1"   : { "AMI" : "ami-eb20928f" },
-      "sa-east-1"      : { "AMI" : "ami-bb40d8d7" },
-      "eu-west-1"      : { "AMI" : "ami-c51e3eb6" },
-      "eu-west-2"      : { "AMI" : "ami-bfe0eadb" },
-      "eu-central-1"   : { "AMI" : "ami-211ada4e" },
-      "ap-northeast-1" : { "AMI" : "ami-9f0c67f8" },
-      "ap-northeast-2" : { "AMI" : "ami-94bb6dfa" },
-      "ap-southeast-1" : { "AMI" : "ami-4dd6782e" },
-      "ap-southeast-2" : { "AMI" : "ami-28cff44b" },
-      "ap-south-1"     : { "AMI" : "ami-9fc7b0f0" }
+      "AMI"            : { "AMZN" : "Amazon Linux 2016.09.1", "RHEL" : "RHEL 7.3", "UBNT" : "Ubuntu 16.04" },
+      "us-east-1"      : { "AMZN" : "ami-0b33d91d", "RHEL" : "ami-b63769a1", "UBNT" : "ami-f4cc1de2" },
+      "us-east-2"      : { "AMZN" : "ami-c55673a0", "RHEL" : "ami-0932686c", "UBNT" : "ami-fcc19b99" },
+      "us-west-1"      : { "AMZN" : "ami-165a0876", "RHEL" : "ami-2cade64c", "UBNT" : "ami-16efb076" },
+      "us-west-2"      : { "AMZN" : "ami-f173cc91", "RHEL" : "ami-6f68cf0f", "UBNT" : "ami-a58d0dc5" },
+      "ca-central-1"   : { "AMZN" : "ami-ebed508f", "RHEL" : "ami-9062d0f4", "UBNT" : "ami-7b74c91f" },
+      "eu-west-1"      : { "AMZN" : "ami-70edb016", "RHEL" : "ami-02ace471", "UBNT" : "ami-405f7226" },
+      "eu-central-1"   : { "AMZN" : "ami-af0fc0c0", "RHEL" : "ami-e4c63e8b", "UBNT" : "ami-3f1bd150" },
+      "eu-west-2"      : { "AMZN" : "ami-f1949e95", "RHEL" : "ami-9c363cf8", "UBNT" : "ami-ede2e889" },
+      "ap-southeast-1" : { "AMZN" : "ami-dc9339bf", "RHEL" : "ami-2c95344f", "UBNT" : "ami-ee7bca8d" },
+      "ap-southeast-2" : { "AMZN" : "ami-1c47407f", "RHEL" : "ami-39ac915a", "UBNT" : "ami-4e686b2d" },
+      "ap-northeast-2" : { "AMZN" : "ami-dac312b4", "RHEL" : "ami-44db152a", "UBNT" : "ami-0500d06b" },
+      "ap-northeast-1" : { "AMZN" : "ami-56d4ad31", "RHEL" : "ami-5de0433c", "UBNT" : "ami-1bfdb67c" },
+      "ap-south-1"     : { "AMZN" : "ami-f9daac96", "RHEL" : "ami-cdbdd7a2", "UBNT" : "ami-5f3d4d30" },
+      "sa-east-1"      : { "AMZN" : "ami-80086dec", "RHEL" : "ami-7de77b11", "UBNT" : "ami-af0462c3" }
     },
 
     "InstanceTypeMap" : {
@@ -294,7 +305,7 @@
   "Conditions" : {
     "ConfigureKey" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "KeyName" }, "" ]}]},
     "DownloadApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationsBucket" }, "" ]}]},
-    "ConfigureDNS" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationDomain" }, "" ]}]},
+    "ConfigureDomainNames" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationDomain" }, "" ]}]},
     "ConfigureAdministratorNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "AdministratorNetwork1" }, "" ]}]},
     "ConfigureAdministratorNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "AdministratorNetwork2" }, "" ]}]},
     "ConfigureAdministratorNetwork3" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "AdministratorNetwork3" }, "" ]}]},
@@ -342,18 +353,10 @@
       "Condition" : "DownloadApplication"
     },
 
-    "InstanceProfile" : {
-      "Type" : "AWS::IAM::InstanceProfile",
-      "Properties" : {
-        "Path" : "/",
-        "Roles" : [{ "Ref" : "Role" }]
-      }
-    },
-
     "SecurityGroup" : {
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
-        "GroupDescription" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }, "SecurityGroup" ]]},
+        "GroupDescription" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "SecurityGroup" ]]},
         "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPC" }},
         "SecurityGroupIngress" : [
           { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "AdministratorNetwork" }},
@@ -382,8 +385,16 @@
           { "Fn::If" : [ "ConfigurePrivateNetwork3", { "IpProtocol" : "tcp",  "FromPort" : "80", "ToPort" : "80", "CidrIp" : { "Ref" : "PrivateNetwork3" }}, { "Ref" : "AWS::NoValue" }]}
         ],
         "Tags" : [
-          { "Key" : "Name", "Value" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }, "SecurityGroup" ]]}}
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "SecurityGroup" ]]}}
         ]
+      }
+    },
+
+    "InstanceProfile" : {
+      "Type" : "AWS::IAM::InstanceProfile",
+      "Properties" : {
+        "Path" : "/",
+        "Roles" : [{ "Ref" : "Role" }]
       }
     },
 
@@ -402,6 +413,7 @@
             "All" : [
               "UpgradeOS",
               "ConfigureOS",
+              "ConfigureHostname",
               "ConfigureCFN",
               "InstallApache",
               { "Fn::If" : [ "DownloadApplication", "DownloadApplication", "ConfigureApplication" ]}
@@ -443,6 +455,30 @@
                 "mode"  : "000644",
                 "owner" : "root",
                 "group" : "root"
+              }
+            }
+          },
+          "ConfigureHostname" : {
+            "files" : {
+              "/root/bin/sethostname" : {
+                "content" : { "Fn::Join" : [ "", [
+                  "#!/bin/bash\n",
+                  "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)\n",
+                  "region=${zone::-1}\n",
+                  "hostname=", { "Fn::Join" : [ "", [ { "Ref" : "ApplicationDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]}, "\n",
+                  "address=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)\n",
+                  "sed -i -e \"/^$address/d\" -e \"$ a$address $hostname\" /etc/hosts\n",
+                  "hostname $hostname\n"
+                ]]},
+                "mode"  : "000700",
+                "owner" : "root",
+                "group" : "root"
+              }
+            },
+            "commands" : {
+              "01_sethostname" : {
+                "command" : "/root/bin/sethostname",
+                "ignoreErrors" : "false"
               }
             }
           },
@@ -552,19 +588,20 @@
         }
       },
       "Properties" : {
-        "ImageId" : { "Fn::FindInMap" : [ "ImageIdMap", { "Ref" : "AWS::Region" } , "AMI" ]},
+        "ImageId" : { "Fn::FindInMap" : [ "ImageIdMap", { "Ref" : "AWS::Region" } , { "Ref" : "InstanceOS" }]},
         "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "WebServer", { "Ref" : "EnvironmentSize" }]},
         "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
         "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
         "NetworkInterfaces" : [{
+          "Description"              : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "NetworkInterface0" ]]},
+          "DeviceIndex"              : "0",
+          "SubnetId"                 : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-WebSubnetA" }},
           "GroupSet"                 : [{ "Ref" :  "SecurityGroup" }],
           "AssociatePublicIpAddress" : "true",
-          "DeviceIndex"              : "0",
-          "DeleteOnTermination"      : "true",
-          "SubnetId"                 : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-WebSubnetA" }}
+          "DeleteOnTermination"      : "true"
         }],
         "Tags" : [
-          { "Key" : "Name", "Value" : { "Fn::Join" : [ "", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }, "Instance" ]]}}
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "Instance" ]]}}
         ],
         "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "", [
           "#!/bin/bash -xe\n",
@@ -601,7 +638,7 @@
         "TTL" : "900",
         "ResourceRecords" : [{ "Fn::GetAtt" : [ "Instance", "PublicIp" ]}]
       },
-      "Condition" : "ConfigureDNS"
+      "Condition" : "ConfigureDomainNames"
     }
   },
 
@@ -615,7 +652,7 @@
     "URL" : {
       "Description" : "The Sample Website URL",
       "Value" :  { "Fn::Join" : [ "", [ "http://", { "Ref" : "ApplicationDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "/" ]]},
-      "Condition" : "ConfigureDNS"
+      "Condition" : "ConfigureDomainNames"
     }
   }
 }

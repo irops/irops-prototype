@@ -23,7 +23,7 @@
           "Label" : { "default" : "Template Configuration" },
           "Parameters" : [
             "TemplatesBucket",
-            "TemplatesPath"
+            "TemplatesFolder"
           ]
         },
         {
@@ -36,7 +36,8 @@
         {
           "Label" : { "default" : "Environment Configuration" },
           "Parameters" : [
-            "EnvironmentSize"
+            "EnvironmentSize",
+            "InstanceOS"
           ]
         },
         {
@@ -77,10 +78,11 @@
         "StandardTopicsStackName" : { "default" : "StandardTopics Stack Name" },
         "KeyName" : { "default" : "Key Name" },
         "TemplatesBucket" : { "default" : "Templates Bucket" },
-        "TemplatesPath" : { "default" : "Templates Path" },
+        "TemplatesFolder" : { "default" : "Templates Folder" },
         "CompanyName" : { "default" : "Company Name" },
         "SystemName" : { "default" : "System Name" },
         "EnvironmentSize" : { "default" : "Environment Size" },
+        "InstanceOS" : { "default" : "Instance Operating System" },
         "ApplicationsBucket" : { "default" : "Applications Bucket" },
         "ApplicationName" : { "default" : "Application Name" },
         "ApplicationDomain" : { "default" : "Application Domain Name" },
@@ -88,8 +90,8 @@
         "UseLogMonitoring" : { "default" : "Use Log Monitoring" },
         "LogRetention" : { "default" : "Log Retention" },
         "UseSchedule" : { "default" : "Use Schedule" },
-        "IncreaseTime" : { "default" : "Increase Time" },
-        "DecreaseTime" : { "default" : "Decrease Time" },
+        "NormalSchedule" : { "default" : "Normal Schedule" },
+        "ReducedSchedule" : { "default" : "Reduced Schedule" },
         "AdministratorNetwork" : { "default" : "Administrator Network" },
         "AdministratorNetwork1" : { "default" : "Additional Administrator Network 1" },
         "AdministratorNetwork2" : { "default" : "Additional Administrator Network 2" },
@@ -145,13 +147,13 @@
       "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
     },
 
-    "TemplatesPath" : {
-      "Description" : "Path within the S3 bucket containing Templates referenced by this Template",
+    "TemplatesFolder" : {
+      "Description" : "Folder within the S3 bucket containing Templates referenced by this Template",
       "Type" : "String",
       "MaxLength" : 64,
-      "Default" : "/example",
-      "AllowedPattern" : "(^$|/[-/a-zA-Z0-9]*$)",
-      "ConstraintDescription" : "must begin with a slash, and contain alphanumeric characters, slashes and dashes, if specified."
+      "Default" : "example",
+      "AllowedPattern" : "^[-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must contain alphanumeric characters and dashes."
     },
 
     "CompanyName" : {
@@ -159,7 +161,7 @@
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
-      "Default" : "Demo",
+      "Default" : "Travel",
       "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
@@ -180,6 +182,14 @@
       "Default" : "micro",
       "AllowedValues" : [ "micro", "small", "medium", "large", "xlarge" ],
       "ConstraintDescription" : "must be micro, small, medium, large or xlarge."
+    },
+
+    "InstanceOS" : {
+      "Description" : "The Operating System to use for Instances",
+      "Type" : "String",
+      "Default" : "AMZN",
+      "AllowedValues" : [ "AMZN", "RHEL", "UBNT" ],
+      "ConstraintDescription" : "must be AMZN = \"Amazon Linux 2016.09.1\", RHEL = \"RHEL 7.3\" or UBNT = \"Ubuntu 16.04\"."
     },
 
     "ApplicationsBucket" : {
@@ -360,14 +370,14 @@
   "Conditions" : {
     "ConfigureGlobalS3" : { "Fn::Equals" : [{ "Ref" : "AWS::Region" }, "us-east-1" ]},
     "ConfigureLogs" : { "Fn::Equals" : [{ "Ref" : "UseLogMonitoring" }, "true" ]},
-    "ConfigureDNS" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationDomain" }, "" ]}]}
+    "ConfigureDomainNames" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationDomain" }, "" ]}]}
   },
 
   "Resources" : {
     "Role" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, { "Ref" : "TemplatesPath" }, "/Example-NestedWebServers-Role.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, { "Ref" : "TemplatesFolder" }, "/Example-NestedWebServers-Role.json" ]]},
         "Parameters" : {
           "ApplicationsBucket" : { "Ref" : "ApplicationsBucket" },
           "ApplicationName" : { "Ref" : "ApplicationName" },
@@ -379,7 +389,7 @@
     "SecurityGroups" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, { "Ref" : "TemplatesPath" }, "/Example-NestedWebServers-SecurityGroups.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplatesFolder" }, "/Example-NestedWebServers-SecurityGroups.json" ]]},
         "Parameters" : {
           "VPCStackName" : { "Ref" : "VPCStackName" },
           "ApplicationName" : { "Ref" : "ApplicationName" },
@@ -402,7 +412,7 @@
     "Logs" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, { "Ref" : "TemplatesPath" }, "/Example-NestedWebServers-Logs.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplatesFolder" }, "/Example-NestedWebServers-Logs.json" ]]},
         "Parameters" : {
           "VPCStackName" : { "Ref" : "VPCStackName" },
           "StandardTopicsStackName" : { "Ref" : "StandardTopicsStackName" },
@@ -418,7 +428,7 @@
     "LoadBalancer" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, { "Ref" : "TemplatesPath" }, "/Example-NestedWebServers-LoadBalancer.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplatesFolder" }, "/Example-NestedWebServers-LoadBalancer.json" ]]},
         "Parameters" : {
           "VPCStackName" : { "Ref" : "VPCStackName" },
           "LoadBalancerSecurityGroup" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.LoadBalancerSecurityGroup" ]},
@@ -427,22 +437,23 @@
       }
     },
 
-
-    "WebServers" : {
+    "Instances" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, { "Ref" : "TemplatesPath" }, "/Example-NestedWebServers-WebServers.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplatesFolder" }, "/Example-NestedWebServers-Instances.json" ]]},
         "Parameters" : {
           "VPCStackName" : { "Ref" : "VPCStackName" },
           "StandardTopicsStackName" : { "Ref" : "StandardTopicsStackName" },
           "KeyName" : { "Ref" : "KeyName" },
           "Role" : { "Fn::GetAtt" : [ "Role", "Outputs.Role" ]},
-          "WebServerSecurityGroup" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.WebServerSecurityGroup" ]},
-          "LogGroup" : { "Fn::GetAtt" : [ "Logs", "Outputs.LogGroup" ]},
+          "InstanceSecurityGroup" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.InstanceSecurityGroup" ]},
+          "LogGroup" : { "Fn::If" : [ "ConfigureLogs", { "Fn::GetAtt" : [ "Logs", "Outputs.LogGroup" ]}, "" ]},
           "LoadBalancer" : { "Fn::GetAtt" : [ "LoadBalancer", "Outputs.LoadBalancer" ]},
           "EnvironmentSize" : { "Ref" : "EnvironmentSize" },
+          "InstanceOS" : { "Ref" : "InstanceOS" },
           "ApplicationsBucket" : { "Ref" : "ApplicationsBucket" },
           "ApplicationName" : { "Ref" : "ApplicationName" },
+          "ApplicationDomain" : { "Ref" : "ApplicationDomain" },
           "ApplicationVersion" : { "Ref" : "ApplicationVersion" },
           "UseLogMonitoring" : { "Ref" : "UseLogMonitoring" },
           "UseSchedule" : { "Ref" : "UseSchedule" },
@@ -452,10 +463,10 @@
       }
     },
 
-    "DNS" : {
+    "DomainNames" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, { "Ref" : "TemplatesPath" }, "/Example-NestedWebServers-DNS.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplatesFolder" }, "/Example-NestedWebServers-DomainNames.json" ]]},
         "Parameters" : {
           "VPCStackName" : { "Ref" : "VPCStackName" },
           "LoadBalancerHostedZoneId" : { "Fn::GetAtt" : [ "LoadBalancer", "Outputs.LoadBalancerHostedZoneId" ]},
@@ -464,7 +475,7 @@
           "ApplicationDomain" : { "Ref" : "ApplicationDomain" }
         }
       },
-      "Condition" : "ConfigureDNS"
+      "Condition" : "ConfigureDomainNames"
     }
   },
 
@@ -475,16 +486,16 @@
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-LoadBalancerSecurityGroup" }}
     },
 
-    "WebServerSecurityGroup" : {
-      "Description" : "The WebServer SecurityGroup",
-      "Value" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.WebServerSecurityGroup" ]},
-      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-WebServerSecurityGroup" }}
+    "InstanceSecurityGroup" : {
+      "Description" : "The Instance SecurityGroup",
+      "Value" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.InstanceSecurityGroup" ]},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-InstanceSecurityGroup" }}
     },
 
     "URL" : {
       "Description" : "The Sample Website URL",
       "Value" :  { "Fn::Join" : [ "", [ "http://", { "Ref" : "ApplicationDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "/" ]]},
-      "Condition" : "ConfigureDNS"
+      "Condition" : "ConfigureDomainNames"
     }
   }
 }

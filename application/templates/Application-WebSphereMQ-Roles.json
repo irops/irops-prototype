@@ -1,0 +1,215 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Application-WebSphereMQ-Roles Template. This is a layer in the WebSphereMQ application, which creates the Roles and attached Policies.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Application Dependencies Configuration" },
+          "Parameters" : [
+            "ProductsBucket",
+            "ProductWebSphereMQFolder",
+            "ConfigurationsBucket",
+            "ConfigurationWebSphereMQFolder"
+          ]
+        },
+        {
+          "Label" : { "default" : "Application Configuration" },
+          "Parameters" : [
+            "ApplicationName",
+            "UseFileSystemMonitoring",
+            "UseLogMonitoring"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "ProductsBucket" : { "default" : "Products Bucket" },
+        "ProductWebSphereMQFolder" : { "default" : "Product WebSphereMQ Folder" },
+        "ConfigurationsBucket" : { "default" : "Configurations Bucket" },
+        "ConfigurationWebSphereMQFolder" : { "default" : "Configuration WebSphereMQ Folder" },
+        "ApplicationName" : { "default" : "Application Name" },
+        "UseFileSystemMonitoring" : { "default" : "Use FileSystem Monitoring" },
+        "UseLogMonitoring" : { "default" : "Use Log Monitoring" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "ProductsBucket" : {
+      "Description" : "S3 bucket containing 3rd-Party Products to be deployed",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[a-z][-a-z0-9]*$)",
+      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
+    },
+
+    "ProductWebSphereMQFolder" : {
+      "Description" : "Folder within S3 bucket containing WebSphereMQ product objects",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "WebSphereMQ",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "ConfigurationsBucket" : {
+      "Description" : "S3 bucket containing Configurations to be deployed",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[a-z][-a-z0-9]*$)",
+      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
+    },
+
+    "ConfigurationWebSphereMQFolder" : {
+      "Description" : "Folder within S3 bucket containing WebSphereMQ configuration objects",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "WebSphereMQ",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "ApplicationName" : {
+      "Description" : "Name of the Application associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "WebSphereMQ",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "UseFileSystemMonitoring" : {
+      "Description" : "Send EFS NFS Statistics to CloudWatch as Custom Metrics",
+      "Type" : "String",
+      "Default" : "true",
+      "AllowedValues" : [ "true", "false" ],
+      "ConstraintDescription" : "must be either true or false."
+    },
+
+    "UseLogMonitoring" : {
+      "Description" : "Send Logs to CloudWatch Logs",
+      "Type" : "String",
+      "Default" : "true",
+      "AllowedValues" : [ "true", "false" ],
+      "ConstraintDescription" : "must be either true or false."
+    }
+  },
+
+  "Conditions" : {
+    "DownloadProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ProductsBucket" }, "" ]}]},
+    "DownloadConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ConfigurationsBucket" }, "" ]}]},
+    "ConfigureFileSystemMonitoring" : { "Fn::Equals" : [{ "Ref" : "UseFileSystemMonitoring" }, "true" ]},
+    "ConfigureLogs" : { "Fn::Equals" : [{ "Ref" : "UseLogMonitoring" }, "true" ]}
+  },
+
+  "Resources" : {
+    "Role" : {
+      "Type" : "AWS::IAM::Role",
+      "Properties" : {
+        "AssumeRolePolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Principal" : { "Service" : [ "ec2.amazonaws.com" ]},
+            "Action" : [ "sts:AssumeRole" ]
+          }]
+        },
+        "Path" : "/"
+      }
+    },
+
+    "DownloadProductFromS3Policy" : {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "DownloadProductFromS3Policy",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [
+              "s3:GetObject"
+            ],
+            "Resource" : { "Fn::Sub" : "arn:aws:s3:::${ProductsBucket}/${ProductWebSphereMQFolder}/*" }
+          }]
+        },
+        "Roles" : [{ "Ref" : "Role" }]
+      },
+      "Condition" : "DownloadProduct"
+    },
+
+    "DownloadConfigurationFromS3Policy" : {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "DownloadConfigurationFromS3Policy",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [
+              "s3:GetObject"
+            ],
+            "Resource" : { "Fn::Sub" : "arn:aws:s3:::${ConfigurationsBucket}/${ConfigurationWebSphereMQFolder}/*" }
+          }]
+        },
+        "Roles" : [{ "Ref" : "Role" }]
+      },
+      "Condition" : "DownloadConfiguration"
+    },
+
+    "FileSystemMonitoringPolicy" : {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "FileSystemMonitoringPolicy",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [
+              "cloudwatch:PutMetricData"
+            ],
+            "Resource" : "*"
+          }]
+        },
+        "Roles" : [{ "Ref" : "Role" }]
+      },
+      "Condition" : "ConfigureFileSystemMonitoring"
+    },
+
+    "LogMonitoringPolicy" : {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "LogMonitoringPolicy",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [
+              "logs:CreateLogGroup",
+              "logs:CreateLogStream",
+              "logs:PutLogEvents",
+              "logs:DescribeLogStreams"
+            ],
+            "Resource" : "arn:aws:logs:*:*:*"
+          }]
+        },
+        "Roles" : [{ "Ref" : "Role" }]
+      },
+      "Condition" : "ConfigureLogs"
+    }
+  },
+
+  "Outputs" : {
+    "Role" : {
+      "Description" : "The Role",
+      "Value" : { "Ref" : "Role" }
+    }
+  }
+}

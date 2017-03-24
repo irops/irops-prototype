@@ -1,0 +1,155 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Core-StandardCIDRFunctions Template. This creates Standard Lambda Functions related to CIDRs within the Core Account.",
+
+  "Resources" : {
+    "Role" : {
+      "Type" : "AWS::IAM::Role",
+      "Properties" : {
+        "AssumeRolePolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Principal" : { "Service" : [ "lambda.amazonaws.com" ]},
+            "Action" : [ "sts:AssumeRole" ]
+          }]
+        },
+        "Path" : "/",
+        "Policies" : [{
+          "PolicyName" : "PutLambdaLogEventsPolicy",
+          "PolicyDocument" : {
+            "Version" : "2012-10-17",
+            "Statement" : [{
+              "Effect" : "Allow",
+              "Action" : [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+              ],
+              "Resource" : "arn:aws:logs:*:*:*"
+            }]
+          }
+        }]
+      }
+    },
+
+    "SubnetCalculatorFunction" : {
+      "Type" : "AWS::Lambda::Function",
+      "Properties" : {
+        "FunctionName" : "SubnetCalculator",
+        "Description" : "A Lambda function which calculates Subnet CIDRs for use in a VPC, based on the VPC CIDR, Addresses per Subnet, Subnets per Availability Zone and Availability Zones.",
+        "Role" : { "Fn::GetAtt" : [ "Role", "Arn" ]},
+        "Runtime" : "nodejs4.3",
+        "Timeout" : "30",
+        "Handler" : "index.handler",
+        "Code" : {
+          "ZipFile" :  { "Fn::Join" : [ "\n", [
+            "var addressesToNetmask = {",
+            "  '16':    '28',",
+            "  '32':    '27',",
+            "  '64':    '26',",
+            "  '128':   '25',",
+            "  '256':   '24',",
+            "  '512':   '23',",
+            "  '1024':  '22',",
+            "  '2048':  '21',",
+            "  '4096':  '20',",
+            "  '8192':  '19',",
+            "  '16384': '18',",
+            "  '32768': '17',",
+            "  '65536': '16'",
+            "};",
+            "",
+            "var response = require('cfn-response');",
+            "",
+            "exports.handler = function(event, context) {",
+            "  console.log('Request body:\\n' + JSON.stringify(event));",
+            "",
+            "  if (event.RequestType == 'Delete') {",
+            "    response.send (event, context, response.SUCCESS);",
+            "    return;",
+            "  }",
+            "",
+            "  console.log('Validating input properties...');",
+            "  var vpcCidrBlock = event.ResourceProperties.VpcCidrBlock;",
+            "  if (! /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(1[6-9]|2[0-7]))$/.test(vpcCidrBlock)) {",
+            "    responseData = {Error: 'VpcCidrBlock invalid: must be a valid IP CIDR range of the form x.x.x.x/x, with a size from /16 to /27'};",
+            "    console.error(responseData.Error);",
+            "    response.send(event, context, response.FAILED);",
+            "    return;",
+            "  }",
+            "  var addresses = parseInt(event.ResourceProperties.Addresses);",
+            "  if (! /^(16|32|64|128|256|512|1024|2048|4096)$/.test(addresses)) {",
+            "    responseData = {Error: 'Addresses invalid: must be 16, 32, 64, 128, 256, 512, 1024, 2048 or 4096'};",
+            "    console.error(responseData.Error);",
+            "    response.send(event, context, response.FAILED);",
+            "    return;",
+            "  }",
+            "  var subnets = parseInt(event.ResourceProperties.Subnets);",
+            "  if (! /^(2|4|8|16|32|64)$/.test(subnets)) { ",
+            "    responseData = {Error: 'Subnets invalid: must be 2, 4, 8, 16, 32 or 64'};",
+            "    console.error(responseData.Error);",
+            "    response.send(event, context, response.FAILED);",
+            "    return;",
+            "  }",
+            "  var zones = parseInt(event.ResourceProperties.AvailabilityZones);",
+            "  if (! /^(1|2|4)$/.test(zones)) {",
+            "    responseData = {Error: 'AvailabilityZones invalid: must be 1, 2 or 4'};",
+            "    console.error(responseData.Error);",
+            "    response.send(event, context, response.FAILED);",
+            "    return;",
+            "  }",
+            "",
+            "  var vpcCidrAddress = vpcCidrBlock.split('/')[0];",
+            "  var vpcCidrNetmask = vpcCidrBlock.split('/')[1];",
+            "  var vpcCidrOctets = vpcCidrAddress.split('.');",
+            "  var vpcCidrDecimal = ((((((+vpcCidrOctets[0]) * 256) + (+vpcCidrOctets[1])) * 256) + (+vpcCidrOctets[2])) * 256) + (+vpcCidrOctets[3]);",
+            "",
+            "  if (vpcCidrDecimal % Math.pow(2, 32 - vpcCidrNetmask) !== 0) {",
+            "    responseData = {Error: 'VpcCidrBlock invalid: not aligned on the correct boundary for a /' + vpcCidrNetmask + ' netmask'};",
+            "    console.error(responseData.Error);",
+            "    response.send(event, context, response.FAILED);",
+            "    return;",
+            "  }",
+            "",
+            "  console.log('Calculating VPC Addresses and Netmask...');",
+            "  var vpcAddresses = addresses * subnets * zones;",
+            "  var vpcNetmask = addressesToNetmask[vpcAddresses];",
+            "",
+            "  if (vpcCidrNetmask != vpcNetmask) {",
+            "    responseData = {Error: 'VpcCidrBlock invalid: incorrect size - a /' + vpcNetmask + ' netmask is needed'};",
+            "    console.error(responseData.Error);",
+            "    response.send(event, context, response.FAILED);",
+            "    return;",
+            "  }",
+            "",
+            "  console.log('Calculating Subnets...');",
+            "  var responseData = {};",
+            "  for (var zone = 0; zone < zones; zone++) {",
+            "    for (var subnet = 0; subnet < subnets; subnet++) {",
+            "      var subnetCidrDecimal = vpcCidrDecimal + (addresses * (subnet + (subnets * zone)));",
+            "      responseData['Subnet'+ subnet + String.fromCharCode(65 + zone)] = (subnetCidrDecimal >>> 24)       + '.'",
+            "                                                                      + (subnetCidrDecimal >>  16 & 255) + '.'",
+            "                                                                      + (subnetCidrDecimal >>   8 & 255) + '.'",
+            "                                                                      + (subnetCidrDecimal        & 255) + '/'",
+            "                                                                      + addressesToNetmask[addresses];",
+            "    }",
+            "  }",
+            "",
+            "  response.send(event, context, response.SUCCESS, responseData);",
+            "};"
+          ]]}
+        }
+      }
+    }
+  },
+
+  "Outputs" : {
+    "SubnetCalculatorFunctionArn" : {
+      "Description" : "The SubnetCalculator Lambda Function ARN",
+      "Value" :  { "Fn::GetAtt" : [ "SubnetCalculatorFunction", "Arn" ]},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-SubnetCalculatorFunctionArn" }}
+    }
+  }
+}

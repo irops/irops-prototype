@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
 
-  "Description" : "Example-WebServers Template. This is an example of an auto-scaled web server based application, showing installation and configuration via cfn-init.",
+  "Description" : "Example-NestedWebServer-DomainName Template. This is an example of a layer in the NestedWebServer application, which creates the Public RecordSet.",
 
   "Metadata" : {
     "AWS::CloudFormation::Interface" : {
@@ -15,8 +15,7 @@
         {
           "Label" : { "default" : "Resource Dependencies" },
           "Parameters" : [
-            "LoadBalancerHostedZoneId",
-            "LoadBalancerDNSName"
+            "InstancePublicIp"
           ]
         },
         {
@@ -30,8 +29,7 @@
 
       "ParameterLabels" : {
         "VPCStackName" : { "default" : "VPC Stack Name" },
-        "LoadBalancerHostedZoneId" : { "default" : "LoadBalancer HostedZoneId" },
-        "LoadBalancerDNSName" : { "default" : "LoadBalancer DNSName" },
+        "InstancePublicIp" : { "default" : "Instance Public IP" },
         "ApplicationName" : { "default" : "Application Name" },
         "ApplicationDomain" : { "default" : "Application Domain Name" }
       }
@@ -49,21 +47,13 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
-    "LoadBalancerHostedZoneId" : {
-      "Description" : "HostedZone ID of the LoadBalancer needed by the RecordSetGroup",
+    "InstancePublicIp" : {
+      "Description" : "PublicIp of an existing Instance needed by the RecordSet",
       "Type" : "String",
-      "Default" : "",
-      "AllowedPattern" : "(^$|^[A-Z0-9]{13}$)",
-      "ConstraintDescription" : "must be a valid HostedZone ID."
-    },
-
-    "LoadBalancerDNSName" : {
-      "Description" : "DNS Name of the LoadBalancer needed by the RecordSetGroup",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 128,
-      "AllowedPattern" : "^[-.a-zA-Z0-9]*$",
-      "ConstraintDescription" : "must contain alphanumeric characters, periods and dashes."
+      "MinLength" : "9",
+      "MaxLength" : "18",
+      "AllowedPattern" : "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})",
+      "ConstraintDescription" : "must be a valid IP of the form x.x.x.x."
     },
 
     "ApplicationName" : {
@@ -71,7 +61,7 @@
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
-      "Default" : "NestedWebServers",
+      "Default" : "NestedWebServer",
       "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
@@ -87,19 +77,15 @@
   },
 
   "Resources" : {
-    "RecordSetGroup" : {
-      "Type" : "AWS::Route53::RecordSetGroup",
+    "RecordSet" : {
+      "Type" : "AWS::Route53::RecordSet",
       "Properties" : {
         "HostedZoneId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicHostedZone" }},
-        "Comment" : { "Fn::Sub" : "Public DNS name for ${ApplicationName} ELB." },
-        "RecordSets" : [{
-          "Name" : { "Fn::Join" : [ "", [ { "Ref" : "ApplicationDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "." ]]},
-          "Type" : "A",
-          "AliasTarget" : {
-            "HostedZoneId" : { "Ref" : "LoadBalancerHostedZoneId" },
-            "DNSName" : { "Ref" : "LoadBalancerDNSName" }
-          }
-        }]
+        "Comment" : { "Fn::Sub" : "Public DNS name for ${ApplicationName} Instance." },
+        "Name" : { "Fn::Join" : [ "", [ { "Ref" : "ApplicationDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "." ]]},
+        "Type" : "A",
+        "TTL" : "900",
+        "ResourceRecords" : [{ "Ref" : "InstancePublicIp" }]
       }
     }
   }

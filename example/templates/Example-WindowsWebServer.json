@@ -1,0 +1,574 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Example-WindowsServer Template. This is an example of a minimal windows server, showing how roles and features can be enabled.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "VPCStackName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Resource Dependencies" },
+          "Parameters" : [
+            "KeyName"
+          ]
+        },
+        {
+          "Label" : { "default" : "System Configuration" },
+          "Parameters" : [
+            "CompanyName",
+            "SystemName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Environment Configuration" },
+          "Parameters" : [
+            "EnvironmentSize",
+            "InstanceOS"
+          ]
+        },
+        {
+          "Label" : { "default" : "Application Configuration" },
+          "Parameters" : [
+            "ApplicationsBucket",
+            "ApplicationName",
+            "ApplicationDomain",
+            "ApplicationVersion"
+          ]
+        },
+        {
+          "Label" : { "default" : "Security Configuration" },
+          "Parameters" : [
+            "AdministratorNetwork",
+            "AdministratorNetwork1",
+            "AdministratorNetwork2",
+            "AdministratorNetwork3",
+            "PublicNetwork",
+            "PublicNetwork1",
+            "PublicNetwork2",
+            "PublicNetwork3",
+            "PrivateNetwork",
+            "PrivateNetwork1",
+            "PrivateNetwork2",
+            "PrivateNetwork3"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "VPCStackName" : { "default" : "VPC Stack Name" },
+        "KeyName" : { "default" : "Key Name" },
+        "CompanyName" : { "default" : "Company Name" },
+        "SystemName" : { "default" : "System Name" },
+        "EnvironmentSize" : { "default" : "Environment Size" },
+        "InstanceOS" : { "default" : "Instance Operating System" },
+        "ApplicationsBucket" : { "default" : "Applications Bucket" },
+        "ApplicationName" : { "default" : "Application Name" },
+        "ApplicationDomain" : { "default" : "Application Domain Name" },
+        "ApplicationVersion" : { "default" : "Application Version" },
+        "AdministratorNetwork" : { "default" : "Administrator Network" },
+        "AdministratorNetwork1" : { "default" : "Additional Administrator Network 1" },
+        "AdministratorNetwork2" : { "default" : "Additional Administrator Network 2" },
+        "AdministratorNetwork3" : { "default" : "Additional Administrator Network 3" },
+        "PublicNetwork" : { "default" : "Public Network" },
+        "PublicNetwork1" : { "default" : "Additional Public Network 1" },
+        "PublicNetwork2" : { "default" : "Additional Public Network 2" },
+        "PublicNetwork3" : { "default" : "Additional Public Network 3" },
+        "PrivateNetwork" : { "default" : "Private Network" },
+        "PrivateNetwork1" : { "default" : "Additional Private Network 1" },
+        "PrivateNetwork2" : { "default" : "Additional Private Network 2" },
+        "PrivateNetwork3" : { "default" : "Additional Private Network 3" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "VPCStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the VPC",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-VPC",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "KeyName" : {
+      "Description" : "Name of an existing KeyPair to enable SSH access to the Instance",
+      "Type" : "AWS::EC2::KeyPair::KeyName",
+      "MaxLength" : 32,
+      "Default" : "example",
+      "AllowedPattern" : "(^$|^[_a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
+    },
+
+    "CompanyName" : {
+      "Description" : "Name of the Company associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "Travel",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "SystemName" : {
+      "Description" : "Name of the System associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "IROPS",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "EnvironmentSize" : {
+      "Description" : "Size of the Environment to build. Used to select size-related options in Mappings",
+      "Type" : "String",
+      "Default" : "micro",
+      "AllowedValues" : [ "micro", "small", "medium", "large", "xlarge", "mlarge", "mxlarge", "m2xlarge", "clarge", "cxlarge", "c2xlarge" ],
+      "ConstraintDescription" : "must be micro, small, medium, large, xlarge, mlarge, mxlarge, m2xlarge, clarge, cxlarge or c2xlarge."
+    },
+
+    "InstanceOS" : {
+      "Description" : "The Operating System to use for Instances",
+      "Type" : "String",
+      "Default" : "WS2012R2",
+      "AllowedValues" : [ "WS2012R2", "WS2016" ],
+      "ConstraintDescription" : "must be WS2012R2 = \"Windows Server 2012R2\" or WS2016 = \"Windows Server 2016\"."
+    },
+
+    "ApplicationsBucket" : {
+      "Description" : "S3 bucket containing Applications to be deployed",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[a-z][-a-z0-9]*$)",
+      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
+    },
+
+    "ApplicationName" : {
+      "Description" : "Name of the Application associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "WindowsServer",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "ApplicationDomain" : {
+      "Description" : "DNS Name of the Application associated with the Stack",
+      "Type" : "String",
+      "MaxLength" : 16,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[a-z][-a-z0-9]*$)",
+      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
+    },
+
+    "ApplicationVersion" : {
+      "Description" : "Version of the Application",
+      "Type" : "String",
+      "MinLength" : 5,
+      "MaxLength" : 32,
+      "Default" : "1.0.0",
+      "AllowedPattern" : "^[0-9]*.[0-9]*.[0-9]*(-[a-zA-Z0-9][-a-zA-Z0-9]*)?$",
+      "ConstraintDescription" : "must follow semantic versioning conventions."
+    },
+
+    "AdministratorNetwork" : {
+      "Description" : "Network that can administer the Application",
+      "Type" : "String",
+      "Default" : "0.0.0.0/0",
+      "AllowedPattern" : "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "AdministratorNetwork1" : {
+      "Description" : "Additional network that can administer the Application",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "AdministratorNetwork2" : {
+      "Description" : "Additional network that can administer the Application",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "AdministratorNetwork3" : {
+      "Description" : "Additional network that can administer the Application",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "PublicNetwork" : {
+      "Description" : "Public network that can access the Application",
+      "Type" : "String",
+      "Default" : "0.0.0.0/0",
+      "AllowedPattern" : "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "PublicNetwork1" : {
+      "Description" : "Additional public network that can access the Application",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "PublicNetwork2" : {
+      "Description" : "Additional public network that can access the Application",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "PublicNetwork3" : {
+      "Description" : "Additional public network that can access the Application",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "PrivateNetwork" : {
+      "Description" : "Private network that can access the Application",
+      "Type" : "String",
+      "Default" : "10.0.0.0/16",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
+    },
+
+    "PrivateNetwork1" : {
+      "Description" : "Additional private network that can access the Application",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
+    },
+
+    "PrivateNetwork2" : {
+      "Description" : "Additional private network that can access the Application",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
+    },
+
+    "PrivateNetwork3" : {
+      "Description" : "Additional private network that can access the Application",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
+    }
+  },
+
+  "Mappings" : {
+    "ImageIdMap" : {
+      "AMI"            : { "WS2012R2" : "Windows Server 2012r2", "WS2016" : "Windows Server 2016" },
+      "us-east-1"      : { "WS2012R2" : "ami-abf616bd", "WS2016" : "ami-188d6e0e" },
+      "us-east-2"      : { "WS2012R2" : "ami-c06d48a5", "WS2016" : "ami-057d5860" },
+      "us-west-1"      : { "WS2012R2" : "ami-76227116", "WS2016" : "ami-179ac977" },
+      "us-west-2"      : { "WS2012R2" : "ami-1562d075", "WS2016" : "ami-6e833e0e" },
+      "ca-central-1"   : { "WS2012R2" : "ami-7805b71c", "WS2016" : "ami-00f84564" },
+      "eu-west-1"      : { "WS2012R2" : "ami-dd9eb6ae", "WS2016" : "ami-29f7dd5a" },
+      "eu-central-1"   : { "WS2012R2" : "ami-6f559800", "WS2016" : "ami-88ec20e7" },
+      "eu-west-2"      : { "WS2012R2" : "ami-738a8017", "WS2016" : "ami-64999300" },
+      "ap-southeast-1" : { "WS2012R2" : "ami-89e74cea", "WS2016" : "ami-49963d2a" },
+      "ap-southeast-2" : { "WS2012R2" : "ami-059d9866", "WS2016" : "ami-b47175d7" },
+      "ap-northeast-2" : { "WS2012R2" : "ami-e979af87", "WS2016" : "ami-819e4fef" },
+      "ap-northeast-1" : { "WS2012R2" : "ami-7accbe1d", "WS2016" : "ami-834e32e4" },
+      "ap-south-1"     : { "WS2012R2" : "ami-31a6d05e", "WS2016" : "ami-2c9aec43" },
+      "sa-east-1"      : { "WS2012R2" : "ami-f4d84298", "WS2016" : "ami-9e79e3f2" }
+    },
+
+    "InstanceTypeMap" : {
+      "WindowsServer" : { "micro" : "t2.micro", "small" : "t2.small", "medium" : "t2.medium", "large" : "t2.large", "xlarge" : "t2.xlarge",
+                          "mlarge" : "m4.large", "mxlarge" : "m4.xlarge", "m2xlarge" : "m4.2xlarge",
+                          "clarge" : "c4.large", "cxlarge" : "c4.xlarge", "c2xlarge" : "c4.2xlarge" }
+    }
+  },
+
+  "Conditions" : {
+    "DownloadApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationsBucket" }, "" ]}]},
+    "ConfigureDomainNames" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationDomain" }, "" ]}]},
+    "ConfigureAdministratorNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "AdministratorNetwork1" }, "" ]}]},
+    "ConfigureAdministratorNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "AdministratorNetwork2" }, "" ]}]},
+    "ConfigureAdministratorNetwork3" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "AdministratorNetwork3" }, "" ]}]},
+    "ConfigurePublicNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicNetwork1" }, "" ]}]},
+    "ConfigurePublicNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicNetwork2" }, "" ]}]},
+    "ConfigurePublicNetwork3" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicNetwork3" }, "" ]}]},
+    "ConfigurePrivateNetwork" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateNetwork" }, "" ]}]},
+    "ConfigurePrivateNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateNetwork1" }, "" ]}]},
+    "ConfigurePrivateNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateNetwork2" }, "" ]}]},
+    "ConfigurePrivateNetwork3" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateNetwork3" }, "" ]}]}
+  },
+
+  "Resources" : {
+    "Role" : {
+      "Type" : "AWS::IAM::Role",
+      "Properties" : {
+        "AssumeRolePolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Principal" : { "Service" : [ "ec2.amazonaws.com" ]},
+            "Action" : [ "sts:AssumeRole" ]
+          }]
+        },
+        "Path" : "/"
+      }
+    },
+
+    "DownloadApplicationFromS3Policy" : {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "DownloadApplicationFromS3Policy",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [
+              "s3:GetObject"
+            ],
+            "Resource" : { "Fn::Sub" : "arn:aws:s3:::${ApplicationsBucket}/${ApplicationName}/*" }
+          }]
+        },
+        "Roles" : [{ "Ref" : "Role" }]
+      },
+      "Condition" : "DownloadApplication"
+    },
+
+    "SecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "SecurityGroup" ]]},
+        "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPC" }},
+        "SecurityGroupIngress" : [
+          { "IpProtocol" : "icmp", "FromPort" : "-1",   "ToPort" : "-1",   "CidrIp" : { "Ref" : "AdministratorNetwork" }},
+          { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Ref" : "AdministratorNetwork" }},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork1", { "IpProtocol" : "icmp", "FromPort" : "-1",   "ToPort" : "-1",   "CidrIp" : { "Ref" : "AdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Ref" : "AdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork2", { "IpProtocol" : "icmp", "FromPort" : "-1",   "ToPort" : "-1",   "CidrIp" : { "Ref" : "AdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Ref" : "AdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork3", { "IpProtocol" : "icmp", "FromPort" : "-1",   "ToPort" : "-1",   "CidrIp" : { "Ref" : "AdministratorNetwork3" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork3", { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Ref" : "AdministratorNetwork3" }}, { "Ref" : "AWS::NoValue" }]},
+          { "IpProtocol" : "icmp", "FromPort" :  "-1", "ToPort" :  "-1", "CidrIp" : { "Ref" : "PublicNetwork" }},
+          { "IpProtocol" : "tcp",  "FromPort" :  "80", "ToPort" :  "80", "CidrIp" : { "Ref" : "PublicNetwork" }},
+          { "Fn::If" : [ "ConfigurePublicNetwork1", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PublicNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "80", "ToPort" : "80", "CidrIp" : { "Ref" : "PublicNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicNetwork2", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PublicNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "80", "ToPort" : "80", "CidrIp" : { "Ref" : "PublicNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicNetwork3", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PublicNetwork3" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicNetwork3", { "IpProtocol" : "tcp",  "FromPort" : "80", "ToPort" : "80", "CidrIp" : { "Ref" : "PublicNetwork3" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateNetwork", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PrivateNetwork" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateNetwork", { "IpProtocol" : "tcp",  "FromPort" : "80", "ToPort" : "80", "CidrIp" : { "Ref" : "PrivateNetwork" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateNetwork1", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PrivateNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "80", "ToPort" : "80", "CidrIp" : { "Ref" : "PrivateNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateNetwork2", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PrivateNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "80", "ToPort" : "80", "CidrIp" : { "Ref" : "PrivateNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateNetwork3", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PrivateNetwork3" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateNetwork3", { "IpProtocol" : "tcp",  "FromPort" : "80", "ToPort" : "80", "CidrIp" : { "Ref" : "PrivateNetwork3" }}, { "Ref" : "AWS::NoValue" }]}
+        ],
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "SecurityGroup" ]]}}
+        ]
+      }
+    },
+
+    "InstanceProfile" : {
+      "Type" : "AWS::IAM::InstanceProfile",
+      "Properties" : {
+        "Path" : "/",
+        "Roles" : [{ "Ref" : "Role" }]
+      }
+    },
+
+    "Instance": {
+      "Type" : "AWS::EC2::Instance",
+      "Metadata" : {
+        "AWS::CloudFormation::Authentication" : {
+          "S3Credentials" : {
+            "type" : "S3",
+            "roleName" : { "Ref" : "Role" },
+            "buckets" : [{ "Ref" : "ApplicationsBucket" }]
+          }
+        },
+        "AWS::CloudFormation::Init" : {
+          "configSets" : {
+            "All" : [
+              "ConfigureOS",
+              "ConfigureHostname",
+              "ConfigureCFN",
+              "InstallWebServer",
+              { "Fn::If" : [ "DownloadApplication", "DownloadApplication", "ConfigureApplication" ]}
+            ]
+          },
+          "ConfigureOS" : {
+            "commands" : {
+              "01_disable_windows_firewall" : {
+                "command" : "powershell.exe -Command \"Get-NetFirewallProfile | Set-NetFirewallProfile -Enabled False\"",
+                "waitAfterCompletion" : "0"
+              },
+              "02_set_execution_policy" : {
+                "command" : "powershell.exe -Command \"Set-ExecutionPolicy RemoteSigned -Force\"",
+                "waitAfterCompletion" : "0"
+              }
+            }
+          },
+          "ConfigureHostname" : {
+            "commands" : {
+              "01_sethostname" : {
+                "command" : { "Fn::Sub" : "powershell.exe Rename-Computer -NewName ${ApplicationDomain} -Restart" },
+                "waitAfterCompletion" : "forever"
+              }
+            }
+          },
+          "ConfigureCFN" : {
+            "files" : {
+              "c:\\cfn\\cfn-hup.conf" : {
+                "content" : { "Fn::Join" : [ "", [
+                  "[main]\n",
+                  "stack=", { "Ref" : "AWS::StackId" }, "\n",
+                  "region=", { "Ref" : "AWS::Region" }, "\n"
+                  ]]}
+              },
+              "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf" : {
+                "content": { "Fn::Join" : [ "", [
+                  "[cfn-auto-reloader-hook]\n",
+                  "triggers=post.update\n",
+                  "path=Resources.Instance.Metadata.AWS::CloudFormation::Init\n",
+                  "action=cfn-init.exe --verbose",
+                  " --configsets All",
+                  " --stack ", { "Ref" : "AWS::StackId" },
+                  " --resource Instance",
+                  " --region ", { "Ref" : "AWS::Region" }, "\n"
+                ]]}
+              }
+            },
+            "services" : {
+              "windows" : {
+                "cfn-hup" : {
+                  "enabled" : "true",
+                  "ensureRunning" : "true",
+                  "files" : [
+                    "c:\\cfn\\cfn-hup.conf",
+                    "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf"
+                  ]
+                }
+              }
+            }
+          },
+          "InstallWebServer" : {
+            "commands" : {
+              "01_install_webserver" : {
+                "command" : "powershell.exe -Command \"Install-WindowsFeature Web-Server -IncludeAllSubFeature\"",
+                "waitAfterCompletion" : "0"
+              }
+            }
+          },
+          "DownloadApplication" : {
+            "sources" : {
+              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ApplicationsBucket}/${ApplicationName}/${ApplicationName}-${ApplicationVersion}.zip" }
+            }
+          },
+          "ConfigureApplication" : {
+            "files" : {
+              "c:\\Inetpub\\wwwroot\\index.htm" : {
+                "content" : { "Fn::Join" : [ "", [
+                  "<html>\n",
+                  "<head>\n",
+                  "<title>", { "Ref" : "ApplicationName" }, " Test Application</title>\n",
+                  "</head>\n",
+                  "<body>\n",
+                  "<h1>", { "Ref" : "ApplicationName" }, " (", { "Ref" : "ApplicationVersion" }, ")</h1>\n",
+                  "</body>\n",
+                  "</html>\n"
+                ]]}
+              }
+            }
+          }
+        }
+      },
+      "Properties" : {
+        "ImageId" : { "Fn::FindInMap" : [ "ImageIdMap", { "Ref" : "AWS::Region" }, { "Ref" : "InstanceOS" }]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "WindowsServer", { "Ref" : "EnvironmentSize" }]},
+        "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
+        "KeyName" : { "Ref" : "KeyName" },
+        "NetworkInterfaces" : [{
+          "Description"              : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "NetworkInterface0" ]]},
+          "DeviceIndex"              : "0",
+          "SubnetId"                 : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-WebSubnetA" }},
+          "GroupSet"                 : [{ "Ref" :  "SecurityGroup" }],
+          "AssociatePublicIpAddress" : "true",
+          "DeleteOnTermination"      : "true"
+        }],
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "Instance" ]]}}
+        ],
+        "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "", [
+          "<script>\n",
+          "\n",
+          "cfn-init.exe --verbose",
+          " --configsets All",
+          " --stack ", { "Ref" : "AWS::StackId" },
+          " --resource Instance",
+          " --region ", { "Ref" : "AWS::Region" }, "\n",
+          "\n",
+          "cfn-signal.exe --exit-code %ERRORLEVEL%",
+          " --stack ", { "Ref" : "AWS::StackName" },
+          " --resource Instance",
+          " --region ", { "Ref" : "AWS::Region" }, "\n",
+          "</script>"
+        ]]}}
+      },
+      "CreationPolicy" : {
+        "ResourceSignal" : {
+          "Timeout" : "PT30M"
+        }
+      }
+    },
+
+    "RecordSet" : {
+      "Type" : "AWS::Route53::RecordSet",
+      "Properties" : {
+        "HostedZoneId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicHostedZone" }},
+        "Comment" : { "Fn::Sub" : "Public DNS name for ${ApplicationName} Instance." },
+        "Name" : { "Fn::Join" : [ "", [ { "Ref" : "ApplicationDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "." ]]},
+        "Type" : "A",
+        "TTL" : "900",
+        "ResourceRecords" : [{ "Fn::GetAtt" : [ "Instance", "PublicIp" ]}]
+      },
+      "Condition" : "ConfigureDomainNames"
+    }
+  },
+
+  "Outputs" : {
+    "SecurityGroup" : {
+      "Description" : "The SecurityGroup",
+      "Value" : { "Ref" : "SecurityGroup" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-SecurityGroup" }}
+    },
+
+    "URL" : {
+      "Description" : "The Sample Website URL",
+      "Value" :  { "Fn::Join" : [ "", [ "http://", { "Ref" : "ApplicationDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "/" ]]},
+      "Condition" : "ConfigureDomainNames"
+    }
+  }
+}

@@ -1,0 +1,204 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Core-StandardAMIFunctions Template. This creates Standard Lambda Functions related to AMIs within the Core Account.",
+
+  "Resources" : {
+    "Role" : {
+      "Type" : "AWS::IAM::Role",
+      "Properties" : {
+        "AssumeRolePolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Principal" : { "Service" : [ "lambda.amazonaws.com" ]},
+            "Action" : [ "sts:AssumeRole" ]
+          }]
+        },
+        "Path" : "/",
+        "Policies" : [{
+          "PolicyName" : "DescribeImagesPolicy",
+          "PolicyDocument" : {
+            "Version" : "2012-10-17",
+            "Statement" : [{
+              "Effect" : "Allow",
+              "Action" : [
+                "ec2:DescribeImages"
+              ],
+              "Resource" : "*"
+            }]
+          }
+        },
+        {
+          "PolicyName" : "PutLambdaLogEventsPolicy",
+          "PolicyDocument" : {
+            "Version" : "2012-10-17",
+            "Statement" : [{
+              "Effect" : "Allow",
+              "Action" : [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+              ],
+              "Resource" : "arn:aws:logs:*:*:*"
+            }]
+          }
+        }]
+      }
+    },
+
+    "GetAmazonLinuxImageIdFunction" : {
+      "Type" : "AWS::Lambda::Function",
+      "Properties" : {
+        "FunctionName" : "GetAmazonLinuxImageId",
+        "Description" : "A Lambda function that looks up the latest Amazon Linux AMI ID for a given region and architecture.",
+        "Role" : { "Fn::GetAtt" : [ "Role", "Arn" ]},
+        "Runtime" : "nodejs4.3",
+        "Timeout" : "30",
+        "Handler" : "index.handler",
+        "Code" : {
+          "ZipFile" : { "Fn::Join" : [ "\n", [
+            "var archToAMINamePattern = {",
+            "  'PV64':  'amzn-ami-pv*x86_64-ebs',",
+            "  'HVM64': 'amzn-ami-hvm*x86_64-gp2',",
+            "  'HVMG2': 'amzn-ami-graphics-hvm*x86_64-ebs*'",
+            "};",
+            "",
+            "var response = require('cfn-response');",
+            "",
+            "exports.handler = function(event, context) {",
+            "  console.log('Request body:\\n' + JSON.stringify(event));",
+            "",
+            "  if (event.RequestType == 'Delete') {",
+            "    response.send(event, context, response.SUCCESS);",
+            "    return;",
+            "  }",
+            "",
+            "  var responseStatus = response.FAILED;",
+            "  var responseData = {};",
+            "",
+            "  var aws = require('aws-sdk');",
+            "",
+            "  var ec2 = new aws.EC2({region: event.ResourceProperties.Region});",
+            "  var describeImagesParams = {",
+            "    Filters: [{ Name: 'name', Values: [archToAMINamePattern[event.ResourceProperties.Architecture]]}],",
+            "    Owners: [event.ResourceProperties.Architecture == 'HVMG2' ? '679593333241' : 'amazon']",
+            "  };",
+            "",
+            "  console.log('Calling DescribeImages...');",
+            "  ec2.describeImages(describeImagesParams, function(err, describeImagesResult) {",
+            "    if (err) {",
+            "      responseData = {Error: 'DescribeImages call failed'};",
+            "      console.error(responseData.Error + ':\\n', err);",
+            "    }",
+            "    else {",
+            "      var images = describeImagesResult.Images;",
+            "      console.log('DescribeImages returned ' + images.length + ' images');",
+            "      images.sort(function(x, y) { return y.Name.localeCompare(x.Name); });",
+            "      for (var i = 0; i < images.length; i++) {",
+            "        if (isBeta(images[i].Name)) continue;",
+            "        responseStatus = response.SUCCESS;",
+            "        responseData['ImageId'] = images[i].ImageId;",
+            "        responseData['Name'] = images[i].Name;",
+            "        console.log('Found: ' + images[i].Name + ', ' + images[i].ImageId);",
+            "        break;",
+            "      }",
+            "    }",
+            "",
+            "    response.send(event, context, responseStatus, responseData);",
+            "  });",
+            "};",
+            "",
+            "function isBeta(imageName) {",
+            "  return imageName.toLowerCase().indexOf('beta') > -1 || imageName.toLowerCase().indexOf('.rc') > -1;",
+            "}"
+          ]]}
+        }
+      }
+    },
+
+    "GetWindowsImageIdFunction" : {
+      "Type" : "AWS::Lambda::Function",
+      "Properties" : {
+        "FunctionName" : "GetWindowsImageId",
+        "Description" : "A Lambda function that looks up the latest Windows AMI ID for a given region and architecture.",
+        "Role" : { "Fn::GetAtt" : [ "Role", "Arn" ]},
+        "Runtime" : "nodejs4.3",
+        "Timeout" : "30",
+        "Handler" : "index.handler",
+        "Code" : {
+          "ZipFile" :  { "Fn::Join" : [ "\n", [
+            "var osNameToPattern = {",
+            "  'Windows Server 2008 SP2 English 32-bit': 'Windows_Server-2008-SP2-English-32Bit-Base-*',",
+            "  'Windows Server 2008 SP2 English 64-bit': 'Windows_Server-2008-SP2-English-64Bit-Base-*',",
+            "  'Windows Server 2008 R2 English 64-bit':  'Windows_Server-2008-R2_SP1-English-64Bit-Base-*',",
+            "  'Windows Server 2012 RTM English 64-bit': 'Windows_Server-2012-RTM-English-64Bit-Base-*',",
+            "  'Windows Server 2012 R2 English 64-bit':  'Windows_Server-2012-R2_RTM-English-64Bit-Base-*'",
+            "};",
+            "",
+            "var response = require('cfn-response');",
+            "",
+            "exports.handler = function(event, context) {",
+            "  console.log('Request body:\\n' + JSON.stringify(event));",
+            "",
+            "  if (event.RequestType == 'Delete') {",
+            "    response.send(event, context, response.SUCCESS);",
+            "    return;",
+            "  }",
+            "",
+            "  var responseStatus = response.FAILED;",
+            "  var responseData = {};",
+            "",
+            "  var osBaseName = osNameToPattern[event.ResourceProperties.OSName];",
+            "  console.log('OS: ' + event.ResourceProperties.OSName + ' -> ' + osBaseName);",
+            "",
+            "  var aws = require('aws-sdk');",
+            "",
+            "  var ec2 = new aws.EC2({region: event.ResourceProperties.Region});",
+            "  var describeImagesParams = {",
+            "    Filters: [{ Name: 'name', Values: [osBaseName]}],",
+            "    Owners: ['amazon']",
+            "  };",
+            "",
+            "  console.log('Calling DescribeImages...');",
+            "  ec2.describeImages(describeImagesParams, function(err, describeImagesResult) {",
+            "    if (err) {",
+            "      responseData = {Error: 'DescribeImages call failed'};",
+            "      console.error(responseData.Error + ':\\n', err);",
+            "    }",
+            "    else {",
+            "      var images = describeImagesResult.Images;",
+            "      console.log('DescribeImages returned ' + images.length + ' images');",
+            "      images.sort(function(x, y) { return x.CreationDate < y.CreationDate; });",
+            "      for (var i = 0; i < images.length; i++) {",
+            "        responseStatus = response.SUCCESS;",
+            "        responseData['ImageId'] = images[i].ImageId;",
+            "        responseData['Name'] = images[i].Name;",
+            "        console.log('Found: ' + images[i].Name + ', ' + images[i].ImageId);",
+            "        break;",
+            "      }",
+            "    }",
+            "",
+            "    response.send(event, context, responseStatus, responseData);",
+            "  });",
+            "};"
+          ]]}
+        }
+      }
+    }
+  },
+
+  "Outputs" : {
+    "GetAmazonLinuxImageIdFunctionArn" : {
+      "Description" : "The GetAmazonLinuxImageId Lambda Function ARN",
+      "Value" :  { "Fn::GetAtt" : [ "GetAmazonLinuxImageIdFunction", "Arn" ]},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-GetAmazonLinuxImageIdFunctionArn" }}
+    },
+
+    "GetWindowsImageIdFunctionArn" : {
+      "Description" : "The GetWindowsImageId Lambda Function ARN",
+      "Value" :  { "Fn::GetAtt" : [ "GetWindowsImageIdFunction", "Arn" ]},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-GetWindowsImageIdFunctionArn" }}
+    }
+  }
+}

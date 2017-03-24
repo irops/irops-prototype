@@ -15,9 +15,9 @@ export AWS_DEFAULT_PROFILE=$AWS_ACCOUNT_ALIAS-$AWS_USER_NAME
 # Region
 export AWS_DEFAULT_REGION=eu-west-1
 
-# Keys
-export AWS_KEY_NAME=$USER
-export AWS_KEY_FILE=${HOME}/.ssh/irops_${AWS_KEY_NAME}_id_rsa
+# Keys (let user override, but by default, use key that's defined in shell scripts)
+#export AWS_KEY_NAME=administrator
+#export AWS_KEY_FILE=${HOME}/.ssh/irops_${AWS_KEY_NAME}_id_rsa
 
 # Notification
 export SNS_ADMINISTRATOR_TOPIC="arn:aws:sns:${AWS_DEFAULT_REGION}:${AWS_ACCOUNT_NUMBER}:Administrators"
@@ -42,8 +42,8 @@ export PRIVATE_NETWORK3=
 export OWNER_EMAIL=$USER@hpe.com
 
 # Company
-export COMPANY_CODE=demo
-export COMPANY_NAME="Demo"
+export COMPANY_CODE=tvl
+export COMPANY_NAME="Travel"
 
 # Location
 case $AWS_DEFAULT_REGION in
