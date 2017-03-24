@@ -145,6 +145,14 @@ run "$corebindir/core-create-customsubscriptions-stack -E Core"
 run "$corebindir/core-create-standardbuckets-stack -E Core"
 
 
+#  X. Create Lambda Functions
+#      X.1 Create StandardAMIFunctions Stack
+#      X.2 Create StandardCIDRFunctions Stack
+
+run "$corebindir/core-create-standardamifunctions-stack -E Core"
+run "$corebindir/core-create-standardcidrfunctions-stack -E Core"
+
+
 #  4. Create CustomerGateways
 #      4.1. Create CharlotteCustomerGateway Stack
 #      4.2. Create SantaBarbaraCustomerGateway Stack
@@ -159,7 +167,7 @@ run "$commonbindir/common-create-customergateway-stack -E Core -G SantaBarbara -
 #      5.3. Create Production-NetworkAcls Stack
 
 run "$environmentbindir/environment-create-hostedzone-stack -E Production -D us-west-2.tvl.iropshub.com"
-run "$environmentbindir/environment-create-vpc-stack -E Production -N 10.40.0.0/16"
+run "$environmentbindir/environment-create-vpc-stack -E Production -N 172.21.0.0/21"
 run "$environmentbindir/environment-create-networkacls-stack -E Production"
 
 
@@ -169,7 +177,7 @@ run "$environmentbindir/environment-create-networkacls-stack -E Production"
 #      6.3. Create Staging-NetworkAcls Stack
 
 run "$environmentbindir/environment-create-hostedzone-stack -E Staging -D s.us-west-2.tvl.iropshub.com"
-run "$environmentbindir/environment-create-vpc-stack -E Staging -N 10.41.0.0/16"
+run "$environmentbindir/environment-create-vpc-stack -E Staging -N 172.21.8.0/21"
 run "$environmentbindir/environment-create-networkacls-stack -E Staging"
 
 
@@ -179,7 +187,7 @@ run "$environmentbindir/environment-create-networkacls-stack -E Staging"
 #      7.3. Create Testing-NetworkAcls Stack
 
 run "$environmentbindir/environment-create-hostedzone-stack -E Testing -D t.us-west-2.tvl.iropshub.com"
-run "$environmentbindir/environment-create-vpc-stack -E Testing -N 10.42.0.0/16"
+run "$environmentbindir/environment-create-vpc-stack -E Testing -N 172.21.16.0/21"
 run "$environmentbindir/environment-create-networkacls-stack -E Testing"
 
 
@@ -189,7 +197,7 @@ run "$environmentbindir/environment-create-networkacls-stack -E Testing"
 #      8.3. Create Development-NetworkAcls Stack
 
 run "$environmentbindir/environment-create-hostedzone-stack -E Development -D d.us-west-2.tvl.iropshub.com"
-run "$environmentbindir/environment-create-vpc-stack -E Development -N 10.43.0.0/16"
+run "$environmentbindir/environment-create-vpc-stack -E Development -N 172.21.24.0/21"
 run "$environmentbindir/environment-create-networkacls-stack -E Development"
 
 
@@ -197,7 +205,7 @@ run "$environmentbindir/environment-create-networkacls-stack -E Development"
 #      9.1. Create Core-VPC Stack
 #      9.2. Create Core-NetworkAcls Stack
 
-run "$corebindir/core-create-vpc-stack -E Core -N 10.46.0.0/16"
+run "$corebindir/core-create-vpc-stack -E Core -N 172.21.56.0/22"
 run "$corebindir/core-create-networkacls-stack -E Core"
 
 
@@ -205,7 +213,7 @@ run "$corebindir/core-create-networkacls-stack -E Core"
 #     10.1. Create Build-VPC Stack
 #     10.2. Create Build-NetworkAcls Stack
 
-run "$corebindir/build-create-vpc-stack -E Build -N 10.47.0.0/16"
+run "$corebindir/build-create-vpc-stack -E Build -N 172.21.60.0/23"
 run "$corebindir/build-create-networkacls-stack -E Build"
 
 

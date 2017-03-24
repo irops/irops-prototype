@@ -26,15 +26,15 @@ export SNS_ALARMS_TOPIC="arn:aws:sns:${AWS_DEFAULT_REGION}:${AWS_ACCOUNT_NUMBER}
 
 # Network
 export ADMINISTRATOR_NETWORK=72.215.187.176/28  # Santa Barbara Public IP Range (Michael Crawford's House)
-export ADMINISTRATOR_NETWORK1=204.26.128.0/17   # Charlotte Public/Private IP Range 
+export ADMINISTRATOR_NETWORK1=204.26.128.0/17   # Charlotte Public/Private IP Range
 export ADMINISTRATOR_NETWORK2=174.76.114.250/32 # Goleta Public IP for internal/vpn user outbound traffic
 export ADMINISTRATOR_NETWORK3=
 export PUBLIC_NETWORK=72.215.187.176/28         # Santa Barbara Public IP Range (Michael Crawford's House)
-export PUBLIC_NETWORK1=204.26.128.0/17          # Charlotte Public/Private IP Range 
+export PUBLIC_NETWORK1=204.26.128.0/17          # Charlotte Public/Private IP Range
 export PUBLIC_NETWORK2=174.76.114.250/32        # Goleta Public IP for internal/vpn user outbound traffic
 export PUBLIC_NETWORK3=
 export PRIVATE_NETWORK=10.0.0.0/16              # Santa Barbara Private IP Range (Michael Crawford's House)
-export PRIVATE_NETWORK1=204.26.128.0/17         # Charlotte Public/Private IP Range 
+export PRIVATE_NETWORK1=204.26.128.0/17         # Charlotte Public/Private IP Range
 export PRIVATE_NETWORK2=
 export PRIVATE_NETWORK3=
 
@@ -78,29 +78,29 @@ export SYSTEM_NAME="IROPS"
 export ENVIRONMENT_CODE=p
 export ENVIRONMENT_NAME="Production"
 export ENVIRONMENT_DOMAIN=$AWS_DEFAULT_REGION.$COMPANY_CODE.iropshub.com
-export ENVIRONMENT_NETWORK=10.40.0.0/16
-export ENVIRONMENT_SIZE=micro
+export ENVIRONMENT_NETWORK=172.21.0.0/21
+export ENVIRONMENT_SIZE=medium
 
 # Core
 export CORE_CODE=c
 export CORE_NAME="Core"
 export CORE_DOMAIN=$AWS_DEFAULT_REGION.$COMPANY_CODE.iropshub.com
-export CORE_NETWORK=10.46.0.0/16
-export CORE_SIZE=micro
+export CORE_NETWORK=172.21.56.0/22
+export CORE_SIZE=small
 
 # Build
 export BUILD_CODE=b
 export BUILD_NAME="Build"
 export BUILD_DOMAIN=$AWS_DEFAULT_REGION.$COMPANY_CODE.iropshub.com
-export BUILD_NETWORK=10.47.0.0/16
-export BUILD_SIZE=micro
+export BUILD_NETWORK=172.21.60.0/23
+export BUILD_SIZE=small
 
 # Identity
 export IDENTITY_CODE=i
 export IDENTITY_NAME="Identity"
 export IDENTITY_DOMAIN=$AWS_DEFAULT_REGION.$COMPANY_CODE.iropshub.com
-export IDENTITY_NETWORK=10.255.0.0/16
-export IDENTITY_SIZE=micro
+export IDENTITY_NETWORK=172.21.62.0/23
+export IDENTITY_SIZE=small
 
 # Gateway
 export GATEWAY_CODE=clt

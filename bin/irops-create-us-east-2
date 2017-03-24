@@ -145,6 +145,14 @@ run "$corebindir/core-create-customsubscriptions-stack -E Core"
 run "$corebindir/core-create-standardbuckets-stack -E Core"
 
 
+#  X. Create Lambda Functions
+#      X.1 Create StandardAMIFunctions Stack
+#      X.2 Create StandardCIDRFunctions Stack
+
+run "$corebindir/core-create-standardamifunctions-stack -E Core"
+run "$corebindir/core-create-standardcidrfunctions-stack -E Core"
+
+
 #  4. Create CustomerGateways
 #      4.1. Create CharlotteCustomerGateway Stack
 #      4.2. Create SantaBarbaraCustomerGateway Stack

@@ -129,6 +129,14 @@ run "$corebindir/core-create-customsubscriptions-stack -E Identity -r us-east-1"
 run "$corebindir/core-create-standardbuckets-stack -E Identity -r us-east-1"
 
 
+#  X. Create Lambda Functions 
+#      X.1 Create StandardAMIFunctions Stack
+#      X.2 Create StandardCIDRFunctions Stack
+
+run "$corebindir/core-create-standardamifunctions-stack -E Identity -r us-east-1"
+run "$corebindir/core-create-standardcidrfunctions-stack -E Identity -r us-east-1"
+
+
 #  8. Create SNS Billing Topics and Subscriptions
 #      8.1 Create BillingTopics Stack
 #      8.2 Create BillingSubscriptions Stack
@@ -149,7 +157,7 @@ run "$billingbindir/billing-create-billingalarms-stack"
 #     10.1. Create Identity-VPC Stack
 #     10.2. Create Identity-NetworkAcls Stack
 
-run "$identitybindir/identity-create-vpc-stack -E Identity -N 10.255.0.0/16 -r us-east-1"
+run "$identitybindir/identity-create-vpc-stack -E Identity -N 172.21.62.0/23 -r us-east-1"
 run "$identitybindir/identity-create-networkacls-stack -E Identity -r us-east-1"
 
 
