@@ -4,7 +4,7 @@ This section is used to bootstrap a new account, before any infrastructure exist
 
 This is currently a work in progress.
 
-## Manditory Manual Account Setup
+## Mandatory Manual Account Setup
 
 ### Configure the Account (root)
 
