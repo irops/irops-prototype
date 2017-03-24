@@ -13,89 +13,93 @@
 #  3. Create S3 Buckets
 #      3.1 Create StandardBuckets Stack
 #
-#  4. Create CustomerGateways
-#      4.1. Create CharlotteCustomerGateway Stack
-#      4.2. Create SantaBarbaraCustomerGateway Stack
+#  4. Create Lambda Functions
+#      4.1 Create StandardAMIFunctions Stack
+#      4.2 Create StandardCIDRFunctions Stack
 #
-#  5. Create Production Environment VPC
-#      5.1. Create Production-HostedZone Stack (Public DNS Zone)
-#      5.2. Create Production-VPC Stack
-#      5.3. Create Production-NetworkAcls Stack
+#  5. Create CustomerGateways
+#      5.1. Create CharlotteCustomerGateway Stack
+#      5.2. Create SantaBarbaraCustomerGateway Stack
 #
-#  6. Create Staging Environment VPC
-#      6.1. Create Staging-HostedZone Stack (Public DNS Zone)
-#      6.2. Create Staging-VPC Stack
-#      6.3. Create Staging-NetworkAcls Stack
+#  6. Create Production Environment VPC
+#      6.1. Create Production-HostedZone Stack (Public DNS Zone)
+#      6.2. Create Production-VPC Stack
+#      6.3. Create Production-NetworkAcls Stack
 #
-#  7. Create Testing Environment VPC
-#      7.1. Create Testing-HostedZone Stack (Public DNS Zone)
-#      7.2. Create Testing-VPC Stack
-#      7.3. Create Testing-NetworkAcls Stack
+#  7. Create Staging Environment VPC
+#      7.1. Create Staging-HostedZone Stack (Public DNS Zone)
+#      7.2. Create Staging-VPC Stack
+#      7.3. Create Staging-NetworkAcls Stack
 #
-#  8. Create Development Environment VPC
-#      8.1. Create Development-HostedZone Stack (Public DNS Zone)
-#      8.2. Create Development-VPC Stack
-#      8.3. Create Development-NetworkAcls Stack
+#  8. Create Testing Environment VPC
+#      8.1. Create Testing-HostedZone Stack (Public DNS Zone)
+#      8.2. Create Testing-VPC Stack
+#      8.3. Create Testing-NetworkAcls Stack
 #
-#  9. Create Core Environment VPC
-#      9.1. Create Core-VPC Stack
-#      9.2. Create Core-NetworkAcls Stack
+#  9. Create Development Environment VPC
+#      9.1. Create Development-HostedZone Stack (Public DNS Zone)
+#      9.2. Create Development-VPC Stack
+#      9.3. Create Development-NetworkAcls Stack
 #
-# 10. Create Build Environment VPC
-#     10.1. Create Build-VPC Stack
-#     10.2. Create Build-NetworkAcls Stack
+# 10. Create Core Environment VPC
+#     10.1. Create Core-VPC Stack
+#     10.2. Create Core-NetworkAcls Stack
 #
-# 11. Create VPCPeeringConnections
-#     11.1. Create Core-VPCPeeringConnections Stack
-#     11.2. Create Production-StagingVPCPeeringConnection Stack
-#     11.3. Create Staging-TestingVPCPeeringConnection Stack
-#     11.4. Create Testing-DevelopmentVPCPeeringConnection Stack
+# 11. Create Build Environment VPC
+#     11.1. Create Build-VPC Stack
+#     11.2. Create Build-NetworkAcls Stack
 #
-# 12. Create VPNConnections
-#     12.1. Create Production-CharlotteVPNConnection Stack
-#     12.2. Create Production-SantaBarbaraVPNConnection Stack
-#     12.3. Create Staging-CharlotteVPNConnection Stack
-#     12.4. Create Staging-SantaBarbaraVPNConnection Stack
-#     12.5. Create Testing-CharlotteVPNConnection Stack
-#     12.6. Create Testing-SantaBarbaraVPNConnection Stack
-#     12.7. Create Development-CharlotteVPNConnection Stack
-#     12.8. Create Development-SantaBarbaraVPNConnection Stack
-#     12.9. Create Core-CharlotteVPNConnection Stack
-#     12.10. Create Core-SantaBarbaraVPNConnection Stack
-#     12.11. Create Build-CharlotteVPNConnection Stack
-#     12.12. Create Build-SantaBarbaraVPNConnection Stack
+# 12. Create VPCPeeringConnections
+#     12.1. Create Core-VPCPeeringConnections Stack
+#     12.2. Create Production-StagingVPCPeeringConnection Stack
+#     12.3. Create Staging-TestingVPCPeeringConnection Stack
+#     12.4. Create Testing-DevelopmentVPCPeeringConnection Stack
 #
-# 13. Create Bastions
-#     13.1. Create Production-LinuxBastions Stack
-#     13.2. Create Production-WindowsBastions Stack (future)
-#     13.3. Create Staging-LinuxBastions Stack
-#     13.4. Create Staging-WindowsBastions Stack (future)
-#     13.5. Create Testing-LinuxBastions Stack
-#     13.6. Create Testing-WindowsBastions Stack (future)
-#     13.7. Create Development-LinuxBastions Stack
-#     13.8. Create Development-WindowsBastions Stack (future)
-#     13.9. Create Build-LinuxBastions Stack
-#     13.10. Create Build-WindowsBastions Stack (future)
-#     13.11. Create Core-LinuxBastions Stack
-#     13.12. Create Core-WindowsBastions Stack (future)
+# 13. Create VPNConnections
+#     13.1. Create Production-CharlotteVPNConnection Stack
+#     13.2. Create Production-SantaBarbaraVPNConnection Stack
+#     13.3. Create Staging-CharlotteVPNConnection Stack
+#     13.4. Create Staging-SantaBarbaraVPNConnection Stack
+#     13.5. Create Testing-CharlotteVPNConnection Stack
+#     13.6. Create Testing-SantaBarbaraVPNConnection Stack
+#     13.7. Create Development-CharlotteVPNConnection Stack
+#     13.8. Create Development-SantaBarbaraVPNConnection Stack
+#     13.9. Create Core-CharlotteVPNConnection Stack
+#     13.10. Create Core-SantaBarbaraVPNConnection Stack
+#     13.11. Create Build-CharlotteVPNConnection Stack
+#     13.12. Create Build-SantaBarbaraVPNConnection Stack
 #
-# 14. Create Example Applications
-#     14.1. Create Production-WebServer Stack
-#     14.2. Create Production-WebServers Stack (future)
-#     14.3. Create Production-LinuxWordPress Stack (future)
-#     14.4. Create Production-WindowsWordPress Stack (future)
-#     14.5. Create Staging-WebServer Stack
-#     14.6. Create Staging-WebServers Stack (future)
-#     14.7. Create Staging-LinuxWordPress Stack (future)
-#     14.8. Create Staging-WindowsWordPress Stack (future)
-#     14.9. Create Testing-WebServer Stack
-#     14.10. Create Testing-WebServers Stack (future)
-#     14.11. Create Testing-LinuxWordPress Stack (future)
-#     14.12. Create Testing-WindowsWordPress Stack (future)
-#     14.13. Create Development-WebServer Stack
-#     14.14. Create Development-WebServers Stack (future)
-#     14.15. Create Development-LinuxWordPress Stack (future)
-#     14.16. Create Development-WindowsWordPress Stack (future)
+# 14. Create Bastions
+#     14.1. Create Production-LinuxBastions Stack
+#     14.2. Create Production-WindowsBastions Stack (future)
+#     14.3. Create Staging-LinuxBastions Stack
+#     14.4. Create Staging-WindowsBastions Stack (future)
+#     14.5. Create Testing-LinuxBastions Stack
+#     14.6. Create Testing-WindowsBastions Stack (future)
+#     14.7. Create Development-LinuxBastions Stack
+#     14.8. Create Development-WindowsBastions Stack (future)
+#     14.9. Create Build-LinuxBastions Stack
+#     14.10. Create Build-WindowsBastions Stack (future)
+#     14.11. Create Core-LinuxBastions Stack
+#     14.12. Create Core-WindowsBastions Stack (future)
+#
+# 15. Create Example Applications
+#     15.1. Create Production-WebServer Stack
+#     15.2. Create Production-WebServers Stack (future)
+#     15.3. Create Production-LinuxWordPress Stack (future)
+#     15.4. Create Production-WindowsWordPress Stack (future)
+#     15.5. Create Staging-WebServer Stack
+#     15.6. Create Staging-WebServers Stack (future)
+#     15.7. Create Staging-LinuxWordPress Stack (future)
+#     15.8. Create Staging-WindowsWordPress Stack (future)
+#     15.9. Create Testing-WebServer Stack
+#     15.10. Create Testing-WebServers Stack (future)
+#     15.11. Create Testing-LinuxWordPress Stack (future)
+#     15.12. Create Testing-WindowsWordPress Stack (future)
+#     15.13. Create Development-WebServer Stack
+#     15.14. Create Development-WebServers Stack (future)
+#     15.15. Create Development-LinuxWordPress Stack (future)
+#     15.16. Create Development-WindowsWordPress Stack (future)
 #
 
 run() {
@@ -145,74 +149,82 @@ run "$corebindir/core-create-customsubscriptions-stack -E Core"
 run "$corebindir/core-create-standardbuckets-stack -E Core"
 
 
-#  4. Create CustomerGateways
-#      4.1. Create CharlotteCustomerGateway Stack
-#      4.2. Create SantaBarbaraCustomerGateway Stack
+#  4. Create Lambda Functions
+#      4.1 Create StandardAMIFunctions Stack
+#      4.2 Create StandardCIDRFunctions Stack
+
+run "$corebindir/core-create-standardamifunctions-stack -E Core"
+run "$corebindir/core-create-standardcidrfunctions-stack -E Core"
+
+
+#  5. Create CustomerGateways
+#      5.1. Create CharlotteCustomerGateway Stack
+#      5.2. Create SantaBarbaraCustomerGateway Stack
 
 #run "$commonbindir/common-create-customergateway-stack -E Core -G Charlotte -i 204.26.253.5"
 run "$commonbindir/common-create-customergateway-stack -E Core -G SantaBarbara -i 72.215.187.179"
 
 
-#  5. Create Production Environment VPC
-#      5.1. Create Production-HostedZone Stack (Public DNS Zone)
-#      5.2. Create Production-VPC Stack
-#      5.3. Create Production-NetworkAcls Stack
+#  6. Create Production Environment VPC
+#      6.1. Create Production-HostedZone Stack (Public DNS Zone)
+#      6.2. Create Production-VPC Stack
+#      6.3. Create Production-NetworkAcls Stack
 
 run "$environmentbindir/environment-create-hostedzone-stack -E Production -D eu-west-1.tvl.iropshub.com"
-run "$environmentbindir/environment-create-vpc-stack -E Production -N 10.56.0.0/16"
+run "$environmentbindir/environment-create-vpc-stack -E Production -N 172.21.128.0/21"
 run "$environmentbindir/environment-create-networkacls-stack -E Production"
 
 
-#  6. Create Staging Environment VPC
-#      6.1. Create Staging-HostedZone Stack (Public DNS Zone)
-#      6.2. Create Staging-VPC Stack
-#      6.3. Create Staging-NetworkAcls Stack
+#  7. Create Staging Environment VPC
+#      7.1. Create Staging-HostedZone Stack (Public DNS Zone)
+#      7.2. Create Staging-VPC Stack
+#      7.3. Create Staging-NetworkAcls Stack
 
 run "$environmentbindir/environment-create-hostedzone-stack -E Staging -D s.eu-west-1.tvl.iropshub.com"
-run "$environmentbindir/environment-create-vpc-stack -E Staging -N 10.57.0.0/16"
+run "$environmentbindir/environment-create-vpc-stack -E Staging -N 172.21.136.0/21"
 run "$environmentbindir/environment-create-networkacls-stack -E Staging"
 
 
-#  7. Create Testing Environment VPC
-#      7.1. Create Testing-HostedZone Stack (Public DNS Zone)
-#      7.2. Create Testing-VPC Stack
-#      7.3. Create Testing-NetworkAcls Stack
+#  8. Create Testing Environment VPC
+#      8.1. Create Testing-HostedZone Stack (Public DNS Zone)
+#      8.2. Create Testing-VPC Stack
+#      8.3. Create Testing-NetworkAcls Stack
 
 run "$environmentbindir/environment-create-hostedzone-stack -E Testing -D t.eu-west-1.tvl.iropshub.com"
-run "$environmentbindir/environment-create-vpc-stack -E Testing -N 10.58.0.0/16"
+run "$environmentbindir/environment-create-vpc-stack -E Testing -N 172.21.144.0/21"
 run "$environmentbindir/environment-create-networkacls-stack -E Testing"
 
 
-#  8. Create Development Environment VPC
-#      8.1. Create Development-HostedZone Stack (Public DNS Zone)
-#      8.2. Create Development-VPC Stack
-#      8.3. Create Development-NetworkAcls Stack
+#  9. Create Development Environment VPC
+#      9.1. Create Development-HostedZone Stack (Public DNS Zone)
+#      9.2. Create Development-VPC Stack
+#      9.3. Create Development-NetworkAcls Stack
 
 run "$environmentbindir/environment-create-hostedzone-stack -E Development -D d.eu-west-1.tvl.iropshub.com"
-run "$environmentbindir/environment-create-vpc-stack -E Development -N 10.59.0.0/16"
+run "$environmentbindir/environment-create-vpc-stack -E Development -N 172.21.152.0/21"
 run "$environmentbindir/environment-create-networkacls-stack -E Development"
 
 
-#  9. Create Core Environment VPC
-#      9.1. Create Core-VPC Stack
-#      9.2. Create Core-NetworkAcls Stack
+# 10. Create Core Environment VPC
+#     10.1. Create Core-VPC Stack
+#     10.2. Create Core-NetworkAcls Stack
 
-run "$corebindir/core-create-vpc-stack -E Core -N 10.62.0.0/16"
+run "$corebindir/core-create-vpc-stack -E Core -N 172.21.184.0/22"
 run "$corebindir/core-create-networkacls-stack -E Core"
 
-# 10. Create Build Environment VPC
-#     10.1. Create Build-VPC Stack
-#     10.2. Create Build-NetworkAcls Stack
+# 11. Create Build Environment VPC
+#     11.1. Create Build-VPC Stack
+#     11.2. Create Build-NetworkAcls Stack
 
-run "$corebindir/build-create-vpc-stack -E Build -N 10.63.0.0/16"
+run "$corebindir/build-create-vpc-stack -E Build -N 172.21.188.0/23"
 run "$corebindir/build-create-networkacls-stack -E Build"
 
 
-# 11. Create VPCPeeringConnections
-#     11.1. Create Core-VPCPeeringConnections Stack
-#     11.2. Create Production-StagingVPCPeeringConnection Stack
-#     11.3. Create Staging-TestingVPCPeeringConnection Stack
-#     11.4. Create Testing-DevelopmentVPCPeeringConnection Stack
+# 12. Create VPCPeeringConnections
+#     12.1. Create Core-VPCPeeringConnections Stack
+#     12.2. Create Production-StagingVPCPeeringConnection Stack
+#     12.3. Create Staging-TestingVPCPeeringConnection Stack
+#     12.4. Create Testing-DevelopmentVPCPeeringConnection Stack
 
 run "$corebindir/core-create-vpcpeeringconnections-stack"
 run "$environmentbindir/environment-create-vpcpeeringconnection-stack -E Production -P Staging"
@@ -220,19 +232,21 @@ run "$environmentbindir/environment-create-vpcpeeringconnection-stack -E Staging
 run "$environmentbindir/environment-create-vpcpeeringconnection-stack -E Testing -P Development"
 
 
-# 12. Create VPNConnections
-#     12.1. Create Production-CharlotteVPNConnection Stack
-#     12.2. Create Production-SantaBarbaraVPNConnection Stack
-#     12.3. Create Staging-CharlotteVPNConnection Stack
-#     12.4. Create Staging-SantaBarbaraVPNConnection Stack
-#     12.5. Create Testing-CharlotteVPNConnection Stack
-#     12.6. Create Testing-SantaBarbaraVPNConnection Stack
-#     12.7. Create Development-CharlotteVPNConnection Stack
-#     12.8. Create Development-SantaBarbaraVPNConnection Stack
-#     12.9. Create Core-CharlotteVPNConnection Stack
-#     12.10. Create Core-SantaBarbaraVPNConnection Stack
-#     12.11. Create Build-CharlotteVPNConnection Stack
-#     12.12. Create Build-SantaBarbaraVPNConnection Stack
+# 13. Create VPNConnections
+#     13.1. Create Production-CharlotteVPNConnection Stack
+#     13.2. Create Production-SantaBarbaraVPNConnection Stack
+#     13.3. Create Staging-CharlotteVPNConnection Stack
+#     13.4. Create Staging-SantaBarbaraVPNConnection Stack
+#     13.5. Create Testing-CharlotteVPNConnection Stack
+#     13.6. Create Testing-SantaBarbaraVPNConnection Stack
+#     13.7. Create Development-CharlotteVPNConnection Stack
+#     13.8. Create Development-SantaBarbaraVPNConnection Stack
+#     13.9. Create Core-CharlotteVPNConnection Stack
+#     13.10. Create Core-SantaBarbaraVPNConnection Stack
+#     13.11. Create Build-CharlotteVPNConnection Stack
+#     13.12. Create Build-SantaBarbaraVPNConnection Stack
+
+# Current subnets are not routable to Charlotte, so don't create VPN to there
 
 #run "$commonbindir/common-create-vpnconnection-stack -E Production -G Charlotte -N 204.26.128.0/17"
 run "$commonbindir/common-create-vpnconnection-stack -E Production -G SantaBarbara -N 10.0.0.0/16"
@@ -248,19 +262,19 @@ run "$commonbindir/common-create-vpnconnection-stack -E Core -G SantaBarbara -N 
 run "$commonbindir/common-create-vpnconnection-stack -E Build -G SantaBarbara -N 10.0.0.0/16"
 
 
-# 13. Create Bastions
-#     13.1. Create Production-LinuxBastions Stack
-#     13.2. Create Production-WindowsBastions Stack (future)
-#     13.3. Create Staging-LinuxBastions Stack
-#     13.4. Create Staging-WindowsBastions Stack (future)
-#     13.5. Create Testing-LinuxBastions Stack
-#     13.6. Create Testing-WindowsBastions Stack (future)
-#     13.7. Create Development-LinuxBastions Stack
-#     13.8. Create Development-WindowsBastions Stack (future)
-#     13.9. Create Build-LinuxBastions Stack
-#     13.10. Create Build-WindowsBastions Stack (future)
-#     13.11. Create Core-LinuxBastions Stack
-#     13.12. Create Core-WindowsBastions Stack (future)
+# 14. Create Bastions
+#     14.1. Create Production-LinuxBastions Stack
+#     14.2. Create Production-WindowsBastions Stack (future)
+#     14.3. Create Staging-LinuxBastions Stack
+#     14.4. Create Staging-WindowsBastions Stack (future)
+#     14.5. Create Testing-LinuxBastions Stack
+#     14.6. Create Testing-WindowsBastions Stack (future)
+#     14.7. Create Development-LinuxBastions Stack
+#     14.8. Create Development-WindowsBastions Stack (future)
+#     14.9. Create Build-LinuxBastions Stack
+#     14.10. Create Build-WindowsBastions Stack (future)
+#     14.11. Create Core-LinuxBastions Stack
+#     14.12. Create Core-WindowsBastions Stack (future)
 
 run "$utilitybindir/utility-create-linuxbastions-stack -E Production -U LinuxBastions -D lbastion"
 #run "$utilitybindir/utility-create-windowsbastions-stack -E Production -U WindowsBastions -D wbastion"
@@ -276,23 +290,23 @@ run "$utilitybindir/utility-create-linuxbastions-stack -E Build -U LinuxBastions
 #run "$utilitybindir/utility-create-windowsbastions-stack -E Build -U WindowsBastions -D bwbastion"
 
 
-# 14. Create Example Applications
-#     14.1. Create Production-WebServer Stack
-#     14.2. Create Production-WebServers Stack (future)
-#     14.3. Create Production-LinuxWordPress Stack (future)
-#     14.4. Create Production-WindowsWordPress Stack (future)
-#     14.5. Create Staging-WebServer Stack
-#     14.6. Create Staging-WebServers Stack (future)
-#     14.7. Create Staging-LinuxWordPress Stack (future)
-#     14.8. Create Staging-WindowsWordPress Stack (future)
-#     14.9. Create Testing-WebServer Stack
-#     14.10. Create Testing-WebServers Stack (future)
-#     14.11. Create Testing-LinuxWordPress Stack (future)
-#     14.12. Create Testing-WindowsWordPress Stack (future)
-#     14.13. Create Development-WebServer Stack
-#     14.14. Create Development-WebServers Stack (future)
-#     14.15. Create Development-LinuxWordPress Stack (future)
-#     14.16. Create Development-WindowsWordPress Stack (future)
+# 15. Create Example Applications
+#     15.1. Create Production-WebServer Stack
+#     15.2. Create Production-WebServers Stack (future)
+#     15.3. Create Production-LinuxWordPress Stack (future)
+#     15.4. Create Production-WindowsWordPress Stack (future)
+#     15.5. Create Staging-WebServer Stack
+#     15.6. Create Staging-WebServers Stack (future)
+#     15.7. Create Staging-LinuxWordPress Stack (future)
+#     15.8. Create Staging-WindowsWordPress Stack (future)
+#     15.9. Create Testing-WebServer Stack
+#     15.10. Create Testing-WebServers Stack (future)
+#     15.11. Create Testing-LinuxWordPress Stack (future)
+#     15.12. Create Testing-WindowsWordPress Stack (future)
+#     15.13. Create Development-WebServer Stack
+#     15.14. Create Development-WebServers Stack (future)
+#     15.15. Create Development-LinuxWordPress Stack (future)
+#     15.16. Create Development-WindowsWordPress Stack (future)
 
 run "$examplebindir/example-create-webserver-stack -E Production -A WebServer -V 1.0.0 -D ws"
 #run "$examplebindir/example-create-webservers-stack -E Production -A WebServers -V 1.0.0 -D bws"

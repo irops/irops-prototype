@@ -93,13 +93,17 @@
 #     12.1. Delete SantaBarbaraCustomerGateway Stack
 #     12.2. Delete CharlotteCustomerGateway Stack
 #
-# 13. Delete S3 Buckets
-#     13.1 Delete StandardBuckets Stack
+# 13. Delete Lambda Functions
+#     13.1 Delete StandardCIDRFunctions Stack
+#     13.2 Delete StandardAMIFunctions Stack
 #
-# 14. Delete SNS Topics and Subscriptions
-#     14.1 Delete CustomSubscriptions Stack
-#     14.2 Delete StandardSubscriptions Stack
-#     14.3 Delete StandardTopics Stack
+# 14. Delete S3 Buckets
+#     14.1 Delete StandardBuckets Stack
+#
+# 15. Delete SNS Topics and Subscriptions
+#     15.1 Delete CustomSubscriptions Stack
+#     15.2 Delete StandardSubscriptions Stack
+#     15.3 Delete StandardTopics Stack
 #
 
 run() {
@@ -305,16 +309,24 @@ run "$commonbindir/common-delete-customergateway-stack -E Core -G SantaBarbara"
 #run "$commonbindir/common-delete-customergateway-stack -E Core -G Charlotte"
 
 
-# 13. Delete S3 Buckets
-#     13.1 Delete StandardBuckets Stack
+# 13. Delete Lambda Functions
+#     13.1 Delete StandardCIDRFunctions Stack
+#     13.2 Delete StandardAMIFunctions Stack
+
+run "$corebindir/core-delete-standardcidrfunctions-stack -E Core"
+run "$corebindir/core-delete-standardamifunctions-stack -E Core"
+
+
+# 14. Delete S3 Buckets
+#     14.1 Delete StandardBuckets Stack
 
 run "$corebindir/core-delete-standardbuckets-stack -E Core"
 
 
-# 14. Delete SNS Topics and Subscriptions
-#     14.1 Delete CustomSubscriptions Stack
-#     14.2 Delete StandardSubscriptions Stack
-#     14.3 Delete StandardTopics Stack
+# 15. Delete SNS Topics and Subscriptions
+#     15.1 Delete CustomSubscriptions Stack
+#     15.2 Delete StandardSubscriptions Stack
+#     15.3 Delete StandardTopics Stack
 
 run "$corebindir/core-delete-customsubscriptions-stack -E Core"
 run "$corebindir/core-delete-standardsubscriptions-stack -E Core"

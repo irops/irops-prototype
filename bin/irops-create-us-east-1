@@ -29,25 +29,29 @@
 #  7. Create S3 Buckets
 #      7.1 Create StandardBuckets Stack
 #
-#  8. Create SNS Billing Topics and Subscriptions
-#      8.1 Create BillingTopics Stack
-#      8.2 Create BillingSubscriptions Stack
+#  8. Create Lambda Functions 
+#      8.1 Create StandardAMIFunctions Stack
+#      8.2 Create StandardCIDRFunctions Stack
 #
-#  9. Create CloudWatch Billing Alarms
-#      9.1 Create BillingAlarms Stack
+#  9. Create SNS Billing Topics and Subscriptions
+#      9.1 Create BillingTopics Stack
+#      9.2 Create BillingSubscriptions Stack
+#
+# 10. Create CloudWatch Billing Alarms
+#     10.1 Create BillingAlarms Stack
 #
 ###### OPTIONAL #########################################################
 #
-# 10. Create Identity Environment VPC
-#     10.1. Create Identity-VPC Stack
-#     10.2. Create Identity-NetworkAcls Stack
+# 11. Create Identity Environment VPC
+#     11.1. Create Identity-VPC Stack
+#     11.2. Create Identity-NetworkAcls Stack
 #
-# 11. Create Bastions
-#     11.1. Create Identity-LinuxBastions Stack
-#     11.1. Create Identity-WindowsBastions Stack (future)
+# 12. Create Bastions
+#     12.1. Create Identity-LinuxBastions Stack
+#     12.1. Create Identity-WindowsBastions Stack (future)
 #
-# 12. Create Example Applications
-#     12.1. Create Identity-WindowsDomainControllers Stack (future)
+# 13. Create Example Applications
+#     13.1. Create Identity-WindowsDomainControllers Stack (future)
 #
 
 run() {
@@ -129,48 +133,48 @@ run "$corebindir/core-create-customsubscriptions-stack -E Identity -r us-east-1"
 run "$corebindir/core-create-standardbuckets-stack -E Identity -r us-east-1"
 
 
-#  X. Create Lambda Functions 
-#      X.1 Create StandardAMIFunctions Stack
-#      X.2 Create StandardCIDRFunctions Stack
+#  8. Create Lambda Functions 
+#      8.1 Create StandardAMIFunctions Stack
+#      8.2 Create StandardCIDRFunctions Stack
 
 run "$corebindir/core-create-standardamifunctions-stack -E Identity -r us-east-1"
 run "$corebindir/core-create-standardcidrfunctions-stack -E Identity -r us-east-1"
 
 
-#  8. Create SNS Billing Topics and Subscriptions
-#      8.1 Create BillingTopics Stack
-#      8.2 Create BillingSubscriptions Stack
+#  9. Create SNS Billing Topics and Subscriptions
+#      9.1 Create BillingTopics Stack
+#      9.2 Create BillingSubscriptions Stack
 
 run "$billingbindir/billing-create-billingtopics-stack"
 run "$billingbindir/billing-create-billingsubscription-stack"
 
 
-#  9. Create CloudWatch Billing Alarms
-#      9.1 Create BillingAlarms Stack
+# 10. Create CloudWatch Billing Alarms
+#     10.1 Create BillingAlarms Stack
 
 run "$billingbindir/billing-create-billingalarms-stack"
 
 
 ###### OPTIONAL #########################################################
 
-# 10. Create Identity Environment VPC
-#     10.1. Create Identity-VPC Stack
-#     10.2. Create Identity-NetworkAcls Stack
+# 11. Create Identity Environment VPC
+#     11.1. Create Identity-VPC Stack
+#     11.2. Create Identity-NetworkAcls Stack
 
 run "$identitybindir/identity-create-vpc-stack -E Identity -N 172.21.62.0/23 -r us-east-1"
 run "$identitybindir/identity-create-networkacls-stack -E Identity -r us-east-1"
 
 
-# 11. Create Bastions
-#     11.1. Create Identity-LinuxBastions Stack
-#     11.1. Create Identity-WindowsBastions Stack (future)
+# 12. Create Bastions
+#     12.1. Create Identity-LinuxBastions Stack
+#     12.1. Create Identity-WindowsBastions Stack (future)
 
 run "$utilitybindir/utility-create-linuxbastions-stack -E Identity -U LinuxBastions -D ilbastion -r us-east-1"
 #run "$utilitybindir/utility-create-windowsbastions-stack -E Identity -U WindowsBastions -D iwbastion -r us-east-1"
 
 
-# 12. Create Example Applications
-#     12.1. Create Identity-WindowsDomainControllers Stack (future)
+# 13. Create Example Applications
+#     13.1. Create Identity-WindowsDomainControllers Stack (future)
 
 #run "$examplebindir/example-create-windowsdomaincontrollers-stack -E Identity -A WindowsDomainControllers -D dc -r us-east-1"
 
