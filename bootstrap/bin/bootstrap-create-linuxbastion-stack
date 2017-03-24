@@ -44,7 +44,7 @@ public_network2=${PUBLIC_NETWORK2:-}
 public_network3=${PUBLIC_NETWORK3:-}
 region=us-east-1 # This should run only in us-east-1
 account=${AWS_ACCOUNT_ALIAS:-irops}
-user=${AWS_USER_NAME:-bootstrapadministrator}
+user=bootstrapadministrator
 
 use_static_public_address=true
 use_static_home_volume=true
