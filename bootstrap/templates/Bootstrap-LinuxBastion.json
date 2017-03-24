@@ -239,20 +239,21 @@
 
   "Mappings" : {
     "ImageIdMap" : {
-      "us-east-1"      : { "AMI" : "ami-9be6f38c" },
-      "us-east-2"      : { "AMI" : "ami-38cd975d" },
-      "us-west-1"      : { "AMI" : "ami-b73d6cd7" },
-      "us-west-2"      : { "AMI" : "ami-1e299d7e" },
-      "ca-central-1"   : { "AMI" : "ami-eb20928f" },
-      "sa-east-1"      : { "AMI" : "ami-bb40d8d7" },
-      "eu-west-1"      : { "AMI" : "ami-c51e3eb6" },
-      "eu-west-2"      : { "AMI" : "ami-bfe0eadb" },
-      "eu-central-1"   : { "AMI" : "ami-211ada4e" },
-      "ap-northeast-1" : { "AMI" : "ami-9f0c67f8" },
-      "ap-northeast-2" : { "AMI" : "ami-94bb6dfa" },
-      "ap-southeast-1" : { "AMI" : "ami-4dd6782e" },
-      "ap-southeast-2" : { "AMI" : "ami-28cff44b" },
-      "ap-south-1"     : { "AMI" : "ami-9fc7b0f0" }
+      "AMI"            : { "AMZN" : "Amazon Linux 2016.09.1", "RHEL" : "RHEL 7.3", "UBNT" : "Ubuntu 16.04" },
+      "us-east-1"      : { "AMZN" : "ami-0b33d91d", "RHEL" : "ami-b63769a1", "UBNT" : "ami-f4cc1de2" },
+      "us-east-2"      : { "AMZN" : "ami-c55673a0", "RHEL" : "ami-0932686c", "UBNT" : "ami-fcc19b99" },
+      "us-west-1"      : { "AMZN" : "ami-165a0876", "RHEL" : "ami-2cade64c", "UBNT" : "ami-16efb076" },
+      "us-west-2"      : { "AMZN" : "ami-f173cc91", "RHEL" : "ami-6f68cf0f", "UBNT" : "ami-a58d0dc5" },
+      "ca-central-1"   : { "AMZN" : "ami-ebed508f", "RHEL" : "ami-9062d0f4", "UBNT" : "ami-7b74c91f" },
+      "eu-west-1"      : { "AMZN" : "ami-70edb016", "RHEL" : "ami-02ace471", "UBNT" : "ami-405f7226" },
+      "eu-central-1"   : { "AMZN" : "ami-af0fc0c0", "RHEL" : "ami-e4c63e8b", "UBNT" : "ami-3f1bd150" },
+      "eu-west-2"      : { "AMZN" : "ami-f1949e95", "RHEL" : "ami-9c363cf8", "UBNT" : "ami-ede2e889" },
+      "ap-southeast-1" : { "AMZN" : "ami-dc9339bf", "RHEL" : "ami-2c95344f", "UBNT" : "ami-ee7bca8d" },
+      "ap-southeast-2" : { "AMZN" : "ami-1c47407f", "RHEL" : "ami-39ac915a", "UBNT" : "ami-4e686b2d" },
+      "ap-northeast-2" : { "AMZN" : "ami-dac312b4", "RHEL" : "ami-44db152a", "UBNT" : "ami-0500d06b" },
+      "ap-northeast-1" : { "AMZN" : "ami-56d4ad31", "RHEL" : "ami-5de0433c", "UBNT" : "ami-1bfdb67c" },
+      "ap-south-1"     : { "AMZN" : "ami-f9daac96", "RHEL" : "ami-cdbdd7a2", "UBNT" : "ami-5f3d4d30" },
+      "sa-east-1"      : { "AMZN" : "ami-80086dec", "RHEL" : "ami-7de77b11", "UBNT" : "ami-af0462c3" }
     },
 
     "InstanceTypeMap" : {
@@ -367,7 +368,10 @@
             "Action" : [
               "iam:GetGroup"
             ],
-            "Resource" : { "Fn::Sub" : "arn:aws:iam::${AWS::AccountId}:group/BootstrapAdministrators" }
+            "Resource" : [
+              { "Fn::Sub" : "arn:aws:iam::${AWS::AccountId}:group/BootstrapAdministrators" },
+              { "Fn::Sub" : "arn:aws:iam::${AWS::AccountId}:group/BootstrapUsers" }
+            ]
           },
           {
             "Effect" : "Allow",
@@ -806,9 +810,9 @@
                   "region=${zone::-1}\n",
                   "echo\n",
                   "echo $(date +\"%Y-%m-%d %H:%M:%S,%3N\") [DEBUG] Obtaining members of BootstrapAdministrators IAM Group:\n",
-                  "bootstrap_administrators=$(aws iam get-group --group-name BootstrapAdministrators --query 'Users[].UserName' --region $region --output text)\n",
+                  "administrators=$(aws iam get-group --group-name BootstrapAdministrators --query 'Users[].UserName' --region $region --output text)\n",
                   "echo $(date +\"%Y-%m-%d %H:%M:%S,%3N\") [DEBUG] Adding local administrators based on membership in BootstrapAdministrators IAM Group:\n",
-                  "for administrator in $bastion_administrators; do\n",
+                  "for administrator in $administrators; do\n",
                   "    echo -n \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] - $administrator\"\n",
                   "    keys=$(aws iam list-ssh-public-keys --user-name $administrator --query 'SSHPublicKeys[].SSHPublicKeyId' --region $region --output text)\n",
                   "    if [ ! \"$keys\" = \"\" ]; then\n",
@@ -831,6 +835,37 @@
                   "        echo\n",
                   "    else\n",
                   "        echo \" - skipped (no SSH Key)\"\n",
+                  "    fi\n",
+                  "done\n",
+                  "\n",
+                  "echo $(date +\"%Y-%m-%d %H:%M:%S,%3N\") [DEBUG] Obtaining members of BootstrapUsers IAM Group:\n",
+                  "users=$(aws iam get-group --group-name BootstrapUsers --query 'Users[].UserName' --region $region --output text)\n",
+                  "echo $(date +\"%Y-%m-%d %H:%M:%S,%3N\") [DEBUG] Adding local users based on membership in BootstrapUsers IAM Group:\n",
+                  "for user in $users; do\n",
+                  "    echo -n \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] - $user\"\n",
+                  "    if ! id $user &> /dev/null; then\n",
+                  "        keys=$(aws iam list-ssh-public-keys --user-name $user --query 'SSHPublicKeys[].SSHPublicKeyId' --region $region --output text)\n",
+                  "        if [ ! \"$keys\" = \"\" ]; then\n",
+                  "            if [ -d /home/$user ]; then\n",
+                  "                /usr/sbin/useradd -M $user\n",
+                  "            else\n",
+                  "                /usr/sbin/useradd $user\n",
+                  "            fi\n",
+                  "            mkdir -p /home/$user/.ssh\n",
+                  "            chmod 0700 /home/$user/.ssh\n",
+                  "            rm -f /home/$user/.ssh/authorized_keys\n",
+                  "            for key in $keys; do\n",
+                  "                echo -n \" - $key\"\n",
+                  "                echo $(aws iam get-ssh-public-key --user-name $user --ssh-public-key-id $key --encoding SSH --query 'SSHPublicKey.SSHPublicKeyBody' --region $region --output text) >> /home/$user/.ssh/authorized_keys\n",
+                  "            done\n",
+                  "            chmod 0600 /home/$user/.ssh/authorized_keys\n",
+                  "            chown -R $user:$user /home/$user/.ssh\n",
+                  "            echo\n",
+                  "        else\n",
+                  "            echo \" - skipped (no SSH Key)\"\n",
+                  "        fi\n",
+                  "    else\n",
+                  "        echo \" - skipped (user created as administrator)\"\n",
                   "    fi\n",
                   "done\n"
               ]]},
