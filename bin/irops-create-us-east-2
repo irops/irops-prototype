@@ -275,17 +275,17 @@ run "$commonbindir/common-create-vpnconnection-stack -E Build -G SantaBarbara -N
 #     14.11. Create Core-LinuxBastions Stack
 #     14.12. Create Core-WindowsBastions Stack (future)
 
-run "$utilitybindir/utility-create-linuxbastions-stack -E Production -U LinuxBastions -D lbastion"
+run "$utilitybindir/utility-create-linuxbastions-stack -E Production -U LinuxBastions -D lbastion -Z micro"
 #run "$utilitybindir/utility-create-windowsbastions-stack -E Production -U WindowsBastions -D wbastion"
-run "$utilitybindir/utility-create-linuxbastions-stack -E Staging -U LinuxBastions -D lbastion"
+run "$utilitybindir/utility-create-linuxbastions-stack -E Staging -U LinuxBastions -D lbastion -Z micro"
 #run "$utilitybindir/utility-create-windowsbastions-stack -E Staging -U WindowsBastions -D wbastion"
-run "$utilitybindir/utility-create-linuxbastions-stack -E Testing -U LinuxBastions -D lbastion"
+run "$utilitybindir/utility-create-linuxbastions-stack -E Testing -U LinuxBastions -D lbastion -Z micro"
 #run "$utilitybindir/utility-create-windowsbastions-stack -E Testing -U WindowsBastions -D wbastion"
-run "$utilitybindir/utility-create-linuxbastions-stack -E Development -U LinuxBastions -D lbastion"
+run "$utilitybindir/utility-create-linuxbastions-stack -E Development -U LinuxBastions -D lbastion -Z micro"
 #run "$utilitybindir/utility-create-windowsbastions-stack -E Development -U WindowsBastions -D wbastion"
-run "$utilitybindir/utility-create-linuxbastions-stack -E Core -U LinuxBastions -D clbastion"
+run "$utilitybindir/utility-create-linuxbastions-stack -E Core -U LinuxBastions -D clbastion -Z micro"
 #run "$utilitybindir/utility-create-windowsbastions-stack -E Core -U WindowsBastions -D cwbastion"
-run "$utilitybindir/utility-create-linuxbastions-stack -E Build -U LinuxBastions -D blbastion"
+run "$utilitybindir/utility-create-linuxbastions-stack -E Build -U LinuxBastions -D blbastion -Z micro"
 #run "$utilitybindir/utility-create-windowsbastions-stack -E Build -U WindowsBastions -D bwbastion"
 
 
@@ -307,22 +307,22 @@ run "$utilitybindir/utility-create-linuxbastions-stack -E Build -U LinuxBastions
 #     15.15. Create Development-LinuxWordPress Stack (future)
 #     15.16. Create Development-WindowsWordPress Stack (future)
 
-run "$examplebindir/example-create-webserver-stack -E Production -A WebServer -V 1.0.0 -D ws"
+run "$examplebindir/example-create-webserver-stack -E Production -A WebServer -V 1.0.0 -D ws -Z micro"
 #run "$examplebindir/example-create-webservers-stack -E Production -A WebServers -V 1.0.0 -D bws"
 #run "$examplebindir/example-create-linuxwordpress-stack -E Production -A LinuxWordPress -V 1.0.0 -D lblog"
 #run "$examplebindir/example-create-windowswordpress-stack -E Production -A WindowsWordPress -V 1.0.0 -D wblog"
 
-run "$examplebindir/example-create-webserver-stack -E Staging -A WebServer -V 2.0.0 -D ws"
+run "$examplebindir/example-create-webserver-stack -E Staging -A WebServer -V 2.0.0 -D ws -Z micro"
 #run "$examplebindir/example-create-webservers-stack -E Staging -A WebServers -V 2.0.0 -D bws"
 #run "$examplebindir/example-create-linuxwordpress-stack -E Staging -A LinuxWordPress -V 2.0.0 -D lblog"
 #run "$examplebindir/example-create-windowswordpress-stack -E Staging -A WindowsWordPress -V 2.0.0 -D wblog"
 
-run "$examplebindir/example-create-webserver-stack -E Testing -A WebServer -V 3.0.0 -D ws"
+run "$examplebindir/example-create-webserver-stack -E Testing -A WebServer -V 3.0.0 -D ws -Z micro"
 #run "$examplebindir/example-create-webservers-stack -E Testing -A WebServers -V 3.0.0 -D bws"
 #run "$examplebindir/example-create-linuxwordpress-stack -E Testing -A LinuxWordPress -V 3.0.0 -D lblog"
 #run "$examplebindir/example-create-windowswordpress-stack -E Testing -A WindowsWordPress -V 3.0.0 -D wblog"
 
-run "$examplebindir/example-create-webserver-stack -E Development -A WebServer -V 4.0.0 -D ws"
+run "$examplebindir/example-create-webserver-stack -E Development -A WebServer -V 4.0.0 -D ws -Z micro"
 #run "$examplebindir/example-create-webservers-stack -E Development -A WebServers -V 4.0.0 -D bws"
 #run "$examplebindir/example-create-linuxwordpress-stack -E Development -A LinuxWordPress -V 4.0.0 -D lblog"
 #run "$examplebindir/example-create-windowswordpress-stack -E Development -A WindowsWordPress -V 4.0.0 -D wblog"
