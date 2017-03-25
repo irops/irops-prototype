@@ -161,7 +161,7 @@ run "$corebindir/core-create-standardcidrfunctions-stack -E Core"
 #      5.1. Create CharlotteCustomerGateway Stack
 #      5.2. Create SantaBarbaraCustomerGateway Stack
 
-run "$commonbindir/common-create-customergateway-stack -E Core -G Charlotte -i 204.26.253.5"
+#run "$commonbindir/common-create-customergateway-stack -E Core -G Charlotte -i 204.26.253.5"
 run "$commonbindir/common-create-customergateway-stack -E Core -G SantaBarbara -i 72.215.187.179"
 
 
@@ -171,7 +171,7 @@ run "$commonbindir/common-create-customergateway-stack -E Core -G SantaBarbara -
 #      6.3. Create Production-NetworkAcls Stack
 
 run "$environmentbindir/environment-create-hostedzone-stack -E Production -D us-east-2.tvl.iropshub.com"
-run "$environmentbindir/environment-create-vpc-stack -E Production -N 10.80.0.0/16"
+run "$environmentbindir/environment-create-vpc-stack -E Production -N 172.21.64.0/21"
 run "$environmentbindir/environment-create-networkacls-stack -E Production"
 
 
@@ -181,7 +181,7 @@ run "$environmentbindir/environment-create-networkacls-stack -E Production"
 #      7.3. Create Staging-NetworkAcls Stack
 
 run "$environmentbindir/environment-create-hostedzone-stack -E Staging -D s.us-east-2.tvl.iropshub.com"
-run "$environmentbindir/environment-create-vpc-stack -E Staging -N 10.81.0.0/16"
+run "$environmentbindir/environment-create-vpc-stack -E Staging -N 172.21.72.0/21"
 run "$environmentbindir/environment-create-networkacls-stack -E Staging"
 
 
@@ -191,7 +191,7 @@ run "$environmentbindir/environment-create-networkacls-stack -E Staging"
 #      8.3. Create Testing-NetworkAcls Stack
 
 run "$environmentbindir/environment-create-hostedzone-stack -E Testing -D t.us-east-2.tvl.iropshub.com"
-run "$environmentbindir/environment-create-vpc-stack -E Testing -N 10.82.0.0/16"
+run "$environmentbindir/environment-create-vpc-stack -E Testing -N 172.21.80.0/21"
 run "$environmentbindir/environment-create-networkacls-stack -E Testing"
 
 
@@ -201,7 +201,7 @@ run "$environmentbindir/environment-create-networkacls-stack -E Testing"
 #      9.3. Create Development-NetworkAcls Stack
 
 run "$environmentbindir/environment-create-hostedzone-stack -E Development -D d.us-east-2.tvl.iropshub.com"
-run "$environmentbindir/environment-create-vpc-stack -E Development -N 10.83.0.0/16"
+run "$environmentbindir/environment-create-vpc-stack -E Development -N 172.21.88.0/21"
 run "$environmentbindir/environment-create-networkacls-stack -E Development"
 
 
@@ -209,7 +209,7 @@ run "$environmentbindir/environment-create-networkacls-stack -E Development"
 #     10.1. Create Core-VPC Stack
 #     10.2. Create Core-NetworkAcls Stack
 
-run "$corebindir/core-create-vpc-stack -E Core -N 10.86.0.0/16"
+run "$corebindir/core-create-vpc-stack -E Core -N 172.21.120.0/22"
 run "$corebindir/core-create-networkacls-stack -E Core"
 
 
@@ -217,7 +217,7 @@ run "$corebindir/core-create-networkacls-stack -E Core"
 #     11.1. Create Build-VPC Stack
 #     11.2. Create Build-NetworkAcls Stack
 
-run "$corebindir/build-create-vpc-stack -E Build -N 10.87.0.0/16"
+run "$corebindir/build-create-vpc-stack -E Build -N 172.21.124.0/23"
 run "$corebindir/build-create-networkacls-stack -E Build"
 
 
@@ -247,17 +247,17 @@ run "$environmentbindir/environment-create-vpcpeeringconnection-stack -E Testing
 #     13.11. Create Build-CharlotteVPNConnection Stack
 #     13.12. Create Build-SantaBarbaraVPNConnection Stack
 
-run "$commonbindir/common-create-vpnconnection-stack -E Production -G Charlotte -N 204.26.128.0/17"
+#run "$commonbindir/common-create-vpnconnection-stack -E Production -G Charlotte -N 204.26.128.0/17"
 run "$commonbindir/common-create-vpnconnection-stack -E Production -G SantaBarbara -N 10.0.0.0/16"
-run "$commonbindir/common-create-vpnconnection-stack -E Staging -G Charlotte -N 204.26.128.0/17"
+#run "$commonbindir/common-create-vpnconnection-stack -E Staging -G Charlotte -N 204.26.128.0/17"
 run "$commonbindir/common-create-vpnconnection-stack -E Staging -G SantaBarbara -N 10.0.0.0/16"
-run "$commonbindir/common-create-vpnconnection-stack -E Testing -G Charlotte -N 204.26.128.0/17"
+#run "$commonbindir/common-create-vpnconnection-stack -E Testing -G Charlotte -N 204.26.128.0/17"
 run "$commonbindir/common-create-vpnconnection-stack -E Testing -G SantaBarbara -N 10.0.0.0/16"
-run "$commonbindir/common-create-vpnconnection-stack -E Development -G Charlotte -N 204.26.128.0/17"
+#run "$commonbindir/common-create-vpnconnection-stack -E Development -G Charlotte -N 204.26.128.0/17"
 run "$commonbindir/common-create-vpnconnection-stack -E Development -G SantaBarbara -N 10.0.0.0/16"
-run "$commonbindir/common-create-vpnconnection-stack -E Core -G Charlotte -N 204.26.128.0/17"
+#run "$commonbindir/common-create-vpnconnection-stack -E Core -G Charlotte -N 204.26.128.0/17"
 run "$commonbindir/common-create-vpnconnection-stack -E Core -G SantaBarbara -N 10.0.0.0/16"
-run "$commonbindir/common-create-vpnconnection-stack -E Build -G Charlotte -N 204.26.128.0/17"
+#run "$commonbindir/common-create-vpnconnection-stack -E Build -G Charlotte -N 204.26.128.0/17"
 run "$commonbindir/common-create-vpnconnection-stack -E Build -G SantaBarbara -N 10.0.0.0/16"
 
 
