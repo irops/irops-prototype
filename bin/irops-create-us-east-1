@@ -146,7 +146,7 @@ run "$corebindir/core-create-standardcidrfunctions-stack -E Identity -r us-east-
 #      9.2 Create BillingSubscriptions Stack
 
 run "$billingbindir/billing-create-billingtopics-stack"
-run "$billingbindir/billing-create-billingsubscription-stack"
+run "$billingbindir/billing-create-billingsubscriptions-stack"
 
 
 # 10. Create CloudWatch Billing Alarms

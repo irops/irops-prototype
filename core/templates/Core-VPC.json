@@ -280,7 +280,7 @@
       "Type" : "AWS::EC2::Subnet",
       "Properties" : {
         "VpcId" : { "Ref" : "VPC" },
-        "CidrBlock" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet4A" ]},
+        "CidrBlock" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet4B" ]},
         "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]},
         "MapPublicIpOnLaunch" : "false",
         "Tags" : [
@@ -332,7 +332,7 @@
       "Type" : "AWS::EC2::Subnet",
       "Properties" : {
         "VpcId" : { "Ref" : "VPC" },
-        "CidrBlock" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet10A" ]},
+        "CidrBlock" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet10B" ]},
         "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]},
         "MapPublicIpOnLaunch" : "false",
         "Tags" : [
