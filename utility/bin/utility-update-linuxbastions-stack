@@ -237,7 +237,7 @@ else
       Testing)
         use_multizone=false
         use_static_public_address=true
-        use_static_private_addressfalse
+        use_static_private_address=false
         use_log_monitoring=true
         use_local_users=true
         use_schedule=true
