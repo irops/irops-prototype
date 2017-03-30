@@ -253,6 +253,83 @@
           { "Fn::ImportValue" : { "Fn::Sub" : "${CustomGroupsStackName}-WebSphereMQAdministratorsGroup" }}
         ]
       }
+    },
+
+    "CMawbyUser" : {
+      "Type": "AWS::IAM::User",
+      "Properties": {
+        "UserName": "cmawby",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-UsersGroup" }}
+        ]
+      }
+    },
+
+    "EMateiUser" : {
+      "Type": "AWS::IAM::User",
+      "Properties": {
+        "UserName": "ematei",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-UsersGroup" }}
+        ]
+      }
+    },
+
+    "GBartheUser" : {
+      "Type": "AWS::IAM::User",
+      "Properties": {
+        "UserName": "gbarthe",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-UsersGroup" }}
+        ]
+      }
+    },
+
+    "JNonezUser" : {
+      "Type": "AWS::IAM::User",
+      "Properties": {
+        "UserName": "jnonez",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-UsersGroup" }}
+        ]
+      }
+    },
+
+    "PNormandinUser" : {
+      "Type": "AWS::IAM::User",
+      "Properties": {
+        "UserName": "pnormandin",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-UsersGroup" }}
+        ]
+      }
+    },
+
+    "RBurczykUser" : {
+      "Type": "AWS::IAM::User",
+      "Properties": {
+        "UserName": "rburczyk",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-UsersGroup" }}
+        ]
+      }
+    },
+
+    "SHebertUser" : {
+      "Type": "AWS::IAM::User",
+      "Properties": {
+        "UserName": "shebert",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardGroupsStackName}-UsersGroup" }}
+        ]
+      }
     }
   }
 }
