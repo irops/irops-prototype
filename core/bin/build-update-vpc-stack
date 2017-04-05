@@ -335,7 +335,7 @@ read -r -d '' statement << EOS
 aws cloudformation update-stack --stack-name $environment-VPC \\
                                 $template_parameter \\
                                 $stack_policy_parameter \\
-                                --parameters ParameterKey=HostedZoneStackName,ParameterValue=Production-HostedZone \\
+                                --parameters ParameterKey=HostedZoneStackName,ParameterValue=$environment-HostedZone \\
                                              ParameterKey=Name,ParameterValue=$environment \\
                                              ParameterKey=Network,ParameterValue=$environment_network \\
                                              ParameterKey=UseMultiZoneNatGateways,ParameterValue=$usemultizonenatgateways \\

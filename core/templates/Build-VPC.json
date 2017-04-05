@@ -52,10 +52,10 @@
     },
 
     "HostedZoneStackName" : {
-      "Description" : "Name of the CloudFormation Stack containing the Environment HostedZone",
+      "Description" : "Name of the CloudFormation Stack containing the Build HostedZone",
       "Type" : "String",
       "MaxLength" : 64,
-      "Default" : "Production-HostedZone",
+      "Default" : "Build-HostedZone",
       "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
@@ -79,7 +79,7 @@
     "AddressesPerSubnet" : {
       "Description" : "Number of Addresses per Subnet",
       "Type" : "Number",
-      "Default" : 32,
+      "Default" : 16,
       "AllowedValues" : [ 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 ],
       "ConstraintDescription" : "must be one of the following: 16, 32, 64, 128, 256, 512, 1024, 2048 or 4096."
     },
@@ -87,9 +87,9 @@
     "SubnetsPerAvailabilityZone" : {
       "Description" : "Number of Subnets per AvailabilityZone",
       "Type" : "Number",
-      "Default" : 8,
-      "AllowedValues" : [ 8 ],
-      "ConstraintDescription" : "must be 8."
+      "Default" : 16,
+      "AllowedValues" : [ 16 ],
+      "ConstraintDescription" : "must be 16."
     },
 
     "AvailabilityZonesPerVPC" : {
@@ -211,11 +211,37 @@
       }
     },
 
-    "WebSubnetA" : {
+    "Public1SubnetA" : {
       "Type" : "AWS::EC2::Subnet",
       "Properties" : {
         "VpcId" : { "Ref" : "VPC" },
         "CidrBlock" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet1A" ]},
+        "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "true",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-Public1SubnetA" }}
+        ]
+      }
+    },
+
+    "Public1SubnetB" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet1B" ]},
+        "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "true",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-Public1SubnetB" }}
+        ]
+      }
+    },
+
+    "WebSubnetA" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet2A" ]},
         "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]},
         "MapPublicIpOnLaunch" : "true",
         "Tags" : [
@@ -228,7 +254,7 @@
       "Type" : "AWS::EC2::Subnet",
       "Properties" : {
         "VpcId" : { "Ref" : "VPC" },
-        "CidrBlock" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet1B" ]},
+        "CidrBlock" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet2B" ]},
         "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]},
         "MapPublicIpOnLaunch" : "true",
         "Tags" : [
@@ -241,7 +267,7 @@
       "Type" : "AWS::EC2::Subnet",
       "Properties" : {
         "VpcId" : { "Ref" : "VPC" },
-        "CidrBlock" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet2A" ]},
+        "CidrBlock" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet4A" ]},
         "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]},
         "MapPublicIpOnLaunch" : "false",
         "Tags" : [
@@ -254,7 +280,7 @@
       "Type" : "AWS::EC2::Subnet",
       "Properties" : {
         "VpcId" : { "Ref" : "VPC" },
-        "CidrBlock" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet2B" ]},
+        "CidrBlock" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet4B" ]},
         "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]},
         "MapPublicIpOnLaunch" : "false",
         "Tags" : [
@@ -267,7 +293,7 @@
       "Type" : "AWS::EC2::Subnet",
       "Properties" : {
         "VpcId" : { "Ref" : "VPC" },
-        "CidrBlock" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet5A" ]},
+        "CidrBlock" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet10A" ]},
         "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]},
         "MapPublicIpOnLaunch" : "false",
         "Tags" : [
@@ -280,7 +306,7 @@
       "Type" : "AWS::EC2::Subnet",
       "Properties" : {
         "VpcId" : { "Ref" : "VPC" },
-        "CidrBlock" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet5B" ]},
+        "CidrBlock" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet10B" ]},
         "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]},
         "MapPublicIpOnLaunch" : "false",
         "Tags" : [
@@ -293,7 +319,7 @@
       "Type" : "AWS::EC2::Subnet",
       "Properties" : {
         "VpcId" : { "Ref" : "VPC" },
-        "CidrBlock" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet6A" ]},
+        "CidrBlock" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet14A" ]},
         "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]},
         "MapPublicIpOnLaunch" : "false",
         "Tags" : [
@@ -306,7 +332,7 @@
       "Type" : "AWS::EC2::Subnet",
       "Properties" : {
         "VpcId" : { "Ref" : "VPC" },
-        "CidrBlock" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet6B" ]},
+        "CidrBlock" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet14B" ]},
         "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]},
         "MapPublicIpOnLaunch" : "false",
         "Tags" : [
@@ -347,6 +373,22 @@
       "Type" : "AWS::EC2::SubnetRouteTableAssociation",
       "Properties" : {
         "SubnetId" : { "Ref" : "PublicSubnetB" },
+        "RouteTableId" : { "Ref" : "PublicRouteTable" }
+      }
+    },
+
+    "Public1SubnetARouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "Public1SubnetA" },
+        "RouteTableId" : { "Ref" : "PublicRouteTable" }
+      }
+    },
+
+    "Public1SubnetBRouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "Public1SubnetB" },
         "RouteTableId" : { "Ref" : "PublicRouteTable" }
       }
     },
@@ -575,6 +617,18 @@
       "Description" : "The Public Subnet in Availability Zone B",
       "Value" :  { "Ref" : "PublicSubnetB" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-PublicSubnetB" }}
+    },
+
+    "Public1SubnetA" : {
+      "Description" : "The Public1 Subnet in Availability Zone A",
+      "Value" :  { "Ref" : "Public1SubnetA" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-Public1SubnetA" }}
+    },
+
+    "Public1SubnetB" : {
+      "Description" : "The Public1 Subnet in Availability Zone B",
+      "Value" :  { "Ref" : "Public1SubnetB" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-Public1SubnetB" }}
     },
 
     "WebSubnetA" : {

@@ -83,6 +83,22 @@
       }
     },
 
+    "Public1SubnetANetworkAclAssociation" : {
+      "Type" : "AWS::EC2::SubnetNetworkAclAssociation",
+      "Properties" : {
+        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-Public1SubnetA" }},
+        "NetworkAclId" : { "Ref" : "PublicNetworkAcl" }
+      }
+    },
+
+    "Public1SubnetBNetworkAclAssociation" : {
+      "Type" : "AWS::EC2::SubnetNetworkAclAssociation",
+      "Properties" : {
+        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-Public1SubnetB" }},
+        "NetworkAclId" : { "Ref" : "PublicNetworkAcl" }
+      }
+    },
+
     "WebSubnetANetworkAclAssociation" : {
       "Type" : "AWS::EC2::SubnetNetworkAclAssociation",
       "Properties" : {
