@@ -102,21 +102,21 @@ export ENVIRONMENT_SIZE=small
 # Core
 export CORE_CODE=c
 export CORE_NAME="Core"
-export CORE_DOMAIN=$AWS_DEFAULT_REGION.$COMPANY_CODE.iropshub.com
+export CORE_DOMAIN=$CORE_CODE.$AWS_DEFAULT_REGION.$COMPANY_CODE.iropshub.com
 export CORE_NETWORK=172.21.120.0/22
 export CORE_SIZE=small
 
 # Build
 export BUILD_CODE=b
 export BUILD_NAME="Build"
-export BUILD_DOMAIN=$AWS_DEFAULT_REGION.$COMPANY_CODE.iropshub.com
+export BUILD_DOMAIN=$BUILD_CODE.$AWS_DEFAULT_REGION.$COMPANY_CODE.iropshub.com
 export BUILD_NETWORK=172.21.124.0/23
 export BUILD_SIZE=small
 
 # Identity
 export IDENTITY_CODE=i
 export IDENTITY_NAME="Identity"
-export IDENTITY_DOMAIN=$AWS_DEFAULT_REGION.$COMPANY_CODE.iropshub.com
+export IDENTITY_DOMAIN=$IDENTITY_CODE.us-east-1.$COMPANY_CODE.iropshub.com
 export IDENTITY_NETWORK=172.21.62.0/23
 export IDENTITY_SIZE=small
 
