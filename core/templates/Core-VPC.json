@@ -52,10 +52,10 @@
     },
 
     "HostedZoneStackName" : {
-      "Description" : "Name of the CloudFormation Stack containing the Environment HostedZone",
+      "Description" : "Name of the CloudFormation Stack containing the Core HostedZone",
       "Type" : "String",
       "MaxLength" : 64,
-      "Default" : "Production-HostedZone",
+      "Default" : "Core-HostedZone",
       "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
