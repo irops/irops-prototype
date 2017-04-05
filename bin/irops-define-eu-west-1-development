@@ -24,7 +24,25 @@ export SNS_ADMINISTRATOR_TOPIC="arn:aws:sns:${AWS_DEFAULT_REGION}:${AWS_ACCOUNT_
 export SNS_EVENTS_TOPIC="arn:aws:sns:${AWS_DEFAULT_REGION}:${AWS_ACCOUNT_NUMBER}:Events"
 export SNS_ALARMS_TOPIC="arn:aws:sns:${AWS_DEFAULT_REGION}:${AWS_ACCOUNT_NUMBER}:Alarms"
 
-# Network
+# Network (new names, not yet in driver scripts consistently)
+export PUBLIC_ADMINISTRATOR_NETWORK=72.215.187.176/28  # Santa Barbara Public IP Range (Michael Crawford's House)
+export PUBLIC_ADMINISTRATOR_NETWORK1=204.26.128.0/17   # Charlotte Public/Private IP Range
+export PUBLIC_ADMINISTRATOR_NETWORK2=174.76.114.250/32 # Goleta Public IP for internal/vpn user outbound traffic
+export PUBLIC_ADMINISTRATOR_NETWORK3=
+export PRIVATE_ADMINISTRATOR_NETWORK=10.0.0.0/16       # Santa Barbara Private IP Range (Michael Crawford's House)
+export PRIVATE_ADMINISTRATOR_NETWORK1=204.26.128.0/17  # Charlotte Public/Private IP Range
+export PRIVATE_ADMINISTRATOR_NETWORK2=
+export PRIVATE_ADMINISTRATOR_NETWORK3=
+export PUBLIC_USER_NETWORK=72.215.187.176/28         # Santa Barbara Public IP Range (Michael Crawford's House)
+export PUBLIC_USER_NETWORK1=204.26.128.0/17          # Charlotte Public/Private IP Range
+export PUBLIC_USER_NETWORK2=174.76.114.250/32        # Goleta Public IP for internal/vpn user outbound traffic
+export PUBLIC_USER_NETWORK3=
+export PRIVATE_USER_NETWORK=10.0.0.0/16              # Santa Barbara Private IP Range (Michael Crawford's House)
+export PRIVATE_USER_NETWORK1=204.26.128.0/17         # Charlotte Public/Private IP Range
+export PRIVATE_USER_NETWORK2=
+export PRIVATE_USER_NETWORK3=
+
+# Network (old names, preserve until I can propagate new names)
 export ADMINISTRATOR_NETWORK=72.215.187.176/28	# Santa Barbara Public IP Range (Michael Crawford's House)
 export ADMINISTRATOR_NETWORK1=204.26.128.0/17   # Charlotte Public/Private IP Range
 export ADMINISTRATOR_NETWORK2=174.76.114.250/32 # Goleta Public IP for internal/vpn user outbound traffic
