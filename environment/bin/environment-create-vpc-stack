@@ -183,7 +183,7 @@ if [ -z $environment ]; then
 else
     case $environment in
       Production)
-        usemultizonenatgateways=true
+        usemultizonenatgateways=false
         usevpngateway=true;;
       Staging)
         usemultizonenatgateways=false
