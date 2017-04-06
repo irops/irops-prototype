@@ -214,11 +214,11 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     exit 60
 fi
 
-templatesbucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
-templatespath=/identity
+templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
+templates_folder=identity
 
-if ! aws s3api head-bucket --bucket $templatesbucket --profile $profile --region $region 2> /dev/null; then
-    unset templatesbucket
+if ! aws s3api head-bucket --bucket $templates_bucket --profile $profile --region $region 2> /dev/null; then
+    unset templates_bucket
 fi
 
 if ! aws cloudformation describe-stacks --stack-name $environment-VPC \
@@ -274,19 +274,19 @@ fi
 ((++step))
 read -r -d '' statement << EOS
 aws s3 sync $templatesdir \\
-            s3://$templatesbucket$templatespath \\
+            s3://$templates_bucket/$templates_folder \\
             --exclude '*' --include 'Identity-VPC.json' --include 'Identity-VPC-StackPolicy.json' \\
             --profile $profile --region $region --output table
 EOS
 run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
 eval_statement="${statement//\\$'\n'}"
 
-if [ ! -z $templatesbucket ]; then
+if [ ! -z $templates_bucket ]; then
     clear
     echo
     echo "============================================================"
     echo
-    echo "$(printf '%2d' $step). Sync Template and Policy to ($templatesbucket) Bucket"
+    echo "$(printf '%2d' $step). Sync Template and Policy to ($templates_bucket) Bucket"
     echo
     echo "============================================================"
     echo
@@ -305,9 +305,9 @@ fi
 
 
 ((++step))
-if [ ! -z $templatesbucket ]; then
-    template_parameter="--template-url https://$s3_domain/$templatesbucket$templatespath/Identity-VPC.json"
-    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templatesbucket$templatespath/Identity-VPC-StackPolicy.json"
+if [ ! -z $templates_bucket ]; then
+    template_parameter="--template-url https://$s3_domain/$templates_bucket/$templates_folder/Identity-VPC.json"
+    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$templates_folder/Identity-VPC-StackPolicy.json"
 else
     template_parameter="--template-body file://$templatesdir/Identity-VPC.json"
     stack_policy_parameter="--stack-policy-body file://$templatesdir/Identity-VPC-StackPolicy.json"
@@ -319,10 +319,9 @@ read -r -d '' statement << EOS
 aws cloudformation update-stack --stack-name $environment-VPC \\
                                 $template_parameter \\
                                 $stack_policy_parameter \\
-                                --parameters ParameterKey=HostedZoneStackName,ParameterValue=Production-HostedZone \\
+                                --parameters ParameterKey=HostedZoneStackName,ParameterValue=$environment-HostedZone \\
                                              ParameterKey=Name,ParameterValue=$environment \\
                                              ParameterKey=Network,ParameterValue=$environment_network \\
-                                             ParameterKey=Domain,ParameterValue=$environment_domain \\
                                              ParameterKey=UseMultiZoneNatGateways,ParameterValue=$usemultizonenatgateways \\
                                              ParameterKey=UseVPNGateway,ParameterValue=$usevpngateway \\
                                 --tags Key=Owner,Value=$owner \\
@@ -356,7 +355,6 @@ if [ $choice = y ]; then
 
     next
 fi
-
 
 
 ((++step))
