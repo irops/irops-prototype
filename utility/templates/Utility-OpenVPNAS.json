@@ -1,0 +1,368 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Utility-OpenVPNAS Template: This adds OpenVPN Access Server Remote-User VPN capacity to a VPC. OpenVPN Access Server is the supported version of OpenVPN, available as a set of Marketplace AMIs. This Template allows section of the OpenVPN AccessServer 2 (free), 10, 25 or 50-user Marketplace AMIs. This template currently is not HA, due to limitations on what can be configured within the OpenVPNAS Marketplace AMI.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "VPCStackName",
+            "StandardAMIFunctionsStackName",
+            "StandardTopicsStackName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Resource Dependencies" },
+          "Parameters" : [
+            "KeyName"
+          ]
+        },
+        {
+          "Label" : { "default" : "System Configuration" },
+          "Parameters" : [
+            "CompanyName",
+            "SystemName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Environment Configuration" },
+          "Parameters" : [
+            "EnvironmentSize"
+          ]
+        },
+        {
+          "Label" : { "default" : "Utility Configuration" },
+          "Parameters" : [
+            "UtilityName",
+            "UtilityDomain",
+            "UtilityLicense"
+          ]
+        },
+        {
+          "Label" : { "default" : "Security Configuration" },
+          "Parameters" : [
+            "PublicAdministratorNetwork",
+            "PublicAdministratorNetwork1",
+            "PublicAdministratorNetwork2",
+            "PublicAdministratorNetwork3",
+            "PublicUserNetwork"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "VPCStackName" : { "default" : "VPC Stack Name" },
+        "StandardAMIFunctionsStackName" : { "default" : "StandardAMIFunctions Stack Name" },
+        "StandardTopicsStackName" : { "default" : "StandardTopics Stack Name" },
+        "KeyName" : { "default" : "Key Name" },
+        "CompanyName" : { "default" : "Company Name" },
+        "SystemName" : { "default" : "System Name" },
+        "EnvironmentSize" : { "default" : "Environment Size" },
+        "UtilityName" : { "default" : "Utility Name" },
+        "UtilityDomain" : { "default" : "Utility Domain" },
+        "UtilityLicense" : { "default" : "Utility License" },
+        "PublicAdministratorNetwork" : { "default" : "Public Administrator Network" },
+        "PublicAdministratorNetwork1" : { "default" : "Additional Public Administrator Network 1" },
+        "PublicAdministratorNetwork2" : { "default" : "Additional Public Administrator Network 2" },
+        "PublicAdministratorNetwork3" : { "default" : "Additional Public Administrator Network 3" },
+        "PublicUserNetwork" : { "default" : "Public User Network" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "VPCStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the VPC",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-VPC",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "StandardAMIFunctionsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Standard AMI Functions",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "StandardAMIFunctions",
+      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "StandardTopicsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Topics",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardTopics",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "KeyName" : {
+      "Description" : "Name of an existing KeyPair to enable SSH access to the Instances",
+      "Type" : "AWS::EC2::KeyPair::KeyName",
+      "MaxLength" : 32,
+      "Default" : "example",
+      "AllowedPattern" : "(^$|^[_a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
+    },
+
+    "CompanyName" : {
+      "Description" : "Name of the Company associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "Travel",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "SystemName" : {
+      "Description" : "Name of the System associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "IROPS",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "EnvironmentSize" : {
+      "Description" : "Size of the Environment to build. Used to select size-related options in Mappings",
+      "Type" : "String",
+      "Default" : "micro",
+      "AllowedValues" : [ "micro", "small", "medium", "large", "xlarge" ],
+      "ConstraintDescription" : "must be micro, small, medium, large or xlarge."
+    },
+
+    "UtilityName" : {
+      "Description" : "Name of the Utility associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "OpenVPNAS",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "UtilityDomain" : {
+      "Description" : "DNS Name of the Utility associated with the Stack",
+      "Type" : "String",
+      "MaxLength" : 16,
+      "Default" : "vpn",
+      "AllowedPattern" : "(^$|^[a-z][-a-z0-9]*$)",
+      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
+    },
+
+    "UtilityLicense" : {
+      "Description" : "OpenVPN Access Server License. Used to select the OpenVPN Access Server AMI, which limits the number of Users",
+      "Type" : "String",
+      "Default" : "OpenVPNAS2",
+      "AllowedValues" : [ "OpenVPNAS2", "OpenVPNAS10", "OpenVPNAS25", "OpenVPNAS50" ],
+      "ConstraintDescription" : "must be OpenVPNAS2, OpenVPNAS10, OpenVPNAS25 or OpenVPNAS50."
+    },
+
+    "PublicAdministratorNetwork" : {
+      "Description" : "Public Network that can administer the Utility",
+      "Type" : "String",
+      "Default" : "0.0.0.0/0",
+      "AllowedPattern" : "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "PublicAdministratorNetwork1" : {
+      "Description" : "Additional public network that can administer the Utility",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "PublicAdministratorNetwork2" : {
+      "Description" : "Additional public network that can administer the Utility",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "PublicAdministratorNetwork3" : {
+      "Description" : "Additional public network that can administer the Utility",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "PublicUserNetwork" : {
+      "Description" : "Public network that can access the Utility",
+      "Type" : "String",
+      "Default" : "0.0.0.0/0",
+      "AllowedPattern" : "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    }
+  },
+
+  "Mappings" : {
+    "ImageIdMap" : {
+      "AMI"            : { "OpenVPNAS2"  : "OpenVPN 2.1.4 Appliance (2 users)",
+                           "OpenVPNAS10" : "OpenVPN 2.1.4 Appliance (10 users)",
+                           "OpenVPNAS25" : "OpenVPN 2.1.4 Appliance (25 users)",
+                           "OpenVPNAS50" : "OpenVPN 2.1.4 Appliance (50 users)" },
+      "us-east-1"      : { "OpenVPNAS2"  : "ami-44aaf953", "OpenVPNAS10" : "ami-b4affca3", "OpenVPNAS25" : "ami-65a9fa72", "OpenVPNAS50" : "ami-78aaf96f" },
+      "us-east-2"      : { "OpenVPNAS2"  : "ami-ae3e64cb", "OpenVPNAS10" : "ami-5f3f653a", "OpenVPNAS25" : "ami-b63b61d3", "OpenVPNAS50" : "ami-94075df1" },
+      "us-west-1"      : { "OpenVPNAS2"  : "ami-fa105b9a", "OpenVPNAS10" : "ami-42165d22", "OpenVPNAS25" : "ami-57175c37", "OpenVPNAS50" : "ami-1c12597c" },
+      "us-west-2"      : { "OpenVPNAS2"  : "ami-e8d67288", "OpenVPNAS10" : "ami-a6d773c6", "OpenVPNAS25" : "ami-a3d175c3", "OpenVPNAS50" : "ami-abd773cb" },
+      "ca-central-1"   : { "OpenVPNAS2"  : "ami-24ad1f40", "OpenVPNAS10" : "ami-3fa5175b", "OpenVPNAS25" : "ami-3da81a59", "OpenVPNAS50" : "ami-22a71546" },
+      "eu-west-1"      : { "OpenVPNAS2"  : "ami-07783674", "OpenVPNAS10" : "ami-7a793709", "OpenVPNAS25" : "ami-40763833", "OpenVPNAS50" : "ami-a57b35d6" },
+      "eu-central-1"   : { "OpenVPNAS2"  : "ami-3f788150", "OpenVPNAS10" : "ami-0207fe6d", "OpenVPNAS25" : "ami-1d798072", "OpenVPNAS50" : "ami-e206ff8d" },
+      "eu-west-2"      : { "OpenVPNAS2"  : "ami-86c3c9e2", "OpenVPNAS10" : "ami-a3c1cbc7", "OpenVPNAS25" : "ami-85c3c9e1", "OpenVPNAS50" : "ami-a1c5cfc5" },
+      "ap-southeast-1" : { "OpenVPNAS2"  : "ami-d72a8cb4", "OpenVPNAS10" : "ami-33369050", "OpenVPNAS25" : "ami-15288e76", "OpenVPNAS50" : "ami-d62a8cb5" },
+      "ap-southeast-2" : { "OpenVPNAS2"  : "ami-5e3b063d", "OpenVPNAS10" : "ami-d33b06b0", "OpenVPNAS25" : "ami-fb340998", "OpenVPNAS50" : "ami-393a075a" },
+      "ap-northeast-2" : { "OpenVPNAS2"  : "ami-b6e733d8", "OpenVPNAS10" : "ami-dbe337b5", "OpenVPNAS25" : "ami-cde236a3", "OpenVPNAS50" : "ami-b7e733d9" },
+      "ap-northeast-1" : { "OpenVPNAS2"  : "ami-2f66c04e", "OpenVPNAS10" : "ami-2967c148", "OpenVPNAS25" : "ami-ec983e8d", "OpenVPNAS50" : "ami-499a3c28" },
+      "ap-south-1"     : { "OpenVPNAS2"  : "ami-066f1b69", "OpenVPNAS10" : "ami-6354200c", "OpenVPNAS25" : "ami-076f1b68", "OpenVPNAS50" : "ami-2455214b" },
+      "sa-east-1"      : { "OpenVPNAS2"  : "ami-283fa244", "OpenVPNAS10" : "ami-1e34a972", "OpenVPNAS25" : "ami-e43ea388", "OpenVPNAS50" : "ami-4d38a521" }
+    },
+
+    "InstanceTypeMap" : {
+      "OpenVPNAS" : { "micro" : "t2.micro", "small" : "t2.small", "medium" : "t2.medium", "large" : "t2.large", "xlarge" : "t2.xlarge" }
+    }
+  },
+
+  "Conditions" : {
+    "ConfigureKey" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "KeyName" }, "" ] }]},
+    "ConfigurePublicAdministratorNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicAdministratorNetwork1" }, "" ]}]},
+    "ConfigurePublicAdministratorNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicAdministratorNetwork2" }, "" ]}]},
+    "ConfigurePublicAdministratorNetwork3" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicAdministratorNetwork3" }, "" ]}]}
+  },
+
+  "Resources" : {
+    "SecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "UtilityName" }, "SecurityGroup" ]]},
+        "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPC" }},
+        "SecurityGroupIngress" : [
+          { "IpProtocol" : "icmp", "FromPort" :   "-1",  "ToPort" :   "-1", "CidrIp" : { "Ref" : "PublicAdministratorNetwork" }},
+          { "IpProtocol" : "tcp",  "FromPort" :   "22",  "ToPort" :   "22", "CidrIp" : { "Ref" : "PublicAdministratorNetwork" }},
+          { "IpProtocol" : "tcp",  "FromPort" :  "943",  "ToPort" :  "943", "CidrIp" : { "Ref" : "PublicAdministratorNetwork" }},
+          { "IpProtocol" : "tcp",  "FromPort" :  "443",  "ToPort" :  "443", "CidrIp" : { "Ref" : "PublicAdministratorNetwork" }},
+          { "IpProtocol" : "udp",  "FromPort" : "1194",  "ToPort" : "1194", "CidrIp" : { "Ref" : "PublicAdministratorNetwork" }},
+          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork1", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PublicAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "CidrIp" : { "Ref" : "PublicAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" :  "943", "ToPort" :  "943", "CidrIp" : { "Ref" : "PublicAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Ref" : "PublicAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork1", { "IpProtocol" : "udp",  "FromPort" : "1194", "ToPort" : "1194", "CidrIp" : { "Ref" : "PublicAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork2", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PublicAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "CidrIp" : { "Ref" : "PublicAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" :  "943", "ToPort" :  "943", "CidrIp" : { "Ref" : "PublicAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Ref" : "PublicAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork2", { "IpProtocol" : "udp",  "FromPort" : "1194", "ToPort" : "1194", "CidrIp" : { "Ref" : "PublicAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork3", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PublicAdministratorNetwork3" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork3", { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "CidrIp" : { "Ref" : "PublicAdministratorNetwork3" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork3", { "IpProtocol" : "tcp",  "FromPort" :  "943", "ToPort" :  "943", "CidrIp" : { "Ref" : "PublicAdministratorNetwork3" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork3", { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Ref" : "PublicAdministratorNetwork3" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork3", { "IpProtocol" : "udp",  "FromPort" : "1194", "ToPort" : "1194", "CidrIp" : { "Ref" : "PublicAdministratorNetwork3" }}, { "Ref" : "AWS::NoValue" }]},
+          { "IpProtocol" : "icmp", "FromPort" :   "-1",  "ToPort" :   "-1", "CidrIp" : { "Ref" : "PublicUserNetwork" }},
+          { "IpProtocol" : "tcp",  "FromPort" :  "443",  "ToPort" :  "443", "CidrIp" : { "Ref" : "PublicUserNetwork" }},
+          { "IpProtocol" : "udp",  "FromPort" : "1194",  "ToPort" : "1194", "CidrIp" : { "Ref" : "PublicUserNetwork" }}
+        ],
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "UtilityName" }, "SecurityGroup" ]]}}
+        ]
+      }
+    },
+
+    "Instance" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "ImageId" : { "Fn::FindInMap" : [ "ImageIdMap", { "Ref" : "AWS::Region" } , { "Ref" : "UtilityLicense" }]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "OpenVPNAS", { "Ref" : "EnvironmentSize" }]},
+        "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
+        "NetworkInterfaces" : [{
+          "Description"              : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "UtilityName" }, "NetworkInterface", "eth0" ]]},
+          "DeviceIndex"              : "0",
+          "SubnetId"                 : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-Public1SubnetA" }},
+          "GroupSet"                 : [{ "Ref" :  "SecurityGroup" }],
+          "AssociatePublicIpAddress" : "false",
+          "DeleteOnTermination"      : "true"
+        }],
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "UtilityName" }, "Instance" ]]}}
+        ],
+        "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "", [
+          "public_hostname=", { "Ref" : "UtilityDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "\n",
+          "admin_user=openvpn\n",
+          "admin_pw=changemeviaguiafterinstall\n",
+          "reroute_gw=0\n",
+          "reroute_dns=1\n"
+        ]]}}
+      }
+    },
+
+    "EIP" : {
+      "Type" : "AWS::EC2::EIP",
+      "Properties" : {
+        "Domain" : "vpc"
+      }
+    },
+
+    "EIPAssociation" : {
+      "Type" : "AWS::EC2::EIPAssociation",
+      "Properties" : {
+        "AllocationId" : { "Fn::GetAtt" : [ "EIP", "AllocationId" ]},
+        "InstanceId" : { "Ref" : "Instance" }
+      }
+    },
+
+    "RecordSet" : {
+      "Type" : "AWS::Route53::RecordSet",
+      "Properties" : {
+        "HostedZoneId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicHostedZone" }},
+        "Comment" : { "Fn::Join" : [ "", [ "DNS name for ", { "Ref" : "UtilityName" }, " Instance" ]]},
+        "Name" : { "Fn::Join" : [ "", [ { "Ref" : "UtilityDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "." ]]},
+        "Type" : "A",
+        "TTL" : "900",
+        "ResourceRecords" : [{ "Ref" : "EIP" }]
+      }
+    }
+  },
+
+  "Outputs" : {
+    "SecurityGroup" : {
+      "Description" : "The SecurityGroup",
+      "Value" : { "Ref" : "SecurityGroup" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-SecurityGroup" }}
+    },
+
+    "EIP" : {
+      "Description" : "The Public Address of the OpenVPN Instance",
+      "Value" : { "Ref" : "EIP" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-EIP" }}
+    },
+
+    "PublicHostname" : {
+      "Description" : "The Public Hostname of the OpenVPN Instance",
+      "Value" : { "Fn::Join" : [ "", [ { "Ref" : "UtilityDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-PublicHostname" }}
+    },
+
+    "UserWebsiteURL" : {
+      "Description" : "The User Website URL",
+      "Value" : { "Fn::Join" : [ "", [ "https://", { "Ref" : "UtilityDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "/" ]]},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-UserWebsiteURL" }}
+    },
+
+    "AdministratorWebsiteURL" : {
+      "Description" : "The Administration Website URL",
+      "Value" : { "Fn::Join" : [ "", [ "https://", { "Ref" : "UtilityDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, ":943/admin/" ]]},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-AdministratorWebsiteURL" }}
+    }
+  }
+}
