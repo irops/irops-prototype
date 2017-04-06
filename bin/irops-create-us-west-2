@@ -176,10 +176,10 @@ run "$commonbindir/common-create-hostedzone-stack -E Development -D d.us-west-2.
 run "$commonbindir/common-create-hostedzone-stack -E Core -D c.us-west-2.tvl.iropshub.com"
 run "$commonbindir/common-create-hostedzone-stack -E Build -D b.us-west-2.tvl.iropshub.com"
 
+echo
 echo "Note: Currently, you must manually create the NS records which are needed in each"
 echo "      parent DNS Zone to delegate to the sub-domain Zone. This should be done now."
 echo
-sleep 5
 
 
 #  6. Create VPCs
@@ -271,7 +271,7 @@ run "$environmentbindir/environment-create-vpcpeeringconnection-stack -E Testing
 #     11.6. Create Build-OpenVPNAS Stack
 
 run "$utilitybindir/utility-create-openvpnas-stack -E Production -U OpenVPNAS -Z micro"
-run "$utilitybindir/utility-create-openvpnas-stack -E Staging -U OpenVPNAS -Z medium -L 25"
+run "$utilitybindir/utility-create-openvpnas-stack -E Staging -U OpenVPNAS -Z small -L 10"
 run "$utilitybindir/utility-create-openvpnas-stack -E Testing -U OpenVPNAS -Z micro"
 run "$utilitybindir/utility-create-openvpnas-stack -E Development -U OpenVPNAS -Z micro"
 run "$utilitybindir/utility-create-openvpnas-stack -E Core -U OpenVPNAS -Z micro"
@@ -292,17 +292,17 @@ run "$utilitybindir/utility-create-openvpnas-stack -E Build -U OpenVPNAS -Z micr
 #     12.11. Create Build-LinuxBastions Stack
 #     12.12. Create Build-WindowsBastions Stack (future)
 
-run "$utilitybindir/utility-create-linuxbastions-stack -E Production -U LinuxBastions -Z micro"
+run "$utilitybindir/utility-create-linuxbastions-stack -E Production -U LinuxBastions -Z standby"
 #run "$utilitybindir/utility-create-windowsbastions-stack -E Production -U WindowsBastions"
-run "$utilitybindir/utility-create-linuxbastions-stack -E Staging -U LinuxBastions -Z micro"
+run "$utilitybindir/utility-create-linuxbastions-stack -E Staging -U LinuxBastions -Z standby"
 #run "$utilitybindir/utility-create-windowsbastions-stack -E Staging -U WindowsBastions"
-run "$utilitybindir/utility-create-linuxbastions-stack -E Testing -U LinuxBastions -Z micro"
+run "$utilitybindir/utility-create-linuxbastions-stack -E Testing -U LinuxBastions -Z standby"
 #run "$utilitybindir/utility-create-windowsbastions-stack -E Testing -U WindowsBastions"
-run "$utilitybindir/utility-create-linuxbastions-stack -E Development -U LinuxBastions -Z micro"
+run "$utilitybindir/utility-create-linuxbastions-stack -E Development -U LinuxBastions -Z standby"
 #run "$utilitybindir/utility-create-windowsbastions-stack -E Development -U WindowsBastions"
-run "$utilitybindir/utility-create-linuxbastions-stack -E Core -U LinuxBastions -Z micro"
+run "$utilitybindir/utility-create-linuxbastions-stack -E Core -U LinuxBastions -Z standby"
 #run "$utilitybindir/utility-create-windowsbastions-stack -E Core -U WindowsBastions"
-run "$utilitybindir/utility-create-linuxbastions-stack -E Build -U LinuxBastions -Z micro"
+run "$utilitybindir/utility-create-linuxbastions-stack -E Build -U LinuxBastions -Z standby"
 #run "$utilitybindir/utility-create-windowsbastions-stack -E Build -U WindowsBastions"
 
 

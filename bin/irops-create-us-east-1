@@ -162,11 +162,11 @@ run "$billingbindir/billing-create-billingsubscriptions-stack"
 
 run "$billingbindir/billing-create-billingalarms-stack"
 
+echo
 echo "Stop! Currently, you should not go any further in this script, so this script"
 echo "      will now exit. The remainder of this script can be enabled to build out"
 echo "      the Identity-VPC, which will not be needed until we implement multiple"
 echo "      accounts with federated identity management."
-sleep 5
 exit
 
 ###### OPTIONAL #########################################################
@@ -176,10 +176,10 @@ exit
 
 run "$commonbindir/common-create-hostedzone-stack -E Identity -D i.us-east-1.tvl.iropshub.com"
 
+echo
 echo "Note: Currently, you must manually create the NS records which are needed in each"
 echo "      parent DNS Zone to delegate to the sub-domain Zone. This should be done now."
 echo
-sleep 5
 
 
 # 12. Create VPC
@@ -204,7 +204,7 @@ run "$utilitybindir/utility-create-openvpnas-stack -E Identity -U OpenVPNAS -Z m
 #     15.1. Create Identity-LinuxBastions Stack
 #     15.1. Create Identity-WindowsBastions Stack (future)
 
-run "$utilitybindir/utility-create-linuxbastions-stack -E Identity -U LinuxBastions -r us-east-1"
+run "$utilitybindir/utility-create-linuxbastions-stack -E Identity -U LinuxBastions -Z standby -r us-east-1"
 #run "$utilitybindir/utility-create-windowsbastions-stack -E Identity -U WindowsBastions -r us-east-1"
 
 
