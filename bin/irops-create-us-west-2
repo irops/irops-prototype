@@ -271,9 +271,9 @@ run "$environmentbindir/environment-create-vpcpeeringconnection-stack -E Testing
 #     11.6. Create Build-OpenVPNAS Stack
 
 run "$utilitybindir/utility-create-openvpnas-stack -E Production -U OpenVPNAS -Z micro"
-run "$utilitybindir/utility-create-openvpnas-stack -E Staging -U OpenVPNAS -Z small -L 10"
-run "$utilitybindir/utility-create-openvpnas-stack -E Testing -U OpenVPNAS -Z micro"
-run "$utilitybindir/utility-create-openvpnas-stack -E Development -U OpenVPNAS -Z micro"
+run "$utilitybindir/utility-create-openvpnas-stack -E Staging -U OpenVPNAS -Z large -L 50"
+run "$utilitybindir/utility-create-openvpnas-stack -E Testing -U OpenVPNAS -Z large -L 25"
+run "$utilitybindir/utility-create-openvpnas-stack -E Development -U OpenVPNAS -Z large -L 25"
 run "$utilitybindir/utility-create-openvpnas-stack -E Core -U OpenVPNAS -Z micro"
 run "$utilitybindir/utility-create-openvpnas-stack -E Build -U OpenVPNAS -Z micro"
 
