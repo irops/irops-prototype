@@ -7,14 +7,14 @@ bindir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 confdir=${bindir%/*}/conf
 datfile=bastion-users.dat
 
-profile=irops-bootstrapmcrawford
+profile=${AWS_DEFAULT_PROFILE:-irops-bootstrapadministrator}
 region=us-east-1
 
 public_ip=$(curl -s http://checkip.amazonaws.com)
 
 cidrs=$(sed -e '/^#/d' -e "$ a$public_ip/32" ../conf/bastion-users.dat | cut -d ':' -f2 | sort -u)
 
-sgs=$(aws ec2 describe-security-groups --filters Name=tag-key,Values=Utility Name=tag-value,Values=LinuxBastion \
+sgs=$(aws ec2 describe-security-groups --filters Name=tag:Utility,Values=LinuxBastion \
                                        --query 'SecurityGroups[].GroupId' \
                                        --profile $profile --region $region --output text)
 for sg in $sgs; do
