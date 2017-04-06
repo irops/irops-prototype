@@ -186,20 +186,20 @@ if [ -z $environment ]; then
 else
     case $environment in
       Production)
-        usemultizonenatgateways=false
-        usevpngateway=true;;
+        use_multi_zone_nat_gateways=false
+        use_vpn_gateway=true;;
       Staging)
-        usemultizonenatgateways=false
-        usevpngateway=true;;
+        use_multi_zone_nat_gateways=false
+        use_vpn_gateway=true;;
       Testing)
-        usemultizonenatgateways=false
-        usevpngateway=true;;
+        use_multi_zone_nat_gateways=false
+        use_vpn_gateway=true;;
       Development)
-        usemultizonenatgateways=false
-        usevpngateway=true;;
+        use_multi_zone_nat_gateways=false
+        use_vpn_gateway=true;;
       *)
-        usemultizonenatgateways=false
-        usevpngateway=true;;
+        use_multi_zone_nat_gateways=false
+        use_vpn_gateway=true;;
     esac
 fi
 
@@ -353,8 +353,8 @@ aws cloudformation update-stack --stack-name $environment-VPC \\
                                 --parameters ParameterKey=HostedZoneStackName,ParameterValue=$environment-HostedZone \\
                                              ParameterKey=Name,ParameterValue=$environment \\
                                              ParameterKey=Network,ParameterValue=$environment_network \\
-                                             ParameterKey=UseMultiZoneNatGateways,ParameterValue=$usemultizonenatgateways \\
-                                             ParameterKey=UseVPNGateway,ParameterValue=$usevpngateway \\
+                                             ParameterKey=UseMultiZoneNatGateways,ParameterValue=$use_multi_zone_nat_gateways \\
+                                             ParameterKey=UseVPNGateway,ParameterValue=$use_vpn_gateway \\
                                 --tags Key=Owner,Value=$owner \\
                                        Key=Company,Value=$company \\
                                        Key=System,Value=$system \\
