@@ -205,7 +205,7 @@
       "Condition" : "ConfigureLogs"
     }
   },
-
+  
   "Outputs" : {
     "Role" : {
       "Description" : "The Role",

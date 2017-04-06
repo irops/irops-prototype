@@ -64,12 +64,6 @@
     }
   },
 
-  "Mappings" : {
-    "HostMap" : {
-      "MountTarget" : { "ZoneA" :  "48.4", "ZoneB" :  "112.4", "ZoneC" : "176.4", "ZoneD" : "240.4" }
-    }
-  },
-
   "Resources" : {
     "FileSystem" : {
       "Type" : "AWS::EFS::FileSystem",
@@ -86,10 +80,6 @@
       "Properties" : {
         "FileSystemId" : { "Ref" : "FileSystem" },
         "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-QueueSubnetA" }},
-        "IpAddress" : { "Fn::Join" : [ ".", [
-                      { "Fn::Select" : [ "0", { "Fn::Split" : [ ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCNetwork" }}]}]},
-                      { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCNetwork" }}]}]},
-                      { "Fn::FindInMap" : [ "HostMap", "MountTarget", "ZoneA" ]}]]},
         "SecurityGroups" : [{ "Ref" : "MountTargetSecurityGroup" }]
       }
     },
@@ -99,10 +89,6 @@
       "Properties" : {
         "FileSystemId" : { "Ref" : "FileSystem" },
         "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-QueueSubnetB" }},
-        "IpAddress" : { "Fn::Join" : [ ".", [
-                      { "Fn::Select" : [ "0", { "Fn::Split" : [ ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCNetwork" }}]}]},
-                      { "Fn::Select" : [ "1", { "Fn::Split" : [ ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCNetwork" }}]}]},
-                      { "Fn::FindInMap" : [ "HostMap", "MountTarget", "ZoneB" ]}]]},
         "SecurityGroups" : [{ "Ref" : "MountTargetSecurityGroup" }]
       }
     }
