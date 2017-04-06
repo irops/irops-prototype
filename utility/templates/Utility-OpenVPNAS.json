@@ -231,7 +231,7 @@
     },
 
     "InstanceTypeMap" : {
-      "OpenVPNAS" : { "micro" : "t2.micro", "small" : "t2.small", "medium" : "t2.medium", "large" : "t2.large", "xlarge" : "t2.xlarge" }
+      "OpenVPNAS" : { "micro" : "t2.micro", "small" : "t2.small", "medium" : "t2.medium", "large" : "c4.large", "xlarge" : "c4.xlarge" }
     }
   },
 
