@@ -27,7 +27,7 @@ owner=${OWNER_EMAIL:-$USER@hpe.com}
 company=${COMPANY_NAME:-Travel}
 system=${SYSTEM_NAME:-IROPS}
 environment=${ENVIRONMENT_NAME:-Production}
-environment_network=${ENVIRONMENT_NETWORK:-10.40.0.0/16}
+environment_network=${ENVIRONMENT_NETWORK:-172.21.0.0/21}
 region=${AWS_DEFAULT_REGION:-us-west-2}
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-administrator}
@@ -183,20 +183,20 @@ if [ -z $environment ]; then
 else
     case $environment in
       Production)
-        usemultizonenatgateways=true
-        usevpngateway=true;;
+        use_multi_zone_nat_gateways=false
+        use_vpn_gateway=true;;
       Staging)
-        usemultizonenatgateways=false
-        usevpngateway=true;;
+        use_multi_zone_nat_gateways=false
+        use_vpn_gateway=true;;
       Testing)
-        usemultizonenatgateways=false
-        usevpngateway=true;;
+        use_multi_zone_nat_gateways=false
+        use_vpn_gateway=true;;
       Development)
-        usemultizonenatgateways=false
-        usevpngateway=true;;
+        use_multi_zone_nat_gateways=false
+        use_vpn_gateway=true;;
       *)
-        usemultizonenatgateways=false
-        usevpngateway=false;;
+        use_multi_zone_nat_gateways=false
+        use_vpn_gateway=false;;
     esac
 fi
 
@@ -347,8 +347,8 @@ aws cloudformation create-stack --stack-name $environment-VPC \\
                                 --parameters ParameterKey=HostedZoneStackName,ParameterValue=$environment-HostedZone \\
                                              ParameterKey=Name,ParameterValue=$environment \\
                                              ParameterKey=Network,ParameterValue=$environment_network \\
-                                             ParameterKey=UseMultiZoneNatGateways,ParameterValue=$usemultizonenatgateways \\
-                                             ParameterKey=UseVPNGateway,ParameterValue=$usevpngateway \\
+                                             ParameterKey=UseMultiZoneNatGateways,ParameterValue=$use_multi_zone_nat_gateways \\
+                                             ParameterKey=UseVPNGateway,ParameterValue=$use_vpn_gateway \\
                                 --tags Key=Owner,Value=$owner \\
                                        Key=Company,Value=$company \\
                                        Key=System,Value=$system \\

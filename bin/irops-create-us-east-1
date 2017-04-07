@@ -29,25 +29,37 @@
 #  7. Create S3 Buckets
 #      7.1 Create StandardBuckets Stack
 #
-#  8. Create SNS Billing Topics and Subscriptions
-#      8.1 Create BillingTopics Stack
-#      8.2 Create BillingSubscriptions Stack
+#  8. Create Lambda Functions
+#      8.1 Create StandardAMIFunctions Stack
+#      8.2 Create StandardCIDRFunctions Stack
 #
-#  9. Create CloudWatch Billing Alarms
-#      9.1 Create BillingAlarms Stack
+#  9. Create SNS Billing Topics and Subscriptions
+#      9.1 Create BillingTopics Stack
+#      9.2 Create BillingSubscriptions Stack
+#
+# 10. Create CloudWatch Billing Alarms
+#     10.1 Create BillingAlarms Stack
 #
 ###### OPTIONAL #########################################################
 #
-# 10. Create Identity Environment VPC
-#     10.1. Create Identity-VPC Stack
-#     10.2. Create Identity-NetworkAcls Stack
+# 11. Create Hosted Zones
+#     11.1. Create Identity-HostedZone Stack (Public DNS Zone)
 #
-# 11. Create Bastions
-#     11.1. Create Identity-LinuxBastions Stack
-#     11.1. Create Identity-WindowsBastions Stack (future)
+# 12. Create VPC
+#     12.1. Create Identity-VPC Stack
 #
-# 12. Create Example Applications
-#     12.1. Create Identity-WindowsDomainControllers Stack (future)
+# 13. Create NetworkACLs
+#     13.1. Create Identity-NetworkAcls Stack
+#
+# 14. Create OpenVPNAS Instances
+#     14.1. Create Identity-OpenVPNAS Stack
+#
+# 15. Create Bastions
+#     15.1. Create Identity-LinuxBastions Stack
+#     15.1. Create Identity-WindowsBastions Stack (future)
+#
+# 16. Create Example Applications
+#     16.1. Create Identity-WindowsDomainControllers Stack (future)
 #
 
 run() {
@@ -129,48 +141,74 @@ run "$corebindir/core-create-customsubscriptions-stack -E Identity -r us-east-1"
 run "$corebindir/core-create-standardbuckets-stack -E Identity -r us-east-1"
 
 
-#  X. Create Lambda Functions 
-#      X.1 Create StandardAMIFunctions Stack
-#      X.2 Create StandardCIDRFunctions Stack
+#  8. Create Lambda Functions
+#      8.1 Create StandardAMIFunctions Stack
+#      8.2 Create StandardCIDRFunctions Stack
 
 run "$corebindir/core-create-standardamifunctions-stack -E Identity -r us-east-1"
 run "$corebindir/core-create-standardcidrfunctions-stack -E Identity -r us-east-1"
 
 
-#  8. Create SNS Billing Topics and Subscriptions
-#      8.1 Create BillingTopics Stack
-#      8.2 Create BillingSubscriptions Stack
+#  9. Create SNS Billing Topics and Subscriptions
+#      9.1 Create BillingTopics Stack
+#      9.2 Create BillingSubscriptions Stack
 
 run "$billingbindir/billing-create-billingtopics-stack"
-run "$billingbindir/billing-create-billingsubscription-stack"
+run "$billingbindir/billing-create-billingsubscriptions-stack"
 
 
-#  9. Create CloudWatch Billing Alarms
-#      9.1 Create BillingAlarms Stack
+# 10. Create CloudWatch Billing Alarms
+#     10.1 Create BillingAlarms Stack
 
 run "$billingbindir/billing-create-billingalarms-stack"
 
+echo
+echo "Stop! Currently, you should not go any further in this script, so this script"
+echo "      will now exit. The remainder of this script can be enabled to build out"
+echo "      the Identity-VPC, which will not be needed until we implement multiple"
+echo "      accounts with federated identity management."
+exit
 
 ###### OPTIONAL #########################################################
 
-# 10. Create Identity Environment VPC
-#     10.1. Create Identity-VPC Stack
-#     10.2. Create Identity-NetworkAcls Stack
+# 11. Create Hosted Zones
+#     11.1. Create Identity-HostedZone Stack (Public DNS Zone)
+
+run "$commonbindir/common-create-hostedzone-stack -E Identity -D i.us-east-1.tvl.iropshub.com"
+
+echo
+echo "Note: Currently, you must manually create the NS records which are needed in each"
+echo "      parent DNS Zone to delegate to the sub-domain Zone. This should be done now."
+echo
+
+
+# 12. Create VPC
+#     12.1. Create Identity-VPC Stack
 
 run "$identitybindir/identity-create-vpc-stack -E Identity -N 172.21.62.0/23 -r us-east-1"
+
+
+# 13. Create NetworkACLs
+#     13.1. Create Identity-NetworkAcls Stack
+
 run "$identitybindir/identity-create-networkacls-stack -E Identity -r us-east-1"
 
 
-# 11. Create Bastions
-#     11.1. Create Identity-LinuxBastions Stack
-#     11.1. Create Identity-WindowsBastions Stack (future)
+# 14. Create OpenVPNAS Instances
+#     14.1. Create Identity-OpenVPNAS Stack
 
-run "$utilitybindir/utility-create-linuxbastions-stack -E Identity -U LinuxBastions -D ilbastion -r us-east-1"
-#run "$utilitybindir/utility-create-windowsbastions-stack -E Identity -U WindowsBastions -D iwbastion -r us-east-1"
+run "$utilitybindir/utility-create-openvpnas-stack -E Identity -U OpenVPNAS -Z micro -r us-east-1"
 
 
-# 12. Create Example Applications
-#     12.1. Create Identity-WindowsDomainControllers Stack (future)
+# 15. Create Bastions
+#     15.1. Create Identity-LinuxBastions Stack
+#     15.1. Create Identity-WindowsBastions Stack (future)
+
+run "$utilitybindir/utility-create-linuxbastions-stack -E Identity -U LinuxBastions -Z standby -r us-east-1"
+#run "$utilitybindir/utility-create-windowsbastions-stack -E Identity -U WindowsBastions -r us-east-1"
+
+
+# 16. Create Example Applications
+#     16.1. Create Identity-WindowsDomainControllers Stack (future)
 
 #run "$examplebindir/example-create-windowsdomaincontrollers-stack -E Identity -A WindowsDomainControllers -D dc -r us-east-1"
-

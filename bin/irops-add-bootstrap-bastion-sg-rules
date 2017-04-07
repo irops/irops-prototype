@@ -1,0 +1,38 @@
+#!/bin/bash
+#
+# Add Bootstrap LinuxBastion SecurityGroup Rules
+#
+
+bindir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+confdir=${bindir%/*}/conf
+datfile=bastion-users.dat
+
+profile=${AWS_DEFAULT_PROFILE:-irops-bootstrapadministrator}
+region=us-east-1
+
+public_ip=$(curl -s http://checkip.amazonaws.com)
+
+cidrs=$(sed -e '/^#/d' -e "$ a$public_ip/32" ../conf/bastion-users.dat | cut -d ':' -f2 | sort -u)
+
+sgs=$(aws ec2 describe-security-groups --filters Name=tag:Utility,Values=LinuxBastion \
+                                       --query 'SecurityGroups[].GroupId' \
+                                       --profile $profile --region $region --output text)
+for sg in $sgs; do
+    echo "== sg: $sg ==========================================================================================="
+    for cidr in $cidrs; do
+        echo "# aws ec2 authorize-security-group-ingress --group-id $sg --protocol icmp --port -1 --cidr $cidr"
+#       aws ec2 authorize-security-group-ingress --group-id $sg --protocol icmp --port -1 --cidr $cidr \
+#                                                --profile $profile --region $region
+        aws ec2 authorize-security-group-ingress --group-id $sg --protocol icmp --port -1 --cidr $cidr \
+                                                 --profile $profile --region $region | sed -e '/InvalidPermission.Duplicate/d'
+
+        echo "# aws ec2 authorize-security-group-ingress --group-id $sg --protocol tcp  --port 22 --cidr $cidr"
+#       aws ec2 authorize-security-group-ingress --group-id $sg --protocol tcp --port 22 --cidr $cidr \
+#                                                --profile $profile --region $region
+        aws ec2 authorize-security-group-ingress --group-id $sg --protocol tcp --port 22 --cidr $cidr \
+                                                 --profile $profile --region $region | sed -e '/InvalidPermission.Duplicate/d'
+
+        echo
+    done
+    echo
+done

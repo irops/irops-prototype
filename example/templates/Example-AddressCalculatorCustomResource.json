@@ -1,0 +1,74 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "ExampleAddressCalculatorCustomResource Template. This demonstrates how to use the AddressCalculator to generate a Map of Addresses, based on the Subnet CIDR obtained from a Subnet ID.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "VPCStackName"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "VPCStackName" : { "default" : "VPC Stack Name" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "VPCStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the VPC",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-VPC",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    }
+  },
+
+  "Resources" : {
+    "AddressCalculatorA" : {
+      "Type" : "Custom::AddressCalculator",
+      "Properties" : {
+        "ServiceToken" : { "Fn::Sub" : "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:AddressCalculator" },
+        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-Public1SubnetA" }}
+      }
+    },
+
+    "AddressCalculatorB" : {
+      "Type" : "Custom::AddressCalculator",
+      "Properties" : {
+        "ServiceToken" : { "Fn::Sub" : "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:AddressCalculator" },
+        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-Public1SubnetB" }}
+      }
+    }
+  },
+
+  "Outputs" : {
+    "Address04A" : {
+      "Description" : "The Address04A Address",
+      "Value" : { "Fn::GetAtt" : [ "AddressCalculatorA", "Address04A" ]}
+    },
+
+    "Address04B" : {
+      "Description" : "The Address04B Address",
+      "Value" : { "Fn::GetAtt" : [ "AddressCalculatorB", "Address04B" ]}
+    },
+
+    "Address30A" : {
+      "Description" : "The Address30A Address",
+      "Value" : { "Fn::GetAtt" : [ "AddressCalculatorA", "Address30A" ]}
+    },
+
+    "Address30B" : {
+      "Description" : "The Address30B Address",
+      "Value" : { "Fn::GetAtt" : [ "AddressCalculatorB", "Address30B" ]}
+    }
+  }
+}

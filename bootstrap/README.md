@@ -30,7 +30,7 @@ This User will be used (by default) to create the remainder of the infrastructur
 - Login as the Account (root)
   - Confirm the MFA is working properly
   - Create the BootStrapAdministrators Group
-    - Use AdministratorAccess ManagedPolicy
+    - Attach the AdministratorAccess Policy
   - Create the bootstrapadministrator User
     - Allow Programmatic Access
     - Allow AWS Management Console access
@@ -38,11 +38,9 @@ This User will be used (by default) to create the remainder of the infrastructur
   - Enable MFA on the bootstrapadministrator User
   - Create an ssh key, using a secure passphrase (this must be run on a UNIX command line):
     ```bash
-    ssh-keygen -t rsa -b 4096 -C bootstrapadministrator@iropshub.com -f ~/.ssh/irops_bootstrapadministrator_id_rsa
+    ssh-keygen -t rsa -b 4096 -C bootstrap@iropshub.com -f ~/.ssh/irops_bootstrap_id_rsa
     ```
-  - Import the bootstrapadministrator SSH public key to the bootstrapadministrator User
-    - This is under the User's Security credentials as "SSH keys for AWS CodeCommit"
-  - Import the bootstrapadministrator SSH public key as an EC2 KeyPair with the name "bootstrap"
+  - Import the bootstrap SSH public key as an EC2 KeyPair with the name "bootstrap"
 - Logout as the Account (root)
 
 ### Configure the BootstrapUsers Group and bootstrapuser User
@@ -72,6 +70,8 @@ The following additional steps can be run manually to create additional users on
 bootstrap bastion host.
 
 - Create additional members of the BootstrapAdministrators Group, using the same process above
+- Except, use each person's normal ssh key (i.e. irops_mcrawford_id_rsa) when importing an SSH
+  key into the corresponding bootstrap<user>'s (i.e. bootstrapmcrawford) User SSH keys
 
 ## Secure Shell Workstation Setup
 

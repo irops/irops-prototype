@@ -1,0 +1,64 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Example-GetRHELImageIdCustomResource Template. This demonstrates how to dynamically get the most recent RHEL ImageId, given the RHEL OS Variant and Region. This template provisions an EC2 instance with an AMI ID that is based on the selected InstanceType, Windows OS Variant and Region.",
+
+  "Parameters" : {
+    "InstanceType" : {
+      "Description" : "EC2 instance type",
+      "Type" : "String",
+      "Default" : "t2.medium",
+      "AllowedValues" : [ "t2.micro", "t2.small", "t2.medium" ],
+      "ConstraintDescription" : "Must be a valid EC2 instance type."
+    },
+
+    "RHELVersion" : {
+      "Description" : "RHEL Version",
+      "Type" : "String",
+      "Default" : "RHEL 7",
+      "AllowedValues" : [
+        "RHEL 7",
+        "RHEL 7.3",
+        "RHEL 7.2",
+        "RHEL 7.1",
+        "RHEL 6",
+        "RHEL 6.9",
+        "RHEL 6.8",
+        "RHEL 6.7"
+      ],
+      "ConstraintDescription" : "Must be a valid RHEL version."
+    }
+  },
+
+  "Resources" : {
+    "GetRHELImageId" : {
+      "Type" : "Custom::GetRHELImageId",
+      "Properties" : {
+        "ServiceToken" : { "Fn::Sub" : "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GetRHELImageId" },
+        "Region" : { "Ref" : "AWS::Region" },
+        "OSName" : { "Ref" : "RHELVersion" }
+      }
+    },
+
+    "Instance" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "InstanceType" : { "Ref" : "InstanceType" },
+        "ImageId" : { "Fn::GetAtt" : [ "GetRHELImageId", "ImageId" ]}
+      }
+    },
+
+  },
+
+  "Outputs" : {
+    "ImageId" : {
+      "Description" : "The ImageId",
+      "Value" : { "Fn::GetAtt" : [ "GetRHELImageId", "ImageId" ]}
+    },
+
+    "Name" : {
+      "Description" : "The Image Name",
+      "Value" : { "Fn::GetAtt" : [ "GetRHELImageId", "Name" ]}
+    }
+  }
+}

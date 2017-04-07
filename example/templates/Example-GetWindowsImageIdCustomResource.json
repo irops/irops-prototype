@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
 
-  "Description" : "Example-GetWindowsImageIdCustomResource Template. This demonstrates how to dynamically get the most recent Windows ImageId, given the Windows OS type and Region. This template provisions an EC2 instance with an AMI ID that is based on the selected InstanceType, Region and Windows OS version.",
+  "Description" : "Example-GetWindowsImageIdCustomResource Template. This demonstrates how to dynamically get the most recent Windows ImageId, given the Windows OS Variant and Region. This template provisions an EC2 instance with an AMI ID that is based on the selected InstanceType, Windows OS Variant and Region.",
 
   "Parameters" : {
     "InstanceType" : {
@@ -15,13 +15,21 @@
     "WindowsVersion" : {
       "Description" : "Windows Version",
       "Type" : "String",
-      "Default" : "Windows Server 2012 R2 English 64-bit",
+      "Default" : "Windows Server 2012 R2",
       "AllowedValues" : [
-        "Windows Server 2008 SP2 English 32-bit",
-        "Windows Server 2008 SP2 English 64-bit",
-        "Windows Server 2008 R2 English 64-bit",
-        "Windows Server 2012 RTM English 64-bit",
-        "Windows Server 2012 R2 English 64-bit"
+        "Windows Server 2016",
+        "Windows Server 2016 with Containers",
+        "Windows Server 2016 Nano",
+        "Windows Server 2016 with SQL Server 2016 Express",
+        "Windows Server 2016 with SQL Server 2016 Web",
+        "Windows Server 2016 with SQL Server Standard",
+        "Windows Server 2012 R2",
+        "Windows Server 2012 R2 with SQL Server 2016 Express",
+        "Windows Server 2012 R2 with SQL Server 2016 Web",
+        "Windows Server 2012 R2 with SQL Server 2016 Standard",
+        "Windows Server 2012 R2 with SQL Server 2014 Express",
+        "Windows Server 2012 R2 with SQL Server 2014 Web",
+        "Windows Server 2012 R2 with SQL Server 2014 Standard"
       ],
       "ConstraintDescription" : "Must be a valid Windows version."
     }

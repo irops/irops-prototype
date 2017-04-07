@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# This script updates the Environment HostedZone Stack in an Environment Account.
+# This script creates the Utility OpenVPNAS Stack in an Environment, Core or Build VPC.
 #
 # This script is written in a format suitable for interactive demos,
 # but can be run non-Iteractively and more quickly with the "-I" flag.
@@ -17,18 +17,26 @@ speed_max=400
 run_default=10
 pause_default=2
 next_default=5
-update_default=15
-update_attempts=20
+create_default=15
+create_attempts=40
 
 interactive=1
 speed=100
 verbose=0
-override=0
 owner=${OWNER_EMAIL:-$USER@hpe.com}
 company=${COMPANY_NAME:-Travel}
 system=${SYSTEM_NAME:-IROPS}
 environment=${ENVIRONMENT_NAME:-Production}
-environment_domain=${ENVIRONMENT_DOMAIN:-demo.iropshub.com}
+environment_size=small  # By default, these should use small
+utility=${UTILITY_NAME:-OpenVPNAS}
+utility_domain=${UTILITY_DOMAIN:-vpn}
+utility_license=${UTILITY_LICENSE:-2}
+key=${AWS_KEY_NAME:-administrator}
+public_administrator_network=${PUBLIC_ADMINISTRATOR_NETWORK:-0.0.0.0/0}
+public_administrator_network1=${PUBLIC_ADMINISTRATOR_NETWORK1:-}
+public_administrator_network2=${PUBLIC_ADMINISTRATOR_NETWORK2:-}
+public_administrator_network3=${PUBLIC_ADMINISTRATOR_NETWORK3:-}
+public_user_network=0.0.0.0/0  # This should be global for the VPN to work
 region=${AWS_DEFAULT_REGION:-us-west-2}
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-administrator}
@@ -37,20 +45,28 @@ user=${AWS_USER_NAME:-administrator}
 #  2. Define functions
 
 usage () {
-    echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v] [-o]"
+    echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v]"
     echo "                  [-O owner] [-C company ] [-S system]"
-    echo "                  [-E environment]"
+    echo "                  [-E environment] [-Z size] [-L license]"
+    echo "                  [-U utility] [-D domain]"
+    echo "                  [-k key]"
+    echo "                  [-n network] [-p network ]"
     echo "                  [-r region ] [-a account] [-u user]"
     echo "  -I              non-interactive"
     echo "  -s              slower: increase pauses by 25%"
     echo "  -f              faster: reduce pauses by 25%"
     echo "  -v              verbose"
-    echo "  -o              override StackPolicy"
     echo "  -O owner        Owner Email (default: $owner)"
     echo "  -C company      Company Name (default: $company)"
     echo "  -S system       System Name (default: $system)"
     echo "  -E environment  Environment Name (default: $environment)"
-    echo "  -D domain       Environment Domain (default: $environment_domain)"
+    echo "  -Z size         Environment Size (default: $environment_size)"
+    echo "  -U utility      Utility Name (default: $utility)"
+    echo "  -D domain       Utility Domain (default: $utility_domain)"
+    echo "  -L license      Utility License (default: $utility_license)"
+    echo "  -k key          Key (default: $key)"
+    echo "  -n network      Public Administrator Network (default: $public_administrator_network)"
+    echo "  -p network      Public User Network (default: $public_user_network)"
     echo "  -r region       Region (default: $region)"
     echo "  -a account      Account (default: $account)"
     echo "  -u user         User (default: $user)"
@@ -135,19 +151,28 @@ next() {
 
 
 #  3. Parse command line options
+#     - Note, using options 1-9 as hidden options to set additional network ranges
 
-while getopts IsfvoO:C:S:E:D:r:a:u:? arg; do
+while getopts IsfvO:C:S:E:Z:U:D:L:k:n:1:2:3:p:r:a:u:? arg; do
     case $arg in
     I)  interactive=0;;
     s)  ((speed < speed_max)) && ((speed=speed+25));;
     f)  ((speed > 0)) && ((speed=speed-25));;
     v)  verbose=1;;
-    o)  override=1;;
     O)  owner="$OPTARG";;
     C)  company="$OPTARG";;
     S)  system="$OPTARG";;
     E)  environment="$OPTARG";;
-    D)  environment_domain="$OPTARG";;
+    Z)  environment_size="$OPTARG";;
+    U)  utility="$OPTARG";;
+    D)  utility_domain="$OPTARG";;
+    L)  utility_license="$OPTARG";;
+    k)  key="$OPTARG";;
+    n)  public_administrator_network="$OPTARG";;
+    1)  public_administrator_network1="$OPTARG";;
+    2)  public_administrator_network2="$OPTARG";;
+    3)  public_administrator_network3="$OPTARG";;
+    p)  public_user_network="$OPTARG";;
     r)  region="$OPTARG";;
     a)  account="$OPTARG";;
     u)  user="$OPTARG";;
@@ -185,10 +210,54 @@ if [ -z $environment ]; then
     exit 16
 fi
 
-if [ -z $environment_domain ]; then
+if [ -z $environment_size ]; then
+    echo "-Z size missing!"
+    echo "Could not automatically determine size, and it was not specified as a parameter"
+    exit 18
+fi
+
+if [ -z $utility ]; then
+    echo "-U utility missing!"
+    echo "Could not automatically determine utility, and it was not specified as a parameter"
+    exit 20
+fi
+
+if [ -z $utility_domain ]; then
     echo "-D domain missing!"
     echo "Could not automatically determine domain, and it was not specified as a parameter"
-    exit 18
+    exit 22
+fi
+
+if [ -z $utility_license ]; then
+    echo "-L license missing!"
+    echo "Could not automatically determine license, and it was not specified as a parameter"
+    exit 24
+else
+    case $utility_license in
+      2|10|25|50)
+        openvpnas_license=OpenVPNAS$utility_license;;
+      *)
+        echo "-Z $utility_license invalid! Must be 2, 10, 25 or 50."
+        exit 25;;
+    esac
+fi
+
+if [ -z $key ]; then
+    echo "-K key missing!"
+    echo "Could not automatically determine key, and it was not specified as a parameter"
+    exit 30
+fi
+
+if [ -z $public_administrator_network ]; then
+    echo "-n network missing!"
+    echo "Could not automatically determine public administrator network, and it was not specified as a parameter"
+    exit 32
+fi
+
+if [ -z $public_user_network ]; then
+    echo "-p network missing!"
+    echo "Could not automatically determine public user network, and it was not specified as a parameter"
+    exit 34
 fi
 
 if [ -z $region ]; then
@@ -228,15 +297,24 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
 fi
 
 templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
-templates_folder=environment
+templates_folder=utility
 
 if ! aws s3api head-bucket --bucket $templates_bucket --profile $profile --region $region 2> /dev/null; then
     unset templates_bucket
 fi
 
-if ! aws cloudformation describe-stacks --stack-name $environment-HostedZone \
+configurations_bucket=${AWS_CONFIGURATIONS_BUCKET:-configurations-$region-$account}
+configurations_folder=$utility
+configurations_object=$environment-$utility-etc-openvpn
+
+if ! aws s3api head-bucket --bucket $configurations_bucket --profile $profile --region $region 2> /dev/null; then
+    echo "$configurations_bucket S3 bucket does not exist!"
+    exit 66
+fi
+
+if ! aws cloudformation describe-stacks --stack-name $environment-VPC \
                                         --profile $profile --region $region --output text &> /dev/null; then
-    echo "Unable to update - $environment-HostedZone Stack does not exist!"
+    echo "$environment-VPC Stack does not exist!"
     exit 70
 fi
 
@@ -288,7 +366,7 @@ fi
 read -r -d '' statement << EOS
 aws s3 sync $templatesdir \\
             s3://$templates_bucket/$templates_folder \\
-            --exclude '*' --include 'Environment-HostedZone.json' --include 'Environment-HostedZone-StackPolicy.json' \\
+            --exclude '*' --include 'Utility-OpenVPNAS.json' --include 'Utility-OpenVPNAS-StackPolicy.json' \\
             --profile $profile --region $region --output table
 EOS
 run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
@@ -319,25 +397,38 @@ fi
 
 ((++step))
 if [ ! -z $templates_bucket ]; then
-    template_parameter="--template-url https://$s3_domain/$templates_bucket/$templates_folder/Environment-HostedZone.json"
-    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$templates_folder/Environment-HostedZone-StackPolicy.json"
+    template_parameter="--template-url https://$s3_domain/$templates_bucket/$templates_folder/Utility-OpenVPNAS.json"
+    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$templates_folder/Utility-OpenVPNAS-StackPolicy.json"
 else
-    template_parameter="--template-body file://$templatesdir/Environment-HostedZone.json"
-    stack_policy_parameter="--stack-policy-body file://$templatesdir/Environment-HostedZone-StackPolicy.json"
-fi
-if [ $override = 1 ]; then
-    stack_policy_parameter="$stack_policy_parameter \\"$'\n'"                                --stack-policy-during-update-body file://$templatesdir/Override-StackPolicy.json"
+    template_parameter="--template-body file://$templatesdir/Utility-OpenVPNAS.json"
+    stack_policy_parameter="--stack-policy-body file://$templatesdir/Utility-OpenVPNAS-StackPolicy.json"
 fi
 read -r -d '' statement << EOS
-aws cloudformation update-stack --stack-name $environment-HostedZone \\
+aws cloudformation create-stack --stack-name $environment-$utility \\
                                 $template_parameter \\
                                 $stack_policy_parameter \\
-                                --parameters ParameterKey=Name,ParameterValue=$environment \\
-                                             ParameterKey=Domain,ParameterValue=$environment_domain \\
+                                --parameters ParameterKey=VPCStackName,ParameterValue=$environment-VPC \\
+                                             ParameterKey=StandardAMIFunctionsStackName,ParameterValue=StandardAMIFunctions \\
+                                             ParameterKey=StandardTopicsStackName,ParameterValue=StandardTopics \\
+                                             ParameterKey=KeyName,ParameterValue=$key \\
+                                             ParameterKey=CompanyName,ParameterValue=$company \\
+                                             ParameterKey=SystemName,ParameterValue=$system \\
+                                             ParameterKey=EnvironmentSize,ParameterValue=$environment_size \\
+                                             ParameterKey=UtilityName,ParameterValue=$utility \\
+                                             ParameterKey=UtilityDomain,ParameterValue=$utility_domain \\
+                                             ParameterKey=UtilityLicense,ParameterValue=$openvpnas_license \\
+                                             ParameterKey=PublicAdministratorNetwork,ParameterValue=$public_administrator_network \\
+                                             ParameterKey=PublicAdministratorNetwork1,ParameterValue=$public_administrator_network1 \\
+                                             ParameterKey=PublicAdministratorNetwork2,ParameterValue=$public_administrator_network2 \\
+                                             ParameterKey=PublicAdministratorNetwork3,ParameterValue=$public_administrator_network3 \\
+                                             ParameterKey=PublicUserNetwork,ParameterValue=$public_user_network \\
                                 --tags Key=Owner,Value=$owner \\
                                        Key=Company,Value=$company \\
                                        Key=System,Value=$system \\
                                        Key=Environment,Value=$environment \\
+                                       Key=Utility,Value=$utility \\
+                                --capabilities CAPABILITY_IAM \\
+                                --disable-rollback \\
                                 --profile $profile --region $region --output table
 EOS
 run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
@@ -347,7 +438,7 @@ clear
 echo
 echo "============================================================"
 echo
-echo "$(printf '%2d' $step). Update the Stack"
+echo "$(printf '%2d' $step). Create the Stack"
 echo
 echo "============================================================"
 echo
@@ -355,20 +446,31 @@ echo "Commands:"
 echo
 echo "$statement"
 
-run
-
-if [ $choice = y ]; then
+if aws cloudformation describe-stacks --stack-name $environment-$utility \
+                                      --profile $profile --region $region --output text &> /dev/null; then
     echo
-    echo "$run_statement"
-    eval "$eval_statement"
+    tput rev
+    echo "Already Created!"
+    tput sgr0
 
-    next
+    next 50
+
+else
+    run
+
+    if [ $choice = y ]; then
+        echo
+        echo "$run_statement"
+        eval "$eval_statement"
+
+        next
+    fi
 fi
 
 
 ((++step))
 read -r -d '' statement << EOS
-aws cloudformation describe-stacks --stack-name $environment-HostedZone \\
+aws cloudformation describe-stacks --stack-name $environment-$utility \\
                                    --query 'Stacks[].[StackName,StackStatus]' \\
                                    --profile $profile --region $region --output table
 EOS
@@ -376,7 +478,7 @@ run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
 eval_statement="${statement//\\$'\n'} 2> /dev/null"
 
 read -r -d '' statement2 << EOS
-aws cloudformation describe-stack-events --stack-name $environment-HostedZone --max-items 5 \\
+aws cloudformation describe-stack-events --stack-name $environment-$utility --max-items 5 \\
                                          --query 'StackEvents[].[LogicalResourceId,ResourceStatus,Timestamp]' \\
                                          --profile $profile --region $region --output table
 EOS
@@ -387,7 +489,7 @@ clear
 echo
 echo "============================================================"
 echo
-echo "$(printf '%2d' $step). Monitor Stack update"
+echo "$(printf '%2d' $step). Monitor Stack creation"
 echo
 echo "============================================================"
 echo
@@ -397,9 +499,9 @@ echo "$statement"
 echo
 echo "$statement2"
 
-if [ "$(aws cloudformation describe-stacks --stack-name $environment-HostedZone \
+if [ "$(aws cloudformation describe-stacks --stack-name $environment-$utility \
                                            --query 'Stacks[].StackStatus' \
-                                           --profile $profile --region $region --output text 2> /dev/null)" = "UPDATE_COMPLETE" ]; then
+                                           --profile $profile --region $region --output text 2> /dev/null)" = "CREATE_COMPLETE" ]; then
     echo
     tput rev
     echo "Already Complete!"
@@ -416,16 +518,16 @@ else
         eval "$eval_statement"
 
         attempt=0
-        seconds=$update_default
-        while ((attempt++ <= update_attempts)); do
+        seconds=$create_default
+        while ((attempt++ <= create_attempts)); do
             echo
             echo "$run_statement2"
             eval "$eval_statement2"
 
-            status=$(aws cloudformation describe-stacks --stack-name $environment-HostedZone \
+            status=$(aws cloudformation describe-stacks --stack-name $environment-$utility \
                                                         --query 'Stacks[].StackStatus' \
                                                         --profile $profile --region $region --output text 2> /dev/null)
-            if [ -z "$status" -o "$status" = "UPDATE_COMPLETE" -o "$status" = "UPDATE_FAILED" -o "$status" = "ROLLBACK_COMPLETE" ]; then
+            if [ -z "$status" -o "$status" = "CREATE_COMPLETE" -o "$status" = "CREATE_FAILED" -o "$status" = "ROLLBACK_COMPLETE" ]; then
                 break
             else
                 echo
@@ -475,7 +577,7 @@ fi
 
 ((++step))
 read -r -d '' statement << EOS
-aws cloudformation describe-stack-resources --stack-name $environment-HostedZone \\
+aws cloudformation describe-stack-resources --stack-name $environment-$utility \\
                                             --query 'StackResources[].[ResourceType,LogicalResourceId,PhysicalResourceId,ResourceStatus]' \\
                                             --profile $profile --region $region --output table
 EOS

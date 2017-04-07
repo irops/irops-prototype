@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# This script updates the Core VPC Stack in the Core Account.
+# This script deletes the Utility OpenVPNAS Stack in an Environment, Core or Build VPC.
 #
 # This script is written in a format suitable for interactive demos,
 # but can be run non-Iteractively and more quickly with the "-I" flag.
@@ -17,18 +17,14 @@ speed_max=400
 run_default=10
 pause_default=2
 next_default=5
-update_default=15
-update_attempts=20
+delete_default=15
+delete_attempts=20
 
 interactive=1
 speed=100
 verbose=0
-override=0
-owner=${OWNER_EMAIL:-$USER@hpe.com}
-company=${COMPANY_NAME:-Travel}
-system=${SYSTEM_NAME:-IROPS}
-environment=${CORE_NAME:-Core}
-environment_network=${CORE_NETWORK:-172.21.56.0/22}
+environment=${ENVIRONMENT_NAME:-Production}
+utility=${UTILITY_NAME:-OpenVPNAS}
 region=${AWS_DEFAULT_REGION:-us-west-2}
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-administrator}
@@ -37,20 +33,16 @@ user=${AWS_USER_NAME:-administrator}
 #  2. Define functions
 
 usage () {
-    echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v] [-o]"
-    echo "                  [-O owner] [-C company ] [-S system]"
-    echo "                  [-E environment] [-N network ]"
+    echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v]"
+    echo "                  [-E environment]"
+    echo "                  [-U utility]"
     echo "                  [-r region ] [-a account] [-u user]"
     echo "  -I              non-interactive"
     echo "  -s              slower: increase pauses by 25%"
     echo "  -f              faster: reduce pauses by 25%"
     echo "  -v              verbose"
-    echo "  -o              override StackPolicy"
-    echo "  -O owner        Owner Email (default: $owner)"
-    echo "  -C company      Company Name (default: $company)"
-    echo "  -S system       System Name (default: $system)"
     echo "  -E environment  Environment Name (default: $environment)"
-    echo "  -N network      Environment Network (default: $environment_network)"
+    echo "  -U utility      Utility Name (default: $utility)"
     echo "  -r region       Region (default: $region)"
     echo "  -a account      Account (default: $account)"
     echo "  -u user         User (default: $user)"
@@ -136,18 +128,14 @@ next() {
 
 #  3. Parse command line options
 
-while getopts IsfvoO:C:S:E:N:r:a:u:? arg; do
+while getopts IsfvE:U:r:a:u:? arg; do
     case $arg in
     I)  interactive=0;;
     s)  ((speed < speed_max)) && ((speed=speed+25));;
     f)  ((speed > 0)) && ((speed=speed-25));;
     v)  verbose=1;;
-    o)  override=1;;
-    O)  owner="$OPTARG";;
-    C)  company="$OPTARG";;
-    S)  system="$OPTARG";;
     E)  environment="$OPTARG";;
-    N)  environment_network="$OPTARG";;
+    U)  utility="$OPTARG";;
     r)  region="$OPTARG";;
     a)  account="$OPTARG";;
     u)  user="$OPTARG";;
@@ -161,36 +149,15 @@ shift $(($OPTIND - 1))
 
 #  4. Validate environment
 
-if [ -z $owner ]; then
-    echo "-O owner missing!"
-    echo "Could not automatically determine owner, and it was not specified as a parameter"
-    exit 10
-fi
-
-if [ -z $company ]; then
-    echo "-C company missing!"
-    echo "Could not automatically determine company, and it was not specified as a parameter"
-    exit 12
-fi
-
-if [ -z $system ]; then
-    echo "-S system missing!"
-    echo "Could not automatically determine system, and it was not specified as a parameter"
-    exit 14
-fi
-
 if [ -z $environment ]; then
     echo "-E environment missing!"
     echo "Could not automatically determine environment, and it was not specified as a parameter"
     exit 16
-else
-    use_multi_zone_nat_gateways=false
-    use_vpn_gateway=true
 fi
 
-if [ -z $environment_network ]; then
-    echo "-N network missing!"
-    echo "Could not automatically determine environment network, and it was not specified as a parameter"
+if [ -z $utility ]; then
+    echo "-U utility missing!"
+    echo "Could not automatically determine utility, and it was not specified as a parameter"
     exit 20
 fi
 
@@ -230,16 +197,9 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     exit 60
 fi
 
-templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
-templates_folder=core
-
-if ! aws s3api head-bucket --bucket $templates_bucket --profile $profile --region $region 2> /dev/null; then
-    unset templates_bucket
-fi
-
-if ! aws cloudformation describe-stacks --stack-name $environment-VPC \
+if ! aws cloudformation describe-stacks --stack-name $environment-$utility \
                                         --profile $profile --region $region --output text &> /dev/null; then
-    echo "Unable to update - $environment-VPC Stack does not exist!"
+    echo "Unable to delete - $environment-$utility Stack does not exist!"
     exit 70
 fi
 
@@ -289,72 +249,17 @@ fi
 
 ((++step))
 read -r -d '' statement << EOS
-aws s3 sync $templatesdir \\
-            s3://$templates_bucket/$templates_folder \\
-            --exclude '*' --include 'Core-VPC.json' --include 'Core-VPC-StackPolicy.json' \\
-            --profile $profile --region $region --output table
-EOS
-run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
-eval_statement="${statement//\\$'\n'}"
-
-if [ ! -z $templates_bucket ]; then
-    clear
-    echo
-    echo "============================================================"
-    echo
-    echo "$(printf '%2d' $step). Sync Template and Policy to ($templates_bucket) Bucket"
-    echo
-    echo "============================================================"
-    echo
-    echo "Commands:"
-    echo
-    echo "$statement"
-
-    next 50
-
-    echo
-    echo "$run_statement"
-    eval "$eval_statement"
-
-    next 50
-fi
-
-
-((++step))
-if [ ! -z $templates_bucket ]; then
-    template_parameter="--template-url https://$s3_domain/$templates_bucket/$templates_folder/Core-VPC.json"
-    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$templates_folder/Core-VPC-StackPolicy.json"
-else
-    template_parameter="--template-body file://$templatesdir/Core-VPC.json"
-    stack_policy_parameter="--stack-policy-body file://$templatesdir/Core-VPC-StackPolicy.json"
-fi
-if [ $override = 1 ]; then
-    stack_policy_parameter="$stack_policy_parameter \\"$'\n'"                                --stack-policy-during-update-body file://$templatesdir/Override-StackPolicy.json"
-fi
-read -r -d '' statement << EOS
-aws cloudformation update-stack --stack-name $environment-VPC \\
-                                $template_parameter \\
-                                $stack_policy_parameter \\
-                                --parameters ParameterKey=HostedZoneStackName,ParameterValue=$environment-HostedZone \\
-                                             ParameterKey=Name,ParameterValue=$environment \\
-                                             ParameterKey=Network,ParameterValue=$environment_network \\
-                                             ParameterKey=UseMultiZoneNatGateways,ParameterValue=$use_multi_zone_nat_gateways \\
-                                             ParameterKey=UseVPNGateway,ParameterValue=$use_vpn_gateway \\
-                                --tags Key=Owner,Value=$owner \\
-                                       Key=Company,Value=$company \\
-                                       Key=System,Value=$system \\
-                                       Key=Environment,Value=$environment \\
-                                --capabilities CAPABILITY_IAM \\
+aws cloudformation delete-stack --stack-name $environment-$utility \\
                                 --profile $profile --region $region --output table
 EOS
 run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
-eval_statement="${statement//\\$'\n'}"
+eval_statement="${statement//\\$'\n'} 2> /dev/null"
 
 clear
 echo
 echo "============================================================"
 echo
-echo "$(printf '%2d' $step). Update the Stack"
+echo "$(printf '%2d' $step). Delete the Stack"
 echo
 echo "============================================================"
 echo
@@ -362,20 +267,31 @@ echo "Commands:"
 echo
 echo "$statement"
 
-run
-
-if [ $choice = y ]; then
+if ! aws cloudformation describe-stacks --stack-name $environment-$utility \
+                                        --profile $profile --region $region --output text &> /dev/null; then
     echo
-    echo "$run_statement"
-    eval "$eval_statement"
+    tput rev
+    echo "Already Deleted!"
+    tput sgr0
 
-    next
+    next 50
+
+else
+    run
+
+    if [ $choice = y ]; then
+        echo
+        echo "$run_statement"
+        eval "$eval_statement"
+
+        next
+    fi
 fi
 
 
 ((++step))
 read -r -d '' statement << EOS
-aws cloudformation describe-stacks --stack-name $environment-VPC \\
+aws cloudformation describe-stacks --stack-name $environment-$utility \\
                                    --query 'Stacks[].[StackName,StackStatus]' \\
                                    --profile $profile --region $region --output table
 EOS
@@ -383,7 +299,7 @@ run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
 eval_statement="${statement//\\$'\n'} 2> /dev/null"
 
 read -r -d '' statement2 << EOS
-aws cloudformation describe-stack-events --stack-name $environment-VPC --max-items 5 \\
+aws cloudformation describe-stack-events --stack-name $environment-$utility --max-items 5 \\
                                          --query 'StackEvents[].[LogicalResourceId,ResourceStatus,Timestamp]' \\
                                          --profile $profile --region $region --output table
 EOS
@@ -394,7 +310,7 @@ clear
 echo
 echo "============================================================"
 echo
-echo "$(printf '%2d' $step). Monitor Stack update"
+echo "$(printf '%2d' $step). Monitor Stack deletion"
 echo
 echo "============================================================"
 echo
@@ -404,12 +320,11 @@ echo "$statement"
 echo
 echo "$statement2"
 
-if [ "$(aws cloudformation describe-stacks --stack-name $environment-VPC \
-                                           --query 'Stacks[].StackStatus' \
-                                           --profile $profile --region $region --output text 2> /dev/null)" = "UPDATE_COMPLETE" ]; then
+if ! aws cloudformation describe-stacks --stack-name $environment-$utility \
+                                        --profile $profile --region $region &> /dev/null; then
     echo
     tput rev
-    echo "Already Complete!"
+    echo "Already Deleted!"
     tput sgr0
 
     next 50
@@ -423,16 +338,16 @@ else
         eval "$eval_statement"
 
         attempt=0
-        seconds=$update_default
-        while ((attempt++ <= update_attempts)); do
+        seconds=$delete_default
+        while ((attempt++ <= delete_attempts)); do
             echo
             echo "$run_statement2"
             eval "$eval_statement2"
 
-            status=$(aws cloudformation describe-stacks --stack-name $environment-VPC \
+            status=$(aws cloudformation describe-stacks --stack-name $environment-$utility \
                                                         --query 'Stacks[].StackStatus' \
                                                         --profile $profile --region $region --output text 2> /dev/null)
-            if [ -z "$status" -o "$status" = "UPDATE_COMPLETE" -o "$status" = "UPDATE_FAILED" -o "$status" = "ROLLBACK_COMPLETE" ]; then
+            if [ -z "$status" -o "$status" = "CREATE_COMPLETE" -o "$status" = "CREATE_FAILED" -o "$status" = "ROLLBACK_COMPLETE" ]; then
                 break
             else
                 echo
@@ -461,40 +376,6 @@ if [ $verbose = 1 ]; then
     echo "============================================================"
     echo
     echo "$(printf '%2d' $step). List Resulting Stacks"
-    echo
-    echo "============================================================"
-    echo
-    echo "Commands:"
-    echo
-    echo "$statement"
-
-    run 50
-
-    if [ $choice = y ]; then
-        echo
-        echo "$run_statement"
-        eval "$eval_statement"
-
-        next
-    fi
-fi
-
-
-((++step))
-read -r -d '' statement << EOS
-aws cloudformation describe-stack-resources --stack-name $environment-VPC \\
-                                            --query 'StackResources[].[ResourceType,LogicalResourceId,PhysicalResourceId,ResourceStatus]' \\
-                                            --profile $profile --region $region --output table
-EOS
-run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
-eval_statement="${statement//\\$'\n'} 2> /dev/null"
-
-if [ $verbose = 1 ]; then
-    clear
-    echo
-    echo "============================================================"
-    echo
-    echo "$(printf '%2d' $step). List Resulting Stack Resources"
     echo
     echo "============================================================"
     echo

@@ -59,9 +59,9 @@
         "Code" : {
           "ZipFile" : { "Fn::Join" : [ "\n", [
             "var archToAMINamePattern = {",
-            "  'PV64':  'amzn-ami-pv*x86_64-ebs',",
-            "  'HVM64': 'amzn-ami-hvm*x86_64-gp2',",
-            "  'HVMG2': 'amzn-ami-graphics-hvm*x86_64-ebs*'",
+            "  'PV64'  : 'amzn-ami-pv*x86_64-ebs',",
+            "  'HVM64' : 'amzn-ami-hvm*x86_64-gp2',",
+            "  'HVMG2' : 'amzn-ami-graphics-hvm*x86_64-ebs*'",
             "};",
             "",
             "var response = require('cfn-response');",
@@ -121,7 +121,7 @@
       "Type" : "AWS::Lambda::Function",
       "Properties" : {
         "FunctionName" : "GetWindowsImageId",
-        "Description" : "A Lambda function that looks up the latest Windows AMI ID for a given region and architecture.",
+        "Description" : "A Lambda function that looks up the latest Windows AMI ID for a given OS Variant and Region.",
         "Role" : { "Fn::GetAtt" : [ "Role", "Arn" ]},
         "Runtime" : "nodejs4.3",
         "Timeout" : "30",
@@ -129,11 +129,19 @@
         "Code" : {
           "ZipFile" :  { "Fn::Join" : [ "\n", [
             "var osNameToPattern = {",
-            "  'Windows Server 2008 SP2 English 32-bit': 'Windows_Server-2008-SP2-English-32Bit-Base-*',",
-            "  'Windows Server 2008 SP2 English 64-bit': 'Windows_Server-2008-SP2-English-64Bit-Base-*',",
-            "  'Windows Server 2008 R2 English 64-bit':  'Windows_Server-2008-R2_SP1-English-64Bit-Base-*',",
-            "  'Windows Server 2012 RTM English 64-bit': 'Windows_Server-2012-RTM-English-64Bit-Base-*',",
-            "  'Windows Server 2012 R2 English 64-bit':  'Windows_Server-2012-R2_RTM-English-64Bit-Base-*'",
+            "  'Windows Server 2016'                                  : 'Windows_Server-2016-English-Full-Base-*',",
+            "  'Windows Server 2016 with Containers'                  : 'Windows_Server-2016-English-Full-Containers-*',",
+            "  'Windows Server 2016 Nano'                             : 'Windows_Server-2016-English-Nano-Base-*',",
+            "  'Windows Server 2016 with SQL Server 2016 Express'     : 'Windows_Server-2016-English-Full-SQL_2016_SP1_Express-*',",
+            "  'Windows Server 2016 with SQL Server 2016 Web'         : 'Windows_Server-2016-English-Full-SQL_2016_SP1_Web-*',",
+            "  'Windows Server 2016 with SQL Server Standard'         : 'Windows_Server-2016-English-Full-SQL_2016_SP1_Standard-*',",
+            "  'Windows Server 2012 R2'                               : 'Windows_Server-2012-R2_RTM-English-64Bit-Base-*',",
+            "  'Windows Server 2012 R2 with SQL Server 2016 Express'  : 'Windows_Server-2012-R2_RTM-English-64Bit-SQL_2016_SP1_Express-*',",
+            "  'Windows Server 2012 R2 with SQL Server 2016 Web'      : 'Windows_Server-2012-R2_RTM-English-64Bit-SQL_2016_SP1_Web-*',",
+            "  'Windows Server 2012 R2 with SQL Server 2016 Standard' : 'Windows_Server-2012-R2_RTM-English-64Bit-SQL_2016_SP1_Standard-*',",
+            "  'Windows Server 2012 R2 with SQL Server 2014 Express'  : 'Windows_Server-2012-R2_RTM-English-64Bit-SQL_2014_SP2_Express-*',",
+            "  'Windows Server 2012 R2 with SQL Server 2014 Web'      : 'Windows_Server-2012-R2_RTM-English-64Bit-SQL_2014_SP2_Web-*',",
+            "  'Windows Server 2012 R2 with SQL Server 2014 Standard' : 'Windows_Server-2012-R2_RTM-English-64Bit-SQL_2014_SP2_Standard-*'",
             "};",
             "",
             "var response = require('cfn-response');",
@@ -185,6 +193,147 @@
           ]]}
         }
       }
+    },
+
+    "GetRHELImageIdFunction" : {
+      "Type" : "AWS::Lambda::Function",
+      "Properties" : {
+        "FunctionName" : "GetRHELImageId",
+        "Description" : "A Lambda function that looks up the latest RHEL AMI ID for a given OS Variant and Region.",
+        "Role" : { "Fn::GetAtt" : [ "Role", "Arn" ]},
+        "Runtime" : "nodejs4.3",
+        "Timeout" : "30",
+        "Handler" : "index.handler",
+        "Code" : {
+          "ZipFile" :  { "Fn::Join" : [ "\n", [
+            "var osNameToPattern = {",
+            "  'RHEL 7'   : 'RHEL-7.*_HVM_GA-*',",
+            "  'RHEL 7.3' : 'RHEL-7.3_HVM_GA-*',",
+            "  'RHEL 7.2' : 'RHEL-7.2_HVM_GA-*',",
+            "  'RHEL 7.1' : 'RHEL-7.1_HVM_GA-*',",
+            "  'RHEL 6'   : 'RHEL-6.*_HVM_GA-*',",
+            "  'RHEL 6.9' : 'RHEL-6.9_HVM_GA-*',",
+            "  'RHEL 6.8' : 'RHEL-6.8_HVM_GA-*',",
+            "  'RHEL 6.7' : 'RHEL-6.7_HVM_GA-*'",
+            "};",
+            "",
+            "var response = require('cfn-response');",
+            "",
+            "exports.handler = function(event, context) {",
+            "  console.log('Request body:\\n' + JSON.stringify(event));",
+            "",
+            "  if (event.RequestType == 'Delete') {",
+            "    response.send(event, context, response.SUCCESS);",
+            "    return;",
+            "  }",
+            "",
+            "  var responseStatus = response.FAILED;",
+            "  var responseData = {};",
+            "",
+            "  var osBaseName = osNameToPattern[event.ResourceProperties.OSName];",
+            "  console.log('OS: ' + event.ResourceProperties.OSName + ' -> ' + osBaseName);",
+            "",
+            "  var aws = require('aws-sdk');",
+            "",
+            "  var ec2 = new aws.EC2({region: event.ResourceProperties.Region});",
+            "  var describeImagesParams = {",
+            "    Filters: [{ Name: 'name', Values: [osBaseName]}],",
+            "    Owners: ['309956199498']",
+            "  };",
+            "",
+            "  console.log('Calling DescribeImages...');",
+            "  ec2.describeImages(describeImagesParams, function(err, describeImagesResult) {",
+            "    if (err) {",
+            "      responseData = {Error: 'DescribeImages call failed'};",
+            "      console.error(responseData.Error + ':\\n', err);",
+            "    }",
+            "    else {",
+            "      var images = describeImagesResult.Images;",
+            "      console.log('DescribeImages returned ' + images.length + ' images');",
+            "      images.sort(function(x, y) { return x.CreationDate < y.CreationDate; });",
+            "      for (var i = 0; i < images.length; i++) {",
+            "        responseStatus = response.SUCCESS;",
+            "        responseData['ImageId'] = images[i].ImageId;",
+            "        responseData['Name'] = images[i].Name;",
+            "        console.log('Found: ' + images[i].Name + ', ' + images[i].ImageId);",
+            "        break;",
+            "      }",
+            "    }",
+            "",
+            "    response.send(event, context, responseStatus, responseData);",
+            "  });",
+            "};"
+          ]]}
+        }
+      }
+    },
+
+    "GetUbuntuImageIdFunction" : {
+      "Type" : "AWS::Lambda::Function",
+      "Properties" : {
+        "FunctionName" : "GetUbuntuImageId",
+        "Description" : "A Lambda function that looks up the latest Ubuntu AMI ID for a given OS Variant and Region.",
+        "Role" : { "Fn::GetAtt" : [ "Role", "Arn" ]},
+        "Runtime" : "nodejs4.3",
+        "Timeout" : "30",
+        "Handler" : "index.handler",
+        "Code" : {
+          "ZipFile" :  { "Fn::Join" : [ "\n", [
+            "var osNameToPattern = {",
+            "  'Ubuntu Server 16.04 LTS' : 'ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-*',",
+            "  'Ubuntu Server 14.04 LTS' : 'ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-*',",
+            "  'Ubuntu Server 12.04 LTS' : 'ubuntu/images/hvm-ssd/ubuntu-precise-12.04-amd64-server-*'",
+            "};",
+            "",
+            "var response = require('cfn-response');",
+            "",
+            "exports.handler = function(event, context) {",
+            "  console.log('Request body:\\n' + JSON.stringify(event));",
+            "",
+            "  if (event.RequestType == 'Delete') {",
+            "    response.send(event, context, response.SUCCESS);",
+            "    return;",
+            "  }",
+            "",
+            "  var responseStatus = response.FAILED;",
+            "  var responseData = {};",
+            "",
+            "  var osBaseName = osNameToPattern[event.ResourceProperties.OSName];",
+            "  console.log('OS: ' + event.ResourceProperties.OSName + ' -> ' + osBaseName);",
+            "",
+            "  var aws = require('aws-sdk');",
+            "",
+            "  var ec2 = new aws.EC2({region: event.ResourceProperties.Region});",
+            "  var describeImagesParams = {",
+            "    Filters: [{ Name: 'name', Values: [osBaseName]}],",
+            "    Owners: ['099720109477']",
+            "  };",
+            "",
+            "  console.log('Calling DescribeImages...');",
+            "  ec2.describeImages(describeImagesParams, function(err, describeImagesResult) {",
+            "    if (err) {",
+            "      responseData = {Error: 'DescribeImages call failed'};",
+            "      console.error(responseData.Error + ':\\n', err);",
+            "    }",
+            "    else {",
+            "      var images = describeImagesResult.Images;",
+            "      console.log('DescribeImages returned ' + images.length + ' images');",
+            "      images.sort(function(x, y) { return y.Name.localeCompare(x.Name); });",
+            "      for (var i = 0; i < images.length; i++) {",
+            "        responseStatus = response.SUCCESS;",
+            "        responseData['ImageId'] = images[i].ImageId;",
+            "        responseData['Name'] = images[i].Name;",
+            "        console.log('Found: ' + images[i].Name + ', ' + images[i].ImageId);",
+            "        break;",
+            "      }",
+            "    }",
+            "",
+            "    response.send(event, context, responseStatus, responseData);",
+            "  });",
+            "};"
+          ]]}
+        }
+      }
     }
   },
 
@@ -199,6 +348,18 @@
       "Description" : "The GetWindowsImageId Lambda Function ARN",
       "Value" :  { "Fn::GetAtt" : [ "GetWindowsImageIdFunction", "Arn" ]},
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-GetWindowsImageIdFunctionArn" }}
+    },
+
+    "GetRHELImageIdFunctionArn" : {
+      "Description" : "The GetRHELImageId Lambda Function ARN",
+      "Value" :  { "Fn::GetAtt" : [ "GetRHELImageIdFunction", "Arn" ]},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-GetRHELImageIdFunctionArn" }}
+    },
+
+    "GetUbuntuImageIdFunctionArn" : {
+      "Description" : "The GetUbuntuImageId Lambda Function ARN",
+      "Value" :  { "Fn::GetAtt" : [ "GetUbuntuImageIdFunction", "Arn" ]},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-GetUbuntuImageIdFunctionArn" }}
     }
   }
 }

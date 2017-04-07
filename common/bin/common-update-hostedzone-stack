@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# This script deletes the Environment HostedZone Stack in an Environment Account.
+# This script updates the Environment HostedZone Stack in an Environment or Core Account.
 #
 # This script is written in a format suitable for interactive demos,
 # but can be run non-Iteractively and more quickly with the "-I" flag.
@@ -17,13 +17,18 @@ speed_max=400
 run_default=10
 pause_default=2
 next_default=5
-delete_default=15
-delete_attempts=20
+update_default=15
+update_attempts=20
 
 interactive=1
 speed=100
 verbose=0
+override=0
+owner=${OWNER_EMAIL:-$USER@hpe.com}
+company=${COMPANY_NAME:-Travel}
+system=${SYSTEM_NAME:-IROPS}
 environment=${ENVIRONMENT_NAME:-Production}
+environment_domain=${ENVIRONMENT_DOMAIN:-demo.iropshub.com}
 region=${AWS_DEFAULT_REGION:-us-west-2}
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-administrator}
@@ -32,14 +37,20 @@ user=${AWS_USER_NAME:-administrator}
 #  2. Define functions
 
 usage () {
-    echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v]"
+    echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v] [-o]"
+    echo "                  [-O owner] [-C company ] [-S system]"
     echo "                  [-E environment]"
     echo "                  [-r region ] [-a account] [-u user]"
     echo "  -I              non-interactive"
     echo "  -s              slower: increase pauses by 25%"
     echo "  -f              faster: reduce pauses by 25%"
     echo "  -v              verbose"
+    echo "  -o              override StackPolicy"
+    echo "  -O owner        Owner Email (default: $owner)"
+    echo "  -C company      Company Name (default: $company)"
+    echo "  -S system       System Name (default: $system)"
     echo "  -E environment  Environment Name (default: $environment)"
+    echo "  -D domain       Environment Domain (default: $environment_domain)"
     echo "  -r region       Region (default: $region)"
     echo "  -a account      Account (default: $account)"
     echo "  -u user         User (default: $user)"
@@ -125,13 +136,18 @@ next() {
 
 #  3. Parse command line options
 
-while getopts IsfvE:r:a:u:? arg; do
+while getopts IsfvoO:C:S:E:D:r:a:u:? arg; do
     case $arg in
     I)  interactive=0;;
     s)  ((speed < speed_max)) && ((speed=speed+25));;
     f)  ((speed > 0)) && ((speed=speed-25));;
     v)  verbose=1;;
+    o)  override=1;;
+    O)  owner="$OPTARG";;
+    C)  company="$OPTARG";;
+    S)  system="$OPTARG";;
     E)  environment="$OPTARG";;
+    D)  environment_domain="$OPTARG";;
     r)  region="$OPTARG";;
     a)  account="$OPTARG";;
     u)  user="$OPTARG";;
@@ -145,10 +161,34 @@ shift $(($OPTIND - 1))
 
 #  4. Validate environment
 
+if [ -z $owner ]; then
+    echo "-O owner missing!"
+    echo "Could not automatically determine owner, and it was not specified as a parameter"
+    exit 10
+fi
+
+if [ -z $company ]; then
+    echo "-C company missing!"
+    echo "Could not automatically determine company, and it was not specified as a parameter"
+    exit 12
+fi
+
+if [ -z $system ]; then
+    echo "-S system missing!"
+    echo "Could not automatically determine system, and it was not specified as a parameter"
+    exit 14
+fi
+
 if [ -z $environment ]; then
     echo "-E environment missing!"
     echo "Could not automatically determine environment, and it was not specified as a parameter"
     exit 16
+fi
+
+if [ -z $environment_domain ]; then
+    echo "-D domain missing!"
+    echo "Could not automatically determine domain, and it was not specified as a parameter"
+    exit 18
 fi
 
 if [ -z $region ]; then
@@ -187,9 +227,16 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     exit 60
 fi
 
+templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
+templates_folder=environment
+
+if ! aws s3api head-bucket --bucket $templates_bucket --profile $profile --region $region 2> /dev/null; then
+    unset templates_bucket
+fi
+
 if ! aws cloudformation describe-stacks --stack-name $environment-HostedZone \
                                         --profile $profile --region $region --output text &> /dev/null; then
-    echo "Unable to delete - $environment-HostedZone Stack does not exist!"
+    echo "Unable to update - $environment-HostedZone Stack does not exist!"
     exit 70
 fi
 
@@ -239,17 +286,68 @@ fi
 
 ((++step))
 read -r -d '' statement << EOS
-aws cloudformation delete-stack --stack-name $environment-HostedZone \\
+aws s3 sync $templatesdir \\
+            s3://$templates_bucket/$templates_folder \\
+            --exclude '*' --include 'Common-HostedZone.json' --include 'Common-HostedZone-StackPolicy.json' \\
+            --profile $profile --region $region --output table
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'}"
+
+if [ ! -z $templates_bucket ]; then
+    clear
+    echo
+    echo "============================================================"
+    echo
+    echo "$(printf '%2d' $step). Sync Template and Policy to ($templates_bucket) Bucket"
+    echo
+    echo "============================================================"
+    echo
+    echo "Commands:"
+    echo
+    echo "$statement"
+
+    next 50
+
+    echo
+    echo "$run_statement"
+    eval "$eval_statement"
+
+    next 50
+fi
+
+
+((++step))
+if [ ! -z $templates_bucket ]; then
+    template_parameter="--template-url https://$s3_domain/$templates_bucket/$templates_folder/Common-HostedZone.json"
+    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$templates_folder/Common-HostedZone-StackPolicy.json"
+else
+    template_parameter="--template-body file://$templatesdir/Common-HostedZone.json"
+    stack_policy_parameter="--stack-policy-body file://$templatesdir/Common-HostedZone-StackPolicy.json"
+fi
+if [ $override = 1 ]; then
+    stack_policy_parameter="$stack_policy_parameter \\"$'\n'"                                --stack-policy-during-update-body file://$templatesdir/Override-StackPolicy.json"
+fi
+read -r -d '' statement << EOS
+aws cloudformation update-stack --stack-name $environment-HostedZone \\
+                                $template_parameter \\
+                                $stack_policy_parameter \\
+                                --parameters ParameterKey=Name,ParameterValue=$environment \\
+                                             ParameterKey=Domain,ParameterValue=$environment_domain \\
+                                --tags Key=Owner,Value=$owner \\
+                                       Key=Company,Value=$company \\
+                                       Key=System,Value=$system \\
+                                       Key=Environment,Value=$environment \\
                                 --profile $profile --region $region --output table
 EOS
 run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
-eval_statement="${statement//\\$'\n'} 2> /dev/null"
+eval_statement="${statement//\\$'\n'}"
 
 clear
 echo
 echo "============================================================"
 echo
-echo "$(printf '%2d' $step). Delete the Stack"
+echo "$(printf '%2d' $step). Update the Stack"
 echo
 echo "============================================================"
 echo
@@ -257,25 +355,14 @@ echo "Commands:"
 echo
 echo "$statement"
 
-if ! aws cloudformation describe-stacks --stack-name $environment-HostedZone \
-                                        --profile $profile --region $region --output text &> /dev/null; then
+run
+
+if [ $choice = y ]; then
     echo
-    tput rev
-    echo "Already Deleted!"
-    tput sgr0
+    echo "$run_statement"
+    eval "$eval_statement"
 
-    next 50
-
-else
-    run
-
-    if [ $choice = y ]; then
-        echo
-        echo "$run_statement"
-        eval "$eval_statement"
-
-        next
-    fi
+    next
 fi
 
 
@@ -300,7 +387,7 @@ clear
 echo
 echo "============================================================"
 echo
-echo "$(printf '%2d' $step). Monitor Stack deletion"
+echo "$(printf '%2d' $step). Monitor Stack update"
 echo
 echo "============================================================"
 echo
@@ -310,11 +397,12 @@ echo "$statement"
 echo
 echo "$statement2"
 
-if ! aws cloudformation describe-stacks --stack-name $environment-HostedZone \
-                                        --profile $profile --region $region &> /dev/null; then
+if [ "$(aws cloudformation describe-stacks --stack-name $environment-HostedZone \
+                                           --query 'Stacks[].StackStatus' \
+                                           --profile $profile --region $region --output text 2> /dev/null)" = "UPDATE_COMPLETE" ]; then
     echo
     tput rev
-    echo "Already Deleted!"
+    echo "Already Complete!"
     tput sgr0
 
     next 50
@@ -328,8 +416,8 @@ else
         eval "$eval_statement"
 
         attempt=0
-        seconds=$delete_default
-        while ((attempt++ <= delete_attempts)); do
+        seconds=$update_default
+        while ((attempt++ <= update_attempts)); do
             echo
             echo "$run_statement2"
             eval "$eval_statement2"
@@ -337,7 +425,7 @@ else
             status=$(aws cloudformation describe-stacks --stack-name $environment-HostedZone \
                                                         --query 'Stacks[].StackStatus' \
                                                         --profile $profile --region $region --output text 2> /dev/null)
-            if [ -z "$status" -o "$status" = "CREATE_COMPLETE" -o "$status" = "CREATE_FAILED" -o "$status" = "ROLLBACK_COMPLETE" ]; then
+            if [ -z "$status" -o "$status" = "UPDATE_COMPLETE" -o "$status" = "UPDATE_FAILED" -o "$status" = "ROLLBACK_COMPLETE" ]; then
                 break
             else
                 echo
@@ -366,6 +454,40 @@ if [ $verbose = 1 ]; then
     echo "============================================================"
     echo
     echo "$(printf '%2d' $step). List Resulting Stacks"
+    echo
+    echo "============================================================"
+    echo
+    echo "Commands:"
+    echo
+    echo "$statement"
+
+    run 50
+
+    if [ $choice = y ]; then
+        echo
+        echo "$run_statement"
+        eval "$eval_statement"
+
+        next
+    fi
+fi
+
+
+((++step))
+read -r -d '' statement << EOS
+aws cloudformation describe-stack-resources --stack-name $environment-HostedZone \\
+                                            --query 'StackResources[].[ResourceType,LogicalResourceId,PhysicalResourceId,ResourceStatus]' \\
+                                            --profile $profile --region $region --output table
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'} 2> /dev/null"
+
+if [ $verbose = 1 ]; then
+    clear
+    echo
+    echo "============================================================"
+    echo
+    echo "$(printf '%2d' $step). List Resulting Stack Resources"
     echo
     echo "============================================================"
     echo

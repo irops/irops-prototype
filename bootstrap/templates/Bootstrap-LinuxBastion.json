@@ -239,21 +239,21 @@
 
   "Mappings" : {
     "ImageIdMap" : {
-      "AMI"            : { "AMZN" : "Amazon Linux 2016.09.1", "RHEL" : "RHEL 7.3", "UBNT" : "Ubuntu 16.04" },
-      "us-east-1"      : { "AMZN" : "ami-0b33d91d", "RHEL" : "ami-b63769a1", "UBNT" : "ami-f4cc1de2" },
-      "us-east-2"      : { "AMZN" : "ami-c55673a0", "RHEL" : "ami-0932686c", "UBNT" : "ami-fcc19b99" },
-      "us-west-1"      : { "AMZN" : "ami-165a0876", "RHEL" : "ami-2cade64c", "UBNT" : "ami-16efb076" },
-      "us-west-2"      : { "AMZN" : "ami-f173cc91", "RHEL" : "ami-6f68cf0f", "UBNT" : "ami-a58d0dc5" },
-      "ca-central-1"   : { "AMZN" : "ami-ebed508f", "RHEL" : "ami-9062d0f4", "UBNT" : "ami-7b74c91f" },
-      "eu-west-1"      : { "AMZN" : "ami-70edb016", "RHEL" : "ami-02ace471", "UBNT" : "ami-405f7226" },
-      "eu-central-1"   : { "AMZN" : "ami-af0fc0c0", "RHEL" : "ami-e4c63e8b", "UBNT" : "ami-3f1bd150" },
-      "eu-west-2"      : { "AMZN" : "ami-f1949e95", "RHEL" : "ami-9c363cf8", "UBNT" : "ami-ede2e889" },
-      "ap-southeast-1" : { "AMZN" : "ami-dc9339bf", "RHEL" : "ami-2c95344f", "UBNT" : "ami-ee7bca8d" },
-      "ap-southeast-2" : { "AMZN" : "ami-1c47407f", "RHEL" : "ami-39ac915a", "UBNT" : "ami-4e686b2d" },
-      "ap-northeast-2" : { "AMZN" : "ami-dac312b4", "RHEL" : "ami-44db152a", "UBNT" : "ami-0500d06b" },
-      "ap-northeast-1" : { "AMZN" : "ami-56d4ad31", "RHEL" : "ami-5de0433c", "UBNT" : "ami-1bfdb67c" },
-      "ap-south-1"     : { "AMZN" : "ami-f9daac96", "RHEL" : "ami-cdbdd7a2", "UBNT" : "ami-5f3d4d30" },
-      "sa-east-1"      : { "AMZN" : "ami-80086dec", "RHEL" : "ami-7de77b11", "UBNT" : "ami-af0462c3" }
+      "AMI"            : { "AMZN" : "Amazon Linux 2016.09.1"},
+      "us-east-1"      : { "AMZN" : "ami-0b33d91d" },
+      "us-east-2"      : { "AMZN" : "ami-c55673a0" },
+      "us-west-1"      : { "AMZN" : "ami-165a0876" },
+      "us-west-2"      : { "AMZN" : "ami-f173cc91" },
+      "ca-central-1"   : { "AMZN" : "ami-ebed508f" },
+      "eu-west-1"      : { "AMZN" : "ami-70edb016" },
+      "eu-central-1"   : { "AMZN" : "ami-af0fc0c0" },
+      "eu-west-2"      : { "AMZN" : "ami-f1949e95" },
+      "ap-southeast-1" : { "AMZN" : "ami-dc9339bf" },
+      "ap-southeast-2" : { "AMZN" : "ami-1c47407f" },
+      "ap-northeast-2" : { "AMZN" : "ami-dac312b4" },
+      "ap-northeast-1" : { "AMZN" : "ami-56d4ad31" },
+      "ap-south-1"     : { "AMZN" : "ami-f9daac96" },
+      "sa-east-1"      : { "AMZN" : "ami-80086dec" }
     },
 
     "InstanceTypeMap" : {
@@ -831,7 +831,7 @@
                   "            echo $(aws iam get-ssh-public-key --user-name $administrator --ssh-public-key-id $key --encoding SSH --query 'SSHPublicKey.SSHPublicKeyBody' --region $region --output text) >> /home/$administrator/.ssh/authorized_keys\n",
                   "        done\n",
                   "        chmod 0600 /home/$administrator/.ssh/authorized_keys\n",
-                  "        chown -R $administrator:$administrator /home/$administrator/.ssh\n",
+                  "        chown -R $administrator:$administrator /home/$administrator\n",
                   "        echo\n",
                   "    else\n",
                   "        echo \" - skipped (no SSH Key)\"\n",
@@ -859,7 +859,7 @@
                   "                echo $(aws iam get-ssh-public-key --user-name $user --ssh-public-key-id $key --encoding SSH --query 'SSHPublicKey.SSHPublicKeyBody' --region $region --output text) >> /home/$user/.ssh/authorized_keys\n",
                   "            done\n",
                   "            chmod 0600 /home/$user/.ssh/authorized_keys\n",
-                  "            chown -R $user:$user /home/$user/.ssh\n",
+                  "            chown -R $user:$user /home/$user\n",
                   "            echo\n",
                   "        else\n",
                   "            echo \" - skipped (no SSH Key)\"\n",
@@ -884,7 +884,7 @@
         }
       },
       "Properties" : {
-        "ImageId" : { "Fn::FindInMap" : [ "ImageIdMap", { "Ref" : "AWS::Region" } , "AMI" ]},
+        "ImageId" : { "Fn::FindInMap" : [ "ImageIdMap", { "Ref" : "AWS::Region" } , "AMZN" ]},
         "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Bastion", { "Ref" : "EnvironmentSize" }]},
         "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
         "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},

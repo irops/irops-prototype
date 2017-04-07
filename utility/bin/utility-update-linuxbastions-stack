@@ -28,18 +28,18 @@ owner=${OWNER_EMAIL:-$USER@hpe.com}
 company=${COMPANY_NAME:-Travel}
 system=${SYSTEM_NAME:-IROPS}
 environment=${ENVIRONMENT_NAME:-Production}
-environment_size=${ENVIRONMENT_SIZE:-micro}
+environment_size=standby  # By default, these run in standby mode
 utility=${UTILITY_NAME:-LinuxBastions}
 utility_domain=${UTILITY_DOMAIN:-lbastion}
 key=${AWS_KEY_NAME:-administrator}
-public_network=${PUBLIC_NETWORK:-0.0.0.0/0}
-public_network1=${PUBLIC_NETWORK1:-}
-public_network2=${PUBLIC_NETWORK2:-}
-public_network3=${PUBLIC_NETWORK3:-}
-private_network=${PRIVATE_NETWORK:-10.0.0.0/16}
-private_network1=${PRIVATE_NETWORK1:-}
-private_network2=${PRIVATE_NETWORK2:-}
-private_network3=${PRIVATE_NETWORK3:-}
+public_user_network=${PUBLIC_USER_NETWORK:-0.0.0.0/0}
+public_user_network1=${PUBLIC_USER_NETWORK1:-}
+public_user_network2=${PUBLIC_USER_NETWORK2:-}
+public_user_network3=${PUBLIC_USER_NETWORK3:-}
+private_user_network=${PRIVATE_USER_NETWORK:-10.0.0.0/16}
+private_user_network1=${PRIVATE_USER_NETWORK1:-}
+private_user_network2=${PRIVATE_USER_NETWORK2:-}
+private_user_network3=${PRIVATE_USER_NETWORK3:-}
 region=${AWS_DEFAULT_REGION:-us-west-2}
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-administrator}
@@ -68,8 +68,8 @@ usage () {
     echo "  -U utility      Utility Name (default: $utility)"
     echo "  -D domain       Utility Domain (default: $utility_domain)"
     echo "  -k key          Key (default: $key)"
-    echo "  -p network      Public Network (default: $public_network)"
-    echo "  -P network      Private Network (default: $private_network)"
+    echo "  -p network      Public User Network (default: $public_user_network)"
+    echo "  -P network      Private User Network (default: $private_user_network)"
     echo "  -r region       Region (default: $region)"
     echo "  -a account      Account (default: $account)"
     echo "  -u user         User (default: $user)"
@@ -171,14 +171,14 @@ while getopts IsfvoO:C:S:E:Z:U:D:k:p:4:5:6:P:7:8:9:r:a:u:? arg; do
     U)  utility="$OPTARG";;
     D)  utility_domain="$OPTARG";;
     k)  key="$OPTARG";;
-    p)  public_network="$OPTARG";;
-    4)  public_network1="$OPTARG";;
-    5)  public_network2="$OPTARG";;
-    6)  public_network3="$OPTARG";;
-    P)  private_network="$OPTARG";;
-    7)  private_network1="$OPTARG";;
-    8)  private_network2="$OPTARG";;
-    9)  private_network3="$OPTARG";;
+    p)  public_user_network="$OPTARG";;
+    4)  public_user_network1="$OPTARG";;
+    5)  public_user_network2="$OPTARG";;
+    6)  public_user_network3="$OPTARG";;
+    P)  private_user_network="$OPTARG";;
+    7)  private_user_network1="$OPTARG";;
+    8)  private_user_network2="$OPTARG";;
+    9)  private_user_network3="$OPTARG";;
     r)  region="$OPTARG";;
     a)  account="$OPTARG";;
     u)  user="$OPTARG";;
@@ -217,18 +217,18 @@ if [ -z $environment ]; then
 else
     case $environment in
       Production)
-        use_multizone=true
+        use_multizone=false
         use_static_public_address=true
-        use_static_private_address=true
+        use_static_private_address=false
         use_log_monitoring=true
         use_local_users=true
-        use_schedule=false
+        use_schedule=true
         on_schedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
         off_schedule="0 4 * * *";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
       Staging)
         use_multizone=false
         use_static_public_address=true
-        use_static_private_address=true
+        use_static_private_address=false
         use_log_monitoring=true
         use_local_users=true
         use_schedule=true
@@ -237,7 +237,7 @@ else
       Testing)
         use_multizone=false
         use_static_public_address=true
-        use_static_private_address=true
+        use_static_private_address=false
         use_log_monitoring=true
         use_local_users=true
         use_schedule=true
@@ -246,7 +246,7 @@ else
       Development)
         use_multizone=false
         use_static_public_address=true
-        use_static_private_address=true
+        use_static_private_address=false
         use_log_monitoring=true
         use_local_users=true
         use_schedule=true
@@ -255,7 +255,7 @@ else
       Core)
         use_multizone=false
         use_static_public_address=true
-        use_static_private_address=true
+        use_static_private_address=false
         use_log_monitoring=true
         use_local_users=true
         use_schedule=false
@@ -306,13 +306,13 @@ if [ -z $key ]; then
     exit 30
 fi
 
-if [ -z $public_network ]; then
+if [ -z $public_user_network ]; then
     echo "-p network missing!"
     echo "Could not automatically determine public network, and it was not specified as a parameter"
     exit 34
 fi
 
-if [ -z $private_network ]; then
+if [ -z $private_user_network ]; then
     echo "-P network missing!"
     echo "Could not automatically determine private network, and it was not specified as a parameter"
     exit 36
@@ -469,6 +469,8 @@ aws cloudformation update-stack --stack-name $environment-$utility \\
                                 $template_parameter \\
                                 $stack_policy_parameter \\
                                 --parameters ParameterKey=VPCStackName,ParameterValue=$environment-VPC \\
+                                             ParameterKey=StandardCIDRFunctionsStackName,ParameterValue=StandardCIDRFunctions \\
+                                             ParameterKey=StandardAMIFunctionsStackName,ParameterValue=StandardAMIFunctions \\
                                              ParameterKey=StandardTopicsStackName,ParameterValue=StandardTopics \\
                                              ParameterKey=KeyName,ParameterValue=$key \\
                                              ParameterKey=CompanyName,ParameterValue=$company \\
@@ -487,14 +489,14 @@ aws cloudformation update-stack --stack-name $environment-$utility \\
                                              ParameterKey=UseSchedule,ParameterValue=$use_schedule \\
                                              ParameterKey=OnSchedule,ParameterValue="$on_schedule" \\
                                              ParameterKey=OffSchedule,ParameterValue="$off_schedule" \\
-                                             ParameterKey=PublicNetwork,ParameterValue=$public_network \\
-                                             ParameterKey=PublicNetwork1,ParameterValue=$public_network1 \\
-                                             ParameterKey=PublicNetwork2,ParameterValue=$public_network2 \\
-                                             ParameterKey=PublicNetwork3,ParameterValue=$public_network3 \\
-                                             ParameterKey=PrivateNetwork,ParameterValue=$private_network \\
-                                             ParameterKey=PrivateNetwork1,ParameterValue=$private_network1 \\
-                                             ParameterKey=PrivateNetwork2,ParameterValue=$private_network2 \\
-                                             ParameterKey=PrivateNetwork3,ParameterValue=$private_network3 \\
+                                             ParameterKey=PublicUserNetwork,ParameterValue=$public_user_network \\
+                                             ParameterKey=PublicUserNetwork1,ParameterValue=$public_user_network1 \\
+                                             ParameterKey=PublicUserNetwork2,ParameterValue=$public_user_network2 \\
+                                             ParameterKey=PublicUserNetwork3,ParameterValue=$public_user_network3 \\
+                                             ParameterKey=PrivateUserNetwork,ParameterValue=$private_user_network \\
+                                             ParameterKey=PrivateUserNetwork1,ParameterValue=$private_user_network1 \\
+                                             ParameterKey=PrivateUserNetwork2,ParameterValue=$private_user_network2 \\
+                                             ParameterKey=PrivateUserNetwork3,ParameterValue=$private_user_network3 \\
                                 --tags Key=Owner,Value=$owner \\
                                        Key=Company,Value=$company \\
                                        Key=System,Value=$system \\
