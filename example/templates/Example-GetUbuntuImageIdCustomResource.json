@@ -1,0 +1,59 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Example-GetUbuntuImageIdCustomResource Template. This demonstrates how to dynamically get the most recent Ubuntu ImageId, given the Ubuntu OS Variant and Region. This template provisions an EC2 instance with an AMI ID that is based on the selected InstanceType, Ubuntu OS Variant and Region.",
+
+  "Parameters" : {
+    "InstanceType" : {
+      "Description" : "EC2 instance type",
+      "Type" : "String",
+      "Default" : "t2.medium",
+      "AllowedValues" : [ "t2.micro", "t2.small", "t2.medium" ],
+      "ConstraintDescription" : "Must be a valid EC2 instance type."
+    },
+
+    "UbuntuVersion" : {
+      "Description" : "Ubuntu Version",
+      "Type" : "String",
+      "Default" : "Ubuntu Server 16.04 LTS",
+      "AllowedValues" : [
+        "Ubuntu Server 16.04 LTS",
+        "Ubuntu Server 14.04 LTS",
+        "Ubuntu Server 12.04 LTS"
+      ],
+      "ConstraintDescription" : "Must be a valid Ubuntu LTS version."
+    }
+  },
+
+  "Resources" : {
+    "GetUbuntuImageId" : {
+      "Type" : "Custom::GetUbuntuImageId",
+      "Properties" : {
+        "ServiceToken" : { "Fn::Sub" : "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GetUbuntuImageId" },
+        "Region" : { "Ref" : "AWS::Region" },
+        "OSName" : { "Ref" : "UbuntuVersion" }
+      }
+    },
+
+    "Instance" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "InstanceType" : { "Ref" : "InstanceType" },
+        "ImageId" : { "Fn::GetAtt" : [ "GetUbuntuImageId", "ImageId" ]}
+      }
+    },
+
+  },
+
+  "Outputs" : {
+    "ImageId" : {
+      "Description" : "The ImageId",
+      "Value" : { "Fn::GetAtt" : [ "GetUbuntuImageId", "ImageId" ]}
+    },
+
+    "Name" : {
+      "Description" : "The Image Name",
+      "Value" : { "Fn::GetAtt" : [ "GetUbuntuImageId", "Name" ]}
+    }
+  }
+}
