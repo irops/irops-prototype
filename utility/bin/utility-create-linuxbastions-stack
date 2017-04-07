@@ -216,7 +216,7 @@ else
       Production)
         use_multizone=false
         use_static_public_address=true
-        use_static_private_address=true
+        use_static_private_address=false
         use_log_monitoring=true
         use_local_users=true
         use_schedule=true
@@ -225,7 +225,7 @@ else
       Staging)
         use_multizone=false
         use_static_public_address=true
-        use_static_private_address=true
+        use_static_private_address=false
         use_log_monitoring=true
         use_local_users=true
         use_schedule=true
@@ -234,7 +234,7 @@ else
       Testing)
         use_multizone=false
         use_static_public_address=true
-        use_static_private_address=true
+        use_static_private_address=false
         use_log_monitoring=true
         use_local_users=true
         use_schedule=true
@@ -243,7 +243,7 @@ else
       Development)
         use_multizone=false
         use_static_public_address=true
-        use_static_private_address=true
+        use_static_private_address=false
         use_log_monitoring=true
         use_local_users=true
         use_schedule=true
@@ -252,7 +252,7 @@ else
       Core)
         use_multizone=false
         use_static_public_address=true
-        use_static_private_address=true
+        use_static_private_address=false
         use_log_monitoring=true
         use_local_users=true
         use_schedule=false
@@ -261,7 +261,7 @@ else
       Build)
         use_multizone=false
         use_static_public_address=true
-        use_static_private_address=true
+        use_static_private_address=false
         use_log_monitoring=true
         use_local_users=true
         use_schedule=true
