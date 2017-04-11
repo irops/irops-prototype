@@ -60,6 +60,15 @@
       }
     },
 
+    "BillsTopicVPrabhakarEmailSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsTopic" }},
+        "Protocol" : "email",
+        "Endpoint" : "vijay.prabhakar@hpe.com"
+      }
+    },
+
     "BillsSMSTopicMCrawfordSMSSubscription" : {
       "Type" : "AWS::SNS::Subscription",
       "Properties" : {
@@ -84,6 +93,15 @@
         "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsSMSTopic" }},
         "Protocol" : "sms",
         "Endpoint" : "+12143920541"
+      }
+    },
+
+    "BillsSMSTopicVPrabhakarSMSSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${BillingTopicsStackName}-BillsSMSTopic" }},
+        "Protocol" : "sms",
+        "Endpoint" : "+16149400944"
       }
     }
   }

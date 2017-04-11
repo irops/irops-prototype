@@ -70,6 +70,15 @@
       }
     },
 
+    "AdministratorsTopicVPrabhakarEmailSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-AdministratorsTopic" }},
+        "Protocol" : "email",
+        "Endpoint" : "vijay.prabhakar@hpe.com"
+      }
+    },
+
     "EventsTopicMCrawfordEmailSubscription" : {
       "Type" : "AWS::SNS::Subscription",
       "Properties" : {
@@ -94,6 +103,15 @@
         "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-EventsTopic" }},
         "Protocol" : "email",
         "Endpoint" : "gregg.veazey@hpe.com"
+      }
+    },
+
+    "EventsTopicVPrabhakarEmailSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-EventsTopic" }},
+        "Protocol" : "email",
+        "Endpoint" : "vijay.prabhakar@hpe.com"
       }
     },
 
@@ -124,6 +142,15 @@
       }
     },
 
+    "EventsSMSTopicVPrabhakarSMSSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-EventsSMSTopic" }},
+        "Protocol" : { "Fn::If" : [ "UseSMS", "sms", "email" ]},
+        "Endpoint" : { "Fn::If" : [ "UseSMS", "+16149400944", "vijay.prabhakar@hpe.com" ]}
+      }
+    },
+
     "AlarmsTopicMCrawfordEmailSubscription" : {
       "Type" : "AWS::SNS::Subscription",
       "Properties" : {
@@ -151,6 +178,15 @@
       }
     },
 
+    "AlarmsTopicVPrabhakarEmailSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-AlarmsTopic" }},
+        "Protocol" : "email",
+        "Endpoint" : "vijay.prabhakar@hpe.com"
+      }
+    },
+
     "AlarmsSMSTopicMCrawfordSMSSubscription" : {
       "Type" : "AWS::SNS::Subscription",
       "Properties" : {
@@ -175,6 +211,15 @@
         "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-AlarmsSMSTopic" }},
         "Protocol" : { "Fn::If" : [ "UseSMS", "sms", "email" ]},
         "Endpoint" : { "Fn::If" : [ "UseSMS", "+12143920541", "gregg.veazey@hpe.com" ]}
+      }
+    },
+
+    "AlarmsSMSTopicVPrabhakarSMSSubscription" : {
+      "Type" : "AWS::SNS::Subscription",
+      "Properties" : {
+        "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-AlarmsSMSTopic" }},
+        "Protocol" : { "Fn::If" : [ "UseSMS", "sms", "email" ]},
+        "Endpoint" : { "Fn::If" : [ "UseSMS", "+16149400944", "vijay.prabhakar@hpe.com" ]}
       }
     }
   }

@@ -253,6 +253,17 @@
           { "Fn::ImportValue" : { "Fn::Sub" : "${CustomGroupsStackName}-WebSphereMQAdministratorsGroup" }}
         ]
       }
+    },
+
+    "CMawbyUser" : {
+      "Type": "AWS::IAM::User",
+      "Properties": {
+        "UserName": "cmawby",
+        "Path" : "/",
+        "Groups" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${CustomGroupsStackName}-PartnerSTAdministratorsGroup" }}
+        ]
+      }
     }
   }
 }
