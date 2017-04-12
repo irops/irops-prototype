@@ -1,0 +1,81 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Example-GetDomainNameCustomResource Template. This demonstrates how to use the GetDomainName Lambda Function to create a DomainName for each VPC from other Template Identifiers, given a ParentDomainName.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "System Configuration" },
+          "Parameters" : [
+            "ParentDomainName",
+            "CompanyName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Environment Configuration" },
+          "Parameters" : [
+            "EnvironmentName"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "ParentDomainName" : { "default" : "Parent Domain Name" },
+        "CompanyName" : { "default" : "Company Name" },
+        "EnvironmentName" : { "default" : "Environment Name" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "ParentDomainName" : {
+      "Description" : "Name of the Parent Domain",
+      "Type" : "String",
+      "MinLength" : 7,
+      "MaxLength" : 64,
+      "Default" : "iropshub.com",
+      "AllowedPattern" : "^((?!-)[a-z0-9-]{1,63}(?<!-)\\.)+[a-z]{2,6}$",
+      "ConstraintDescription" : "must be a valid domain name and contain only lower-case letters, numbers, dashes and periods."
+    },
+
+    "CompanyName" : {
+      "Description" : "Name of the Company",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "Travel",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "EnvironmentName" : {
+      "Description" : "Name of the Environment",
+      "Type" : "String",
+      "Default" : "Production",
+      "AllowedValues" : [ "Production", "Staging", "Testing", "Development", "Core", "Build", "QA", "Recovery" ],
+      "ConstraintDescription" : "must be one of the following: Production, Staging, Testing, Development, Core, Build, QA, Recovery."
+    }
+  },
+
+  "Resources" : {
+    "GetDomainName" : {
+      "Type" : "Custom::GetDomainName",
+      "Properties" : {
+        "ServiceToken" : { "Fn::Sub" : "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GetDomainName" },
+        "ParentDomainName" : { "Ref" : "ParentDomainName" },
+        "CompanyName" : { "Ref" : "CompanyName" },
+        "LocationName" : { "Ref": "AWS::Region" },
+        "EnvironmentName" : { "Ref" : "EnvironmentName" }
+      }
+    }
+  },
+
+  "Outputs" : {
+    "DomainName" : {
+      "Description" : "The DomainName",
+      "Value" : { "Fn::GetAtt" : [ "GetDomainName", "DomainName" ]}
+    }
+  }
+}
