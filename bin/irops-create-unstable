@@ -23,7 +23,7 @@
 #      4.1 Create StandardAMIFunctions Stack
 #      4.2 Create StandardCIDRFunctions Stack
 #      4.3 Create StandardScheduleFunctions Stack
-#      4.4 Create CustomIdentityFunctions Stack
+#      4.4 Create CustomIdentifierFunctions Stack
 #
 #  5. Create Hosted Zones
 #      5.1. Create Production-HostedZone Stack (Public DNS Zone)
@@ -165,12 +165,12 @@ run "$corebindir/core-create-standardbuckets-stack -E Core"
 #      4.1 Create StandardAMIFunctions Stack
 #      4.2 Create StandardCIDRFunctions Stack
 #      4.3 Create StandardScheduleFunctions Stack
-#      4.4 Create CustomIdentityFunctions Stack
+#      4.4 Create CustomIdentifierFunctions Stack
 
 run "$corebindir/core-create-standardamifunctions-stack -E Core"
 run "$corebindir/core-create-standardcidrfunctions-stack -E Core"
 run "$corebindir/core-create-standardschedulefunctions-stack -E Core"
-run "$corebindir/core-create-customidentityfunctions-stack -E Core"
+run "$corebindir/core-create-customidentifierfunctions-stack -E Core"
 
 
 #  5. Create Hosted Zones

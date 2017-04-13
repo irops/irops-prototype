@@ -98,7 +98,7 @@
 #     10.6. Delete Production-HostedZone Stack (Public DNS Zone)
 #
 # 11. Delete Lambda Functions
-#     11.1 Delete CustomIdentityFunctions Stack
+#     11.1 Delete CustomIdentifierFunctions Stack
 #     11.2 Delete StandardScheduleFunctions Stack
 #     11.3 Delete StandardCIDRFunctions Stack
 #     11.4 Delete StandardAMIFunctions Stack
@@ -330,12 +330,12 @@ run "$commonbindir/common-delete-hostedzone-stack -E Production"
 
 
 # 11. Delete Lambda Functions
-#     11.1 Delete CustomIdentityFunctions Stack
+#     11.1 Delete CustomIdentifierFunctions Stack
 #     11.2 Delete StandardScheduleFunctions Stack
 #     11.3 Delete StandardCIDRFunctions Stack
 #     11.4 Delete StandardAMIFunctions Stack
 
-run "$corebindir/core-delete-customidentityfunctions-stack"
+run "$corebindir/core-delete-customidentifierfunctions-stack"
 run "$corebindir/core-delete-standardschedulefunctions-stack"
 run "$corebindir/core-delete-standardcidrfunctions-stack"
 run "$corebindir/core-delete-standardamifunctions-stack"
