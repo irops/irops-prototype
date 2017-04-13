@@ -275,7 +275,7 @@
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
-      "AllowedPattern" : "^[-_.a-zA-Z0-9]*$",
+      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
