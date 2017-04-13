@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Defines the IROPS Environment Variables for the Development Environment in Ohio
+# Defines the IROPS Environment Variables for the Testing Environment in Ohio
 
 # Account
 export AWS_ACCOUNT_ALIAS=irops
@@ -25,35 +25,35 @@ export SNS_EVENTS_TOPIC="arn:aws:sns:${AWS_DEFAULT_REGION}:${AWS_ACCOUNT_NUMBER}
 export SNS_ALARMS_TOPIC="arn:aws:sns:${AWS_DEFAULT_REGION}:${AWS_ACCOUNT_NUMBER}:Alarms"
 
 # Network (new names, not yet in driver scripts consistently)
-export PUBLIC_ADMINISTRATOR_NETWORK=72.215.187.176/28  # Santa Barbara Public IP Range (Michael Crawford's House)
-export PUBLIC_ADMINISTRATOR_NETWORK1=204.26.128.0/17   # Charlotte Public/Private IP Range
-export PUBLIC_ADMINISTRATOR_NETWORK2=174.76.114.250/32 # Goleta Public IP for internal/vpn user outbound traffic
+export PUBLIC_ADMINISTRATOR_NETWORK=204.26.128.0/17    # Charlotte Public/Private IP Range
+export PUBLIC_ADMINISTRATOR_NETWORK1=                  # Tulsa Pulic IP Range
+export PUBLIC_ADMINISTRATOR_NETWORK2=72.215.187.176/28 # Santa Barbara Public IP Range (Michael Crawford's House)
 export PUBLIC_ADMINISTRATOR_NETWORK3=
-export PRIVATE_ADMINISTRATOR_NETWORK=10.0.0.0/16       # Santa Barbara Private IP Range (Michael Crawford's House)
-export PRIVATE_ADMINISTRATOR_NETWORK1=204.26.128.0/17  # Charlotte Public/Private IP Range
-export PRIVATE_ADMINISTRATOR_NETWORK2=
+export PRIVATE_ADMINISTRATOR_NETWORK=204.26.128.0/17   # Charlotte Public/Private IP Range
+export PRIVATE_ADMINISTRATOR_NETWORK1=                 # Tulsa Private IP Range
+export PRIVATE_ADMINISTRATOR_NETWORK2=10.0.0.0/16      # Santa Barbara Private IP Range (Michael Crawford's House)
 export PRIVATE_ADMINISTRATOR_NETWORK3=
-export PUBLIC_USER_NETWORK=72.215.187.176/28         # Santa Barbara Public IP Range (Michael Crawford's House)
-export PUBLIC_USER_NETWORK1=204.26.128.0/17          # Charlotte Public/Private IP Range
-export PUBLIC_USER_NETWORK2=174.76.114.250/32        # Goleta Public IP for internal/vpn user outbound traffic
+export PUBLIC_USER_NETWORK=204.26.128.0/17           # Charlotte Public/Private IP Range
+export PUBLIC_USER_NETWORK1=                         # Tulsa Pulic IP Range
+export PUBLIC_USER_NETWORK2=72.215.187.176/28        # Santa Barbara Public IP Range (Michael Crawford's House)
 export PUBLIC_USER_NETWORK3=
-export PRIVATE_USER_NETWORK=10.0.0.0/16              # Santa Barbara Private IP Range (Michael Crawford's House)
-export PRIVATE_USER_NETWORK1=204.26.128.0/17         # Charlotte Public/Private IP Range
-export PRIVATE_USER_NETWORK2=
+export PRIVATE_USER_NETWORK=204.26.128.0/17          # Charlotte Public/Private IP Range
+export PRIVATE_USER_NETWORK1=                        # Tulsa Private IP Range
+export PRIVATE_USER_NETWORK2=10.0.0.0/16             # Santa Barbara Private IP Range (Michael Crawford's House)
 export PRIVATE_USER_NETWORK3=
 
 # Network (old names, preserve until I can propagate new names)
-export ADMINISTRATOR_NETWORK=72.215.187.176/28  # Santa Barbara Public IP Range (Michael Crawford's House)
-export ADMINISTRATOR_NETWORK1=204.26.128.0/17   # Charlotte Public/Private IP Range
-export ADMINISTRATOR_NETWORK2=174.76.114.250/32 # Goleta Public IP for internal/vpn user outbound traffic
+export ADMINISTRATOR_NETWORK=204.26.128.0/17    # Charlotte Public/Private IP Range
+export ADMINISTRATOR_NETWORK1=                  # Tulsa Pulic IP Range
+export ADMINISTRATOR_NETWORK2=72.215.187.176/28	# Santa Barbara Public IP Range (Michael Crawford's House)
 export ADMINISTRATOR_NETWORK3=
-export PUBLIC_NETWORK=72.215.187.176/28         # Santa Barbara Public IP Range (Michael Crawford's House)
-export PUBLIC_NETWORK1=204.26.128.0/17          # Charlotte Public/Private IP Range
-export PUBLIC_NETWORK2=174.76.114.250/32        # Goleta Public IP for internal/vpn user outbound traffic
+export PUBLIC_NETWORK=204.26.128.0/17           # Charlotte Public/Private IP Range
+export PUBLIC_NETWORK1=                         # Tulsa Pulic IP Range
+export PUBLIC_NETWORK2=72.215.187.176/28        # Santa Barbara Public IP Range (Michael Crawford's House)
 export PUBLIC_NETWORK3=
-export PRIVATE_NETWORK=10.0.0.0/16              # Santa Barbara Private IP Range (Michael Crawford's House)
-export PRIVATE_NETWORK1=204.26.128.0/17         # Charlotte Public/Private IP Range
-export PRIVATE_NETWORK2=
+export PRIVATE_NETWORK=204.26.128.0/17          # Charlotte Public/Private IP Range
+export PRIVATE_NETWORK1=                        # Tulsa Private IP Range
+export PRIVATE_NETWORK2=10.0.0.0/16             # Santa Barbara Private IP Range (Michael Crawford's House)
 export PRIVATE_NETWORK3=
 
 # Owner
@@ -93,10 +93,10 @@ export SYSTEM_CODE=irops
 export SYSTEM_NAME="IROPS"
 
 # Environment
-export ENVIRONMENT_CODE=d
-export ENVIRONMENT_NAME="Development"
+export ENVIRONMENT_CODE=t
+export ENVIRONMENT_NAME="Testing"
 export ENVIRONMENT_DOMAIN=$ENVIRONMENT_CODE.$AWS_DEFAULT_REGION.$COMPANY_CODE.iropshub.com
-export ENVIRONMENT_NETWORK=172.21.88.0/21
+export ENVIRONMENT_NETWORK=172.21.80.0/21
 export ENVIRONMENT_SIZE=small
 
 # Core
@@ -126,3 +126,15 @@ export GATEWAY_NAME="Charlotte"
 export GATEWAY_ASN=65000
 export GATEWAY_ADDRESS=204.26.253.5
 export GATEWAY_NETWORK=204.26.128.0/17
+
+export GATEWAY_CODE1=tul
+export GATEWAY_NAME1="Tulsa"
+export GATEWAY_ASN1=65000
+export GATEWAY_ADDRESS1=
+export GATEWAY_NETWORK1=
+
+export GATEWAY_CODE2=sba
+export GATEWAY_NAME2="SantaBarbara"
+export GATEWAY_ASN2=65000
+export GATEWAY_ADDRESS2=72.215.187.179
+export GATEWAY_NETWORK2=10.0.0.0/16

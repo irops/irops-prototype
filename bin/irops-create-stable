@@ -1,9 +1,11 @@
 #!/bin/bash
 #
-# Here's a list of the commands which need to be run to create us-west-2 (Oregon)
+# Here's a list of the commands which need to be run to create the Stable MultiEnvironment (us-west-2 / Oregon)
+# - Stable is a MultiEnvironment which consists of the Stable set of Environments used for
+#   developing and running the live IROPS systems.
 #
 # We can break down the creation of a region into this order:
-#  1. Initialize Environment
+#  1. Initialize Environment Variables
 #
 #  2. Create SNS Topics and Subscriptions
 #      2.1 Create StandardTopics Stack
@@ -120,8 +122,8 @@ run() {
     esac
 }
 
-#  1. Initalize Environment
-#     - This will initialze the environment variables to the us-west-2 Production Environment
+#  1. Initalize Environment Variables
+#     - This will initialze the environment variables to the Stable-Production Environment
 #     - We will be explicit on certain options below, even when the value does not need to be set due to defaults
 
 bindir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
@@ -134,7 +136,7 @@ examplebindir=${bindir%/*}/example/bin
 identitybindir=${bindir%/*}/identity/bin
 utilitybindir=${bindir%/*}/utility/bin
 
-source $bindir/irops-define-us-west-2-production
+source $bindir/irops-define-stable-production
 
 
 #  2. Create SNS Topics and Subscriptions

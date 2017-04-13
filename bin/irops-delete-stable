@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# Here's a list of the commands which need to be run to delete us-west-2 (Oregon)
+# Here's a list of the commands which need to be run to delete the Stable MultiEnvironment (us-west-2 / Oregon)
 # - It's very likely some of these will fail due to manual changes, requiring
 #   this script to be run until a failure, stopped with manual steps to clear
 #   out what's blocking the deletion, then a restart, until done.
 #
 # We can break down the deletion of a region into this order:
 #
-#  1. Initialize Environment
+#  1. Initialize Environment Variables
 #
 #  2. Delete Example Applications
 #      2.1. Delete Development-WindowsWordPress Stack (future)
@@ -124,8 +124,8 @@ run() {
     esac
 }
 
-#  1. Initalize Environment
-#     - This will initialze the environment variables to the us-west-2 Production Environment
+#  1. Initalize Environment Variables
+#     - This will initialze the environment variables to the Stable-Production Environment
 #     - We will be explicit on certain options below, even when the value does not need to be set due to defaults
 
 bindir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
@@ -138,7 +138,7 @@ examplebindir=${bindir%/*}/example/bin
 identitybindir=${bindir%/*}/identity/bin
 utilitybindir=${bindir%/*}/utility/bin
 
-source $bindir/irops-define-us-west-2-production
+source $bindir/irops-define-stable-production
 
 
 #  2. Delete Example Applications

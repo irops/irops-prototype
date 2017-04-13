@@ -1,9 +1,15 @@
 #!/bin/bash
 #
-# Here's a list of the commands which need to be run to create eu-west-1 (Ireland)
+# Here's a list of the commands which need to be run to create the Unstable MultiEnvironment (us-east-2 / Ohio)
+# - Unstable is a MultiEnvironment which consists of the Unstable set of Environments used for
+#   developing and running the CloudFormation Templates and Build infrastructure used in the
+#   live IROPS systems.
+# - The Unstable MultiEnvironment is - by definition - UNSTABLE!
+#   It's purpose is to be changed and deleted often to test modifications to CloudFormation Templates
+#   driver scripts, and automated build pipelines.
 #
 # We can break down the creation of a region into this order:
-#  1. Initialize Environment
+#  1. Initialize Environment Variables
 #
 #  2. Create SNS Topics and Subscriptions
 #      2.1 Create StandardTopics Stack
@@ -120,8 +126,8 @@ run() {
     esac
 }
 
-#  1. Initalize Environment
-#     - This will initialze the environment variables to the eu-west-1 Production Environment
+#  1. Initalize Environment Variables
+#     - This will initialze the environment variables to the Unstable-Production Environment
 #     - We will be explicit on certain options below, even when the value does not need to be set due to defaults
 
 bindir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
@@ -134,7 +140,7 @@ examplebindir=${bindir%/*}/example/bin
 identitybindir=${bindir%/*}/identity/bin
 utilitybindir=${bindir%/*}/utility/bin
 
-source $bindir/irops-define-eu-west-1-production
+source $bindir/irops-define-unstable-production
 
 
 #  2. Create SNS Topics and Subscriptions
@@ -169,12 +175,12 @@ run "$corebindir/core-create-standardcidrfunctions-stack -E Core"
 #      5.5. Create Core-HostedZone Stack (Public DNS Zone)
 #      5.6. Create Build-HostedZone Stack (Public DNS Zone)
 
-run "$commonbindir/common-create-hostedzone-stack -E Production -D eu-west-1.tvl.iropshub.com"
-run "$commonbindir/common-create-hostedzone-stack -E Staging -D s.eu-west-1.tvl.iropshub.com"
-run "$commonbindir/common-create-hostedzone-stack -E Testing -D t.eu-west-1.tvl.iropshub.com"
-run "$commonbindir/common-create-hostedzone-stack -E Development -D d.eu-west-1.tvl.iropshub.com"
-run "$commonbindir/common-create-hostedzone-stack -E Core -D c.eu-west-1.tvl.iropshub.com"
-run "$commonbindir/common-create-hostedzone-stack -E Build -D b.eu-west-1.tvl.iropshub.com"
+run "$commonbindir/common-create-hostedzone-stack -E Production -D us-east-2.tvl.iropshub.com"
+run "$commonbindir/common-create-hostedzone-stack -E Staging -D s.us-east-2.tvl.iropshub.com"
+run "$commonbindir/common-create-hostedzone-stack -E Testing -D t.us-east-2.tvl.iropshub.com"
+run "$commonbindir/common-create-hostedzone-stack -E Development -D d.us-east-2.tvl.iropshub.com"
+run "$commonbindir/common-create-hostedzone-stack -E Core -D c.us-east-2.tvl.iropshub.com"
+run "$commonbindir/common-create-hostedzone-stack -E Build -D b.us-east-2.tvl.iropshub.com"
 
 echo
 echo "Note: Currently, you must manually create the NS records which are needed in each"
@@ -190,12 +196,12 @@ echo
 #      6.5. Create Core-VPC Stack
 #      6.6. Create Build-VPC Stack
 
-run "$environmentbindir/environment-create-vpc-stack -E Production -N 172.21.128.0/21"
-run "$environmentbindir/environment-create-vpc-stack -E Staging -N 172.21.136.0/21"
-run "$environmentbindir/environment-create-vpc-stack -E Testing -N 172.21.144.0/21"
-run "$environmentbindir/environment-create-vpc-stack -E Development -N 172.21.152.0/21"
-run "$corebindir/core-create-vpc-stack -E Core -N 172.21.184.0/22"
-run "$corebindir/build-create-vpc-stack -E Build -N 172.21.188.0/23"
+run "$environmentbindir/environment-create-vpc-stack -E Production -N 172.21.64.0/21"
+run "$environmentbindir/environment-create-vpc-stack -E Staging -N 172.21.72.0/21"
+run "$environmentbindir/environment-create-vpc-stack -E Testing -N 172.21.80.0/21"
+run "$environmentbindir/environment-create-vpc-stack -E Development -N 172.21.88.0/21"
+run "$corebindir/core-create-vpc-stack -E Core -N 172.21.120.0/22"
+run "$corebindir/build-create-vpc-stack -E Build -N 172.21.124.0/23"
 
 
 #  7. Create NetworkACLs
