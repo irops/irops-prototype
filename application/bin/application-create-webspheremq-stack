@@ -5,7 +5,7 @@
 # This script is written in a format suitable for interactive demos,
 # but can be run non-Iteractively and more quickly with the "-I" flag.
 #
-
+# Added a comment
 #  1. Initalize Environment
 
 bindir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
