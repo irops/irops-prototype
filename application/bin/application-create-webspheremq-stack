@@ -23,15 +23,12 @@ create_attempts=40
 interactive=1
 speed=100
 verbose=0
-dummy=0
 owner=${OWNER_EMAIL:-$USER@hpe.com}
 company=${COMPANY_NAME:-Travel}
 system=${SYSTEM_NAME:-IROPS}
 environment=${ENVIRONMENT_NAME:-Production}
 environment_size=${ENVIRONMENT_SIZE:-medium}
 application=${APPLICATION_NAME:-WebSphereMQ}
-application_domain=${APPLICATION_DOMAIN:-tvluw2pwmq01}
-application_domain_override=0
 application_version=${APPLICATION_VERSION:-1.0.0}
 key=${AWS_KEY_NAME:-user}
 private_user_network=${PRIVATE_USER_NETWORK:-10.0.0.0/16}
@@ -46,10 +43,10 @@ user=${AWS_USER_NAME:-administrator}
 #  2. Define functions
 
 usage () {
-    echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v] [-d]"
+    echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v]"
     echo "                  [-O owner] [-C company ] [-S system]"
     echo "                  [-E environment] [-Z size]"
-    echo "                  [-A application ] [-D domain] [-V version]"
+    echo "                  [-A application ] [-V version]"
     echo "                  [-k key]"
     echo "                  [-P network ]"
     echo "                  [-r region ] [-a account] [-u user]"
@@ -57,14 +54,12 @@ usage () {
     echo "  -s              slower: increase pauses by 25%"
     echo "  -f              faster: reduce pauses by 25%"
     echo "  -v              verbose"
-    echo "  -d              use dummy application"
     echo "  -O owner        Owner Email (default: $owner)"
     echo "  -C company      Company Name (default: $company)"
     echo "  -S system       System Name (default: $system)"
     echo "  -E environment  Environment Name (default: $environment)"
     echo "  -Z size         Environment Size (default: $environment_size)"
     echo "  -A application  Application Name (default: $application)"
-    echo "  -D domain       Application Domain (default: $application_domain)"
     echo "  -V version      Application Version (default: $application_version)"
     echo "  -k key          Key (default: $key)"
     echo "  -P network      Private User Network (default: $private_user_network)"
@@ -154,21 +149,18 @@ next() {
 #  3. Parse command line options
 #     - Note, using options 1-9 as hidden options to set additional network ranges
 
-while getopts IsfvdO:C:S:E:Z:A:D:V:k:P:7:8:9:r:a:u:? arg; do
+while getopts IsfvO:C:S:E:Z:A:V:k:P:7:8:9:r:a:u:? arg; do
     case $arg in
     I)  interactive=0;;
     s)  ((speed < speed_max)) && ((speed=speed+25));;
     f)  ((speed > 0)) && ((speed=speed-25));;
     v)  verbose=1;;
-    d)  dummy=1;;
     O)  owner="$OPTARG";;
     C)  company="$OPTARG";;
     S)  system="$OPTARG";;
     E)  environment="$OPTARG";;
     Z)  environment_size="$OPTARG";;
     A)  application="$OPTARG";;
-    D)  application_domain="$OPTARG"
-        application_domain_override=1;;
     V)  application_version="$OPTARG";;
     k)  key="$OPTARG";;
     P)  private_user_network="$OPTARG";;
@@ -201,7 +193,7 @@ if [ -z $company ]; then
 else
     case $company in
       Travel)
-        company_code=tvl;;
+        ;;
       *)
         echo "-C $company invalid! Must be Travel"
         exit 13;;
@@ -215,7 +207,7 @@ if [ -z $system ]; then
 else
     case $system in
       IROPS)
-        system_code=irops;;
+        ;;
       *)
         echo "-S $system invalid! Must be IROPS"
         exit 15;;
@@ -229,7 +221,6 @@ if [ -z $environment ]; then
 else
     case $environment in
       Production)
-        environment_code=p
         instance_os=AMZN
         use_static_address=true
         use_filesystem_monitoring=true
@@ -238,7 +229,6 @@ else
         on_schedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
         off_schedule="0 4 * * *";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
       Staging)
-        environment_code=s
         instance_os=RHEL
         use_static_address=true
         use_filesystem_monitoring=true
@@ -247,7 +237,6 @@ else
         on_schedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
         off_schedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
       Testing)
-        environment_code=t
         instance_os=RHEL
         use_static_address=true
         use_filesystem_monitoring=false
@@ -256,7 +245,6 @@ else
         on_schedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
         off_schedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
       Development)
-        environment_code=d
         instance_os=RHEL
         use_static_address=true
         use_filesystem_monitoring=false
@@ -264,8 +252,16 @@ else
         use_schedule=false
         on_schedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
         off_schedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
+      Core)
+        instance_os=RHEL
+        use_static_address=true
+        use_filesystem_monitoring=true
+        use_log_monitoring=true
+        use_schedule=false
+        on_schedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
+        off_schedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
       *)
-        echo "-E $environment invalid! Must be Production, Staging, Testing or Development"
+        echo "-E $environment invalid! Must be Production, Staging, Testing, Development or Core"
         exit 17;;
     esac
 fi
@@ -276,14 +272,8 @@ if [ -z $environment_size ]; then
     exit 18
 else
     case $environment_size in
-      small)
-        environment_size_code=s;;
-      medium)
-        environment_size_code=m;;
-      large)
-        environment_size_code=l;;
-      xlarge)
-        environment_size_code=xl;;
+      small|medium|large|xlarge)
+        ;;
       *)
         echo "-Z $environment_size invalid! Must be small, medium, large or xlarge"
         exit 19;;
@@ -297,23 +287,17 @@ if [ -z $application ]; then
 else
     case $application in
       WebSphereMQ)
-        application_code=wmq;;
+        ;;
       *)
         echo "-A $application invalid! Must be WebSphereMQ"
         exit 21;;
     esac
 fi
 
-if [ -z $application_domain ]; then
-    echo "-D domain missing!"
-    echo "Could not automatically determine domain, and it was not specified as a parameter"
-    exit 22
-fi
-
 if [ -z $application_version ]; then
     echo "-V version missing!"
     echo "Could not automatically determine version, and it was not specified as a parameter"
-    exit 24
+    exit 22
 fi
 
 if [ -z $key ]; then
@@ -335,31 +319,8 @@ if [ -z $region ]; then
 else
     case $region in
       us-east-1)
-        location_code=ue1
         s3_domain=s3.amazonaws.com;;
-      us-east-2)
-        location_code=ue2
-        s3_domain=s3-$region.amazonaws.com;;
-      us-west-1)
-        location_code=uw1
-        s3_domain=s3-$region.amazonaws.com;;
-      us-west-2)
-        location_code=uw2
-        s3_domain=s3-$region.amazonaws.com;;
-      ca-central-1)
-        location_code=cc1
-        s3_domain=s3-$region.amazonaws.com;;
-      eu-west-1)
-        location_code=ew1
-        s3_domain=s3-$region.amazonaws.com;;
-      eu-central-1)
-        location_code=ec1
-        s3_domain=s3-$region.amazonaws.com;;
-      eu-west-2)
-        location_code=ew2
-        s3_domain=s3-$region.amazonaws.com;;
-      ap-southeast-1|ap-southeast-2|ap-northeast-2|ap-northeast-1|ap-south-1|sa-east-1)
-        location_code=aws
+      us-east-2|us-west-1|us-west-2|ca-central-1|eu-west-1|eu-central-1|eu-west-2|ap-southeast-1|ap-southeast-2|ap-northeast-2|ap-northeast-1|ap-south-1|sa-east-1)
         s3_domain=s3-$region.amazonaws.com;;
       *)
         echo "-r $region invalid: Must be a valid region"
@@ -379,11 +340,6 @@ if [ -z $user ]; then
     exit 54
 fi
 
-if [ $application_domain_override = 0 ]; then
-    # If not explicitly overridden, reconstruct application_domain in case any parts which make up the name have changed
-    application_domain=${company_code}${location_code}${environment_code}${application_code}01
-fi
-
 profile=$account-$user
 
 if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
@@ -393,7 +349,7 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
 fi
 
 templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
-templates_folder=application
+template_folder=application
 
 if ! aws s3api head-bucket --bucket $templates_bucket --profile $profile --region $region 2> /dev/null; then
     echo "$templates_bucket S3 bucket does not exist!"
@@ -401,8 +357,8 @@ if ! aws s3api head-bucket --bucket $templates_bucket --profile $profile --regio
 fi
 
 products_bucket=${AWS_PRODUCTS_BUCKET:-products-$region-$account}
-products_wmq_folder=WebSphereMQ
-products_wmq_object=mqadv_dev80_linux_x86-64.tar.gz
+product_wmq_folder=WebSphereMQ
+product_wmq_object=WS_MQ_V8.0.0.4_LINUX_ON_X86_64_IM.tar.gz
 
 if ! aws s3api head-bucket --bucket $products_bucket --profile $profile --region $region 2> /dev/null; then
     echo "$products_bucket S3 bucket does not exist!"
@@ -410,12 +366,18 @@ if ! aws s3api head-bucket --bucket $products_bucket --profile $profile --region
 fi
 
 configurations_bucket=${AWS_CONFIGURATIONS_BUCKET:-configurations-$region-$account}
-configurations_wmq_folder=WebSphereMQ
-configurations_wmq_object=$environment-WebSphereMQ-etc-wmq.tgz
+configuration_wmq_folder=WebSphereMQ
+configuration_wmq_object=$environment-WebSphereMQ-etc-wmq.tgz
 
 if ! aws s3api head-bucket --bucket $configurations_bucket --profile $profile --region $region 2> /dev/null; then
     echo "$configurations_bucket S3 bucket does not exist!"
     exit 66
+fi
+
+if ! aws cloudformation describe-stacks --stack-name $environment-OpenVPNAS \
+                                        --profile $profile --region $region --output text &> /dev/null; then
+    echo "$environment-OpenVPNAS Stack does not exist!"
+    exit 70
 fi
 
 if ! aws cloudformation describe-stacks --stack-name $environment-LinuxBastions \
@@ -430,22 +392,28 @@ if ! aws cloudformation describe-stacks --stack-name $environment-VPC \
     exit 71
 fi
 
+if ! aws cloudformation describe-stacks --stack-name CustomIdentifierFunctions \
+                                        --profile $profile --region $region --output text &> /dev/null; then
+    echo "CustomIdentifierFunctions Stack does not exist!"
+    exit 72
+fi
+
 if ! aws cloudformation describe-stacks --stack-name StandardCIDRFunctions \
                                         --profile $profile --region $region --output text &> /dev/null; then
     echo "StandardCIDRFunctions Stack does not exist!"
-    exit 72
+    exit 73
 fi
 
 if ! aws cloudformation describe-stacks --stack-name StandardAMIFunctions \
                                         --profile $profile --region $region --output text &> /dev/null; then
     echo "StandardAMIFunctions Stack does not exist!"
-    exit 73
+    exit 74
 fi
 
 if ! aws cloudformation describe-stacks --stack-name StandardTopics \
                                         --profile $profile --region $region --output text &> /dev/null; then
     echo "StandardTopics Stack does not exist!"
-    exit 74
+    exit 75
 fi
 
 # Prevent certain environment variables from breaking commands
@@ -495,7 +463,7 @@ fi
 ((++step))
 read -r -d '' statement << EOS
 aws s3 sync $templatesdir \\
-            s3://$templates_bucket/$templates_folder \\
+            s3://$templates_bucket/$template_folder \\
             --exclude '*' --include 'Application-WebSphereMQ.json' --include 'Application-WebSphereMQ-StackPolicy.json' \\
             --include 'Application-WebSphereMQ-Roles.json' \\
             --include 'Application-WebSphereMQ-Logs.json' \\
@@ -534,8 +502,8 @@ if [ $dummy = 1 ]; then
     unset applications_bucket
 fi
 
-template_parameter="--template-url https://$s3_domain/$templates_bucket/$templates_folder/Application-WebSphereMQ.json"
-stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$templates_folder/Application-WebSphereMQ-StackPolicy.json"
+template_parameter="--template-url https://$s3_domain/$templates_bucket/$template_folder/Application-WebSphereMQ.json"
+stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$template_folder/Application-WebSphereMQ-StackPolicy.json"
 read -r -d '' statement << EOS
 aws cloudformation create-stack --stack-name $environment-$application \\
                                 $template_parameter \\
@@ -543,24 +511,24 @@ aws cloudformation create-stack --stack-name $environment-$application \\
                                 --parameters ParameterKey=VPNStackName,ParameterValue=$environment-OpenVPNAS \\
                                              ParameterKey=LinuxBastionsStackName,ParameterValue=$environment-LinuxBastions \\
                                              ParameterKey=VPCStackName,ParameterValue=$environment-VPC \\
+                                             ParameterKey=CustomIdentifierFunctionsStackName,ParameterValue=CustomIdentifierFunctions \\
                                              ParameterKey=StandardCIDRFunctionsStackName,ParameterValue=StandardCIDRFunctions \\
                                              ParameterKey=StandardAMIFunctionsStackName,ParameterValue=StandardAMIFunctions \\
                                              ParameterKey=StandardTopicsStackName,ParameterValue=StandardTopics \\
                                              ParameterKey=KeyName,ParameterValue=$key \\
                                              ParameterKey=TemplatesBucket,ParameterValue=$templates_bucket \\
-                                             ParameterKey=TemplatesFolder,ParameterValue=$templates_folder \\
+                                             ParameterKey=TemplateFolder,ParameterValue=$template_folder \\
                                              ParameterKey=CompanyName,ParameterValue=$company \\
                                              ParameterKey=SystemName,ParameterValue=$system \\
                                              ParameterKey=EnvironmentSize,ParameterValue=$environment_size \\
                                              ParameterKey=InstanceOS,ParameterValue=$instance_os \\
                                              ParameterKey=ProductsBucket,ParameterValue=$products_bucket \\
-                                             ParameterKey=ProductWebSphereMQFolder,ParameterValue=$products_wmq_folder \\
-                                             ParameterKey=ProductWebSphereMQObject,ParameterValue=$products_wmq_object \\
+                                             ParameterKey=ProductWebSphereMQFolder,ParameterValue=$product_wmq_folder \\
+                                             ParameterKey=ProductWebSphereMQObject,ParameterValue=$product_wmq_object \\
                                              ParameterKey=ConfigurationsBucket,ParameterValue=$configurations_bucket \\
-                                             ParameterKey=ConfigurationWebSphereMQFolder,ParameterValue=$configurations_wmq_folder \\
-                                             ParameterKey=ConfigurationWebSphereMQObject,ParameterValue=$configurations_wmq_object \\
+                                             ParameterKey=ConfigurationWebSphereMQFolder,ParameterValue=$configuration_wmq_folder \\
+                                             ParameterKey=ConfigurationWebSphereMQObject,ParameterValue=$configuration_wmq_object \\
                                              ParameterKey=ApplicationName,ParameterValue=$application \\
-                                             ParameterKey=ApplicationDomain,ParameterValue=$application_domain \\
                                              ParameterKey=UseStaticAddress,ParameterValue=$use_static_address \\
                                              ParameterKey=UseFileSystemMonitoring,ParameterValue=$use_filesystem_monitoring \\
                                              ParameterKey=UseLogMonitoring,ParameterValue=$use_log_monitoring \\

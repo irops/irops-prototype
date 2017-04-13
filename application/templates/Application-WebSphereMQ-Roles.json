@@ -41,9 +41,10 @@
     "ProductsBucket" : {
       "Description" : "S3 bucket containing 3rd-Party Products to be deployed",
       "Type" : "String",
+      "MinLength" : 2,
       "MaxLength" : 64,
-      "Default" : "",
-      "AllowedPattern" : "(^$|^[a-z][-a-z0-9]*$)",
+      "Default" : "products-us-west-2-irops",
+      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
       "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
     },
 
@@ -60,9 +61,10 @@
     "ConfigurationsBucket" : {
       "Description" : "S3 bucket containing Configurations to be deployed",
       "Type" : "String",
+      "MinLength" : 2,
       "MaxLength" : 64,
-      "Default" : "",
-      "AllowedPattern" : "(^$|^[a-z][-a-z0-9]*$)",
+      "Default" : "configurations-us-west-2-irops",
+      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
       "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
     },
 
@@ -104,8 +106,6 @@
   },
 
   "Conditions" : {
-    "DownloadProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ProductsBucket" }, "" ]}]},
-    "DownloadConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ConfigurationsBucket" }, "" ]}]},
     "ConfigureFileSystemMonitoring" : { "Fn::Equals" : [{ "Ref" : "UseFileSystemMonitoring" }, "true" ]},
     "ConfigureLogs" : { "Fn::Equals" : [{ "Ref" : "UseLogMonitoring" }, "true" ]}
   },
@@ -141,8 +141,7 @@
           }]
         },
         "Roles" : [{ "Ref" : "Role" }]
-      },
-      "Condition" : "DownloadProduct"
+      }
     },
 
     "DownloadConfigurationFromS3Policy" : {
@@ -160,8 +159,7 @@
           }]
         },
         "Roles" : [{ "Ref" : "Role" }]
-      },
-      "Condition" : "DownloadConfiguration"
+      }
     },
 
     "FileSystemMonitoringPolicy" : {
@@ -205,7 +203,7 @@
       "Condition" : "ConfigureLogs"
     }
   },
-  
+
   "Outputs" : {
     "Role" : {
       "Description" : "The Role",

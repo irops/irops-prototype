@@ -10,6 +10,7 @@
           "Label" : { "default" : "Stack Dependencies" },
           "Parameters" : [
             "VPCStackName",
+            "CustomIdentifierFunctionsStackName",
             "StandardCIDRFunctionsStackName",
             "StandardAMIFunctionsStackName",
             "StandardTopicsStackName"
@@ -20,9 +21,16 @@
           "Parameters" : [
             "KeyName",
             "Role",
-            "InstanceSecurityGroup",
             "LogGroup",
+            "InstanceSecurityGroup",
             "FileSystem"
+          ]
+        },
+        {
+          "Label" : { "default" : "System Configuration" },
+          "Parameters" : [
+            "CompanyName",
+            "SystemName"
           ]
         },
         {
@@ -47,8 +55,6 @@
           "Label" : { "default" : "Application Configuration" },
           "Parameters" : [
             "ApplicationName",
-            "ApplicationDomain",
-            "OptMqmSnapshot",
             "UseStaticAddress",
             "UseFileSystemMonitoring",
             "UseLogMonitoring",
@@ -61,14 +67,17 @@
 
       "ParameterLabels" : {
         "VPCStackName" : { "default" : "VPC Stack Name" },
+        "CustomIdentifierFunctionsStackName" : { "default" : "CustomIdentifierFunctions Stack Name" },
         "StandardCIDRFunctionsStackName" : { "default" : "StandardCIDRFunctions Stack Name" },
         "StandardAMIFunctionsStackName" : { "default" : "StandardAMIFunctions Stack Name" },
         "StandardTopicsStackName" : { "default" : "StandardTopics Stack Name" },
         "KeyName" : { "default" : "Key Name" },
         "Role" : { "default" : "Role" },
-        "InstanceSecurityGroup" : { "default" : "Instance SecurityGroup" },
         "LogGroup" : { "default" : "LogGroup" },
+        "InstanceSecurityGroup" : { "default" : "Instance SecurityGroup" },
         "FileSystem" : { "default" : "FileSystem" },
+        "CompanyName" : { "default" : "Company Name" },
+        "SystemName" : { "default" : "System Name" },
         "EnvironmentSize" : { "default" : "Environment Size" },
         "InstanceOS" : { "default" : "Instance Operating System" },
         "ProductsBucket" : { "default" : "Products Bucket" },
@@ -78,8 +87,6 @@
         "ConfigurationWebSphereMQFolder" : { "default" : "Configuration WebSphereMQ Folder" },
         "ConfigurationWebSphereMQObject" : { "default" : "Configuration WebSphereMQ Object" },
         "ApplicationName" : { "default" : "Application Name" },
-        "ApplicationDomain" : { "default" : "Application Domain Name" },
-        "OptMqmSnapshot" : { "default" : "/opt/mqm Snapshot" },
         "UseStaticAddress" : { "default" : "Use Static Address" },
         "UseFileSystemMonitoring" : { "default" : "Use FileSystem Monitoring" },
         "UseLogMonitoring" : { "default" : "Use Log Monitoring" },
@@ -98,6 +105,15 @@
       "MaxLength" : 64,
       "Default" : "Production-VPC",
       "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "CustomIdentifierFunctionsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Custom Identifier Functions",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "CustomIdentifierFunctions",
+      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
@@ -146,14 +162,6 @@
       "ConstraintDescription" : "must be the name of an existing Role."
     },
 
-    "InstanceSecurityGroup" : {
-      "Description" : "ID of an existing SecurityGroup which controls access to the Instances",
-      "Type" : "AWS::EC2::SecurityGroup::Id",
-      "MaxLength" : 32,
-      "AllowedPattern" : "^sg-[0-9a-f]{8}$",
-      "ConstraintDescription" : "must be the name of an existing SecurityGroup."
-    },
-
     "LogGroup" : {
       "Description" : "Name of an existing LogGroup which provides access to CloudWatch Logs",
       "Type" : "String",
@@ -162,12 +170,40 @@
       "ConstraintDescription" : "must be the name of an existing LogGroup."
     },
 
+    "InstanceSecurityGroup" : {
+      "Description" : "ID of an existing SecurityGroup which controls access to the Instances",
+      "Type" : "AWS::EC2::SecurityGroup::Id",
+      "MaxLength" : 32,
+      "AllowedPattern" : "^sg-[0-9a-f]{8}$",
+      "ConstraintDescription" : "must be the name of an existing SecurityGroup."
+    },
+
     "FileSystem" : {
       "Description" : "Name of an existing FileSystem which provides shared Instance storage",
       "Type" : "String",
       "MaxLength" : 128,
       "AllowedPattern" : "^[-a-zA-Z0-9]*$",
       "ConstraintDescription" : "must be the name of an existing FileSystem."
+    },
+
+    "CompanyName" : {
+      "Description" : "Name of the Company associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "Travel",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "SystemName" : {
+      "Description" : "Name of the System associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "IROPS",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
     "EnvironmentSize" : {
@@ -182,16 +218,16 @@
       "Description" : "The Operating System to use for Instances",
       "Type" : "String",
       "Default" : "AMZN",
-      "AllowedValues" : [ "AMZN", "RHEL", "UBNT" ],
-      "ConstraintDescription" : "must be AMZN = \"Amazon Linux 2016.09.1\", RHEL = \"RHEL 7.3\" or UBNT = \"Ubuntu 16.04\"."
+      "AllowedValues" : [ "AMZN", "RHEL" ],
+      "ConstraintDescription" : "must be AMZN = \"Amazon Linux 2016.09.1\" or RHEL = \"RHEL 7.3\"."
     },
 
     "ProductsBucket" : {
       "Description" : "S3 bucket containing 3rd-Party Products to be deployed",
       "Type" : "String",
       "MaxLength" : 64,
-      "Default" : "",
-      "AllowedPattern" : "(^$|^[a-z][-a-z0-9]*$)",
+      "Default" : "products-us-west-2-irops",
+      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
       "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
     },
 
@@ -208,19 +244,19 @@
     "ProductWebSphereMQObject" : {
       "Description" : "Object within S3 bucket and folder containing WebSphereMQ installer",
       "Type" : "String",
-      "MinLength" : 2,
       "MaxLength" : 64,
-      "Default" : "mqadv_dev80_linux_x86-64.tar.gz",
-      "AllowedPattern" : "^[-_.a-zA-Z0-9]*$",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
     "ConfigurationsBucket" : {
       "Description" : "S3 bucket containing Configurations to be deployed",
       "Type" : "String",
+      "MinLength" : 2,
       "MaxLength" : 64,
-      "Default" : "",
-      "AllowedPattern" : "(^$|^[a-z][-a-z0-9]*$)",
+      "Default" : "configurations-us-west-2-irops",
+      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
       "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
     },
 
@@ -237,9 +273,8 @@
     "ConfigurationWebSphereMQObject" : {
       "Description" : "Object within S3 bucket and folder containing WebSphereMQ configuration",
       "Type" : "String",
-      "MinLength" : 2,
       "MaxLength" : 64,
-      "Default" : "Production-WebSphereMQ-etc-wmq.tgz",
+      "Default" : "",
       "AllowedPattern" : "^[-_.a-zA-Z0-9]*$",
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
@@ -252,23 +287,6 @@
       "Default" : "WebSphereMQ",
       "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
-    },
-
-    "ApplicationDomain" : {
-      "Description" : "DNS Name of the Application associated with the Stack",
-      "Type" : "String",
-      "MaxLength" : 16,
-      "Default" : "",
-      "AllowedPattern" : "(^$|^[a-z][-a-z0-9]*$)",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
-    },
-
-    "OptMqmSnapshot" : {
-      "Description" : "Snapshot of previous EBS Volume containing /opt/mqm directory",
-      "Type" : "String",
-      "Default" : "",
-      "AllowedPattern" : "(^$|snap-[0-9a-f]{17}$)",
-      "ConstraintDescription" : "must be a valid Snapshot ID."
     },
 
     "UseStaticAddress" : {
@@ -321,24 +339,6 @@
   },
 
   "Mappings" : {
-    "ImageIdMap" : {
-      "AMI"            : { "AMZN" : "Amazon Linux 2016.09.1", "RHEL" : "RHEL 7.3", "UBNT" : "Ubuntu 16.04" },
-      "us-east-1"      : { "AMZN" : "ami-0b33d91d", "RHEL" : "ami-b63769a1", "UBNT" : "ami-f4cc1de2" },
-      "us-east-2"      : { "AMZN" : "ami-c55673a0", "RHEL" : "ami-0932686c", "UBNT" : "ami-fcc19b99" },
-      "us-west-1"      : { "AMZN" : "ami-165a0876", "RHEL" : "ami-2cade64c", "UBNT" : "ami-16efb076" },
-      "us-west-2"      : { "AMZN" : "ami-f173cc91", "RHEL" : "ami-6f68cf0f", "UBNT" : "ami-a58d0dc5" },
-      "ca-central-1"   : { "AMZN" : "ami-ebed508f", "RHEL" : "ami-9062d0f4", "UBNT" : "ami-7b74c91f" },
-      "eu-west-1"      : { "AMZN" : "ami-70edb016", "RHEL" : "ami-02ace471", "UBNT" : "ami-405f7226" },
-      "eu-central-1"   : { "AMZN" : "ami-af0fc0c0", "RHEL" : "ami-e4c63e8b", "UBNT" : "ami-3f1bd150" },
-      "eu-west-2"      : { "AMZN" : "ami-f1949e95", "RHEL" : "ami-9c363cf8", "UBNT" : "ami-ede2e889" },
-      "ap-southeast-1" : { "AMZN" : "ami-dc9339bf", "RHEL" : "ami-2c95344f", "UBNT" : "ami-ee7bca8d" },
-      "ap-southeast-2" : { "AMZN" : "ami-1c47407f", "RHEL" : "ami-39ac915a", "UBNT" : "ami-4e686b2d" },
-      "ap-northeast-2" : { "AMZN" : "ami-dac312b4", "RHEL" : "ami-44db152a", "UBNT" : "ami-0500d06b" },
-      "ap-northeast-1" : { "AMZN" : "ami-56d4ad31", "RHEL" : "ami-5de0433c", "UBNT" : "ami-1bfdb67c" },
-      "ap-south-1"     : { "AMZN" : "ami-f9daac96", "RHEL" : "ami-cdbdd7a2", "UBNT" : "ami-5f3d4d30" },
-      "sa-east-1"      : { "AMZN" : "ami-80086dec", "RHEL" : "ami-7de77b11", "UBNT" : "ami-af0462c3" }
-    },
-
     "InstanceTypeMap" : {
       "Queue" : { "small" : "c4.large", "medium" : "c4.xlarge", "large" : "c4.2xlarge", "xlarge" : "c4.4xlarge" }
     }
@@ -348,16 +348,26 @@
     "ConfigureKey" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "KeyName" }, "" ]}]},
     "ConfigureAMZN" : { "Fn::Equals" : [{ "Ref" : "InstanceOS" }, "AMZN" ]},
     "ConfigureRHEL" : { "Fn::Equals" : [{ "Ref" : "InstanceOS" }, "RHEL" ]},
-    "DownloadProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ProductsBucket" }, "" ]}]},
-    "DownloadConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ConfigurationsBucket" }, "" ]}]},
-    "ConfigureSnapshot" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "OptMqmSnapshot" }, "" ] }]},
+    "DownloadProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ProductWebSphereMQObject" }, "" ]}]},
+    "DownloadConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ConfigurationWebSphereMQObject" }, "" ]}]},
     "ConfigureStaticAddress" : { "Fn::Equals" : [{ "Ref" : "UseStaticAddress" }, "true" ]},
-    "ConfigureVarMqmFileSystemMonitoring" : { "Fn::Equals" : [{ "Ref" : "UseFileSystemMonitoring" }, "true" ]},
+    "ConfigureMQHAFileSystemMonitoring" : { "Fn::Equals" : [{ "Ref" : "UseFileSystemMonitoring" }, "true" ]},
     "ConfigureLogs" : { "Fn::Equals" : [{ "Ref" : "UseLogMonitoring" }, "true" ]},
     "ConfigureSchedule" : { "Fn::Equals" : [{ "Ref" : "UseSchedule" }, "true" ]}
   },
 
   "Resources" : {
+    "GetHostName" : {
+      "Type" : "Custom::GetHostName",
+      "Properties" : {
+        "ServiceToken" : { "Fn::ImportValue" : { "Fn::Sub" : "${CustomIdentifierFunctionsStackName}-GetHostNameFunctionArn" }},
+        "CompanyName" : { "Ref" : "CompanyName" },
+        "LocationName" : { "Ref": "AWS::Region" },
+        "EnvironmentName" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }},
+        "ApplicationName" : { "Ref" : "ApplicationName" }
+      }
+    },
+
     "GetAmazonLinuxImageId" : {
       "Type" : "Custom::GetAmazonLinuxImageId",
       "Properties" : {
@@ -366,6 +376,16 @@
         "Architecture" : "HVM64"
       },
       "Condition" : "ConfigureAMZN"
+    },
+
+    "GetRHELImageId" : {
+      "Type" : "Custom::GetRHELImageId",
+      "Properties" : {
+        "ServiceToken" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardAMIFunctionsStackName}-GetRHELImageIdFunctionArn" }},
+        "Region" : { "Ref" : "AWS::Region" },
+        "OSName" : "RHEL 7.3"
+      },
+      "Condition" : "ConfigureRHEL"
     },
 
     "InstanceProfile" : {
@@ -403,14 +423,12 @@
             "All" : [
               "UpdateOS",
               { "Fn::If" : [ "ConfigureAMZN", "ConfigureOSUpdates", { "Ref": "AWS::NoValue" }]},
-              { "Fn::If" : [ "ConfigureStaticAddress", "ConfigureStaticAddress", { "Ref" : "AWS::NoValue" }]},
               "ConfigureHostname",
               "ConfigureOS",
-              "ConfigureOptMqmVolume",
-              "ConfigureVarMqmFileSystem",
-              { "Fn::If" : [ "ConfigureVarMqmFileSystemMonitoring", "ConfigureVarMqmFileSystemMonitoring", { "Ref": "AWS::NoValue" }]},
+              "ConfigureMQHAFileSystem",
+              { "Fn::If" : [ "ConfigureMQHAFileSystemMonitoring", "ConfigureMQHAFileSystemMonitoring", { "Ref": "AWS::NoValue" }]},
               "ConfigureCFN",
-              { "Fn::If" : [ "DownloadProduct", "InstallWebSphereMQ", { "Ref": "AWS::NoValue" }]},
+              { "Fn::If" : [ "DownloadProduct", "DownloadWebSphereMQ", { "Ref": "AWS::NoValue" }]},
               { "Fn::If" : [ "DownloadConfiguration", "ConfigureWebSphereMQ", { "Ref": "AWS::NoValue" }]},
               { "Fn::If" : [ "ConfigureLogs", { "Fn::If" : [ "ConfigureAMZN", "InstallLogs", "BuildLogs" ]}, { "Ref": "AWS::NoValue" }]},
               { "Fn::If" : [ "ConfigureLogs", "ConfigureLogs", { "Ref": "AWS::NoValue" }]}
@@ -446,27 +464,6 @@
               }
             }
           },
-          "ConfigureStaticAddress" : {
-            "files" : {
-              "/root/bin/configurestaticaddress" : {
-                "content" : { "Fn::Join" : [ "", [
-                  "#!/bin/bash\n",
-                  "# This is a placeholder to configure custom routing for eth1\n",
-                  "# CloudFormation will attach eth1, so no action needed to attach, just to adjust routing\n",
-                  "echo 'eth1 routing not yet configured'\n"
-                ]]},
-                "mode"  : "000700",
-                "owner" : "root",
-                "group" : "root"
-              }
-            },
-            "commands" : {
-              "01_configurestaticaddress" : {
-                "command" : "/root/bin/configurestaticaddress",
-                "ignoreErrors" : "false"
-              }
-            }
-          },
           "ConfigureHostname" : {
             "files" : {
               "/root/bin/sethostname" : {
@@ -474,9 +471,9 @@
                   "#!/bin/bash\n",
                   "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)\n",
                   "region=${zone::-1}\n",
-                  "hostname=", { "Fn::Join" : [ "", [ { "Ref" : "ApplicationDomain" }, "a.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]}, "\n",
+                  "hostname=", { "Fn::Join" : [ "", [ { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01a.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]}, "\n",
                   "address=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)\n",
-                  "sed -i -e \"/^$address/d\" -e \"$ a$address $hostname\" /etc/hosts\n",
+                  "sed -i -e \"/^$address/d\" -e \"$ a$address $hostname ${hostname%%.*} wmqa\" /etc/hosts\n",
                   "hostname $hostname\n"
                 ]]},
                 "mode"  : "000700",
@@ -570,85 +567,55 @@
               }
             },
             "commands" : {
-              "01_chownmqmhome" : {
+              "01_usermod_mqm" : {
+                "command" : "usermod -s /bin/bash mqm",
+                "ignoreErrors" : "false"
+              },
+              "02_chown_home_mqm" : {
                 "command" : "chown -R mqm:mqm /home/mqm",
                 "ignoreErrors" : "false"
               },
-              "01_usermodmqm" : {
-                "command" : "usermod -s /bin/bash mqm",
+              "03_mkdir_opt_mqm" : {
+                "command" : "mkdir -p /opt/mqm",
+                "ignoreErrors" : "false"
+              },
+              "04_chown_opt_mqm" : {
+                "command" : "chown -R mqm:mqm /opt/mqm",
+                "ignoreErrors" : "false"
+              },
+              "05_mkdir_var_mqm" : {
+                "command" : "mkdir -p /var/mqm",
+                "ignoreErrors" : "false"
+              },
+              "06_chown_var_mqm" : {
+                "command" : "chown -R mqm:mqm /var/mqm",
+                "ignoreErrors" : "false"
+              },
+              "07_mkdir_mqha" : {
+                "command" : "mkdir -p /MQHA",
+                "ignoreErrors" : "false"
+              },
+              "08_chown_mqha" : {
+                "command" : "chown -R mqm:mqm /MQHA",
                 "ignoreErrors" : "false"
               }
             }
           },
-          "ConfigureOptMqmVolume" : {
-            "packages" : {
-              "yum" : {
-                "parted" : [],
-                "xfsprogs" : []
-              }
-            },
-            "files" : {
-              "/root/bin/mountoptmqmvolume" : {
-                "content" : { "Fn::Join" : [ "", [
-                  "#!/bin/bash\n",
-                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Wait for Instance to recognize Volume\"\n",
-                  "attempt=0\n",
-                  "attempts=30\n",
-                  "delay=5\n",
-                  "while ((attempt++ <= attempts)); do\n",
-                  "    if fdisk -l /dev/xvdb &> /dev/null; then\n",
-                  "        break\n",
-                  "    else\n",
-                  "        echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume not yet attached, pausing $delay seconds...\"\n",
-                  "        sleep $delay\n",
-                  "    fi\n",
-                  "done\n",
-                  "filesystem_type=$(file -sL /dev/xvdb)\n",
-                  "if [[ $filesystem_type == *\"XFS\"* ]]; then\n",
-                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume formatted with XFS Filesystem\"\n",
-                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Existing Volume: using Snapshot, or mapping Volume to replacement Instance\"\n",
-                  "else\n",
-                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume not formatted\"\n",
-                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] New Volume: mounted to initial Instance\"\n",
-                  "    mkfs -t xfs /dev/xvdb 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"\n",
-                  "    xfs_admin -L /opt/mqm /dev/xvdb 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"\n",
-                  "fi\n",
-                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Add Volume MountPoint to /etc/fstab\"\n",
-                  "sed -i -e \"/\\/opt\\/mqm/d\" /etc/fstab\n",
-                  "sed -i -e \"/^LABEL=\\// aLABEL=/opt/mqm /opt/mqm xfs     defaults,noatime  1   1\" /etc/fstab\n",
-                  "sed -i -e \"/^UUID=[^ ]* \\// aLABEL=/opt/mqm /opt/mqm xfs     defaults,noatime  1   1\" /etc/fstab\n",
-                  "mkdir /opt/mqm 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"\n",
-                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Mounting /opt/mqm\"\n",
-                  "mount /opt/mqm 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"\n",
-                  "chown -R mqm:mqm /opt/mqm\n"
-                ]]},
-                "mode"  : "000700",
-                "owner" : "root",
-                "group" : "root"
-              }
-            },
-            "commands" : {
-              "01_mountoptmqmvolume" : {
-                "command" : "/root/bin/mountoptmqmvolume",
-                "ignoreErrors" : "false"
-              }
-            }
-          },
-          "ConfigureVarMqmFileSystem" : {
+          "ConfigureMQHAFileSystem" : {
             "packages" : {
               "yum" : {
                 "nfs-utils" : []
               }
             },
             "files" : {
-              "/root/bin/mountvarmqmfilesystem" : {
+              "/root/bin/mountmqhafilesystem" : {
                 "content" : { "Fn::Join" : [ "", [
                   "#!/bin/bash\n",
                   "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)\n",
                   "region=${zone::-1}\n",
                   "filesystem=", { "Ref" : "FileSystem" }, "\n",
-                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Create /var/mqm mount point\"\n",
-                  "mkdir -p /var/mqm\n",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Create /MQHA mount point\"\n",
+                  "mkdir -p /MQHA\n",
                   "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Wait for FileSystem DNS name to resolve\"\n",
                   "attempt=0\n",
                   "attempts=30\n",
@@ -662,10 +629,10 @@
                   "    fi\n",
                   "done\n",
                   "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Add FileSystem MountPoint to /etc/fstab\"\n",
-                  "sed -i -e \"/$filesystem/d\" -e \"$ a$filesystem.efs.$region.amazonaws.com:/ /var/mqm nfs nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2\" /etc/fstab\n",
-                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Mounting /var/mqm\"\n",
-                  "mount /var/mqm\n",
-                  "chown -R mqm:mqm /var/mqm\n"
+                  "sed -i -e \"/$filesystem/d\" -e \"$ a$filesystem.efs.$region.amazonaws.com:/ /MQHA nfs nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2\" /etc/fstab\n",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Mounting /MQHA\"\n",
+                  "mount /MQHA\n",
+                  "chown -R mqm:mqm /MQHA\n"
                 ]]},
                 "mode"  : "000700",
                 "owner" : "root",
@@ -674,12 +641,12 @@
             },
             "commands" : {
               "01_attachvolume" : {
-                "command" : "/root/bin/mountvarmqmfilesystem",
+                "command" : "/root/bin/mountmqhafilesystem",
                 "ignoreErrors" : "false"
               }
             }
           },
-          "ConfigureVarMqmFileSystemMonitoring" : {
+          "ConfigureMQHAFileSystemMonitoring" : {
             "files" : {
               "/root/bin/putfilesystemmetrics" : {
                 "content" : { "Fn::Join" : [ "", [
@@ -796,9 +763,9 @@
               }
             }
           },
-          "InstallWebSphereMQ" : {
+          "DownloadWebSphereMQ" : {
             "sources" : {
-              "/opt" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ProductsBucket}/${ProductWebSphereMQFolder}/${ProductWebSphereMQObject}" }
+              "/var/tmp" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ProductsBucket}/${ProductWebSphereMQFolder}/${ProductWebSphereMQObject}" }
             }
           },
           "ConfigureWebSphereMQ" : {
@@ -954,7 +921,7 @@
       },
       "Properties" : {
         "ImageId" : { "Fn::If" : [ "ConfigureAMZN", { "Fn::GetAtt" : [ "GetAmazonLinuxImageId", "ImageId" ]},
-                                                    { "Fn::FindInMap" : [ "ImageIdMap", { "Ref" : "AWS::Region" } , { "Ref" : "InstanceOS" }]}]},
+                                                    { "Fn::GetAtt" : [ "GetRHELImageId", "ImageId" ]}]},
         "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Queue", { "Ref" : "EnvironmentSize" }]},
         "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
         "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
@@ -968,12 +935,9 @@
           "DeleteOnTermination"      : "true"
         }],
         "BlockDeviceMappings" : [{
-          "DeviceName" : "/dev/sdb",
+          "DeviceName" : { "Fn::If" : [ "ConfigureAMZN", "/dev/xvda", "/dev/sda1" ]},
           "Ebs" : {
-            "VolumeType" : "gp2",
-            "VolumeSize" : "10",
-            "SnapshotId" : { "Fn::If" : [ "ConfigureSnapshot", { "Ref" : "OptMqmSnapshot" }, { "Ref" : "AWS::NoValue" }]},
-            "DeleteOnTermination" : "true"
+            "VolumeSize" : "32"
           }
         }],
         "Tags" : [
@@ -1066,14 +1030,12 @@
             "All" : [
               "UpdateOS",
               { "Fn::If" : [ "ConfigureAMZN", "ConfigureOSUpdates", { "Ref": "AWS::NoValue" }]},
-              { "Fn::If" : [ "ConfigureStaticAddress", "ConfigureStaticAddress", { "Ref" : "AWS::NoValue" }]},
               "ConfigureHostname",
               "ConfigureOS",
-              "ConfigureOptMqmVolume",
-              "ConfigureVarMqmFileSystem",
-              { "Fn::If" : [ "ConfigureVarMqmFileSystemMonitoring", "ConfigureVarMqmFileSystemMonitoring", { "Ref": "AWS::NoValue" }]},
+              "ConfigureMQHAFileSystem",
+              { "Fn::If" : [ "ConfigureMQHAFileSystemMonitoring", "ConfigureMQHAFileSystemMonitoring", { "Ref": "AWS::NoValue" }]},
               "ConfigureCFN",
-              { "Fn::If" : [ "DownloadProduct", "InstallWebSphereMQ", { "Ref": "AWS::NoValue" }]},
+              { "Fn::If" : [ "DownloadProduct", "DownloadWebSphereMQ", { "Ref": "AWS::NoValue" }]},
               { "Fn::If" : [ "DownloadConfiguration", "ConfigureWebSphereMQ", { "Ref": "AWS::NoValue" }]},
               { "Fn::If" : [ "ConfigureLogs", { "Fn::If" : [ "ConfigureAMZN", "InstallLogs", "BuildLogs" ]}, { "Ref": "AWS::NoValue" }]},
               { "Fn::If" : [ "ConfigureLogs", "ConfigureLogs", { "Ref": "AWS::NoValue" }]}
@@ -1109,27 +1071,6 @@
               }
             }
           },
-          "ConfigureStaticAddress" : {
-            "files" : {
-              "/root/bin/configurestaticaddress" : {
-                "content" : { "Fn::Join" : [ "", [
-                  "#!/bin/bash\n",
-                  "# This is a placeholder to configure custom routing for eth1\n",
-                  "# CloudFormation will attach eth1, so no action needed to attach, just to adjust routing\n",
-                  "echo 'eth1 routing not yet configured'\n"
-                ]]},
-                "mode"  : "000700",
-                "owner" : "root",
-                "group" : "root"
-              }
-            },
-            "commands" : {
-              "01_configurestaticaddress" : {
-                "command" : "/root/bin/configurestaticaddress",
-                "ignoreErrors" : "false"
-              }
-            }
-          },
           "ConfigureHostname" : {
             "files" : {
               "/root/bin/sethostname" : {
@@ -1137,9 +1078,9 @@
                   "#!/bin/bash\n",
                   "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)\n",
                   "region=${zone::-1}\n",
-                  "hostname=", { "Fn::Join" : [ "", [ { "Ref" : "ApplicationDomain" }, "b.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]}, "\n",
+                  "hostname=", { "Fn::Join" : [ "", [ { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01b.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]}, "\n",
                   "address=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)\n",
-                  "sed -i -e \"/^$address/d\" -e \"$ a$address $hostname\" /etc/hosts\n",
+                  "sed -i -e \"/^$address/d\" -e \"$ a$address $hostname ${hostname%%.*} wmqb\" /etc/hosts\n",
                   "hostname $hostname\n"
                 ]]},
                 "mode"  : "000700",
@@ -1233,85 +1174,55 @@
               }
             },
             "commands" : {
-              "01_chownmqmhome" : {
+              "01_usermod_mqm" : {
+                "command" : "usermod -s /bin/bash mqm",
+                "ignoreErrors" : "false"
+              },
+              "02_chown_home_mqm" : {
                 "command" : "chown -R mqm:mqm /home/mqm",
                 "ignoreErrors" : "false"
               },
-              "01_usermodmqm" : {
-                "command" : "usermod -s /bin/bash mqm",
+              "03_mkdir_opt_mqm" : {
+                "command" : "mkdir -p /opt/mqm",
+                "ignoreErrors" : "false"
+              },
+              "04_chown_opt_mqm" : {
+                "command" : "chown -R mqm:mqm /opt/mqm",
+                "ignoreErrors" : "false"
+              },
+              "05_mkdir_var_mqm" : {
+                "command" : "mkdir -p /var/mqm",
+                "ignoreErrors" : "false"
+              },
+              "06_chown_var_mqm" : {
+                "command" : "chown -R mqm:mqm /var/mqm",
+                "ignoreErrors" : "false"
+              },
+              "07_mkdir_mqha" : {
+                "command" : "mkdir -p /MQHA",
+                "ignoreErrors" : "false"
+              },
+              "08_chown_mqha" : {
+                "command" : "chown -R mqm:mqm /MQHA",
                 "ignoreErrors" : "false"
               }
             }
           },
-          "ConfigureOptMqmVolume" : {
-            "packages" : {
-              "yum" : {
-                "parted" : [],
-                "xfsprogs" : []
-              }
-            },
-            "files" : {
-              "/root/bin/mountoptmqmvolume" : {
-                "content" : { "Fn::Join" : [ "", [
-                  "#!/bin/bash\n",
-                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Wait for Instance to recognize Volume\"\n",
-                  "attempt=0\n",
-                  "attempts=30\n",
-                  "delay=5\n",
-                  "while ((attempt++ <= attempts)); do\n",
-                  "    if fdisk -l /dev/xvdb &> /dev/null; then\n",
-                  "        break\n",
-                  "    else\n",
-                  "        echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume not yet attached, pausing $delay seconds...\"\n",
-                  "        sleep $delay\n",
-                  "    fi\n",
-                  "done\n",
-                  "filesystem_type=$(file -sL /dev/xvdb)\n",
-                  "if [[ $filesystem_type == *\"XFS\"* ]]; then\n",
-                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume formatted with XFS Filesystem\"\n",
-                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Existing Volume: using Snapshot, or mapping Volume to replacement Instance\"\n",
-                  "else\n",
-                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume not formatted\"\n",
-                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] New Volume: mounted to initial Instance\"\n",
-                  "    mkfs -t xfs /dev/xvdb 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"\n",
-                  "    xfs_admin -L /opt/mqm /dev/xvdb 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"\n",
-                  "fi\n",
-                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Add Volume MountPoint to /etc/fstab\"\n",
-                  "sed -i -e \"/\\/opt\\/mqm/d\" /etc/fstab\n",
-                  "sed -i -e \"/^LABEL=\\// aLABEL=/opt/mqm /opt/mqm xfs     defaults,noatime  1   1\" /etc/fstab\n",
-                  "sed -i -e \"/^UUID=[^ ]* \\// aLABEL=/opt/mqm /opt/mqm xfs     defaults,noatime  1   1\" /etc/fstab\n",
-                  "mkdir /opt/mqm 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"\n",
-                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Mounting /opt/mqm\"\n",
-                  "mount /opt/mqm 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"\n",
-                  "chown -R mqm:mqm /opt/mqm\n"
-                ]]},
-                "mode"  : "000700",
-                "owner" : "root",
-                "group" : "root"
-              }
-            },
-            "commands" : {
-              "01_mountoptmqmvolume" : {
-                "command" : "/root/bin/mountoptmqmvolume",
-                "ignoreErrors" : "false"
-              }
-            }
-          },
-          "ConfigureVarMqmFileSystem" : {
+          "ConfigureMQHAFileSystem" : {
             "packages" : {
               "yum" : {
                 "nfs-utils" : []
               }
             },
             "files" : {
-              "/root/bin/mountvarmqmfilesystem" : {
+              "/root/bin/mountmqhafilesystem" : {
                 "content" : { "Fn::Join" : [ "", [
                   "#!/bin/bash\n",
                   "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)\n",
                   "region=${zone::-1}\n",
                   "filesystem=", { "Ref" : "FileSystem" }, "\n",
-                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Create /var/mqm mount point\"\n",
-                  "mkdir -p /var/mqm\n",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Create /MQHA mount point\"\n",
+                  "mkdir -p /MQHA\n",
                   "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Wait for FileSystem DNS name to resolve\"\n",
                   "attempt=0\n",
                   "attempts=30\n",
@@ -1325,10 +1236,10 @@
                   "    fi\n",
                   "done\n",
                   "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Add FileSystem MountPoint to /etc/fstab\"\n",
-                  "sed -i -e \"/$filesystem/d\" -e \"$ a$filesystem.efs.$region.amazonaws.com:/ /var/mqm nfs nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2\" /etc/fstab\n",
-                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Mounting /var/mqm\"\n",
-                  "mount /var/mqm\n",
-                  "chown -R mqm:mqm /var/mqm\n"
+                  "sed -i -e \"/$filesystem/d\" -e \"$ a$filesystem.efs.$region.amazonaws.com:/ /MQHA nfs nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2\" /etc/fstab\n",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Mounting /MQHA\"\n",
+                  "mount /MQHA\n",
+                  "chown -R mqm:mqm /MQHA\n"
                 ]]},
                 "mode"  : "000700",
                 "owner" : "root",
@@ -1337,12 +1248,12 @@
             },
             "commands" : {
               "01_attachvolume" : {
-                "command" : "/root/bin/mountvarmqmfilesystem",
+                "command" : "/root/bin/mountmqhafilesystem",
                 "ignoreErrors" : "false"
               }
             }
           },
-          "ConfigureVarMqmFileSystemMonitoring" : {
+          "ConfigureMQHAFileSystemMonitoring" : {
             "files" : {
               "/root/bin/putfilesystemmetrics" : {
                 "content" : { "Fn::Join" : [ "", [
@@ -1459,9 +1370,9 @@
               }
             }
           },
-          "InstallWebSphereMQ" : {
+          "DownloadWebSphereMQ" : {
             "sources" : {
-              "/opt" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ProductsBucket}/${ProductWebSphereMQFolder}/${ProductWebSphereMQObject}" }
+              "/var/tmp" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ProductsBucket}/${ProductWebSphereMQFolder}/${ProductWebSphereMQObject}" }
             }
           },
           "ConfigureWebSphereMQ" : {
@@ -1617,7 +1528,7 @@
       },
       "Properties" : {
         "ImageId" : { "Fn::If" : [ "ConfigureAMZN", { "Fn::GetAtt" : [ "GetAmazonLinuxImageId", "ImageId" ]},
-                                                    { "Fn::FindInMap" : [ "ImageIdMap", { "Ref" : "AWS::Region" } , { "Ref" : "InstanceOS" }]}]},
+                                                    { "Fn::GetAtt" : [ "GetRHELImageId", "ImageId" ]}]},
         "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Queue", { "Ref" : "EnvironmentSize" }]},
         "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
         "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
@@ -1631,12 +1542,9 @@
           "DeleteOnTermination"      : "true"
         }],
         "BlockDeviceMappings" : [{
-          "DeviceName" : "/dev/sdb",
+          "DeviceName" : { "Fn::If" : [ "ConfigureAMZN", "/dev/xvda", "/dev/sda1" ]},
           "Ebs" : {
-            "VolumeType" : "gp2",
-            "VolumeSize" : "10",
-            "SnapshotId" : { "Fn::If" : [ "ConfigureSnapshot", { "Ref" : "OptMqmSnapshot" }, { "Ref" : "AWS::NoValue" }]},
-            "DeleteOnTermination" : "true"
+            "VolumeSize" : "32"
           }
         }],
         "Tags" : [
@@ -1709,9 +1617,19 @@
       "Value" : { "Ref" : "QueueInstanceA" }
     },
 
+    "QueueHostNameA" : {
+      "Description" : "The QueueHostNameA",
+      "Value" : { "Fn::Join" : [ "", [ { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01a.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]}
+    },
+
     "QueueInstanceB" : {
       "Description" : "The QueueInstanceB",
       "Value" : { "Ref" : "QueueInstanceB" }
+    },
+
+    "QueueHostNameB" : {
+      "Description" : "The QueueHostNameB",
+      "Value" : { "Fn::Join" : [ "", [ { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01b.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]}
     }
   }
 }

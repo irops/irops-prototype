@@ -131,24 +131,22 @@
         "GroupDescription" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "InstanceSecurityGroup" ]]},
         "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPC" }},
         "SecurityGroupIngress" : [
-          { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${LinuxBastionsStackName}-SecurityGroup" }}},
-          { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${LinuxBastionsStackName}-SecurityGroup" }}},
-          { "IpProtocol" : "tcp",  "FromPort" : "1414", "ToPort" : "1414", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${LinuxBastionsStackName}-SecurityGroup" }}},
           { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPNStackName}-SecurityGroup" }}},
           { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPNStackName}-SecurityGroup" }}},
-          { "IpProtocol" : "tcp",  "FromPort" : "1414", "ToPort" : "1414", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPNStackName}-SecurityGroup" }}},
+          { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${LinuxBastionsStackName}-SecurityGroup" }}},
+          { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${LinuxBastionsStackName}-SecurityGroup" }}},
           { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateUserNetwork" }},
           { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "CidrIp" : { "Ref" : "PrivateUserNetwork" }},
-          { "IpProtocol" : "tcp",  "FromPort" : "1414", "ToPort" : "1414", "CidrIp" : { "Ref" : "PrivateUserNetwork" }},
+          { "IpProtocol" : "tcp",  "FromPort" : "1415", "ToPort" : "1418", "CidrIp" : { "Ref" : "PrivateUserNetwork" }},
           { "Fn::If" : [ "ConfigurePrivateUserNetwork1", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateUserNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
           { "Fn::If" : [ "ConfigurePrivateUserNetwork1", { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "CidrIp" : { "Ref" : "PrivateUserNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateUserNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "1414", "ToPort" : "1414", "CidrIp" : { "Ref" : "PrivateUserNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateUserNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "1415", "ToPort" : "1418", "CidrIp" : { "Ref" : "PrivateUserNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
           { "Fn::If" : [ "ConfigurePrivateUserNetwork2", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateUserNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
           { "Fn::If" : [ "ConfigurePrivateUserNetwork2", { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "CidrIp" : { "Ref" : "PrivateUserNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateUserNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "1414", "ToPort" : "1414", "CidrIp" : { "Ref" : "PrivateUserNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateUserNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "1415", "ToPort" : "1418", "CidrIp" : { "Ref" : "PrivateUserNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
           { "Fn::If" : [ "ConfigurePrivateUserNetwork3", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateUserNetwork3" }}, { "Ref" : "AWS::NoValue" }]},
           { "Fn::If" : [ "ConfigurePrivateUserNetwork3", { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "CidrIp" : { "Ref" : "PrivateUserNetwork3" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateUserNetwork3", { "IpProtocol" : "tcp",  "FromPort" : "1414", "ToPort" : "1414", "CidrIp" : { "Ref" : "PrivateUserNetwork3" }}, { "Ref" : "AWS::NoValue" }]}
+          { "Fn::If" : [ "ConfigurePrivateUserNetwork3", { "IpProtocol" : "tcp",  "FromPort" : "1415", "ToPort" : "1418", "CidrIp" : { "Ref" : "PrivateUserNetwork3" }}, { "Ref" : "AWS::NoValue" }]}
         ],
         "Tags" : [
           { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "InstanceSecurityGroup" ]]}}
