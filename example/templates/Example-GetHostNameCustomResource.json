@@ -87,7 +87,7 @@
   },
 
   "Resources" : {
-    "GetHostName" : {
+    "GetLongerHostName" : {
       "Type" : "Custom::GetHostName",
       "Properties" : {
         "ServiceToken" : { "Fn::Sub" : "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GetHostName" },
@@ -98,13 +98,28 @@
         "ApplicationName" : { "Ref" : "ApplicationName" },
         "ComponentName" : { "Ref" : "ComponentName" }
       }
+    },
+    "GetShorterHostName" : {
+      "Type" : "Custom::GetHostName",
+      "Properties" : {
+        "ServiceToken" : { "Fn::Sub" : "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GetHostName" },
+        "CompanyName" : { "Ref" : "CompanyName" },
+        "LocationName" : { "Ref": "AWS::Region" },
+        "EnvironmentName" : { "Ref" : "EnvironmentName" },
+        "ApplicationName" : { "Ref" : "ApplicationName" }
+      }
     }
   },
 
   "Outputs" : {
-    "HostName" : {
-      "Description" : "The HostName",
-      "Value" : { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}
+    "LongerHostName" : {
+      "Description" : "The Longer HostName",
+      "Value" : { "Fn::GetAtt" : [ "GetLongerHostName", "HostName" ]}
+    },
+
+    "ShorterHostName" : {
+      "Description" : "The Shorter HostName",
+      "Value" : { "Fn::GetAtt" : [ "GetShorterHostName", "HostName" ]}
     }
   }
 }
