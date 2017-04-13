@@ -269,8 +269,8 @@ run "$commonbindir/common-delete-vpnconnection-stack -E Production -G SantaBarba
 #      7.1. Delete SantaBarbaraCustomerGateway Stack
 #      7.2. Delete CharlotteCustomerGateway Stack
 
-run "$commonbindir/common-delete-customergateway-stack -E Core -G SantaBarbara"
-#run "$commonbindir/common-delete-customergateway-stack -E Core -G Charlotte"
+run "$commonbindir/common-delete-customergateway-stack -G SantaBarbara"
+#run "$commonbindir/common-delete-customergateway-stack -G Charlotte"
 
 
 #  8. Delete NetworkACLs
