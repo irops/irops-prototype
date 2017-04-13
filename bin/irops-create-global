@@ -39,6 +39,8 @@
 #  8. Create Lambda Functions
 #      8.1 Create StandardAMIFunctions Stack
 #      8.2 Create StandardCIDRFunctions Stack
+#      8.3 Create StandardScheduleFunctions Stack
+#      8.4 Create CustomIdentityFunctions Stack
 #
 #  9. Create SNS Billing Topics and Subscriptions
 #      9.1 Create BillingTopics Stack
@@ -151,9 +153,13 @@ run "$corebindir/core-create-standardbuckets-stack -E Identity -r us-east-1"
 #  8. Create Lambda Functions
 #      8.1 Create StandardAMIFunctions Stack
 #      8.2 Create StandardCIDRFunctions Stack
+#      8.3 Create StandardScheduleFunctions Stack
+#      8.4 Create CustomIdentityFunctions Stack
 
 run "$corebindir/core-create-standardamifunctions-stack -E Identity -r us-east-1"
 run "$corebindir/core-create-standardcidrfunctions-stack -E Identity -r us-east-1"
+run "$corebindir/core-create-standardschedulefunctions-stack -E Identity -r us-east-1"
+run "$corebindir/core-create-customidentityfunctions-stack -E Identity -r us-east-1"
 
 
 #  9. Create SNS Billing Topics and Subscriptions
