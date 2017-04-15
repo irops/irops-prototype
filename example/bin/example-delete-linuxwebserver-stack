@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# This script deletes the Example WebServer Stack in an Environment Account.
+# This script deletes the Example LinuxWebServer Stack in an Environment Account.
 #
 # This script is written in a format suitable for interactive demos,
 # but can be run non-Iteractively and more quickly with the "-I" flag.
@@ -24,7 +24,7 @@ interactive=1
 speed=100
 verbose=0
 environment=${ENVIRONMENT_NAME:-Production}
-application=${APPLICATION_NAME:-WebServer}
+application=${APPLICATION_NAME:-LinuxWebServer}
 region=${AWS_DEFAULT_REGION:-us-west-2}
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-administrator}
