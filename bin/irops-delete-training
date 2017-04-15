@@ -10,22 +10,14 @@
 #  1. Initialize Environment Variables
 #
 #  2. Delete Example Applications
-#      2.1. Delete Development-WindowsWordPress Stack (future)
-#      2.2. Delete Development-LinuxWordPress Stack (future)
-#      2.3. Delete Development-WebServers Stack (future)
-#      2.4. Delete Development-WebServer Stack
-#      2.5. Delete Testing-WindowsWordPress Stack (future)
-#      2.6. Delete Testing-LinuxWordPress Stack (future)
-#      2.7. Delete Testing-WebServers Stack (future)
-#      2.8. Delete Testing-WebServer Stack
-#      2.9. Delete Staging-WindowsWordPress Stack (future)
-#      2.10. Delete Staging-LinuxWordPress Stack (future)
-#      2.11. Delete Staging-WebServers Stack (future)
-#      2.13. Delete Staging-WebServer Stack
-#      2.13. Delete Production-WindowsWordPress Stack (future)
-#      2.14. Delete Production-LinuxWordPress Stack (future)
-#      2.15. Delete Production-WebServers Stack (future)
-#      2.16. Delete Production-WebServer Stack
+#      2.1. Delete Development-WindowsWebServer Stack
+#      2.2. Delete Development-LinuxWebServer Stack
+#      2.3. Delete Testing-WindowsWebServer Stack
+#      2.4. Delete Testing-LinuxWebServer Stack
+#      2.5. Delete Staging-WindowsWebServer Stack
+#      2.6. Delete Staging-LinuxWebServer Stack
+#      2.7. Delete Production-WindowsWebServer Stack
+#      2.8. Delete Production-LinuxWebServer Stack
 #
 #  3. Delete Bastions
 #      3.1. Delete Core-WindowsBastions Stack (future)
@@ -144,42 +136,26 @@ source $bindir/irops-define-training-production
 
 
 #  2. Delete Example Applications
-#      2.1. Delete Development-WindowsWordPress Stack (future)
-#      2.2. Delete Development-LinuxWordPress Stack (future)
-#      2.3. Delete Development-WebServers Stack (future)
-#      2.4. Delete Development-WebServer Stack
-#      2.5. Delete Testing-WindowsWordPress Stack (future)
-#      2.6. Delete Testing-LinuxWordPress Stack (future)
-#      2.7. Delete Testing-WebServers Stack (future)
-#      2.8. Delete Testing-WebServer Stack
-#      2.9. Delete Staging-WindowsWordPress Stack (future)
-#      2.10. Delete Staging-LinuxWordPress Stack (future)
-#      2.11. Delete Staging-WebServers Stack (future)
-#      2.13. Delete Staging-WebServer Stack
-#      2.13. Delete Production-WindowsWordPress Stack (future)
-#      2.14. Delete Production-LinuxWordPress Stack (future)
-#      2.15. Delete Production-WebServers Stack (future)
-#      2.16. Delete Production-WebServer Stack
+#      2.1. Delete Development-WindowsWebServer Stack
+#      2.2. Delete Development-LinuxWebServer Stack
+#      2.3. Delete Testing-WindowsWebServer Stack
+#      2.4. Delete Testing-LinuxWebServer Stack
+#      2.5. Delete Staging-WindowsWebServer Stack
+#      2.6. Delete Staging-LinuxWebServer Stack
+#      2.7. Delete Production-WindowsWebServer Stack
+#      2.8. Delete Production-LinuxWebServer Stack
 
-#run "$examplebindir/example-delete-windowswordpress-stack -E Development -A WindowsWordPress"
-#run "$examplebindir/example-delete-linuxwordpress-stack -E Development -A LinuxWordPress"
-#run "$examplebindir/example-delete-webservers-stack -E Development -A WebServers"
-run "$examplebindir/example-delete-webserver-stack -E Development -A WebServer"
+run "$examplebindir/example-delete-windowswebserver-stack -E Development"
+run "$examplebindir/example-delete-linuxwebserver-stack -E Development"
 
-#run "$examplebindir/example-delete-windowswordpress-stack -E Testing -A WindowsWordPress"
-#run "$examplebindir/example-delete-linuxwordpress-stack -E Testing -A LinuxWordPress"
-#run "$examplebindir/example-delete-webservers-stack -E Testing -A WebServers"
-run "$examplebindir/example-delete-webserver-stack -E Testing -A WebServer"
+run "$examplebindir/example-delete-windowswebservers-stack -E Testing"
+run "$examplebindir/example-delete-linuxwebserver-stack -E Testing"
 
-#run "$examplebindir/example-delete-windowswordpress-stack -E Staging -A WindowsWordPress"
-#run "$examplebindir/example-delete-linuxwordpress-stack -E Staging -A LinuxWordPress"
-#run "$examplebindir/example-delete-webservers-stack -E Staging -A WebServers"
-run "$examplebindir/example-delete-webserver-stack -E Staging -A WebServer"
+run "$examplebindir/example-delete-windowswebservers-stack -E Staging"
+run "$examplebindir/example-delete-linuxwebserver-stack -E Staging"
 
-#run "$examplebindir/example-delete-windowswordpress-stack -E Production -A WindowsWordPress"
-#run "$examplebindir/example-delete-linuxwordpress-stack -E Production -A LinuxWordPress"
-#run "$examplebindir/example-delete-webservers-stack -E Production -A WebServers"
-run "$examplebindir/example-delete-webserver-stack -E Production -A WebServer"
+run "$examplebindir/example-delete-windowswebservers-stack -E Production"
+run "$examplebindir/example-delete-linuxwebserver-stack -E Production"
 
 
 #  3. Delete Bastions
