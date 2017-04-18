@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Here's a list of the commands which need to be run to delete us-west-2 (Oregon)
+# Here's a list of the commands which need to be run to delete eu-west-1 (Ireland)
 # - It's very likely some of these will fail due to manual changes, requiring
 #   this script to be run until a failure, stopped with manual steps to clear
 #   out what's blocking the deletion, then a restart, until done.
@@ -125,7 +125,7 @@ run() {
 }
 
 #  1. Initalize Environment
-#     - This will initialze the environment variables to the us-west-2 Production Environment
+#     - This will initialze the environment variables to the eu-west-1 Production Environment
 #     - We will be explicit on certain options below, even when the value does not need to be set due to defaults
 
 bindir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
@@ -138,7 +138,7 @@ examplebindir=${bindir%/*}/example/bin
 identitybindir=${bindir%/*}/identity/bin
 utilitybindir=${bindir%/*}/utility/bin
 
-source $bindir/irops-define-us-west-2-production
+source $bindir/irops-define-eu-west-1-production
 
 
 #  2. Delete Example Applications
