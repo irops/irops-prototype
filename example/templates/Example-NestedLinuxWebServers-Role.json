@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
 
-  "Description" : "Example-NestedWebServers Template. This is an example of a layer in the NestedWebServers application, which creates the Role and attached Policies.",
+  "Description" : "Example-NestedLinuxWebServer-Role Template. This is an example of a layer in the NestedLinuxWebServer application, which creates the Role and attached Policies.",
 
   "Metadata" : {
     "AWS::CloudFormation::Interface" : {
@@ -10,7 +10,8 @@
           "Label" : { "default" : "Application Configuration" },
           "Parameters" : [
             "ApplicationsBucket",
-            "ApplicationName",
+            "ApplicationFolder",
+            "ApplicationObject",
             "UseLogMonitoring"
           ]
         }
@@ -18,7 +19,8 @@
 
       "ParameterLabels" : {
         "ApplicationsBucket" : { "default" : "Applications Bucket" },
-        "ApplicationName" : { "default" : "Application Name" },
+        "ApplicationFolder" : { "default" : "Application Folder" },
+        "ApplicationObject" : { "default" : "Application Object" },
         "UseLogMonitoring" : { "default" : "Use Log Monitoring" }
       }
     }
@@ -34,14 +36,23 @@
       "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
     },
 
-    "ApplicationName" : {
-      "Description" : "Name of the Application associated with the Stack",
+    "ApplicationFolder" : {
+      "Description" : "Folder within S3 bucket containing WebServer Application objects",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
-      "Default" : "NestedWebServers",
+      "Default" : "LinuxWebServer",
       "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "ApplicationObject" : {
+      "Description" : "Object within S3 bucket and folder containing WebServer Application object",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
     "UseLogMonitoring" : {
@@ -54,7 +65,7 @@
   },
 
   "Conditions" : {
-    "DownloadApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationsBucket" }, "" ]}]},
+    "DownloadApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationObject" }, "" ]}]},
     "ConfigureLogs" : { "Fn::Equals" : [{ "Ref" : "UseLogMonitoring" }, "true" ]}
   },
 
@@ -62,6 +73,7 @@
     "Role" : {
       "Type" : "AWS::IAM::Role",
       "Properties" : {
+        "Path" : "/",
         "AssumeRolePolicyDocument" : {
           "Version" : "2012-10-17",
           "Statement" : [{
@@ -70,7 +82,7 @@
             "Action" : [ "sts:AssumeRole" ]
           }]
         },
-        "Path" : "/"
+        "ManagedPolicyArns" : [ "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM" ]
       }
     },
 
@@ -85,7 +97,7 @@
             "Action" : [
               "s3:GetObject"
             ],
-            "Resource" : { "Fn::Sub" : "arn:aws:s3:::${ApplicationsBucket}/${ApplicationName}/*" }
+            "Resource" : { "Fn::Sub" : "arn:aws:s3:::${ApplicationsBucket}/${ApplicationFolder}/*" }
           }]
         },
         "Roles" : [{ "Ref" : "Role" }]

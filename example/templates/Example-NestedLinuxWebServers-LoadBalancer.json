@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
 
-  "Description" : "Example-NestedWebServers-LoadBalancer Template. This is an example of a layer in the NestedWebServers application, which creates a LoadBalancer.",
+  "Description" : "Example-NestedLinuxWebServers-LoadBalancer Template. This is an example of a layer in the NestedLinuxWebServers application, which creates a LoadBalancer.",
 
   "Metadata" : {
     "AWS::CloudFormation::Interface" : {
@@ -58,7 +58,7 @@
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
-      "Default" : "NestedWebServers",
+      "Default" : "NestedLinuxWebServers",
       "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     }
