@@ -540,7 +540,7 @@
         "Statistic" : "Average",
         "Period" : "60",
         "EvaluationPeriods" : "1",
-        "Threshold" : "1024",
+        "Threshold" : "1500000000",
         "ComparisonOperator" : "GreaterThanThreshold"
       },
       "Condition" : "ConfigureLogs"
