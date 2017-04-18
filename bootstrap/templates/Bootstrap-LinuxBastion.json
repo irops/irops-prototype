@@ -167,7 +167,7 @@
     "LogAlarmEmail" : {
       "Description" : "Email Address to use for Subscription to Log-related Alarm Topic",
       "Type" : "String",
-      "Default" : "mcrawford@hpe.com",
+      "Default" : "murali.gowda@hpe.com",
       "AllowedPattern" : "^[a-z0-9._]+@[a-z0-9.-]+\\.[a-z]{2,6}$",
       "ConstraintDescription" : "must be a valid email address."
     },

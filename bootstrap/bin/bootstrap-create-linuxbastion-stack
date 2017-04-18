@@ -50,7 +50,7 @@ use_static_public_address=true
 use_static_home_volume=true
 use_log_monitoring=true
 log_retention=7
-log_alarm_email=mcrawford@hpe.com
+log_alarm_email=murali.gowda@hpe.com
 use_local_users=true
 use_schedule=false
 on_schedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
