@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
 
-  "Description" : "Example-NestedWebServer-DomainName Template. This is an example of a layer in the NestedWebServer application, which creates the Public RecordSet.",
+  "Description" : "Example-NestedLinuxWebServer-DomainNames Template. This is an example of a layer in the NestedLinuxWebServer application, which creates the Domain Names.",
 
   "Metadata" : {
     "AWS::CloudFormation::Interface" : {
@@ -15,6 +15,7 @@
         {
           "Label" : { "default" : "Resource Dependencies" },
           "Parameters" : [
+            "InstanceHostName",
             "InstancePublicIp"
           ]
         },
@@ -29,7 +30,11 @@
 
       "ParameterLabels" : {
         "VPCStackName" : { "default" : "VPC Stack Name" },
+        "CustomIdentifierFunctionsStackName" : { "default" : "CustomIdentifierFunctions Stack Name" },
+        "InstanceHostName" : { "default" : "Instance HostName" },
         "InstancePublicIp" : { "default" : "Instance Public IP" },
+        "CompanyName" : { "default" : "Company Name" },
+        "SystemName" : { "default" : "System Name" },
         "ApplicationName" : { "default" : "Application Name" },
         "ApplicationDomain" : { "default" : "Application Domain Name" }
       }
@@ -45,6 +50,23 @@
       "Default" : "Production-VPC",
       "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "CustomIdentifierFunctionsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Custom Identifier Functions",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "CustomIdentifierFunctions",
+      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "InstanceHostName" : {
+      "Description" : "HostName of an existing Instance needed by the RecordSet",
+      "Type" : "String",
+      "MinLength" : "2",
+      "MaxLength" : "32",
+      "ConstraintDescription" : "must be a valid HostName."
     },
 
     "InstancePublicIp" : {
@@ -76,17 +98,34 @@
     }
   },
 
+  "Conditions" : {
+    "ConfigureDomainName" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationDomain" }, "" ]}]}
+  },
+
   "Resources" : {
-    "RecordSet" : {
+    "HostNameRecordSet" : {
       "Type" : "AWS::Route53::RecordSet",
       "Properties" : {
         "HostedZoneId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicHostedZone" }},
-        "Comment" : { "Fn::Sub" : "Public DNS name for ${ApplicationName} Instance." },
-        "Name" : { "Fn::Join" : [ "", [ { "Ref" : "ApplicationDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "." ]]},
+        "Comment" : { "Fn::Sub" : "Public DNS HostName for ${ApplicationName} Instance." },
+        "Name" : { "Fn::Sub" : [ "${InstanceHostName}." ]},
         "Type" : "A",
         "TTL" : "900",
         "ResourceRecords" : [{ "Ref" : "InstancePublicIp" }]
       }
+    },
+
+    "ServiceNameRecordSet" : {
+      "Type" : "AWS::Route53::RecordSet",
+      "Properties" : {
+        "HostedZoneId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicHostedZone" }},
+        "Comment" : { "Fn::Sub" : "Public DNS ServiceName for ${ApplicationName}." },
+        "Name" : { "Fn::Join" : [ "", [ { "Ref" : "ApplicationDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "." ]]},
+        "Type" : "CNAME",
+        "TTL" : "900",
+        "ResourceRecords" : [{ "Ref" : "InstanceHostName" }]
+      },
+      "Condition" : "ConfigureDomainName"
     }
   }
 }
