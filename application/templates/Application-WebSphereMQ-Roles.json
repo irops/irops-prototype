@@ -11,8 +11,10 @@
           "Parameters" : [
             "ProductsBucket",
             "ProductWebSphereMQFolder",
+            "ProductWebSphereMQObject",
             "ConfigurationsBucket",
-            "ConfigurationWebSphereMQFolder"
+            "ConfigurationWebSphereMQFolder",
+            "ConfigurationWebSphereMQObject"
           ]
         },
         {
@@ -28,8 +30,10 @@
       "ParameterLabels" : {
         "ProductsBucket" : { "default" : "Products Bucket" },
         "ProductWebSphereMQFolder" : { "default" : "Product WebSphereMQ Folder" },
+        "ProductWebSphereMQObject" : { "default" : "Product WebSphereMQ Object" },
         "ConfigurationsBucket" : { "default" : "Configurations Bucket" },
         "ConfigurationWebSphereMQFolder" : { "default" : "Configuration WebSphereMQ Folder" },
+        "ConfigurationWebSphereMQObject" : { "default" : "Configuration WebSphereMQ Object" },
         "ApplicationName" : { "default" : "Application Name" },
         "UseFileSystemMonitoring" : { "default" : "Use FileSystem Monitoring" },
         "UseLogMonitoring" : { "default" : "Use Log Monitoring" }
@@ -58,6 +62,15 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
+    "ProductWebSphereMQObject" : {
+      "Description" : "Object within S3 bucket and folder containing WebSphereMQ installer",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be a valid filename, not containing slashes."
+    },
+
     "ConfigurationsBucket" : {
       "Description" : "S3 bucket containing Configurations to be deployed",
       "Type" : "String",
@@ -76,6 +89,15 @@
       "Default" : "WebSphereMQ",
       "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "ConfigurationWebSphereMQObject" : {
+      "Description" : "Object within S3 bucket and folder containing WebSphereMQ configuration",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
     "ApplicationName" : {
@@ -106,6 +128,8 @@
   },
 
   "Conditions" : {
+    "DownloadProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ProductWebSphereMQObject" }, "" ]}]},
+    "DownloadConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ConfigurationWebSphereMQFolder" }, "" ]}]},
     "ConfigureFileSystemMonitoring" : { "Fn::Equals" : [{ "Ref" : "UseFileSystemMonitoring" }, "true" ]},
     "ConfigureLogs" : { "Fn::Equals" : [{ "Ref" : "UseLogMonitoring" }, "true" ]}
   },
@@ -114,6 +138,7 @@
     "Role" : {
       "Type" : "AWS::IAM::Role",
       "Properties" : {
+        "Path" : "/",
         "AssumeRolePolicyDocument" : {
           "Version" : "2012-10-17",
           "Statement" : [{
@@ -122,7 +147,7 @@
             "Action" : [ "sts:AssumeRole" ]
           }]
         },
-        "Path" : "/"
+        "ManagedPolicyArns" : [ "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM" ]
       }
     },
 
@@ -141,7 +166,8 @@
           }]
         },
         "Roles" : [{ "Ref" : "Role" }]
-      }
+      },
+      "Condition" : "DownloadProduct"
     },
 
     "DownloadConfigurationFromS3Policy" : {
@@ -159,7 +185,8 @@
           }]
         },
         "Roles" : [{ "Ref" : "Role" }]
-      }
+      },
+      "Condition" : "DownloadConfiguration"
     },
 
     "FileSystemMonitoringPolicy" : {

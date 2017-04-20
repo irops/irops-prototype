@@ -428,6 +428,7 @@
               "ConfigureMQHAFileSystem",
               { "Fn::If" : [ "ConfigureMQHAFileSystemMonitoring", "ConfigureMQHAFileSystemMonitoring", { "Ref": "AWS::NoValue" }]},
               "ConfigureCFN",
+              "InstallSSMAgent",
               { "Fn::If" : [ "DownloadProduct", "DownloadWebSphereMQ", { "Ref": "AWS::NoValue" }]},
               { "Fn::If" : [ "DownloadConfiguration", "ConfigureWebSphereMQ", { "Ref": "AWS::NoValue" }]},
               { "Fn::If" : [ "ConfigureLogs", { "Fn::If" : [ "ConfigureAMZN", "InstallLogs", "BuildLogs" ]}, { "Ref": "AWS::NoValue" }]},
@@ -763,6 +764,13 @@
               }
             }
           },
+          "InstallSSMAgent" : {
+            "packages" : {
+              "rpm" : {
+                "amazon-ssm-agent" : [ "https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm" ]
+              }
+            }
+          },
           "DownloadWebSphereMQ" : {
             "sources" : {
               "/var/tmp" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ProductsBucket}/${ProductWebSphereMQFolder}/${ProductWebSphereMQObject}" }
@@ -816,7 +824,13 @@
                   "region=${zone::-1}\n",
                   "cd /var/tmp\n",
                   "curl -O https://s3.amazonaws.com/aws-cloudwatch/downloads/latest/awslogs-agent-setup.py\n",
-                  "python awslogs-agent-setup.py --non-interactive --configfile /etc/awslogs/awslogs.conf --region ", { "Ref" : "AWS::Region" }, "\n"
+                  "python awslogs-agent-setup.py --non-interactive --configfile /etc/awslogs/awslogs.conf --region ", { "Ref" : "AWS::Region" }, "\n",
+                  "# Create symlinks to make this work like rpm\n",
+                  "ln -s /var/awslogs /var/lib/awslogs\n",
+                  "mv /var/awslogs/etc/aws.conf /var/awslogs/etc/aws.conf.bak\n",
+                  "ln -s /etc/awslogs/awscli.conf /var/awslogs/etc/aws.conf\n",
+                  "mv /var/awslogs/etc/awslogs.conf /var/awslogs/etc/awslogs.conf.bak\n",
+                  "ln -s /etc/awslogs/awslogs.conf /var/awslogs/etc/awslogs.conf\n"
                 ]]},
                 "mode"  : "000700",
                 "owner" : "root",
@@ -1035,6 +1049,7 @@
               "ConfigureMQHAFileSystem",
               { "Fn::If" : [ "ConfigureMQHAFileSystemMonitoring", "ConfigureMQHAFileSystemMonitoring", { "Ref": "AWS::NoValue" }]},
               "ConfigureCFN",
+              "InstallSSMAgent",
               { "Fn::If" : [ "DownloadProduct", "DownloadWebSphereMQ", { "Ref": "AWS::NoValue" }]},
               { "Fn::If" : [ "DownloadConfiguration", "ConfigureWebSphereMQ", { "Ref": "AWS::NoValue" }]},
               { "Fn::If" : [ "ConfigureLogs", { "Fn::If" : [ "ConfigureAMZN", "InstallLogs", "BuildLogs" ]}, { "Ref": "AWS::NoValue" }]},
@@ -1370,6 +1385,13 @@
               }
             }
           },
+          "InstallSSMAgent" : {
+            "packages" : {
+              "rpm" : {
+                "amazon-ssm-agent" : [ "https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm" ]
+              }
+            }
+          },
           "DownloadWebSphereMQ" : {
             "sources" : {
               "/var/tmp" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ProductsBucket}/${ProductWebSphereMQFolder}/${ProductWebSphereMQObject}" }
@@ -1423,7 +1445,13 @@
                   "region=${zone::-1}\n",
                   "cd /var/tmp\n",
                   "curl -O https://s3.amazonaws.com/aws-cloudwatch/downloads/latest/awslogs-agent-setup.py\n",
-                  "python awslogs-agent-setup.py --non-interactive --configfile /etc/awslogs/awslogs.conf --region ", { "Ref" : "AWS::Region" }, "\n"
+                  "python awslogs-agent-setup.py --non-interactive --configfile /etc/awslogs/awslogs.conf --region ", { "Ref" : "AWS::Region" }, "\n",
+                  "# Create symlinks to make this work like rpm\n",
+                  "ln -s /var/awslogs /var/lib/awslogs\n",
+                  "mv /var/awslogs/etc/aws.conf /var/awslogs/etc/aws.conf.bak\n",
+                  "ln -s /etc/awslogs/awscli.conf /var/awslogs/etc/aws.conf\n",
+                  "mv /var/awslogs/etc/awslogs.conf /var/awslogs/etc/awslogs.conf.bak\n",
+                  "ln -s /etc/awslogs/awslogs.conf /var/awslogs/etc/awslogs.conf\n"
                 ]]},
                 "mode"  : "000700",
                 "owner" : "root",
