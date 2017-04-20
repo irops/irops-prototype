@@ -235,25 +235,25 @@ else
     case $environment in
       Production)
         instance_os="Windows Server 2016"
-        use_log_monitoring=true;;
+        log_retention=30;;
       Staging)
         instance_os="Windows Server 2012 R2"
-        use_log_monitoring=true;;
+        log_retention=7;;
       Testing)
         instance_os="Windows Server 2012 R2"
-        use_log_monitoring=false;;
+        log_retention=0;;
       Development)
         instance_os="Windows Server 2012 R2"
-        use_log_monitoring=false;;
+        log_retention=0;;
       Core)
         instance_os="Windows Server 2012 R2"
-        use_log_monitoring=true;;
+        log_retention=14;;
       Build)
         instance_os="Windows Server 2012 R2"
-        use_log_monitoring=false;;
+        log_retention=0;;
       *)
         instance_os="Windows Server 2012 R2"
-        use_log_monitoring=false;;
+        log_retention=0;;
     esac
 fi
 
@@ -481,7 +481,7 @@ aws cloudformation update-stack --stack-name $environment-$application \\
                                              ParameterKey=ApplicationName,ParameterValue=$application \\
                                              ParameterKey=ApplicationDomain,ParameterValue=$application_domain \\
                                              ParameterKey=ApplicationVersion,ParameterValue=$application_version \\
-                                             ParameterKey=UseLogMonitoring,ParameterValue=$use_log_monitoring \\
+                                             ParameterKey=LogRetention,ParameterValue=$log_retention \\
                                              ParameterKey=PublicUserNetwork,ParameterValue=$public_user_network \\
                                              ParameterKey=PublicUserNetwork1,ParameterValue=$public_user_network1 \\
                                              ParameterKey=PublicUserNetwork2,ParameterValue=$public_user_network2 \\

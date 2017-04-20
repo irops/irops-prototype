@@ -44,7 +44,6 @@
             "ApplicationName",
             "ApplicationDomain",
             "ApplicationVersion",
-            "UseLogMonitoring",
             "LogRetention"
           ]
         },
@@ -83,7 +82,6 @@
         "ApplicationName" : { "default" : "Application Name" },
         "ApplicationDomain" : { "default" : "Application Domain Name" },
         "ApplicationVersion" : { "default" : "Application Version" },
-        "UseLogMonitoring" : { "default" : "Use Log Monitoring" },
         "LogRetention" : { "default" : "Log Retention" },
         "PublicUserNetwork" : { "default" : "Public User Network" },
         "PublicUserNetwork1" : { "default" : "Additional Public User Network 1" },
@@ -243,20 +241,12 @@
       "ConstraintDescription" : "must follow semantic versioning conventions."
     },
 
-    "UseLogMonitoring" : {
-      "Description" : "Send Logs to CloudWatch Logs",
-      "Type" : "String",
-      "Default" : "true",
-      "AllowedValues" : [ "true", "false" ],
-      "ConstraintDescription" : "must be either true or false."
-    },
-
     "LogRetention" : {
-      "Description" : "Number of days to retain log events",
+      "Description" : "Number of days to retain CloudWatch Log Events (0 disables use of CloudWatch Logs)",
       "Type" : "Number",
       "Default" : 14,
-      "AllowedValues" : [ 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653 ],
-      "ConstraintDescription" : "must be: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827 or 3653."
+      "AllowedValues" : [ 0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653 ],
+      "ConstraintDescription" : "must be: 0 (disabled), 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827 or 3653."
     },
 
     "PublicUserNetwork" : {
@@ -367,7 +357,7 @@
   "Conditions" : {
     "DownloadApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationObject" }, "" ]}]},
     "ConfigureDomainName" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationDomain" }, "" ]}]},
-    "ConfigureLogs" : { "Fn::Equals" : [{ "Ref" : "UseLogMonitoring" }, "true" ]},
+    "ConfigureLogs" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LogRetention" }, "0" ]}]},
     "ConfigurePublicUserNetwork" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicUserNetwork" }, "" ]}]},
     "ConfigurePublicUserNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicUserNetwork1" }, "" ]}]},
     "ConfigurePublicUserNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicUserNetwork2" }, "" ]}]},
@@ -528,7 +518,7 @@
         "Statistic" : "Average",
         "Period" : "60",
         "EvaluationPeriods" : "1",
-        "Threshold" : "1024",
+        "Threshold" : "1500000000",
         "ComparisonOperator" : "GreaterThanThreshold"
       },
       "Condition" : "ConfigureLogs"
@@ -622,11 +612,11 @@
           },
           "ConfigureOS" : {
             "commands" : {
-              "01_disable_windows_firewall" : {
+              "01-disable-windows-firewall" : {
                 "command" : "powershell.exe -Command \"Get-NetFirewallProfile | Set-NetFirewallProfile -Enabled False\"",
                 "waitAfterCompletion" : "0"
               },
-              "02_set_execution_policy" : {
+              "02-set-execution-policy" : {
                 "command" : "powershell.exe -Command \"Set-ExecutionPolicy RemoteSigned -Force\"",
                 "waitAfterCompletion" : "0"
               }
@@ -634,7 +624,7 @@
           },
           "ConfigureHostname" : {
             "commands" : {
-              "01_sethostname" : {
+              "01-set-hostname" : {
                 "command" : { "Fn::Join" : [ "", [ "powershell.exe Rename-Computer -NewName ", { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01", " -Restart" ]]},
                 "waitAfterCompletion" : "forever"
               }
@@ -803,7 +793,7 @@
                   "        \"AccessKey\": \"\",",
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
-                           { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","},
+                           { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
                   "        \"LogStream\": \"{instance_id}/ApplicationEventLog\"",
                   "      }",
                   "    },",
@@ -814,7 +804,7 @@
                   "        \"AccessKey\": \"\",",
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
-                           { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","},
+                           { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
                   "        \"LogStream\": \"{instance_id}/SystemEventLog\"",
                   "      }",
                   "    },",
@@ -825,7 +815,7 @@
                   "        \"AccessKey\": \"\",",
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
-                           { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","},
+                           { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
                   "        \"LogStream\": \"{instance_id}/SecurityEventLog\"",
                   "      }",
                   "    },",
@@ -836,7 +826,7 @@
                   "        \"AccessKey\": \"\",",
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
-                           { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","},
+                           { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
                   "        \"LogStream\": \"{instance_id}/EC2ConfigLog\"",
                   "      }",
                   "    },",
@@ -847,7 +837,7 @@
                   "        \"AccessKey\": \"\",",
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
-                           { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","},
+                           { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
                   "        \"LogStream\": \"{instance_id}/CfnInitLog\"",
                   "      }",
                   "    },",
@@ -858,7 +848,7 @@
                   "        \"AccessKey\": \"\",",
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
-                           { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","},
+                           { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
                   "        \"LogStream\": \"{instance_id}/IISLogs\"",
                   "      }",
                   "    },",
@@ -888,15 +878,14 @@
                 ]]}
               }
             },
-            "services" : {
-              "windows" : {
-                "AmazonSSMAgent" : {
-                  "enabled" : "true",
-                  "ensureRunning" : "true",
-                  "files" : [
-                    "C:\\Program Files\\Amazon\\SSM\\Plugins\\awsCloudWatch\\AWS.EC2.Windows.CloudWatch.json"
-                  ]
-                }
+            "commands" : {
+              "01-enable-SSM" : {
+                "command" : "powershell.exe -Command \"Set-Service -Name AmazonSSMAgent -StartupType Automatic\"",
+                "waitAfterCompletion" : "0"
+              },
+              "02-restart-SSM" : {
+                "command" : "powershell.exe -Command \"Restart-Service AmazonSSMAgent\"",
+                "waitAfterCompletion" : "30"
               }
             }
           }
@@ -920,6 +909,11 @@
         ],
         "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "\n", [
           "<script>",
+          "wmic product where \"description='Amazon SSM Agent' \" uninstall",
+          "wmic product where \"description='aws-cfn-bootstrap' \" uninstall ",
+          "start /wait c:\\Windows\\system32\\msiexec /passive /qn /i https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-win64-latest.msi",
+          "powershell.exe -Command \"iwr https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/windows_amd64/AmazonSSMAgentSetup.exe -UseBasicParsing -OutFile C:\\AmazonSSMAgentSetup.exe\"",
+          "start /wait C:\\AmazonSSMAgentSetup.exe /install /quiet",
           { "Fn::Sub" : "cfn-init.exe --verbose --configsets All --stack ${AWS::StackId} --resource Instance --region ${AWS::Region}" },
           { "Fn::Sub" : "cfn-signal.exe --exit-code %ERRORLEVEL% --stack ${AWS::StackName} --resource Instance --region ${AWS::Region}" },
           "</script>"
