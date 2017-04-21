@@ -229,42 +229,32 @@ else
         instance_os=RHEL
         use_static_address=true
         use_filesystem_monitoring=true
-        use_log_monitoring=true
-        use_schedule=false
-        on_schedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
-        off_schedule="0 4 * * *";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
+        log_retention=30
+        schedule="";;  # 11:00 - 4:00 UTC = 3:00 AM - 8:00 PM PST = 6:00 AM - 11:00 PM EST
       Staging)
         instance_os=RHEL
         use_static_address=true
         use_filesystem_monitoring=true
-        use_log_monitoring=true
-        use_schedule=false
-        on_schedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
-        off_schedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
+        log_retention=7
+        schedule="";;  # 11:00 - 4:00 UTC = 3:00 AM - 8:00 PM PST = 6:00 AM - 11:00 PM EST
       Testing)
         instance_os=AMZN
         use_static_address=false
         use_filesystem_monitoring=false
-        use_log_monitoring=true
-        use_schedule=false
-        on_schedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
-        off_schedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
+        log_retention=0
+        schedule="13:00-2:00";; # 13:00 - 2:00 UTC = 5:00 AM - 6:00 PM PST = 8:00 AM - 9:00 PM EST
       Development)
         instance_os=AMZN
         use_static_address=fakse
         use_filesystem_monitoring=false
-        use_log_monitoring=true
-        use_schedule=false
-        on_schedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
-        off_schedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
+        log_retention=0
+        schedule="";; # 13:00 - 2:00 UTC = 5:00 AM - 6:00 PM PST = 8:00 AM - 9:00 PM EST
       Core)
         instance_os=RHEL
         use_static_address=true
         use_filesystem_monitoring=true
-        use_log_monitoring=true
-        use_schedule=false
-        on_schedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
-        off_schedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
+        log_retention=14
+        schedule="";;  # 11:00 - 4:00 UTC = 3:00 AM - 8:00 PM PST = 6:00 AM - 11:00 PM EST
       *)
         echo "-E $environment invalid! Must be Production, Staging, Testing, Development or Core"
         exit 17;;
@@ -532,7 +522,7 @@ aws cloudformation create-stack --stack-name $environment-$application \\
                                              ParameterKey=CompanyName,ParameterValue=$company \\
                                              ParameterKey=SystemName,ParameterValue=$system \\
                                              ParameterKey=EnvironmentSize,ParameterValue=$environment_size \\
-                                             ParameterKey=InstanceOS,ParameterValue=$instance_os \\
+                                             ParameterKey=InstanceOS,ParameterValue="$instance_os" \\
                                              ParameterKey=ProductsBucket,ParameterValue=$products_bucket \\
                                              ParameterKey=ProductWebSphereMQFolder,ParameterValue=$product_wmq_folder \\
                                              ParameterKey=ProductWebSphereMQObject,ParameterValue=$product_wmq_object \\
@@ -542,10 +532,8 @@ aws cloudformation create-stack --stack-name $environment-$application \\
                                              ParameterKey=ApplicationName,ParameterValue=$application \\
                                              ParameterKey=UseStaticAddress,ParameterValue=$use_static_address \\
                                              ParameterKey=UseFileSystemMonitoring,ParameterValue=$use_filesystem_monitoring \\
-                                             ParameterKey=UseLogMonitoring,ParameterValue=$use_log_monitoring \\
-                                             ParameterKey=UseSchedule,ParameterValue=$use_schedule \\
-                                             ParameterKey=OnSchedule,ParameterValue="$on_schedule" \\
-                                             ParameterKey=OffSchedule,ParameterValue="$off_schedule" \\
+                                             ParameterKey=LogRetention,ParameterValue=$log_retention \\
+                                             ParameterKey=Schedule,ParameterValue=$schedule \\
                                              ParameterKey=PrivateUserNetwork,ParameterValue=$private_user_network \\
                                              ParameterKey=PrivateUserNetwork1,ParameterValue=$private_user_network1 \\
                                              ParameterKey=PrivateUserNetwork2,ParameterValue=$private_user_network2 \\
