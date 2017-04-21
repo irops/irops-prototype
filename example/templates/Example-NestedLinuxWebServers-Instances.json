@@ -48,8 +48,7 @@
             "ApplicationName",
             "ApplicationDomain",
             "ApplicationVersion",
-            "UseLogMonitoring",
-            "UseSchedule",
+            "LogRetention",
             "NormalSchedule",
             "ReducedSchedule"
           ]
@@ -72,8 +71,7 @@
         "ApplicationName" : { "default" : "Application Name" },
         "ApplicationDomain" : { "default" : "Application Domain Name" },
         "ApplicationVersion" : { "default" : "Application Version" },
-        "UseLogMonitoring" : { "default" : "Use Log Monitoring" },
-        "UseSchedule" : { "default" : "Use Schedule" },
+        "LogRetention" : { "default" : "Log Retention" },
         "NormalSchedule" : { "default" : "Normal Schedule" },
         "ReducedSchedule" : { "default" : "Reduced Schedule" }
       }
@@ -254,35 +252,27 @@
       "ConstraintDescription" : "must follow semantic versioning conventions."
     },
 
-    "UseLogMonitoring" : {
-      "Description" : "Send Logs to CloudWatch Logs",
-      "Type" : "String",
-      "Default" : "true",
-      "AllowedValues" : [ "true", "false" ],
-      "ConstraintDescription" : "must be either true or false."
-    },
-
-    "UseSchedule" : {
-      "Description" : "Use a Schedule to start and stop the Bastions",
-      "Type" : "String",
-      "Default" : "true",
-      "AllowedValues" : [ "true", "false" ],
-      "ConstraintDescription" : "must be either true or false."
+    "LogRetention" : {
+      "Description" : "Number of days to retain CloudWatch Log Events (0 disables use of CloudWatch Logs)",
+      "Type" : "Number",
+      "Default" : 14,
+      "AllowedValues" : [ 0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653 ],
+      "ConstraintDescription" : "must be: 0 (disabled), 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827 or 3653."
     },
 
     "NormalSchedule" : {
-      "Description" : "Normal Schedule in constrained Cron format (UTC)",
+      "Description" : "Normal Schedule in constrained Cron format (UTC) (blank disables Normal Schedule)",
       "Type" : "String",
       "Default" : "0 11 * * 1-5",
-      "AllowedPattern" : "(^0 ([5-9]|1[0-6]) \\* \\* 1-5$)",
+      "AllowedPattern" : "(^$|^0 ([5-9]|1[0-6]) \\* \\* 1-5$)",
       "ConstraintDescription" : "must follow constrained cron syntax: \"0 H * * 1-5\", where H = 5-16."
     },
 
     "ReducedSchedule" : {
-      "Description" : "Off Schedule in constrained Cron format (UTC)",
+      "Description" : "Off Schedule in constrained Cron format (UTC) (blank disables Reduced Schedule)",
       "Type" : "String",
       "Default" : "0 4 * * *",
-      "AllowedPattern" : "(^0 [0-7] \\* \\* \\*$)",
+      "AllowedPattern" : "(^$|0 [0-7] \\* \\* \\*$)",
       "ConstraintDescription" : "must follow constrained cron syntax: \"0 H * * *\", where H = 0-7."
     }
   },
@@ -314,8 +304,9 @@
     "ConfigureAMZN" : { "Fn::Equals" : [{ "Ref" : "InstanceOS" }, "AMZN" ]},
     "ConfigureRHEL" : { "Fn::Equals" : [{ "Ref" : "InstanceOS" }, "RHEL" ]},
     "DownloadApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationObject" }, "" ]}]},
-    "ConfigureLogs" : { "Fn::Equals" : [{ "Ref" : "UseLogMonitoring" }, "true" ]},
-    "ConfigureSchedule" : { "Fn::Equals" : [{ "Ref" : "UseSchedule" }, "true" ]}
+    "ConfigureLogs" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LogRetention" }, "0" ]}]},
+    "ConfigureNormalSchedule" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "NormalSchedule" }, "" ]}]},
+    "ConfigureReducedSchedule" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ReducedSchedule" }, "" ]}]}
   },
 
   "Resources" : {
@@ -804,14 +795,14 @@
       "CreationPolicy" : {
         "ResourceSignal" : {
           "Count" : { "Fn::FindInMap" : [ "MinSizeMap", "WebServer", { "Ref" : "EnvironmentSize" }]},
-          "Timeout" : { "Fn::If" : [ "ConfigureAMZN", "PT10M", "PT15M" ]}
+          "Timeout" : { "Fn::If" : [ "ConfigureAMZN", "PT10M", "PT20M" ]}
         }
       },
       "UpdatePolicy" : {
         "AutoScalingRollingUpdate" : {
           "MinInstancesInService" : { "Fn::FindInMap" : [ "MinSizeMap", "WebServer", { "Ref" : "EnvironmentSize" }]},
           "MaxBatchSize" : "1",
-          "PauseTime" : { "Fn::If" : [ "ConfigureAMZN", "PT10M", "PT15M" ]},
+          "PauseTime" : { "Fn::If" : [ "ConfigureAMZN", "PT10M", "PT20M" ]},
           "WaitOnResourceSignals" : "true"
         }
       }
@@ -826,7 +817,7 @@
         "MaxSize" : { "Fn::FindInMap" : [ "MaxSizeMap", "WebServer", { "Ref" : "EnvironmentSize" }]},
         "Recurrence" : { "Ref" : "NormalSchedule" }
       },
-      "Condition" : "ConfigureSchedule"
+      "Condition" : "ConfigureNormalSchedule"
     },
 
     "ReducedScheduledAction" : {
@@ -838,7 +829,7 @@
         "MaxSize" : { "Fn::FindInMap" : [ "ReducedMaxSizeMap", "WebServer", { "Ref" : "EnvironmentSize" }]},
         "Recurrence" : { "Ref" : "ReducedSchedule" }
       },
-      "Condition" : "ConfigureSchedule"
+      "Condition" : "ConfigureReducedSchedule"
     },
 
     "IncreaseScalingPolicy" : {

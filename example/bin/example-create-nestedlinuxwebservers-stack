@@ -232,44 +232,37 @@ else
     case $environment in
       Production)
         instance_os=RHEL
-        use_log_monitoring=true
-        use_schedule=false
-        normal_schedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
-        reduced_schedule="0 4 * * *";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
+        log_retention=30
+        normal_schedule=""    # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
+        reduced_schedule="";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
       Staging)
         instance_os=AMZN
-        use_log_monitoring=true
-        use_schedule=true
-        normal_schedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
-        reduced_schedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
+        log_retention=7
+        normal_schedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
+        reduced_schedule="0 4 * * *";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
       Testing)
         instance_os=AMZN
-        use_log_monitoring=false
-        use_schedule=true
+        log_retention=0
         normal_schedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
         reduced_schedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
       Development)
         instance_os=AMZN
-        use_log_monitoring=false
-        use_schedule=true
+        log_retention=0
         normal_schedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
         reduced_schedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
       Core)
         instance_os=AMZN
-        use_log_monitoring=true
-        use_schedule=true
-        normal_schedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
-        reduced_schedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
+        log_retention=14
+        normal_schedule=""    # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
+        reduced_schedule="";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
       Build)
         instance_os=AMZN
-        use_log_monitoring=false
-        use_schedule=true
+        log_retention=0
         normal_schedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
         reduced_schedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
       *)
         instance_os=AMZN
-        use_log_monitoring=false
-        use_schedule=true
+        log_retention=0
         normal_schedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
         reduced_schedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
     esac
@@ -339,7 +332,7 @@ else
         s3_domain=s3.amazonaws.com;;
       us-east-2|us-west-1|us-west-2|ca-central-1|eu-west-1|eu-central-1|eu-west-2|ap-southeast-1|ap-southeast-2|ap-northeast-2|ap-northeast-1|ap-south-1|sa-east-1)
         s3_domain=s3-$region.amazonaws.com;;
-    *)
+      *)
         echo "-r $region invalid: Please specify a valid region"
         exit 51;;
     esac
@@ -509,15 +502,14 @@ aws cloudformation create-stack --stack-name $environment-$application \\
                                              ParameterKey=CompanyName,ParameterValue=$company \\
                                              ParameterKey=SystemName,ParameterValue=$system \\
                                              ParameterKey=EnvironmentSize,ParameterValue=$environment_size \\
-                                             ParameterKey=InstanceOS,ParameterValue=$instance_os \\
+                                             ParameterKey=InstanceOS,ParameterValue="$instance_os" \\
                                              ParameterKey=ApplicationsBucket,ParameterValue=$examples_bucket \\
                                              ParameterKey=ApplicationFolder,ParameterValue=$example_folder \\
                                              ParameterKey=ApplicationObject,ParameterValue=$example_object \\
                                              ParameterKey=ApplicationName,ParameterValue=$application \\
                                              ParameterKey=ApplicationDomain,ParameterValue=$application_domain \\
                                              ParameterKey=ApplicationVersion,ParameterValue=$application_version \\
-                                             ParameterKey=UseLogMonitoring,ParameterValue=$use_log_monitoring \\
-                                             ParameterKey=UseSchedule,ParameterValue=$use_schedule \\
+                                             ParameterKey=LogRetention,ParameterValue=$log_retention \\
                                              ParameterKey=NormalSchedule,ParameterValue="$normal_schedule" \\
                                              ParameterKey=ReducedSchedule,ParameterValue="$reduced_schedule" \\
                                              ParameterKey=PublicUserNetwork,ParameterValue=$public_user_network \\

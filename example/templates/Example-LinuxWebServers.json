@@ -85,6 +85,8 @@
         "ApplicationDomain" : { "default" : "Application Domain Name" },
         "ApplicationVersion" : { "default" : "Application Version" },
         "LogRetention" : { "default" : "Log Retention" },
+        "NormalSchedule" : { "default" : "Normal Schedule" },
+        "ReducedSchedule" : { "default" : "Reduced Schedule" },
         "PublicUserNetwork" : { "default" : "Public User Network" },
         "PublicUserNetwork1" : { "default" : "Additional Public User Network 1" },
         "PublicUserNetwork2" : { "default" : "Additional Public User Network 2" },
@@ -1128,14 +1130,14 @@
       "CreationPolicy" : {
         "ResourceSignal" : {
           "Count" : { "Fn::FindInMap" : [ "MinSizeMap", "WebServer", { "Ref" : "EnvironmentSize" }]},
-          "Timeout" : { "Fn::If" : [ "ConfigureAMZN", "PT10M", "PT15M" ]}
+          "Timeout" : { "Fn::If" : [ "ConfigureAMZN", "PT10M", "PT20M" ]}
         }
       },
       "UpdatePolicy" : {
         "AutoScalingRollingUpdate" : {
           "MinInstancesInService" : { "Fn::FindInMap" : [ "MinSizeMap", "WebServer", { "Ref" : "EnvironmentSize" }]},
           "MaxBatchSize" : "1",
-          "PauseTime" : { "Fn::If" : [ "ConfigureAMZN", "PT10M", "PT15M" ]},
+          "PauseTime" : { "Fn::If" : [ "ConfigureAMZN", "PT10M", "PT20M" ]},
           "WaitOnResourceSignals" : "true"
         }
       }
