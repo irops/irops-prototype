@@ -151,7 +151,7 @@
         "Statistic" : "Average",
         "Period" : "60",
         "EvaluationPeriods" : "2",
-        "Threshold" : "1024",
+        "Threshold" : "1500000000",
         "ComparisonOperator" : "GreaterThanThreshold"
       }
     }
