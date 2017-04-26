@@ -10,6 +10,7 @@
 
 bindir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 templatesdir=${bindir%/*}/templates
+functionsdir=${bindir%/*}/functions
 tmpdir=/var/tmp
 
 step=0
@@ -219,10 +220,21 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
 fi
 
 templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
-templates_folder=core
+template_folder=core
 
 if ! aws s3api head-bucket --bucket $templates_bucket --profile $profile --region $region 2> /dev/null; then
-    unset templates_bucket
+    echo "$templates_bucket S3 bucket does not exist!"
+    exit 62
+fi
+
+functions_bucket=${AWS_FUNCTIONS_BUCKET:-functions-$region-$account}
+function_folder=identifier
+gethostname_function_object=GetHostName.zip
+getdomainname_function_object=GetDomainName.zip
+
+if ! aws s3api head-bucket --bucket $functions_bucket --profile $profile --region $region 2> /dev/null; then
+    echo "$functions_bucket S3 bucket does not exist!"
+    exit 64
 fi
 
 if ! aws cloudformation describe-stacks --stack-name CustomIdentifierFunctions \
@@ -278,44 +290,116 @@ fi
 ((++step))
 read -r -d '' statement << EOS
 aws s3 sync $templatesdir \\
-            s3://$templates_bucket/$templates_folder \\
+            s3://$templates_bucket/$template_folder \\
             --exclude '*' --include 'Core-CustomIdentifierFunctions.json' --include 'Core-CustomIdentifierFunctions-StackPolicy.json' \\
             --profile $profile --region $region --output table
 EOS
 run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
 eval_statement="${statement//\\$'\n'}"
 
-if [ ! -z $templates_bucket ]; then
-    clear
-    echo
-    echo "============================================================"
-    echo
-    echo "$(printf '%2d' $step). Sync Template and Policy to ($templates_bucket) Bucket"
-    echo
-    echo "============================================================"
-    echo
-    echo "Commands:"
-    echo
-    echo "$statement"
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Sync Template and Policy to ($templates_bucket) Bucket"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
 
-    next 50
+next 50
 
+echo
+echo "$run_statement"
+eval "$eval_statement"
+
+next 50
+
+
+((++step))
+read -r -d '' statement << EOS
+zip -j $functionsdir/$gethostname_function_object \\
+       $functionsdir/${gethostname_function_object%.zip}.js
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'}"
+
+read -r -d '' statement2 << EOS
+zip -j $functionsdir/$getdomainname_function_object \\
+       $functionsdir/${getdomainname_function_object%.zip}.js
+EOS
+run_statement2=$(echo "$statement2" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement2="${statement2//\\$'\n'}"
+
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Create Lambda ZipFiles"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
+echo
+echo "$statement2"
+
+run 50
+
+if [ $choice = y ]; then
     echo
     echo "$run_statement"
     eval "$eval_statement"
+    echo
+    echo "$run_statement2"
+    eval "$eval_statement2"
 
     next 50
 fi
 
 
 ((++step))
-if [ ! -z $templates_bucket ]; then
-    template_parameter="--template-url https://$s3_domain/$templates_bucket/$templates_folder/Core-CustomIdentifierFunctions.json"
-    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$templates_folder/Core-CustomIdentifierFunctions-StackPolicy.json"
-else
-    template_parameter="--template-body file://$templatesdir/Core-CustomIdentifierFunctions.json"
-    stack_policy_parameter="--stack-policy-body file://$templatesdir/Core-CustomIdentifierFunctions-StackPolicy.json"
-fi
+read -r -d '' statement << EOS
+aws s3 sync $functionsdir \\
+            s3://$functions_bucket/$function_folder \\
+            --exclude '*' \\
+            --include '$gethostname_function_object' \\
+            --include '$getdomainname_function_object' \\
+            --profile $profile --region $region --output table
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'}"
+
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Sync Lambda Function ZipFiles to ($functions_bucket) Bucket"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
+
+next 50
+
+echo
+echo "$run_statement"
+eval "$eval_statement"
+
+rm -f $functionsdir/$gethostname_function_object
+rm -f $functionsdir/$getdomainname_function_object
+
+next 50
+
+
+((++step))
+template_parameter="--template-url https://$s3_domain/$templates_bucket/$template_folder/Core-CustomIdentifierFunctions.json"
+stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$template_folder/Core-CustomIdentifierFunctions-StackPolicy.json"
 if [ $override = 1 ]; then
     stack_policy_parameter="$stack_policy_parameter \\"$'\n'"                                --stack-policy-during-update-body file://$templatesdir/Override-StackPolicy.json"
 fi
@@ -323,6 +407,10 @@ read -r -d '' statement << EOS
 aws cloudformation update-stack --stack-name CustomIdentifierFunctions \\
                                 $template_parameter \\
                                 $stack_policy_parameter \\
+                                --parameters ParameterKey=StandardBucketsStackName,ParameterValue=StandardBuckets \\
+                                             ParameterKey=FunctionFolder,ParameterValue=$function_folder \\
+                                             ParameterKey=GetHostNameFunctionObject,ParameterValue=$gethostname_function_object \\
+                                             ParameterKey=GetDomainNameFunctionObject,ParameterValue=$getdomainname_function_object \\
                                 --tags Key=Owner,Value=$owner \\
                                        Key=Company,Value=$company \\
                                        Key=System,Value=$system \\
