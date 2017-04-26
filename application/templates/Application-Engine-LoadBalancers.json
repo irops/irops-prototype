@@ -1,0 +1,117 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Application-Engine-LoadBalancers Template. This is a layer in the Engine application, which creates the LoadBalancers.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "VPNStackName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Resource Dependencies" },
+          "Parameters" : [
+            "WebLoadBalancerSecurityGroup"
+          ]
+        },
+        {
+          "Label" : { "default" : "Application Configuration" },
+          "Parameters" : [
+            "ApplicationName"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "VPCStackName" : { "default" : "VPC Stack Name" },
+        "WebLoadBalancerSecurityGroup" : { "default" : "WebLoadBalancerSecurityGroup" },
+        "ApplicationName" : { "default" : "Application Name" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "VPCStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the VPC",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-VPC",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "WebLoadBalancerSecurityGroup" : {
+      "Description" : "ID of an existing SecurityGroup which controls access to the Web LoadBalancer",
+      "Type" : "AWS::EC2::SecurityGroup::Id",
+      "MaxLength" : 32,
+      "AllowedPattern" : "^sg-[0-9a-f]{8}$",
+      "ConstraintDescription" : "must be the name of an existing SecurityGroup."
+    },
+
+    "ApplicationName" : {
+      "Description" : "Name of the Application associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "Engine",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    }
+  },
+
+  "Resources" : {
+    "WebLoadBalancer" : {
+      "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties" : {
+        "Subnets" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicSubnetA" }},
+          { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicSubnetB" }}
+        ],
+        "SecurityGroups" : [{ "Ref" : "WebLoadBalancerSecurityGroup" }],
+        "CrossZone" : "true",
+        "LBCookieStickinessPolicy" : [{
+          "PolicyName" : "CookieBasedPolicy",
+          "CookieExpirationPeriod" : "30"
+        }],
+        "Listeners" : [{
+          "LoadBalancerPort" : "80",
+          "InstancePort" : "80",
+          "Protocol" : "HTTP",
+          "PolicyNames" : [ "CookieBasedPolicy" ]
+        }],
+        "HealthCheck" : {
+          "Target" : "HTTP:80/index.html",
+          "HealthyThreshold" : "2",
+          "UnhealthyThreshold" : "2",
+          "Interval" : "15",
+          "Timeout" : "5"
+        },
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "WebLoadBalancer" ]]}}
+        ]
+      }
+    }
+  },
+
+  "Outputs" : {
+    "WebLoadBalancer" : {
+      "Description" : "The WebLoadBalancer",
+      "Value" : { "Ref" : "WebLoadBalancer" }
+    },
+
+    "WebLoadBalancerHostedZoneId" : {
+      "Description" : "The WebLoadBalancer HostedZoneId",
+      "Value" : { "Fn::GetAtt" : [ "WebLoadBalancer", "CanonicalHostedZoneNameID" ]}
+    },
+
+    "WebLoadBalancerDNSName" : {
+      "Description" : "The WebLoadBalancer DNSName",
+      "Value" : { "Fn::GetAtt" : [ "WebLoadBalancer", "DNSName" ]}
+    }
+  }
+}

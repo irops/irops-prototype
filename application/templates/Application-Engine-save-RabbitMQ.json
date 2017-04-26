@@ -1,0 +1,35 @@
+    "RabbitMQInstances" : {
+      "Type" : "AWS::CloudFormation::Stack",
+      "Properties" : {
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplateFolder" }, "/Application-Engine-RabbitMQInstances.json" ]]},
+        "Parameters" : {
+          "VPCStackName" : { "Ref" : "VPCStackName" },
+          "CustomIdentifierFunctionsStackName" : { "Ref" : "CustomIdentifierFunctionsStackName" },
+          "StandardCIDRFunctionsStackName" : { "Ref" : "StandardCIDRFunctionsStackName" },
+          "StandardAMIFunctionsStackName" : { "Ref" : "StandardAMIFunctionsStackName" },
+          "StandardTopicsStackName" : { "Ref" : "StandardTopicsStackName" },
+          "KeyName" : { "Ref" : "KeyName" },
+          "RabbitMQRole" : { "Fn::GetAtt" : [ "Roles", "Outputs.RabbitMQRole" ]},
+          "LogGroup" : { "Fn::If" : [ "ConfigureLogs", { "Fn::GetAtt" : [ "Logs", "Outputs.LogGroup" ]}, "" ]},
+          "RabbitMQInstanceSecurityGroup" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.RabbitMQInstanceSecurityGroup" ]},
+          "CompanyName" : { "Ref" : "CompanyName" },
+          "SystemName" : { "Ref" : "SystemName" },
+          "EnvironmentSize" : { "Ref" : "EnvironmentSize" },
+          "LinuxInstanceOS" : { "Ref" : "LinuxInstanceOS" },
+          "ProductsBucket" : { "Ref" : "ProductsBucket" },
+          "ProductFolder" : { "Ref" : "ProductFolder" },
+          "RabbitMQProductObject" : { "Ref" : "RabbitMQProductObject" },
+          "ConfigurationsBucket" : { "Ref" : "ConfigurationsBucket" },
+          "ConfigurationFolder" : { "Ref" : "ConfigurationFolder" },
+          "RabbitMQConfigurationObject" : { "Ref" : "RabbitMQConfigurationObject" },
+          "ApplicationsBucket" : { "Ref" : "ApplicationsBucket" },
+          "ApplicationFolder" : { "Ref" : "ApplicationFolder" },
+          "RabbitMQApplicationObject" : { "Ref" : "RabbitMQApplicationObject" },
+          "ApplicationName" : { "Ref" : "ApplicationName" },
+          "ApplicationVersion" : { "Ref" : "ApplicationVersion" },
+          "UseStaticAddress" : { "Ref" : "UseStaticAddress" },
+          "LogRetention" : { "Ref" : "LogRetention" },
+          "Schedule" : { "Ref" : "Schedule" }
+        }
+      }
+    }

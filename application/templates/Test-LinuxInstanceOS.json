@@ -1,0 +1,92 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Test-LinuxOSName Template.",
+
+  "Parameters" : {
+    "LinuxOSName" : {
+      "Description" : "The Operating System to use for Instances",
+      "Type" : "String",
+      "Default" : "Amazon Linux",
+      "AllowedValues" : [ "Amazon Linux", "Amazon Linux 2017.03.0", "Amazon Linux 2016.09.1", "Amazon Linux 2016.09.0", "RHEL 7", "RHEL 7.4", "RHEL 7.3" ],
+      "ConstraintDescription" : "must be \"Amazon Linux\" (latest), \"Amazon Linux 2017.03.0\", \"Amazon Linux 2016.09.1\", \"Amazon Linux 2016.09.0\", \"RHEL 7\" (latest), \"RHEL 7.4\" or \"RHEL 7.3\"."
+    },
+
+    "InstanceType" : {
+      "Description" : "EC2 instance type",
+      "Type" : "String",
+      "Default" : "t2.medium",
+      "AllowedValues" : [ "t1.micro", "t2.micro", "t2.small", "t2.medium", "t2.large",
+                          "m1.small", "m1.medium", "m1.large", "m1.xlarge",
+                          "m2.xlarge", "m2.2xlarge", "m2.4xlarge",
+                          "m3.medium", "m3.large", "m3.xlarge", "m3.2xlarge",
+                          "c1.medium", "c1.xlarge",
+                          "c3.large", "c3.xlarge", "c3.2xlarge", "c3.4xlarge", "c3.8xlarge",
+                          "c4.large", "c4.xlarge", "c4.2xlarge", "c4.4xlarge", "c4.8xlarge",
+                          "g2.2xlarge",
+                          "r3.large", "r3.xlarge", "r3.2xlarge", "r3.4xlarge", "r3.8xlarge",
+                          "i2.xlarge", "i2.2xlarge", "i2.4xlarge", "i2.8xlarge",
+                          "d2.xlarge", "d2.2xlarge", "d2.4xlarge", "d2.8xlarge",
+                          "hi1.4xlarge",
+                          "hs1.8xlarge",
+                          "cr1.8xlarge",
+                          "cc2.8xlarge",
+                          "cg1.4xlarge" ],
+      "ConstraintDescription" : "Must be a valid EC2 instance type."
+    }
+  },
+
+  "Conditions" : {
+    "ConfigureAMZN" : { "Fn::Equals" : [{ "Fn::Select" : [ "0", { "Fn::Split" : [ " ", { "Ref" : "LinuxOSName" }]}]}, "Amazon" ]},
+    "ConfigureRHEL" : { "Fn::Equals" : [{ "Fn::Select" : [ "0", { "Fn::Split" : [ " ", { "Ref" : "LinuxOSName" }]}]}, "RHEL" ]}
+  },
+
+  "Resources" : {
+    "GetAmazonLinuxImageId" : {
+      "Type" : "Custom::GetAmazonLinuxImageId",
+      "Properties" : {
+        "ServiceToken" : { "Fn::Sub" : "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GetAmazonLinuxImageId" },
+        "Region" : { "Ref" : "AWS::Region" },
+        "OSName" : { "Ref" : "LinuxOSName" },
+        "InstanceType" : { "Ref" : "InstanceType" }
+      },
+      "Condition" : "ConfigureAMZN"
+    },
+
+    "GetRHELImageId" : {
+      "Type" : "Custom::GetRHELImageId",
+      "Properties" : {
+        "ServiceToken" : { "Fn::Sub" : "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GetRHELImageId" },
+        "Region" : { "Ref" : "AWS::Region" },
+        "OSName" : { "Ref" : "LinuxOSName" }
+      },
+      "Condition" : "ConfigureRHEL"
+    }
+  },
+
+  "Outputs" : {
+    "AmazonLinuxImageId" : {
+      "Description" : "The AmazonLinux ImageId",
+      "Value" : { "Fn::GetAtt" : [ "GetAmazonLinuxImageId", "ImageId" ]},
+      "Condition" : "ConfigureAMZN"
+    },
+
+    "AmazonLinuxImageName" : {
+      "Description" : "The AmazonLinux Image Name",
+      "Value" : { "Fn::GetAtt" : [ "GetAmazonLinuxImageId", "Name" ]},
+      "Condition" : "ConfigureAMZN"
+    },
+
+    "RHELImageId" : {
+      "Description" : "The RHEL ImageId",
+      "Value" : { "Fn::GetAtt" : [ "GetRHELImageId", "ImageId" ]},
+      "Condition" : "ConfigureRHEL"
+    },
+
+    "RHELImageName" : {
+      "Description" : "The RHEL Image Name",
+      "Value" : { "Fn::GetAtt" : [ "GetRHELImageId", "Name" ]},
+      "Condition" : "ConfigureRHEL"
+    }
+  }
+}

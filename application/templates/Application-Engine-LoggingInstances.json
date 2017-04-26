@@ -1,0 +1,709 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Application-Engine-LoggingInstances Template. This is a layer in the Engine application, which creates the InstanceProfile, and one LoggingInstance.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "VPCStackName",
+            "CustomIdentifierFunctionsStackName",
+            "StandardCIDRFunctionsStackName",
+            "StandardAMIFunctionsStackName",
+            "StandardTopicsStackName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Resource Dependencies" },
+          "Parameters" : [
+            "KeyName",
+            "LoggingRole",
+            "LogGroup",
+            "LoggingInstanceSecurityGroup"
+          ]
+        },
+        {
+          "Label" : { "default" : "System Configuration" },
+          "Parameters" : [
+            "CompanyName",
+            "SystemName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Environment Configuration" },
+          "Parameters" : [
+            "EnvironmentSize",
+            "WindowsOSName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Application Dependencies Configuration" },
+          "Parameters" : [
+            "ProductsBucket",
+            "ProductFolder",
+            "LoggingProductObject",
+            "ConfigurationsBucket",
+            "ConfigurationFolder",
+            "LoggingConfigurationObject"
+          ]
+        },
+        {
+          "Label" : { "default" : "Application Configuration" },
+          "Parameters" : [
+            "ApplicationsBucket",
+            "ApplicationFolder",
+            "LoggingApplicationObject",
+            "ApplicationName",
+            "ApplicationVersion",
+            "UseStaticAddress",
+            "LogRetention",
+            "Schedule"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "VPCStackName" : { "default" : "VPC Stack Name" },
+        "CustomIdentifierFunctionsStackName" : { "default" : "CustomIdentifierFunctions Stack Name" },
+        "StandardCIDRFunctionsStackName" : { "default" : "StandardCIDRFunctions Stack Name" },
+        "StandardAMIFunctionsStackName" : { "default" : "StandardAMIFunctions Stack Name" },
+        "StandardTopicsStackName" : { "default" : "StandardTopics Stack Name" },
+        "KeyName" : { "default" : "Key Name" },
+        "LoggingRole" : { "default" : "LoggingRole" },
+        "LogGroup" : { "default" : "LogGroup" },
+        "LoggingInstanceSecurityGroup" : { "default" : "LoggingInstance SecurityGroup" },
+        "CompanyName" : { "default" : "Company Name" },
+        "SystemName" : { "default" : "System Name" },
+        "EnvironmentSize" : { "default" : "Environment Size" },
+        "WindowsOSName" : { "default" : "Windows Operating System Name" },
+        "ProductsBucket" : { "default" : "Products Bucket" },
+        "ProductFolder" : { "default" : "Product Folder" },
+        "LoggingProductObject" : { "default" : "Logging Product Object" },
+        "ConfigurationsBucket" : { "default" : "Configurations Bucket" },
+        "ConfigurationFolder" : { "default" : "Configuration Folder" },
+        "LoggingConfigurationObject" : { "default" : "Logging Configuration Object" },
+        "ApplicationsBucket" : { "default" : "Applications Bucket" },
+        "ApplicationFolder" : { "default" : "Application Folder" },
+        "LoggingApplicationObject" : { "default" : "Logging Application Object" },
+        "ApplicationName" : { "default" : "Application Name" },
+        "ApplicationVersion" : { "default" : "Application Version" },
+        "UseStaticAddress" : { "default" : "Use Static Address" },
+        "LogRetention" : { "default" : "Log Retention" },
+        "Schedule" : { "default" : "Schedule" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "VPCStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the VPC",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-VPC",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "CustomIdentifierFunctionsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Custom Identifier Functions",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "CustomIdentifierFunctions",
+      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "StandardCIDRFunctionsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Standard CIDR Functions",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "StandardCIDRFunctions",
+      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "StandardAMIFunctionsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Standard AMI Functions",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "StandardAMIFunctions",
+      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "StandardTopicsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Topics",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardTopics",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "KeyName" : {
+      "Description" : "Name of an existing KeyPair to enable SSH access to the Instances",
+      "Type" : "AWS::EC2::KeyPair::KeyName",
+      "MaxLength" : 32,
+      "Default" : "administrator",
+      "AllowedPattern" : "(^$|^[_a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
+    },
+
+    "LoggingRole" : {
+      "Description" : "Name of an existing Role which provides permissions needed by the LoggingInstance",
+      "Type" : "String",
+      "MaxLength" : 128,
+      "AllowedPattern" : "^[-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must be the name of an existing Role."
+    },
+
+    "LogGroup" : {
+      "Description" : "Name of an existing LogGroup which provides access to CloudWatch Logs",
+      "Type" : "String",
+      "MaxLength" : 128,
+      "AllowedPattern" : "^[-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must be the name of an existing LogGroup."
+    },
+
+    "LoggingInstanceSecurityGroup" : {
+      "Description" : "ID of an existing SecurityGroup which controls access to the LoggingInstances",
+      "Type" : "AWS::EC2::SecurityGroup::Id",
+      "MaxLength" : 32,
+      "AllowedPattern" : "^sg-[0-9a-f]{8}$",
+      "ConstraintDescription" : "must be the name of an existing SecurityGroup."
+    },
+
+    "CompanyName" : {
+      "Description" : "Name of the Company associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "Travel",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "SystemName" : {
+      "Description" : "Name of the System associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "IROPS",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "EnvironmentSize" : {
+      "Description" : "Size of the Environment to build. Used to select size-related options in Mappings",
+      "Type" : "String",
+      "Default" : "small",
+      "AllowedValues" : [ "small", "medium", "large", "xlarge" ],
+      "ConstraintDescription" : "must be small, medium, large or xlarge."
+    },
+
+    "WindowsOSName" : {
+      "Description" : "The Operating System to use for Windows Instances",
+      "Type" : "String",
+      "Default" : "Windows Server 2012 R2",
+      "AllowedValues" : [ "Windows Server 2012 R2", "Windows Server 2016" ],
+      "ConstraintDescription" : "must be \"Windows Server 2012 R2\" or \"Windows Server 2016\"."
+    },
+
+    "ProductsBucket" : {
+      "Description" : "S3 bucket containing 3rd-Party Products to be deployed",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "products-us-west-2-production",
+      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
+      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
+    },
+
+    "ProductFolder" : {
+      "Description" : "Folder within the S3 bucket containing Products deployed by this Template",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "Engine",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "LoggingProductObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Engine Logging Component installer",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be a valid filename, not containing slashes."
+    },
+
+    "ConfigurationsBucket" : {
+      "Description" : "S3 bucket containing Configurations to be deployed",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "configurations-us-west-2-irops",
+      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
+      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
+    },
+
+    "ConfigurationFolder" : {
+      "Description" : "Folder within the S3 bucket containing Configurations deployed by this Template",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "Engine",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "LoggingConfigurationObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Engine Logging Component configuration",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be a valid filename, not containing slashes."
+    },
+
+    "ApplicationsBucket" : {
+      "Description" : "S3 bucket containing Applications to be deployed",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "applications-us-west-2-irops",
+      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
+      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
+    },
+
+    "ApplicationFolder" : {
+      "Description" : "Folder within the S3 bucket containing Applications deployed by this Template",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "Engine",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "LoggingApplicationObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Engine Logging Component application",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be a valid filename, not containing slashes."
+    },
+
+    "ApplicationName" : {
+      "Description" : "Name of the Application associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "Engine",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "ApplicationVersion" : {
+      "Description" : "Version of the Application",
+      "Type" : "String",
+      "MinLength" : 5,
+      "MaxLength" : 32,
+      "Default" : "1.0.0",
+      "AllowedPattern" : "^[0-9]*.[0-9]*.[0-9]*(-[a-zA-Z0-9][-a-zA-Z0-9]*)?$",
+      "ConstraintDescription" : "must follow semantic versioning conventions."
+    },
+
+    "UseStaticAddress" : {
+      "Description" : "Create and attach a separate Static Address",
+      "Type" : "String",
+      "Default" : "true",
+      "AllowedValues" : [ "true", "false" ],
+      "ConstraintDescription" : "must be either true or false."
+    },
+
+    "LogRetention" : {
+      "Description" : "Number of days to retain CloudWatch Log Events (0 disables use of CloudWatch Logs)",
+      "Type" : "Number",
+      "Default" : 14,
+      "AllowedValues" : [ 0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653 ],
+      "ConstraintDescription" : "must be: 0 (disabled), 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827 or 3653."
+    },
+
+    "Schedule" : {
+      "Description" : "Schedule Tag Value (blank disables Scheduler)",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^([0-9]|1[0-9]|2[0-3]):[0-5][0-9]-([0-9]|1[0-9]|2[0-3]):[0-5][0-9]T?$)",
+      "ConstraintDescription" : "See Scheduler Lambda Function description for Tag format."
+    }
+  },
+
+  "Mappings" : {
+    "InstanceTypeMap" : {
+      "Logging" : { "small" : "t2.small", "medium" : "t2.large", "large" : "c4.large", "xlarge" : "c4.2xlarge" }
+    }
+  },
+
+  "Conditions" : {
+    "ConfigureKey" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "KeyName" }, "" ]}]},
+    "InstallProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LoggingProductObject" }, "" ]}]},
+    "InstallConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LoggingConfigurationObject" }, "" ]}]},
+    "InstallApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LoggingApplicationObject" }, "" ]}]},
+    "ConfigureStaticAddress" : { "Fn::Equals" : [{ "Ref" : "UseStaticAddress" }, "true" ]},
+    "ConfigureLogs" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LogRetention" }, "0" ]}]},
+    "ConfigureSchedule" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "Schedule" }, "" ]}]}
+  },
+
+  "Resources" : {
+    "GetHostName" : {
+      "Type" : "Custom::GetHostName",
+      "Properties" : {
+        "ServiceToken" : { "Fn::ImportValue" : { "Fn::Sub" : "${CustomIdentifierFunctionsStackName}-GetHostNameFunctionArn" }},
+        "CompanyName" : { "Ref" : "CompanyName" },
+        "LocationName" : { "Ref": "AWS::Region" },
+        "EnvironmentName" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }},
+        "ApplicationName" : { "Ref" : "ApplicationName" },
+        "ComponentName" : "Logging"
+      }
+    },
+
+    "GetWindowsImageId" : {
+      "Type" : "Custom::GetWindowsImageId",
+      "Properties" : {
+        "ServiceToken" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardAMIFunctionsStackName}-GetWindowsImageIdFunctionArn" }},
+        "Region" : { "Ref" : "AWS::Region" },
+        "OSName" : { "Ref" : "WindowsOSName" }
+      }
+    },
+
+    "InstanceProfile" : {
+      "Type" : "AWS::IAM::InstanceProfile",
+      "Properties" : {
+        "Path" : "/",
+        "Roles" : [{ "Ref" : "LoggingRole" }]
+      }
+    },
+
+    "AddressCalculatorA" : {
+      "Type" : "Custom::AddressCalculator",
+      "Properties" : {
+        "ServiceToken" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardCIDRFunctionsStackName}-AddressCalculatorFunctionArn" }},
+        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-ApplicationSubnetA" }}
+      },
+      "Condition" : "ConfigureStaticAddress"
+    },
+
+    "LoggingInstance01A" : {
+      "Type" : "AWS::EC2::Instance",
+      "Metadata" : {
+        "AWS::CloudFormation::Authentication" : {
+          "S3Credentials" : {
+            "type" : "S3",
+            "roleName" : { "Ref" : "LoggingRole" },
+            "buckets" : [
+              { "Ref" : "ProductsBucket" },
+              { "Ref" : "ConfigurationsBucket" },
+              { "Ref" : "ApplicationsBucket" }
+            ]
+          }
+        },
+        "AWS::CloudFormation::Init" : {
+          "configSets" : {
+            "All" : [
+              { "Fn::If" : [ "ConfigureLogs", "ConfigureLogs", { "Ref": "AWS::NoValue" }]},
+              "ConfigureOS",
+              "ConfigureCFN",
+              "InstallAtomEditor",
+              { "Fn::If" : [ "InstallProduct", "InstallLoggingProduct", { "Ref": "AWS::NoValue" }]},
+              { "Fn::If" : [ "InstallConfiguration", "InstallLoggingConfiguration", { "Ref": "AWS::NoValue" }]},
+              { "Fn::If" : [ "InstallApplication", "InstallLoggingApplication", { "Ref": "AWS::NoValue" }]}
+            ]
+          },
+          "ConfigureLogs" : {
+            "files" : {
+              "C:\\Program Files\\Amazon\\SSM\\Plugins\\awsCloudWatch\\AWS.EC2.Windows.CloudWatch.json" : {
+                "content" : { "Fn::Join" : [ "", [
+                  "{",
+                  "  \"IsEnabled\" : true,",
+                  "  \"EngineConfiguration\" : {",
+                  "    \"PollInterval\" : \"00:00:10\",",
+                  "    \"Components\" : [{",
+                  "      \"Id\" : \"ApplicationEventLog\",",
+                  "      \"FullName\" : \"AWS.EC2.Windows.CloudWatch.EventLog.EventLogInputComponent,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\" : {",
+                  "        \"LogName\" : \"Application\",",
+                  "        \"Levels\" : \"7\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\" : \"SystemEventLog\",",
+                  "      \"FullName\" : \"AWS.EC2.Windows.CloudWatch.EventLog.EventLogInputComponent,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\" : {",
+                  "        \"LogName\" : \"System\",",
+                  "        \"Levels\" : \"7\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\" : \"SecurityEventLog\",",
+                  "      \"FullName\" : \"AWS.EC2.Windows.CloudWatch.EventLog.EventLogInputComponent,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\" : {",
+                  "        \"LogName\" : \"Security\",",
+                  "        \"Levels\" : \"7\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\" : \"EC2ConfigLog\",",
+                  "      \"FullName\": \"AWS.EC2.Windows.CloudWatch.CustomLog.CustomLogInputComponent,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\": {",
+                  "        \"LogDirectoryPath\": \"C:\\\\Program Files\\\\Amazon\\\\Ec2ConfigService\\\\Logs\",",
+                  "        \"TimestampFormat\": \"yyyy-MM-ddTHH:mm:ss.fffZ:\",",
+                  "        \"Encoding\": \"ASCII\",",
+                  "        \"Filter\": \"EC2ConfigLog.txt\",",
+                  "        \"CultureName\": \"en-US\",",
+                  "        \"TimeZoneKind\": \"UTC\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\": \"CfnInitLog\",",
+                  "      \"FullName\": \"AWS.EC2.Windows.CloudWatch.CustomLog.CustomLogInputComponent,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\": {",
+                  "        \"LogDirectoryPath\": \"C:\\\\cfn\\\\log\",",
+                  "        \"TimestampFormat\": \"yyyy-MM-dd HH:mm:ss,fff\",",
+                  "        \"Encoding\": \"ASCII\",",
+                  "        \"Filter\": \"cfn-init.log\",",
+                  "        \"CultureName\": \"en-US\",",
+                  "        \"TimeZoneKind\": \"Local\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\" : \"MemoryPerformanceCounter\",",
+                  "      \"FullName\" : \"AWS.EC2.Windows.CloudWatch.PerformanceCounterComponent.PerformanceCounterInputComponent,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\" : {",
+                  "        \"CategoryName\" : \"Memory\",",
+                  "        \"CounterName\" : \"Available MBytes\",",
+                  "        \"InstanceName\" : \"\",",
+                  "        \"MetricName\" : \"Memory\",",
+                  "        \"Unit\" : \"Megabytes\",",
+                  "        \"DimensionName\" : \"\",",
+                  "        \"DimensionValue\" : \"\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\": \"CloudWatchApplicationEventLog\",",
+                  "      \"FullName\": \"AWS.EC2.Windows.CloudWatch.CloudWatchLogsOutput,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\": {",
+                  "        \"AccessKey\": \"\",",
+                  "        \"SecretKey\": \"\",",
+                           { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
+                           { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
+                  "        \"LogStream\": \"Logging/{instance_id}/ApplicationEventLog\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\": \"CloudWatchSystemEventLog\",",
+                  "      \"FullName\": \"AWS.EC2.Windows.CloudWatch.CloudWatchLogsOutput,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\": {",
+                  "        \"AccessKey\": \"\",",
+                  "        \"SecretKey\": \"\",",
+                           { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
+                           { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
+                  "        \"LogStream\": \"Logging/{instance_id}/SystemEventLog\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\": \"CloudWatchSecurityEventLog\",",
+                  "      \"FullName\": \"AWS.EC2.Windows.CloudWatch.CloudWatchLogsOutput,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\": {",
+                  "        \"AccessKey\": \"\",",
+                  "        \"SecretKey\": \"\",",
+                           { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
+                           { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
+                  "        \"LogStream\": \"Logging/{instance_id}/SecurityEventLog\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\": \"CloudWatchEC2ConfigLog\",",
+                  "      \"FullName\": \"AWS.EC2.Windows.CloudWatch.CloudWatchLogsOutput,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\": {",
+                  "        \"AccessKey\": \"\",",
+                  "        \"SecretKey\": \"\",",
+                           { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
+                           { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
+                  "        \"LogStream\": \"Logging/{instance_id}/EC2ConfigLog\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\": \"CloudWatchCfnInitLog\",",
+                  "      \"FullName\": \"AWS.EC2.Windows.CloudWatch.CloudWatchLogsOutput,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\": {",
+                  "        \"AccessKey\": \"\",",
+                  "        \"SecretKey\": \"\",",
+                           { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
+                           { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
+                  "        \"LogStream\": \"Logging/{instance_id}/CfnInitLog\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\" : \"CloudWatch\",",
+                  "      \"FullName\" : \"AWS.EC2.Windows.CloudWatch.CloudWatch.CloudWatchOutputComponent,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\" : {",
+                  "        \"AccessKey\" : \"\",",
+                  "        \"SecretKey\" : \"\",",
+                           { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
+                  "        \"NameSpace\" : \"Windows/Default\"",
+                  "      }",
+                  "    }],",
+                  "    \"Flows\": {",
+                  "      \"Flows\": [",
+                  "        \"ApplicationEventLog,CloudWatchApplicationEventLog\",",
+                  "        \"SystemEventLog,CloudWatchSystemEventLog\",",
+                  "        \"SecurityEventLog,CloudWatchSecurityEventLog\",",
+                  "        \"EC2ConfigLog,CloudWatchEC2ConfigLog\",",
+                  "        \"CfnInitLog,CloudWatchCfnInitLog\",",
+                  "        \"MemoryPerformanceCounter,CloudWatch\"",
+                  "      ]",
+                  "    }",
+                  "  }",
+                  "}"
+                ]]}
+              }
+            },
+            "commands" : {
+              "01-enable-SSM" : {
+                "command" : "powershell.exe -Command \"Set-Service -Name AmazonSSMAgent -StartupType Automatic\"",
+                "waitAfterCompletion" : "0"
+              },
+              "02-restart-SSM" : {
+                "command" : "powershell.exe -Command \"Restart-Service AmazonSSMAgent\"",
+                "waitAfterCompletion" : "30"
+              }
+            }
+          },
+          "ConfigureOS" : {
+            "commands" : {
+              "01-disable-windows-firewall" : {
+                "command" : "powershell.exe -Command \"Get-NetFirewallProfile | Set-NetFirewallProfile -Enabled False\"",
+                "waitAfterCompletion" : "0"
+              },
+              "02-set-execution-policy" : {
+                "command" : "powershell.exe -Command \"Set-ExecutionPolicy RemoteSigned -Force\"",
+                "waitAfterCompletion" : "0"
+              }
+            }
+          },
+          "ConfigureCFN" : {
+            "files" : {
+              "c:\\cfn\\cfn-hup.conf" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "[main]",
+                  { "Fn::Sub" : "stack=${AWS::StackId}" },
+                  { "Fn::Sub" : "region=${AWS::Region}" }
+                  ]]}
+              },
+              "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf" : {
+                "content": { "Fn::Join" : [ "\n", [
+                  "[cfn-auto-reloader-hook]",
+                  "triggers=post.update",
+                  "path=Resources.LoggingInstance01A.Metadata.AWS::CloudFormation::Init",
+                  { "Fn::Sub" : "action=cfn-init.exe --verbose --configsets All --stack ${AWS::StackId} --resource LoggingInstance01A --region ${AWS::Region}" }
+                ]]}
+              }
+            },
+            "services" : {
+              "windows" : {
+                "cfn-hup" : {
+                  "enabled" : "true",
+                  "ensureRunning" : "true",
+                  "files" : [
+                    "c:\\cfn\\cfn-hup.conf",
+                    "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf"
+                  ]
+                }
+              }
+            }
+          },
+          "InstallAtomEditor" : {
+            "packages" : {
+              "msi" : {
+                "atom" : "https://github.com/atom/atom/releases/download/v1.16.0/AtomSetup-x64.msi"
+              }
+            }
+          },
+          "InstallLoggingProduct" : {
+            "sources" : {
+              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ProductsBucket}/${ProductFolder}/${LoggingProductObject}" }
+            }
+          },
+          "InstallLoggingConfiguration" : {
+            "sources" : {
+              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ConfigurationsBucket}/${ConfigurationFolder}/${LoggingConfigurationObject}" }
+            }
+          },
+          "InstallLoggingApplication" : {
+            "sources" : {
+              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ApplicationsBucket}/${ApplicationFolder}/${LoggingApplicationObject}" }
+            }
+          },
+          "ConfigureHostname" : {
+            "commands" : {
+              "01-set-hostname" : {
+                "command" : { "Fn::Join" : [ "", [ "powershell.exe Rename-Computer -NewName ", { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01a", " -Restart" ]]},
+                "waitAfterCompletion" : "forever"
+              }
+            }
+          }
+        }
+      },
+      "Properties" : {
+        "ImageId" : { "Fn::GetAtt" : [ "GetWindowsImageId", "ImageId" ]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Logging", { "Ref" : "EnvironmentSize" }]},
+        "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
+        "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
+        "NetworkInterfaces" : [{
+          "Description"              : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "LoggingNetworkInterface01A", "eth0" ]]},
+          "DeviceIndex"              : "0",
+          "SubnetId"                 : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-ApplicationSubnetA" }},
+          "PrivateIpAddress"         : { "Fn::If" : [ "ConfigureStaticAddress", { "Fn::GetAtt" : [ "AddressCalculatorA", "Address4" ]}, { "Ref" : "AWS::NoValue" }]},
+          "GroupSet"                 : [{ "Ref" :  "LoggingInstanceSecurityGroup" }],
+          "AssociatePublicIpAddress" : "false",
+          "DeleteOnTermination"      : "true"
+        }],
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "LoggingInstance01A" ]]}},
+          { "Fn::If" : [ "ConfigureSchedule", { "Key" : "Schedule", "Value" : { "Ref" : "Schedule" }}, { "Ref" : "AWS::NoValue" }]}
+        ],
+        "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "\n", [
+          "<script>",
+          { "Fn::Sub" : "cfn-init.exe --verbose --configsets All --stack ${AWS::StackId} --resource LoggingInstance01A --region ${AWS::Region}" },
+          { "Fn::Sub" : "cfn-signal.exe --exit-code %ERRORLEVEL% --stack ${AWS::StackName} --resource LoggingInstance01A --region ${AWS::Region}" },
+          "</script>"
+        ]]}}
+      },
+      "CreationPolicy" : {
+        "ResourceSignal" : {
+          "Timeout" : "PT20M"
+        }
+      }
+    }
+  },
+
+  "Outputs" : {
+    "LoggingInstance01A" : {
+      "Description" : "The LoggingInstance01A",
+      "Value" : { "Ref" : "LoggingInstance01A" }
+    },
+
+    "LoggingHostName01A" : {
+      "Description" : "The LoggingHostName01A",
+      "Value" : { "Fn::Join" : [ "", [ { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01a.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]}
+    }
+  }
+}
