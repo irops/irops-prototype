@@ -10,11 +10,11 @@
           "Label" : { "default" : "Application Dependencies Configuration" },
           "Parameters" : [
             "ProductsBucket",
-            "ProductWebSphereMQFolder",
-            "ProductWebSphereMQObject",
+            "ProductFolder",
+            "ProductObject",
             "ConfigurationsBucket",
-            "ConfigurationWebSphereMQFolder",
-            "ConfigurationWebSphereMQObject"
+            "ConfigurationFolder",
+            "ConfigurationObject"
           ]
         },
         {
@@ -29,11 +29,11 @@
 
       "ParameterLabels" : {
         "ProductsBucket" : { "default" : "Products Bucket" },
-        "ProductWebSphereMQFolder" : { "default" : "Product WebSphereMQ Folder" },
-        "ProductWebSphereMQObject" : { "default" : "Product WebSphereMQ Object" },
+        "ProductFolder" : { "default" : "Product Folder" },
+        "ProductObject" : { "default" : "Product Object" },
         "ConfigurationsBucket" : { "default" : "Configurations Bucket" },
-        "ConfigurationWebSphereMQFolder" : { "default" : "Configuration WebSphereMQ Folder" },
-        "ConfigurationWebSphereMQObject" : { "default" : "Configuration WebSphereMQ Object" },
+        "ConfigurationFolder" : { "default" : "Configuration Folder" },
+        "ConfigurationObject" : { "default" : "Configuration Object" },
         "ApplicationName" : { "default" : "Application Name" },
         "UseFileSystemMonitoring" : { "default" : "Use FileSystem Monitoring" },
         "LogRetention" : { "default" : "Log Retention" }
@@ -52,8 +52,8 @@
       "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
     },
 
-    "ProductWebSphereMQFolder" : {
-      "Description" : "Folder within S3 bucket containing WebSphereMQ product objects",
+    "ProductFolder" : {
+      "Description" : "Folder within the S3 bucket containing Products deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -62,8 +62,8 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
-    "ProductWebSphereMQObject" : {
-      "Description" : "Object within S3 bucket and folder containing WebSphereMQ installer",
+    "ProductObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the WebSphereMQ installer",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
@@ -81,8 +81,8 @@
       "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
     },
 
-    "ConfigurationWebSphereMQFolder" : {
-      "Description" : "Folder within S3 bucket containing WebSphereMQ configuration objects",
+    "ConfigurationFolder" : {
+      "Description" : "Folder within the S3 bucket containing Configurations deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -91,8 +91,8 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
-    "ConfigurationWebSphereMQObject" : {
-      "Description" : "Object within S3 bucket and folder containing WebSphereMQ configuration",
+    "ConfigurationObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the WebSphereMQ configuration",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
@@ -128,8 +128,8 @@
   },
 
   "Conditions" : {
-    "DownloadProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ProductWebSphereMQObject" }, "" ]}]},
-    "DownloadConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ConfigurationWebSphereMQFolder" }, "" ]}]},
+    "InstallProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ProductObject" }, "" ]}]},
+    "InstallConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ConfigurationObject" }, "" ]}]},
     "ConfigureFileSystemMonitoring" : { "Fn::Equals" : [{ "Ref" : "UseFileSystemMonitoring" }, "true" ]},
     "ConfigureLogs" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LogRetention" }, "0" ]}]}
   },
@@ -162,12 +162,12 @@
             "Action" : [
               "s3:GetObject"
             ],
-            "Resource" : { "Fn::Sub" : "arn:aws:s3:::${ProductsBucket}/${ProductWebSphereMQFolder}/*" }
+            "Resource" : { "Fn::Sub" : "arn:aws:s3:::${ProductsBucket}/${ProductFolder}/*" }
           }]
         },
         "Roles" : [{ "Ref" : "Role" }]
       },
-      "Condition" : "DownloadProduct"
+      "Condition" : "InstallProduct"
     },
 
     "DownloadConfigurationFromS3Policy" : {
@@ -181,12 +181,12 @@
             "Action" : [
               "s3:GetObject"
             ],
-            "Resource" : { "Fn::Sub" : "arn:aws:s3:::${ConfigurationsBucket}/${ConfigurationWebSphereMQFolder}/*" }
+            "Resource" : { "Fn::Sub" : "arn:aws:s3:::${ConfigurationsBucket}/${ConfigurationFolder}/*" }
           }]
         },
         "Roles" : [{ "Ref" : "Role" }]
       },
-      "Condition" : "DownloadConfiguration"
+      "Condition" : "InstallConfiguration"
     },
 
     "FileSystemMonitoringPolicy" : {

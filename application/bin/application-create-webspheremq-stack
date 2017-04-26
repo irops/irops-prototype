@@ -226,31 +226,31 @@ if [ -z $environment ]; then
 else
     case $environment in
       Production)
-        instance_os=RHEL
+        os_name="RHEL 7.3"
         use_static_address=true
         use_filesystem_monitoring=true
         log_retention=30
         schedule="";;  # 11:00 - 4:00 UTC = 3:00 AM - 8:00 PM PST = 6:00 AM - 11:00 PM EST
       Staging)
-        instance_os=RHEL
+        os_name="RHEL 7.3"
         use_static_address=true
         use_filesystem_monitoring=true
         log_retention=7
         schedule="";;  # 11:00 - 4:00 UTC = 3:00 AM - 8:00 PM PST = 6:00 AM - 11:00 PM EST
       Testing)
-        instance_os=AMZN
+        os_name="Amazon Linux 2017.03.0"
         use_static_address=false
         use_filesystem_monitoring=false
         log_retention=0
         schedule="13:00-2:00";; # 13:00 - 2:00 UTC = 5:00 AM - 6:00 PM PST = 8:00 AM - 9:00 PM EST
       Development)
-        instance_os=AMZN
-        use_static_address=fakse
+        os_name="Amazon Linux"
+        use_static_address=false
         use_filesystem_monitoring=false
         log_retention=0
         schedule="";; # 13:00 - 2:00 UTC = 5:00 AM - 6:00 PM PST = 8:00 AM - 9:00 PM EST
       Core)
-        instance_os=RHEL
+        os_name="RHEL 7.3"
         use_static_address=true
         use_filesystem_monitoring=true
         log_retention=14
@@ -358,8 +358,8 @@ if ! aws s3api head-bucket --bucket $templates_bucket --profile $profile --regio
 fi
 
 products_bucket=${AWS_PRODUCTS_BUCKET:-products-$region-$account}
-product_wmq_folder=WebSphereMQ
-product_wmq_object=WS_MQ_V8.0.0.4_LINUX_ON_X86_64_IM.tar.gz
+product_folder=WebSphereMQ
+product_object=WS_MQ_V8.0.0.4_LINUX_ON_X86_64_IM.tar.gz
 
 if ! aws s3api head-bucket --bucket $products_bucket --profile $profile --region $region 2> /dev/null; then
     echo "$products_bucket S3 bucket does not exist!"
@@ -367,8 +367,8 @@ if ! aws s3api head-bucket --bucket $products_bucket --profile $profile --region
 fi
 
 configurations_bucket=${AWS_CONFIGURATIONS_BUCKET:-configurations-$region-$account}
-configuration_wmq_folder=WebSphereMQ
-configuration_wmq_object=$environment-WebSphereMQ-etc-wmq.tgz
+configuration_folder=WebSphereMQ
+configuration_object=$environment-WebSphereMQ-etc-wmq.tgz
 
 if ! aws s3api head-bucket --bucket $configurations_bucket --profile $profile --region $region 2> /dev/null; then
     echo "$configurations_bucket S3 bucket does not exist!"
@@ -522,13 +522,13 @@ aws cloudformation create-stack --stack-name $environment-$application \\
                                              ParameterKey=CompanyName,ParameterValue=$company \\
                                              ParameterKey=SystemName,ParameterValue=$system \\
                                              ParameterKey=EnvironmentSize,ParameterValue=$environment_size \\
-                                             ParameterKey=InstanceOS,ParameterValue="$instance_os" \\
+                                             ParameterKey=OSName,ParameterValue="$os_name" \\
                                              ParameterKey=ProductsBucket,ParameterValue=$products_bucket \\
-                                             ParameterKey=ProductWebSphereMQFolder,ParameterValue=$product_wmq_folder \\
-                                             ParameterKey=ProductWebSphereMQObject,ParameterValue=$product_wmq_object \\
+                                             ParameterKey=ProductFolder,ParameterValue=$product_folder \\
+                                             ParameterKey=ProductObject,ParameterValue=$product_object \\
                                              ParameterKey=ConfigurationsBucket,ParameterValue=$configurations_bucket \\
-                                             ParameterKey=ConfigurationWebSphereMQFolder,ParameterValue=$configuration_wmq_folder \\
-                                             ParameterKey=ConfigurationWebSphereMQObject,ParameterValue=$configuration_wmq_object \\
+                                             ParameterKey=ConfigurationFolder,ParameterValue=$configuration_folder \\
+                                             ParameterKey=ConfigurationObject,ParameterValue=$configuration_object \\
                                              ParameterKey=ApplicationName,ParameterValue=$application \\
                                              ParameterKey=UseStaticAddress,ParameterValue=$use_static_address \\
                                              ParameterKey=UseFileSystemMonitoring,ParameterValue=$use_filesystem_monitoring \\

@@ -42,18 +42,18 @@
           "Label" : { "default" : "Environment Configuration" },
           "Parameters" : [
             "EnvironmentSize",
-            "InstanceOS"
+            "OSName"
           ]
         },
         {
           "Label" : { "default" : "Application Dependencies Configuration" },
           "Parameters" : [
             "ProductsBucket",
-            "ProductWebSphereMQFolder",
-            "ProductWebSphereMQObject",
+            "ProductFolder",
+            "ProductObject",
             "ConfigurationsBucket",
-            "ConfigurationWebSphereMQFolder",
-            "ConfigurationWebSphereMQObject"
+            "ConfigurationFolder",
+            "ConfigurationObject"
           ]
         },
         {
@@ -93,13 +93,13 @@
         "CompanyName" : { "default" : "Company Name" },
         "SystemName" : { "default" : "System Name" },
         "EnvironmentSize" : { "default" : "Environment Size" },
-        "InstanceOS" : { "default" : "Instance Operating System" },
+        "OSName" : { "default" : "Operating System Name" },
         "ProductsBucket" : { "default" : "Products Bucket" },
-        "ProductWebSphereMQFolder" : { "default" : "Product WebSphereMQ Folder" },
-        "ProductWebSphereMQObject" : { "default" : "Product WebSphereMQ Object" },
+        "ProductFolder" : { "default" : "Product Folder" },
+        "ProductObject" : { "default" : "Product Object" },
         "ConfigurationsBucket" : { "default" : "Configurations Bucket" },
-        "ConfigurationWebSphereMQFolder" : { "default" : "Configuration WebSphereMQ Folder" },
-        "ConfigurationWebSphereMQObject" : { "default" : "Configuration WebSphereMQ Object" },
+        "ConfigurationFolder" : { "default" : "Configuration Folder" },
+        "ConfigurationObject" : { "default" : "Configuration Object" },
         "ApplicationName" : { "default" : "Application Name" },
         "UseStaticAddress" : { "default" : "Use Static Address" },
         "UseFileSystemMonitoring" : { "default" : "Use FileSystem Monitoring" },
@@ -238,12 +238,12 @@
       "ConstraintDescription" : "must be small, medium, large or xlarge."
     },
 
-    "InstanceOS" : {
+    "OSName" : {
       "Description" : "The Operating System to use for Instances",
       "Type" : "String",
-      "Default" : "AMZN",
-      "AllowedValues" : [ "AMZN", "RHEL" ],
-      "ConstraintDescription" : "must be AMZN = \"Amazon Linux 2016.09.1\" or RHEL = \"RHEL 7.3\"."
+      "Default" : "Amazon Linux",
+      "AllowedValues" : [ "Amazon Linux", "Amazon Linux 2017.03.0", "RHEL 7", "RHEL 7.4", "RHEL 7.3" ],
+      "ConstraintDescription" : "must be \"Amazon Linux\" (latest), \"Amazon Linux 2017.03.0\", \"RHEL 7\" (latest), \"RHEL 7.4\" or \"RHEL 7.3\"."
     },
 
     "ProductsBucket" : {
@@ -256,8 +256,8 @@
       "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
     },
 
-    "ProductWebSphereMQFolder" : {
-      "Description" : "Folder within S3 bucket containing WebSphereMQ product objects",
+    "ProductFolder" : {
+      "Description" : "Folder within the S3 bucket containing Products deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -266,8 +266,8 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
-    "ProductWebSphereMQObject" : {
-      "Description" : "Object within S3 bucket and folder containing WebSphereMQ installer",
+    "ProductObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the WebSphereMQ installer",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
@@ -285,8 +285,8 @@
       "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
     },
 
-    "ConfigurationWebSphereMQFolder" : {
-      "Description" : "Folder within S3 bucket containing WebSphereMQ configuration objects",
+    "ConfigurationFolder" : {
+      "Description" : "Folder within the S3 bucket containing Configurations deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -295,8 +295,8 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
-    "ConfigurationWebSphereMQObject" : {
-      "Description" : "Object within S3 bucket and folder containing WebSphereMQ configuration",
+    "ConfigurationObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the WebSphereMQ configuration",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
@@ -408,11 +408,11 @@
         "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplateFolder" }, "/Application-WebSphereMQ-Roles.json" ]]},
         "Parameters" : {
           "ProductsBucket" : { "Ref" : "ProductsBucket" },
-          "ProductWebSphereMQFolder" : { "Ref" : "ProductWebSphereMQFolder" },
-          "ProductWebSphereMQObject" : { "Ref" : "ProductWebSphereMQObject" },
+          "ProductFolder" : { "Ref" : "ProductFolder" },
+          "ProductObject" : { "Ref" : "ProductObject" },
           "ConfigurationsBucket" : { "Ref" : "ConfigurationsBucket" },
-          "ConfigurationWebSphereMQFolder" : { "Ref" : "ConfigurationWebSphereMQFolder" },
-          "ConfigurationWebSphereMQObject" : { "Ref" : "ConfigurationWebSphereMQObject" },
+          "ConfigurationFolder" : { "Ref" : "ConfigurationFolder" },
+          "ConfigurationObject" : { "Ref" : "ConfigurationObject" },
           "ApplicationName" : { "Ref" : "ApplicationName" },
           "UseFileSystemMonitoring" : { "Ref" : "UseFileSystemMonitoring" },
           "LogRetention" : { "Ref" : "LogRetention" }
@@ -484,13 +484,13 @@
           "CompanyName" : { "Ref" : "CompanyName" },
           "SystemName" : { "Ref" : "SystemName" },
           "EnvironmentSize" : { "Ref" : "EnvironmentSize" },
-          "InstanceOS" : { "Ref" : "InstanceOS" },
+          "OSName" : { "Ref" : "OSName" },
           "ProductsBucket" : { "Ref" : "ProductsBucket" },
-          "ProductWebSphereMQFolder" : { "Ref" : "ProductWebSphereMQFolder" },
-          "ProductWebSphereMQObject" : { "Ref" : "ProductWebSphereMQObject" },
+          "ProductFolder" : { "Ref" : "ProductFolder" },
+          "ProductObject" : { "Ref" : "ProductObject" },
           "ConfigurationsBucket" : { "Ref" : "ConfigurationsBucket" },
-          "ConfigurationWebSphereMQFolder" : { "Ref" : "ConfigurationWebSphereMQFolder" },
-          "ConfigurationWebSphereMQObject" : { "Ref" : "ConfigurationWebSphereMQObject" },
+          "ConfigurationFolder" : { "Ref" : "ConfigurationFolder" },
+          "ConfigurationObject" : { "Ref" : "ConfigurationObject" },
           "ApplicationName" : { "Ref" : "ApplicationName" },
           "UseStaticAddress" : { "Ref" : "UseStaticAddress" },
           "UseFileSystemMonitoring" : { "Ref" : "UseFileSystemMonitoring" },
