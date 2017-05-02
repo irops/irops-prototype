@@ -7,12 +7,16 @@
     "AWS::CloudFormation::Interface" : {
       "ParameterGroups" : [
         {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "StandardBucketsStackName"
+          ]
+        },
+        {
           "Label" : { "default" : "Application Dependencies Configuration" },
           "Parameters" : [
-            "ProductsBucket",
             "ProductFolder",
             "ProductObject",
-            "ConfigurationsBucket",
             "ConfigurationFolder",
             "ConfigurationObject"
           ]
@@ -20,7 +24,6 @@
         {
           "Label" : { "default" : "Application Configuration" },
           "Parameters" : [
-            "ApplicationName",
             "UseFileSystemMonitoring",
             "LogRetention"
           ]
@@ -28,13 +31,11 @@
       ],
 
       "ParameterLabels" : {
-        "ProductsBucket" : { "default" : "Products Bucket" },
+        "StandardBucketsStackName" : { "default" : "StandardBuckets Stack Name" },
         "ProductFolder" : { "default" : "Product Folder" },
         "ProductObject" : { "default" : "Product Object" },
-        "ConfigurationsBucket" : { "default" : "Configurations Bucket" },
         "ConfigurationFolder" : { "default" : "Configuration Folder" },
         "ConfigurationObject" : { "default" : "Configuration Object" },
-        "ApplicationName" : { "default" : "Application Name" },
         "UseFileSystemMonitoring" : { "default" : "Use FileSystem Monitoring" },
         "LogRetention" : { "default" : "Log Retention" }
       }
@@ -42,18 +43,18 @@
   },
 
   "Parameters" : {
-    "ProductsBucket" : {
-      "Description" : "S3 bucket containing 3rd-Party Products to be deployed",
+    "StandardBucketsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Buckets",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 64,
-      "Default" : "products-us-west-2-irops",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
+      "Default" : "StandardBuckets",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
     "ProductFolder" : {
-      "Description" : "Folder within the S3 bucket containing Products deployed by this Template",
+      "Description" : "Folder within the S3 Products bucket containing Products deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -71,18 +72,8 @@
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
-    "ConfigurationsBucket" : {
-      "Description" : "S3 bucket containing Configurations to be deployed",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 64,
-      "Default" : "configurations-us-west-2-irops",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
-    },
-
     "ConfigurationFolder" : {
-      "Description" : "Folder within the S3 bucket containing Configurations deployed by this Template",
+      "Description" : "Folder within the S3 Configurations bucket containing Configurations deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -98,16 +89,6 @@
       "Default" : "",
       "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
-    },
-
-    "ApplicationName" : {
-      "Description" : "Name of the Application associated with the Stack",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 32,
-      "Default" : "WebSphereMQ",
-      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
-      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
     "UseFileSystemMonitoring" : {
@@ -162,7 +143,7 @@
             "Action" : [
               "s3:GetObject"
             ],
-            "Resource" : { "Fn::Sub" : "arn:aws:s3:::${ProductsBucket}/${ProductFolder}/*" }
+            "Resource" : { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }}, "/", { "Ref" : "ProductFolder" }, "/*" ]]}
           }]
         },
         "Roles" : [{ "Ref" : "Role" }]
@@ -181,7 +162,7 @@
             "Action" : [
               "s3:GetObject"
             ],
-            "Resource" : { "Fn::Sub" : "arn:aws:s3:::${ConfigurationsBucket}/${ConfigurationFolder}/*" }
+            "Resource" : { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/*" ]]}
           }]
         },
         "Roles" : [{ "Ref" : "Role" }]

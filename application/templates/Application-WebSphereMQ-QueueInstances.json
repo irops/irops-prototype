@@ -13,6 +13,7 @@
             "CustomIdentifierFunctionsStackName",
             "StandardCIDRFunctionsStackName",
             "StandardAMIFunctionsStackName",
+            "StandardBucketsStackName",
             "StandardTopicsStackName"
           ]
         },
@@ -36,17 +37,15 @@
         {
           "Label" : { "default" : "Environment Configuration" },
           "Parameters" : [
-            "EnvironmentSize",
+            "EnvironmentType",
             "OSName"
           ]
         },
         {
           "Label" : { "default" : "Application Dependencies Configuration" },
           "Parameters" : [
-            "ProductsBucket",
             "ProductFolder",
             "ProductObject",
-            "ConfigurationsBucket",
             "ConfigurationFolder",
             "ConfigurationObject"
           ]
@@ -68,6 +67,7 @@
         "CustomIdentifierFunctionsStackName" : { "default" : "CustomIdentifierFunctions Stack Name" },
         "StandardCIDRFunctionsStackName" : { "default" : "StandardCIDRFunctions Stack Name" },
         "StandardAMIFunctionsStackName" : { "default" : "StandardAMIFunctions Stack Name" },
+        "StandardBucketsStackName" : { "default" : "StandardBuckets Stack Name" },
         "StandardTopicsStackName" : { "default" : "StandardTopics Stack Name" },
         "KeyName" : { "default" : "Key Name" },
         "Role" : { "default" : "Role" },
@@ -76,12 +76,10 @@
         "FileSystem" : { "default" : "FileSystem" },
         "CompanyName" : { "default" : "Company Name" },
         "SystemName" : { "default" : "System Name" },
-        "EnvironmentSize" : { "default" : "Environment Size" },
+        "EnvironmentType" : { "default" : "Environment Type" },
         "OSName" : { "default" : "Operating System Name" },
-        "ProductsBucket" : { "default" : "Products Bucket" },
         "ProductFolder" : { "default" : "Product Folder" },
         "ProductObject" : { "default" : "Product Object" },
-        "ConfigurationsBucket" : { "default" : "Configurations Bucket" },
         "ConfigurationFolder" : { "default" : "Configuration Folder" },
         "ConfigurationObject" : { "default" : "Configuration Object" },
         "ApplicationName" : { "default" : "Application Name" },
@@ -128,6 +126,16 @@
       "MaxLength" : 64,
       "Default" : "StandardAMIFunctions",
       "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "StandardBucketsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Buckets",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardBuckets",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
@@ -202,8 +210,8 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
-    "EnvironmentSize" : {
-      "Description" : "Size of the Environment to build. Used to select size-related options in Mappings",
+    "EnvironmentType" : {
+      "Description" : "Type of the Environment to build. Used to select size-related options in Mappings",
       "Type" : "String",
       "Default" : "small",
       "AllowedValues" : [ "small", "medium", "large", "xlarge" ],
@@ -218,18 +226,8 @@
       "ConstraintDescription" : "must be \"Amazon Linux\" (latest), \"Amazon Linux 2017.03.0\", \"Amazon Linux 2016.09.1\", \"Amazon Linux 2016.09.0\", \"RHEL 7\" (latest), \"RHEL 7.4\" or \"RHEL 7.3\"."
     },
 
-    "ProductsBucket" : {
-      "Description" : "S3 bucket containing 3rd-Party Products to be deployed",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 64,
-      "Default" : "products-us-west-2-production",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
-    },
-
     "ProductFolder" : {
-      "Description" : "Folder within the S3 bucket containing Products deployed by this Template",
+      "Description" : "Folder within the S3 Products bucket containing Products deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -247,18 +245,8 @@
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
-    "ConfigurationsBucket" : {
-      "Description" : "S3 bucket containing Configurations to be deployed",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 64,
-      "Default" : "configurations-us-west-2-irops",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
-    },
-
     "ConfigurationFolder" : {
-      "Description" : "Folder within the S3 bucket containing Configurations deployed by this Template",
+      "Description" : "Folder within the S3 Configurations bucket containing Configurations deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -321,11 +309,12 @@
 
   "Mappings" : {
     "InstanceTypeMap" : {
-      "Queue" : { "small" : "c4.large", "medium" : "c4.xlarge", "large" : "c4.2xlarge", "xlarge" : "c4.4xlarge" }
+      "Queue" : { "small" : "t2.large", "medium" : "c4.xlarge", "large" : "c4.2xlarge", "xlarge" : "c4.4xlarge" }
     }
   },
 
   "Conditions" : {
+    "ConfigureGlobalS3" : { "Fn::Equals" : [{ "Ref" : "AWS::Region" }, "us-east-1" ]},
     "ConfigureKey" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "KeyName" }, "" ]}]},
     "ConfigureAMZN" : { "Fn::Equals" : [{ "Fn::Select" : [ "0", { "Fn::Split" : [ " ", { "Ref" : "OSName" }]}]}, "Amazon" ]},
     "ConfigureRHEL" : { "Fn::Equals" : [{ "Fn::Select" : [ "0", { "Fn::Split" : [ " ", { "Ref" : "OSName" }]}]}, "RHEL" ]},
@@ -394,8 +383,8 @@
             "type" : "S3",
             "roleName" : { "Ref" : "Role" },
             "buckets" : [
-              { "Ref" : "ProductsBucket" },
-              { "Ref" : "ConfigurationsBucket" }
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }},
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}
             ]
           }
         },
@@ -750,12 +739,12 @@
           },
           "InstallWebSphereMQProduct" : {
             "sources" : {
-              "/var/tmp" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ProductsBucket}/${ProductFolder}/${ProductObject}" }
+              "/var/tmp" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }}, "/", { "Ref" : "ProductFolder" }, "/", { "Ref" : "ProductObject" }]]}
             }
           },
           "InstallWebSphereMQConfiguration" : {
             "sources" : {
-              "/etc" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ConfigurationsBucket}/${ConfigurationFolder}/${ConfigurationObject}" }
+              "/etc" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/", { "Ref" : "ConfigurationObject" }]]}
             }
           },
           "InstallLogs" : {
@@ -913,7 +902,7 @@
       "Properties" : {
         "ImageId" : { "Fn::If" : [ "ConfigureAMZN", { "Fn::GetAtt" : [ "GetAmazonLinuxImageId", "ImageId" ]},
                                                     { "Fn::GetAtt" : [ "GetRHELImageId", "ImageId" ]}]},
-        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Queue", { "Ref" : "EnvironmentSize" }]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Queue", { "Ref" : "EnvironmentType" }]},
         "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
         "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
         "NetworkInterfaces" : [{
@@ -1002,8 +991,8 @@
             "type" : "S3",
             "roleName" : { "Ref" : "Role" },
             "buckets" : [
-              { "Ref" : "ProductsBucket" },
-              { "Ref" : "ConfigurationsBucket" }
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }},
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}
             ]
           }
         },
@@ -1358,12 +1347,12 @@
           },
           "InstallWebSphereMQProduct" : {
             "sources" : {
-              "/var/tmp" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ProductsBucket}/${ProductFolder}/${ProductObject}" }
+              "/var/tmp" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }}, "/", { "Ref" : "ProductFolder" }, "/", { "Ref" : "ProductObject" }]]}
             }
           },
           "InstallWebSphereMQConfiguration" : {
             "sources" : {
-              "/etc" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ConfigurationsBucket}/${ConfigurationFolder}/${ConfigurationObject}" }
+              "/etc" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/", { "Ref" : "ConfigurationObject" }]]}
             }
           },
           "InstallLogs" : {
@@ -1521,7 +1510,7 @@
       "Properties" : {
         "ImageId" : { "Fn::If" : [ "ConfigureAMZN", { "Fn::GetAtt" : [ "GetAmazonLinuxImageId", "ImageId" ]},
                                                     { "Fn::GetAtt" : [ "GetRHELImageId", "ImageId" ]}]},
-        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Queue", { "Ref" : "EnvironmentSize" }]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Queue", { "Ref" : "EnvironmentType" }]},
         "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
         "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
         "NetworkInterfaces" : [{

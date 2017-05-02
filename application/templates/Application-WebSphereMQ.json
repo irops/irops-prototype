@@ -15,6 +15,7 @@
             "CustomIdentifierFunctionsStackName",
             "StandardCIDRFunctionsStackName",
             "StandardAMIFunctionsStackName",
+            "StandardBucketsStackName",
             "StandardTopicsStackName"
           ]
         },
@@ -27,7 +28,6 @@
         {
           "Label" : { "default" : "Template Configuration" },
           "Parameters" : [
-            "TemplatesBucket",
             "TemplateFolder"
           ]
         },
@@ -41,17 +41,15 @@
         {
           "Label" : { "default" : "Environment Configuration" },
           "Parameters" : [
-            "EnvironmentSize",
+            "EnvironmentType",
             "OSName"
           ]
         },
         {
           "Label" : { "default" : "Application Dependencies Configuration" },
           "Parameters" : [
-            "ProductsBucket",
             "ProductFolder",
             "ProductObject",
-            "ConfigurationsBucket",
             "ConfigurationFolder",
             "ConfigurationObject"
           ]
@@ -86,18 +84,16 @@
         "CustomIdentifierFunctionsStackName" : { "default" : "CustomIdentifierFunctions Stack Name" },
         "StandardCIDRFunctionsStackName" : { "default" : "StandardCIDRFunctions Stack Name" },
         "StandardAMIFunctionsStackName" : { "default" : "StandardAMIFunctions Stack Name" },
+        "StandardBucketsStackName" : { "default" : "StandardBuckets Stack Name" },
         "StandardTopicsStackName" : { "default" : "StandardTopics Stack Name" },
         "KeyName" : { "default" : "Key Name" },
-        "TemplatesBucket" : { "default" : "Templates Bucket" },
         "TemplateFolder" : { "default" : "Template Folder" },
         "CompanyName" : { "default" : "Company Name" },
         "SystemName" : { "default" : "System Name" },
-        "EnvironmentSize" : { "default" : "Environment Size" },
+        "EnvironmentType" : { "default" : "Environment Type" },
         "OSName" : { "default" : "Operating System Name" },
-        "ProductsBucket" : { "default" : "Products Bucket" },
         "ProductFolder" : { "default" : "Product Folder" },
         "ProductObject" : { "default" : "Product Object" },
-        "ConfigurationsBucket" : { "default" : "Configurations Bucket" },
         "ConfigurationFolder" : { "default" : "Configuration Folder" },
         "ConfigurationObject" : { "default" : "Configuration Object" },
         "ApplicationName" : { "default" : "Application Name" },
@@ -173,6 +169,16 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
+    "StandardBucketsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Buckets",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardBuckets",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
     "StandardTopicsStackName" : {
       "Description" : "Name of the CloudFormation Stack containing Standard Topics",
       "Type" : "String",
@@ -192,17 +198,8 @@
       "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
     },
 
-    "TemplatesBucket" : {
-      "Description" : "S3 bucket containing Templates referenced by this Template",
-      "Type" : "String",
-      "MaxLength" : 64,
-      "Default" : "templates-us-west-2-irops",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
-    },
-
     "TemplateFolder" : {
-      "Description" : "Folder within the S3 bucket containing Templates referenced by this Template",
+      "Description" : "Folder within the S3 Templates bucket containing Templates referenced by this Template",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "application",
@@ -230,8 +227,8 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
-    "EnvironmentSize" : {
-      "Description" : "Size of the Environment to build. Used to select size-related options in Mappings",
+    "EnvironmentType" : {
+      "Description" : "Type of the Environment to build. Used to select size-related options in Mappings",
       "Type" : "String",
       "Default" : "small",
       "AllowedValues" : [ "small", "medium", "large", "xlarge" ],
@@ -246,18 +243,8 @@
       "ConstraintDescription" : "must be \"Amazon Linux\" (latest), \"Amazon Linux 2017.03.0\", \"RHEL 7\" (latest), \"RHEL 7.4\" or \"RHEL 7.3\"."
     },
 
-    "ProductsBucket" : {
-      "Description" : "S3 bucket containing 3rd-Party Products to be deployed",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 64,
-      "Default" : "products-us-west-2-production",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
-    },
-
     "ProductFolder" : {
-      "Description" : "Folder within the S3 bucket containing Products deployed by this Template",
+      "Description" : "Folder within the S3 Products bucket containing Products deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -275,18 +262,8 @@
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
-    "ConfigurationsBucket" : {
-      "Description" : "S3 bucket containing Configurations to be deployed",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 64,
-      "Default" : "configurations-us-west-2-irops",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
-    },
-
     "ConfigurationFolder" : {
-      "Description" : "Folder within the S3 bucket containing Configurations deployed by this Template",
+      "Description" : "Folder within the S3 Configurations bucket containing Configurations deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -350,7 +327,7 @@
       "Description" : "Private network that can access the Application",
       "Type" : "String",
       "Default" : "10.0.0.0/16",
-      "AllowedPattern" : "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
       "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
     },
 
@@ -405,15 +382,13 @@
     "Roles" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplateFolder" }, "/Application-WebSphereMQ-Roles.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-TemplatesBucket" }}, "/", { "Ref" : "TemplateFolder" }, "/Application-WebSphereMQ-Roles.json" ]]},
         "Parameters" : {
-          "ProductsBucket" : { "Ref" : "ProductsBucket" },
+          "StandardBucketsStackName" : { "Ref" : "StandardBucketsStackName" },
           "ProductFolder" : { "Ref" : "ProductFolder" },
           "ProductObject" : { "Ref" : "ProductObject" },
-          "ConfigurationsBucket" : { "Ref" : "ConfigurationsBucket" },
           "ConfigurationFolder" : { "Ref" : "ConfigurationFolder" },
           "ConfigurationObject" : { "Ref" : "ConfigurationObject" },
-          "ApplicationName" : { "Ref" : "ApplicationName" },
           "UseFileSystemMonitoring" : { "Ref" : "UseFileSystemMonitoring" },
           "LogRetention" : { "Ref" : "LogRetention" }
         }
@@ -423,7 +398,7 @@
     "Logs" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplateFolder" }, "/Application-WebSphereMQ-Logs.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-TemplatesBucket" }}, "/", { "Ref" : "TemplateFolder" }, "/Application-WebSphereMQ-Logs.json" ]]},
         "Parameters" : {
           "VPCStackName" : { "Ref" : "VPCStackName" },
           "StandardTopicsStackName" : { "Ref" : "StandardTopicsStackName" },
@@ -438,7 +413,7 @@
     "SecurityGroups" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplateFolder" }, "/Application-WebSphereMQ-SecurityGroups.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-TemplatesBucket" }}, "/", { "Ref" : "TemplateFolder" }, "/Application-WebSphereMQ-SecurityGroups.json" ]]},
         "Parameters" : {
           "VPNStackName" : { "Ref" : "VPNStackName" },
           "LinuxBastionsStackName" : { "Ref" : "LinuxBastionsStackName" },
@@ -457,7 +432,7 @@
     "FileSystem" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplateFolder" }, "/Application-WebSphereMQ-FileSystem.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-TemplatesBucket" }}, "/", { "Ref" : "TemplateFolder" }, "/Application-WebSphereMQ-FileSystem.json" ]]},
         "Parameters" : {
           "VPCStackName" : { "Ref" : "VPCStackName" },
           "MountTargetSecurityGroup" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.MountTargetSecurityGroup" ]},
@@ -469,12 +444,13 @@
     "QueueInstances" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplateFolder" }, "/Application-WebSphereMQ-QueueInstances.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-TemplatesBucket" }}, "/", { "Ref" : "TemplateFolder" }, "/Application-WebSphereMQ-QueueInstances.json" ]]},
         "Parameters" : {
           "VPCStackName" : { "Ref" : "VPCStackName" },
           "CustomIdentifierFunctionsStackName" : { "Ref" : "CustomIdentifierFunctionsStackName" },
           "StandardCIDRFunctionsStackName" : { "Ref" : "StandardCIDRFunctionsStackName" },
           "StandardAMIFunctionsStackName" : { "Ref" : "StandardAMIFunctionsStackName" },
+          "StandardBucketsStackName" : { "Ref" : "StandardBucketsStackName" },
           "StandardTopicsStackName" : { "Ref" : "StandardTopicsStackName" },
           "KeyName" : { "Ref" : "KeyName" },
           "Role" : { "Fn::GetAtt" : [ "Roles", "Outputs.Role" ]},
@@ -483,12 +459,10 @@
           "FileSystem" : { "Fn::GetAtt" : [ "FileSystem", "Outputs.FileSystem" ]},
           "CompanyName" : { "Ref" : "CompanyName" },
           "SystemName" : { "Ref" : "SystemName" },
-          "EnvironmentSize" : { "Ref" : "EnvironmentSize" },
+          "EnvironmentType" : { "Ref" : "EnvironmentType" },
           "OSName" : { "Ref" : "OSName" },
-          "ProductsBucket" : { "Ref" : "ProductsBucket" },
           "ProductFolder" : { "Ref" : "ProductFolder" },
           "ProductObject" : { "Ref" : "ProductObject" },
-          "ConfigurationsBucket" : { "Ref" : "ConfigurationsBucket" },
           "ConfigurationFolder" : { "Ref" : "ConfigurationFolder" },
           "ConfigurationObject" : { "Ref" : "ConfigurationObject" },
           "ApplicationName" : { "Ref" : "ApplicationName" },
