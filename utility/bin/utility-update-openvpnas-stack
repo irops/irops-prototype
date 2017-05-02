@@ -240,7 +240,7 @@ else
       2|10|25|50)
         openvpnas_license=OpenVPNAS$utility_license;;
       *)
-        echo "-Z $utility_license invalid! Must be 2, 10, 25 or 50."
+        echo "-L $utility_license invalid! Must be 2, 10, 25 or 50."
         exit 25;;
     esac
 fi
