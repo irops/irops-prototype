@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
 
-  "Description" : "Example-LinuxWebServer Template. This is an example of a Linux Web Server based application, showing installation and configuration via cfn-init.",
+  "Description" : "Example-NestedLinuxWebServer Template. This is an example of a Linux Web Server based application, showing installation and configuration via cfn-init, using the Nested Stack model to separate Resources into logical groups.",
 
   "Metadata" : {
     "AWS::CloudFormation::Interface" : {
@@ -12,6 +12,7 @@
             "VPCStackName",
             "CustomIdentifierFunctionsStackName",
             "StandardAMIFunctionsStackName",
+            "StandardBucketsStackName",
             "StandardTopicsStackName"
           ]
         },
@@ -24,7 +25,6 @@
         {
           "Label" : { "default" : "Template Configuration" },
           "Parameters" : [
-            "TemplatesBucket",
             "TemplateFolder"
           ]
         },
@@ -38,14 +38,13 @@
         {
           "Label" : { "default" : "Environment Configuration" },
           "Parameters" : [
-            "EnvironmentSize",
-            "InstanceOS"
+            "EnvironmentType",
+            "OSName"
           ]
         },
         {
           "Label" : { "default" : "Application Configuration" },
           "Parameters" : [
-            "ApplicationsBucket",
             "ApplicationFolder",
             "ApplicationObject",
             "ApplicationName",
@@ -77,15 +76,14 @@
         "VPCStackName" : { "default" : "VPC Stack Name" },
         "CustomIdentifierFunctionsStackName" : { "default" : "CustomIdentifierFunctions Stack Name" },
         "StandardAMIFunctionsStackName" : { "default" : "StandardAMIFunctions Stack Name" },
+        "StandardBucketsStackName" : { "default" : "StandardBuckets Stack Name" },
         "StandardTopicsStackName" : { "default" : "StandardTopics Stack Name" },
         "KeyName" : { "default" : "Key Name" },
-        "TemplatesBucket" : { "default" : "Templates Bucket" },
         "TemplateFolder" : { "default" : "Template Folder" },
         "CompanyName" : { "default" : "Company Name" },
         "SystemName" : { "default" : "System Name" },
-        "EnvironmentSize" : { "default" : "Environment Size" },
-        "InstanceOS" : { "default" : "Instance Operating System" },
-        "ApplicationsBucket" : { "default" : "Applications Bucket" },
+        "EnvironmentType" : { "default" : "Environment Type" },
+        "OSName" : { "default" : "Operating System Name" },
         "ApplicationFolder" : { "default" : "Application Folder" },
         "ApplicationObject" : { "default" : "Application Object" },
         "ApplicationName" : { "default" : "Application Name" },
@@ -137,6 +135,16 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
+    "StandardBucketsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Buckets",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardBuckets",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
     "StandardTopicsStackName" : {
       "Description" : "Name of the CloudFormation Stack containing Standard Topics",
       "Type" : "String",
@@ -154,15 +162,6 @@
       "Default" : "example",
       "AllowedPattern" : "(^$|^[_a-zA-Z0-9]*$)",
       "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
-    },
-
-    "TemplatesBucket" : {
-      "Description" : "S3 bucket containing Templates referenced by this Template",
-      "Type" : "String",
-      "MaxLength" : 64,
-      "Default" : "templates-us-west-2-irops",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
     },
 
     "TemplateFolder" : {
@@ -194,34 +193,24 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
-    "EnvironmentSize" : {
-      "Description" : "Size of the Environment to build. Used to select size-related options in Mappings",
+    "EnvironmentType" : {
+      "Description" : "Type of the Environment to build. Used to select size-related options in Mappings",
       "Type" : "String",
-      "Default" : "micro",
+      "Default" : "small",
       "AllowedValues" : [ "micro", "small", "medium", "large", "xlarge" ],
       "ConstraintDescription" : "must be micro, small, medium, large or xlarge."
     },
 
-    "InstanceOS" : {
+    "OSName" : {
       "Description" : "The Operating System to use for Instances",
       "Type" : "String",
-      "Default" : "AMZN",
-      "AllowedValues" : [ "AMZN", "RHEL" ],
-      "ConstraintDescription" : "must be AMZN = \"Amazon Linux 2016.09.1\" or RHEL = \"RHEL 7.3\"."
-    },
-
-    "ApplicationsBucket" : {
-      "Description" : "S3 bucket containing Applications to be deployed",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 64,
-      "Default" : "examples-us-west-2-irops",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
+      "Default" : "Amazon Linux",
+      "AllowedValues" : [ "Amazon Linux", "Amazon Linux 2017.03.0", "Amazon Linux 2016.09.1", "Amazon Linux 2016.09.0", "RHEL 7", "RHEL 7.4", "RHEL 7.3" ],
+      "ConstraintDescription" : "must be \"Amazon Linux\" (latest), \"Amazon Linux 2017.03.0\", \"Amazon Linux 2016.09.1\", \"Amazon Linux 2016.09.0\", \"RHEL 7\" (latest), \"RHEL 7.4\" or \"RHEL 7.3\"."
     },
 
     "ApplicationFolder" : {
-      "Description" : "Folder within S3 bucket containing WebServer Application objects",
+      "Description" : "Folder within the S3 Applications bucket containing Applications deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -231,7 +220,7 @@
     },
 
     "ApplicationObject" : {
-      "Description" : "Object within S3 bucket and folder containing WebServer Application object",
+      "Description" : "Object within the S3 bucket and folder containing the LinuxWebServer Application",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
@@ -383,9 +372,9 @@
     "Role" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplateFolder" }, "/Example-NestedLinuxWebServer-Role.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-TemplatesBucket" }}, "/", { "Ref" : "TemplateFolder" }, "/Example-NestedLinuxWebServer-Role.json" ]]},
         "Parameters" : {
-          "ApplicationsBucket" : { "Ref" : "ApplicationsBucket" },
+          "StandardBucketsStackName" : { "Ref" : "StandardBucketsStackName" },
           "ApplicationFolder" : { "Ref" : "ApplicationFolder" },
           "ApplicationObject" : { "Ref" : "ApplicationObject" },
           "LogRetention" : { "Ref" : "LogRetention" }
@@ -396,7 +385,7 @@
     "Logs" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplateFolder" }, "/Example-NestedLinuxWebServer-Logs.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-TemplatesBucket" }}, "/", { "Ref" : "TemplateFolder" }, "/Example-NestedLinuxWebServer-Logs.json" ]]},
         "Parameters" : {
           "VPCStackName" : { "Ref" : "VPCStackName" },
           "StandardTopicsStackName" : { "Ref" : "StandardTopicsStackName" },
@@ -411,7 +400,7 @@
     "SecurityGroup" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplateFolder" }, "/Example-NestedLinuxWebServer-SecurityGroup.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-TemplatesBucket" }}, "/", { "Ref" : "TemplateFolder" }, "/Example-NestedLinuxWebServer-SecurityGroup.json" ]]},
         "Parameters" : {
           "VPCStackName" : { "Ref" : "VPCStackName" },
           "ApplicationName" : { "Ref" : "ApplicationName" },
@@ -434,20 +423,20 @@
     "Instance" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplateFolder" }, "/Example-NestedLinuxWebServer-Instance.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-TemplatesBucket" }}, "/", { "Ref" : "TemplateFolder" }, "/Example-NestedLinuxWebServer-Instance.json" ]]},
         "Parameters" : {
           "VPCStackName" : { "Ref" : "VPCStackName" },
           "CustomIdentifierFunctionsStackName" : { "Ref" : "CustomIdentifierFunctionsStackName" },
           "StandardAMIFunctionsStackName" : { "Ref" : "StandardAMIFunctionsStackName" },
+          "StandardBucketsStackName" : { "Ref" : "StandardBucketsStackName" },
           "KeyName" : { "Ref" : "KeyName" },
           "Role" : { "Fn::GetAtt" : [ "Role", "Outputs.Role" ]},
           "LogGroup" : { "Fn::If" : [ "ConfigureLogs", { "Fn::GetAtt" : [ "Logs", "Outputs.LogGroup" ]}, "" ]},
           "SecurityGroup" : { "Fn::GetAtt" : [ "SecurityGroup", "Outputs.SecurityGroup" ]},
           "CompanyName" : { "Ref" : "CompanyName" },
           "SystemName" : { "Ref" : "SystemName" },
-          "EnvironmentSize" : { "Ref" : "EnvironmentSize" },
-          "InstanceOS" : { "Ref" : "InstanceOS" },
-          "ApplicationsBucket" : { "Ref" : "ApplicationsBucket" },
+          "EnvironmentType" : { "Ref" : "EnvironmentType" },
+          "OSName" : { "Ref" : "OSName" },
           "ApplicationFolder" : { "Ref" : "ApplicationFolder" },
           "ApplicationObject" : { "Ref" : "ApplicationObject" },
           "ApplicationName" : { "Ref" : "ApplicationName" },
@@ -461,7 +450,7 @@
     "DomainNames" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplateFolder" }, "/Example-NestedLinuxWebServer-DomainNames.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-TemplatesBucket" }}, "/", { "Ref" : "TemplateFolder" }, "/Example-NestedLinuxWebServer-DomainNames.json" ]]},
         "Parameters" : {
           "VPCStackName" : { "Ref" : "VPCStackName" },
           "InstanceHostName" : { "Fn::GetAtt" : [ "Instance", "Outputs.InstanceHostName" ]},

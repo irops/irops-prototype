@@ -7,9 +7,14 @@
     "AWS::CloudFormation::Interface" : {
       "ParameterGroups" : [
         {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "StandardBucketsStackName"
+          ]
+        },
+        {
           "Label" : { "default" : "Application Configuration" },
           "Parameters" : [
-            "ApplicationsBucket",
             "ApplicationFolder",
             "ApplicationObject",
             "LogRetention"
@@ -18,7 +23,7 @@
       ],
 
       "ParameterLabels" : {
-        "ApplicationsBucket" : { "default" : "Applications Bucket" },
+        "StandardBucketsStackName" : { "default" : "StandardBuckets Stack Name" },
         "ApplicationFolder" : { "default" : "Application Folder" },
         "ApplicationObject" : { "default" : "Application Object" },
         "LogRetention" : { "default" : "Log Retention" }
@@ -27,13 +32,14 @@
   },
 
   "Parameters" : {
-    "ApplicationsBucket" : {
-      "Description" : "S3 bucket containing Applications to be deployed",
+    "StandardBucketsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Buckets",
       "Type" : "String",
+      "MinLength" : 2,
       "MaxLength" : 64,
-      "Default" : "",
-      "AllowedPattern" : "(^$|^[a-z][-a-z0-9]*$)",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
+      "Default" : "StandardBuckets",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
     "ApplicationFolder" : {
@@ -65,7 +71,7 @@
   },
 
   "Conditions" : {
-    "DownloadApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationObject" }, "" ]}]},
+    "InstallApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationObject" }, "" ]}]},
     "ConfigureLogs" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LogRetention" }, "0" ]}]}
   },
 
@@ -97,12 +103,12 @@
             "Action" : [
               "s3:GetObject"
             ],
-            "Resource" : { "Fn::Sub" : "arn:aws:s3:::${ApplicationsBucket}/${ApplicationFolder}/*" }
+            "Resource" : { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ExamplesBucket" }}, "/", { "Ref" : "ApplicationFolder" }, "/*" ]]}
           }]
         },
         "Roles" : [{ "Ref" : "Role" }]
       },
-      "Condition" : "DownloadApplication"
+      "Condition" : "InstallApplication"
     },
 
     "LogMonitoringPolicy" : {

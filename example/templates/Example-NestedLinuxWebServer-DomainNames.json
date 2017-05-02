@@ -30,11 +30,8 @@
 
       "ParameterLabels" : {
         "VPCStackName" : { "default" : "VPC Stack Name" },
-        "CustomIdentifierFunctionsStackName" : { "default" : "CustomIdentifierFunctions Stack Name" },
         "InstanceHostName" : { "default" : "Instance HostName" },
         "InstancePublicIp" : { "default" : "Instance Public IP" },
-        "CompanyName" : { "default" : "Company Name" },
-        "SystemName" : { "default" : "System Name" },
         "ApplicationName" : { "default" : "Application Name" },
         "ApplicationDomain" : { "default" : "Application Domain Name" }
       }
@@ -52,20 +49,11 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
-    "CustomIdentifierFunctionsStackName" : {
-      "Description" : "Name of the CloudFormation Stack containing the Custom Identifier Functions",
-      "Type" : "String",
-      "MaxLength" : 64,
-      "Default" : "CustomIdentifierFunctions",
-      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
-      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
-    },
-
     "InstanceHostName" : {
       "Description" : "HostName of an existing Instance needed by the RecordSet",
       "Type" : "String",
       "MinLength" : "2",
-      "MaxLength" : "32",
+      "MaxLength" : "64",
       "ConstraintDescription" : "must be a valid HostName."
     },
 
@@ -108,7 +96,7 @@
       "Properties" : {
         "HostedZoneId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicHostedZone" }},
         "Comment" : { "Fn::Sub" : "Public DNS HostName for ${ApplicationName} Instance." },
-        "Name" : { "Fn::Sub" : [ "${InstanceHostName}." ]},
+        "Name" : { "Fn::Sub" : "${InstanceHostName}." },
         "Type" : "A",
         "TTL" : "900",
         "ResourceRecords" : [{ "Ref" : "InstancePublicIp" }]
