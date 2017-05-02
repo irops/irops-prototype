@@ -13,6 +13,7 @@
             "CustomIdentifierFunctionsStackName",
             "StandardCIDRFunctionsStackName",
             "StandardAMIFunctionsStackName",
+            "StandardBucketsStackName",
             "StandardTopicsStackName"
           ]
         },
@@ -35,17 +36,15 @@
         {
           "Label" : { "default" : "Environment Configuration" },
           "Parameters" : [
-            "EnvironmentSize",
+            "EnvironmentType",
             "WindowsOSName"
           ]
         },
         {
           "Label" : { "default" : "Application Dependencies Configuration" },
           "Parameters" : [
-            "ProductsBucket",
             "ProductFolder",
             "DataStagingProductObject",
-            "ConfigurationsBucket",
             "ConfigurationFolder",
             "DataStagingConfigurationObject"
           ]
@@ -53,7 +52,6 @@
         {
           "Label" : { "default" : "Application Configuration" },
           "Parameters" : [
-            "ApplicationsBucket",
             "ApplicationFolder",
             "DataStagingApplicationObject",
             "ApplicationName",
@@ -70,6 +68,7 @@
         "CustomIdentifierFunctionsStackName" : { "default" : "CustomIdentifierFunctions Stack Name" },
         "StandardCIDRFunctionsStackName" : { "default" : "StandardCIDRFunctions Stack Name" },
         "StandardAMIFunctionsStackName" : { "default" : "StandardAMIFunctions Stack Name" },
+        "StandardBucketsStackName" : { "default" : "StandardBuckets Stack Name" },
         "StandardTopicsStackName" : { "default" : "StandardTopics Stack Name" },
         "KeyName" : { "default" : "Key Name" },
         "DataStagingRole" : { "default" : "DataStagingRole" },
@@ -77,15 +76,12 @@
         "DataStagingInstanceSecurityGroup" : { "default" : "DataStagingInstance SecurityGroup" },
         "CompanyName" : { "default" : "Company Name" },
         "SystemName" : { "default" : "System Name" },
-        "EnvironmentSize" : { "default" : "Environment Size" },
+        "EnvironmentType" : { "default" : "Environment Type" },
         "WindowsOSName" : { "default" : "Windows Operating System Name" },
-        "ProductsBucket" : { "default" : "Products Bucket" },
         "ProductFolder" : { "default" : "Product Folder" },
         "DataStagingProductObject" : { "default" : "DataStaging Product Object" },
-        "ConfigurationsBucket" : { "default" : "Configurations Bucket" },
         "ConfigurationFolder" : { "default" : "Configuration Folder" },
         "DataStagingConfigurationObject" : { "default" : "DataStaging Configuration Object" },
-        "ApplicationsBucket" : { "default" : "Applications Bucket" },
         "ApplicationFolder" : { "default" : "Application Folder" },
         "DataStagingApplicationObject" : { "default" : "DataStaging Application Object" },
         "ApplicationName" : { "default" : "Application Name" },
@@ -132,6 +128,16 @@
       "MaxLength" : 64,
       "Default" : "StandardAMIFunctions",
       "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "StandardBucketsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Buckets",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardBuckets",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
@@ -198,8 +204,8 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
-    "EnvironmentSize" : {
-      "Description" : "Size of the Environment to build. Used to select size-related options in Mappings",
+    "EnvironmentType" : {
+      "Description" : "Type of the Environment to build. Used to select size-related options in Mappings",
       "Type" : "String",
       "Default" : "small",
       "AllowedValues" : [ "small", "medium", "large", "xlarge" ],
@@ -214,18 +220,8 @@
       "ConstraintDescription" : "must be \"Windows Server 2012 R2\" or \"Windows Server 2016\"."
     },
 
-    "ProductsBucket" : {
-      "Description" : "S3 bucket containing 3rd-Party Products to be deployed",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 64,
-      "Default" : "products-us-west-2-production",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
-    },
-
     "ProductFolder" : {
-      "Description" : "Folder within the S3 bucket containing Products deployed by this Template",
+      "Description" : "Folder within the S3 Products bucket containing Products deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -243,18 +239,8 @@
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
-    "ConfigurationsBucket" : {
-      "Description" : "S3 bucket containing Configurations to be deployed",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 64,
-      "Default" : "configurations-us-west-2-irops",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
-    },
-
     "ConfigurationFolder" : {
-      "Description" : "Folder within the S3 bucket containing Configurations deployed by this Template",
+      "Description" : "Folder within the S3 Configurations bucket containing Configurations deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -272,18 +258,8 @@
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
-    "ApplicationsBucket" : {
-      "Description" : "S3 bucket containing Applications to be deployed",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 64,
-      "Default" : "applications-us-west-2-irops",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
-    },
-
     "ApplicationFolder" : {
-      "Description" : "Folder within the S3 bucket containing Applications deployed by this Template",
+      "Description" : "Folder within the S3 Applications bucket containing Applications deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -348,16 +324,17 @@
 
   "Mappings" : {
     "InstanceTypeMap" : {
-      "InventoryDetail" : { "small" : "t2.medium", "medium" : "t2.large", "large" : "c4.large", "xlarge" : "c4.xlarge" },
-      "FLIFO"           : { "small" : "t2.medium", "medium" : "t2.large", "large" : "c4.large", "xlarge" : "c4.xlarge" },
-      "Schedule"        : { "small" : "t2.medium", "medium" : "t2.large", "large" : "c4.large", "xlarge" : "c4.xlarge" },
-      "ETicket"         : { "small" : "t2.medium", "medium" : "t2.large", "large" : "c4.large", "xlarge" : "c.4xlarge" },
-      "PNR"             : { "small" : "t2.medium", "medium" : "t2.large", "large" : "c4.large", "xlarge" : "c4.xlarge" },
-      "ACI"             : { "small" : "t2.medium", "medium" : "t2.large", "large" : "c4.large", "xlarge" : "c4.xlarge" }
+      "InventoryDetail" : { "small" : "t2.large", "medium" : "r4.xlarge", "large" : "r4.2xlarge", "xlarge" : "r4.4xlarge" },
+      "FLIFO"           : { "small" : "t2.large", "medium" : "r4.xlarge", "large" : "r4.2xlarge", "xlarge" : "r4.4xlarge" },
+      "Schedule"        : { "small" : "t2.large", "medium" : "r4.xlarge", "large" : "r4.2xlarge", "xlarge" : "r4.4xlarge" },
+      "ETicket"         : { "small" : "t2.large", "medium" : "r4.xlarge", "large" : "r4.2xlarge", "xlarge" : "r4.4xlarge" },
+      "PNR"             : { "small" : "t2.large", "medium" : "r4.xlarge", "large" : "r4.2xlarge", "xlarge" : "r4.4xlarge" },
+      "ACI"             : { "small" : "t2.large", "medium" : "r4.xlarge", "large" : "r4.2xlarge", "xlarge" : "r4.4xlarge" }
     }
   },
 
   "Conditions" : {
+    "ConfigureGlobalS3" : { "Fn::Equals" : [{ "Ref" : "AWS::Region" }, "us-east-1" ]},
     "ConfigureKey" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "KeyName" }, "" ]}]},
     "InstallProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "DataStagingProductObject" }, "" ]}]},
     "InstallConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "DataStagingConfigurationObject" }, "" ]}]},
@@ -474,9 +451,9 @@
             "type" : "S3",
             "roleName" : { "Ref" : "DataStagingRole" },
             "buckets" : [
-              { "Ref" : "ProductsBucket" },
-              { "Ref" : "ConfigurationsBucket" },
-              { "Ref" : "ApplicationsBucket" }
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }},
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }},
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ApplicationsBucket" }}
             ]
           }
         },
@@ -704,17 +681,17 @@
           },
           "InstallInventoryDetailProduct" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ProductsBucket}/${ProductFolder}/${DataStagingProductObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }}, "/", { "Ref" : "ProductFolder" }, "/", { "Ref" : "DataStagingProductObject" }]]}
             }
           },
           "InstallInventoryDetailConfiguration" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ConfigurationsBucket}/${ConfigurationFolder}/${DataStagingConfigurationObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/", { "Ref" : "DataStagingConfigurationObject" }]]}
             }
           },
           "InstallInventoryDetailApplication" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ApplicationsBucket}/${ApplicationFolder}/${DataStagingApplicationObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ApplicationsBucket" }}, "/", { "Ref" : "ApplicationFolder" }, "/", { "Ref" : "DataStagingApplicationObject" }]]}
             }
           },
           "ConfigureHostname" : {
@@ -729,7 +706,7 @@
       },
       "Properties" : {
         "ImageId" : { "Fn::GetAtt" : [ "GetWindowsImageId", "ImageId" ]},
-        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "InventoryDetail", { "Ref" : "EnvironmentSize" }]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "InventoryDetail", { "Ref" : "EnvironmentType" }]},
         "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
         "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
         "NetworkInterfaces" : [{
@@ -767,9 +744,9 @@
             "type" : "S3",
             "roleName" : { "Ref" : "DataStagingRole" },
             "buckets" : [
-              { "Ref" : "ProductsBucket" },
-              { "Ref" : "ConfigurationsBucket" },
-              { "Ref" : "ApplicationsBucket" }
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }},
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }},
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ApplicationsBucket" }}
             ]
           }
         },
@@ -997,17 +974,17 @@
           },
           "InstallFLIFOProduct" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ProductsBucket}/${ProductFolder}/${DataStagingProductObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }}, "/", { "Ref" : "ProductFolder" }, "/", { "Ref" : "DataStagingProductObject" }]]}
             }
           },
           "InstallFLIFOConfiguration" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ConfigurationsBucket}/${ConfigurationFolder}/${DataStagingConfigurationObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/", { "Ref" : "DataStagingConfigurationObject" }]]}
             }
           },
           "InstallFLIFOApplication" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ApplicationsBucket}/${ApplicationFolder}/${DataStagingApplicationObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ApplicationsBucket" }}, "/", { "Ref" : "ApplicationFolder" }, "/", { "Ref" : "DataStagingApplicationObject" }]]}
             }
           },
           "ConfigureHostname" : {
@@ -1022,7 +999,7 @@
       },
       "Properties" : {
         "ImageId" : { "Fn::GetAtt" : [ "GetWindowsImageId", "ImageId" ]},
-        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "FLIFO", { "Ref" : "EnvironmentSize" }]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "FLIFO", { "Ref" : "EnvironmentType" }]},
         "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
         "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
         "NetworkInterfaces" : [{
@@ -1060,9 +1037,9 @@
             "type" : "S3",
             "roleName" : { "Ref" : "DataStagingRole" },
             "buckets" : [
-              { "Ref" : "ProductsBucket" },
-              { "Ref" : "ConfigurationsBucket" },
-              { "Ref" : "ApplicationsBucket" }
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }},
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }},
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ApplicationsBucket" }}
             ]
           }
         },
@@ -1290,17 +1267,17 @@
           },
           "InstallScheduleProduct" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ProductsBucket}/${ProductFolder}/${DataStagingProductObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }}, "/", { "Ref" : "ProductFolder" }, "/", { "Ref" : "DataStagingProductObject" }]]}
             }
           },
           "InstallScheduleConfiguration" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ConfigurationsBucket}/${ConfigurationFolder}/${DataStagingConfigurationObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/", { "Ref" : "DataStagingConfigurationObject" }]]}
             }
           },
           "InstallScheduleApplication" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ApplicationsBucket}/${ApplicationFolder}/${DataStagingApplicationObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ApplicationsBucket" }}, "/", { "Ref" : "ApplicationFolder" }, "/", { "Ref" : "DataStagingApplicationObject" }]]}
             }
           },
           "ConfigureHostname" : {
@@ -1315,7 +1292,7 @@
       },
       "Properties" : {
         "ImageId" : { "Fn::GetAtt" : [ "GetWindowsImageId", "ImageId" ]},
-        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Schedule", { "Ref" : "EnvironmentSize" }]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Schedule", { "Ref" : "EnvironmentType" }]},
         "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
         "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
         "NetworkInterfaces" : [{
@@ -1353,9 +1330,9 @@
             "type" : "S3",
             "roleName" : { "Ref" : "DataStagingRole" },
             "buckets" : [
-              { "Ref" : "ProductsBucket" },
-              { "Ref" : "ConfigurationsBucket" },
-              { "Ref" : "ApplicationsBucket" }
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }},
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }},
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ApplicationsBucket" }}
             ]
           }
         },
@@ -1583,17 +1560,17 @@
           },
           "InstallETicketProduct" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ProductsBucket}/${ProductFolder}/${DataStagingProductObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }}, "/", { "Ref" : "ProductFolder" }, "/", { "Ref" : "DataStagingProductObject" }]]}
             }
           },
           "InstallETicketConfiguration" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ConfigurationsBucket}/${ConfigurationFolder}/${DataStagingConfigurationObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/", { "Ref" : "DataStagingConfigurationObject" }]]}
             }
           },
           "InstallETicketApplication" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ApplicationsBucket}/${ApplicationFolder}/${DataStagingApplicationObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ApplicationsBucket" }}, "/", { "Ref" : "ApplicationFolder" }, "/", { "Ref" : "DataStagingApplicationObject" }]]}
             }
           },
           "ConfigureHostname" : {
@@ -1608,7 +1585,7 @@
       },
       "Properties" : {
         "ImageId" : { "Fn::GetAtt" : [ "GetWindowsImageId", "ImageId" ]},
-        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "ETicket", { "Ref" : "EnvironmentSize" }]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "ETicket", { "Ref" : "EnvironmentType" }]},
         "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
         "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
         "NetworkInterfaces" : [{
@@ -1646,9 +1623,9 @@
             "type" : "S3",
             "roleName" : { "Ref" : "DataStagingRole" },
             "buckets" : [
-              { "Ref" : "ProductsBucket" },
-              { "Ref" : "ConfigurationsBucket" },
-              { "Ref" : "ApplicationsBucket" }
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }},
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }},
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ApplicationsBucket" }}
             ]
           }
         },
@@ -1876,17 +1853,17 @@
           },
           "InstallPNRProduct" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ProductsBucket}/${ProductFolder}/${DataStagingProductObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }}, "/", { "Ref" : "ProductFolder" }, "/", { "Ref" : "DataStagingProductObject" }]]}
             }
           },
           "InstallPNRConfiguration" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ConfigurationsBucket}/${ConfigurationFolder}/${DataStagingConfigurationObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/", { "Ref" : "DataStagingConfigurationObject" }]]}
             }
           },
           "InstallPNRApplication" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ApplicationsBucket}/${ApplicationFolder}/${DataStagingApplicationObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ApplicationsBucket" }}, "/", { "Ref" : "ApplicationFolder" }, "/", { "Ref" : "DataStagingApplicationObject" }]]}
             }
           },
           "ConfigureHostname" : {
@@ -1901,7 +1878,7 @@
       },
       "Properties" : {
         "ImageId" : { "Fn::GetAtt" : [ "GetWindowsImageId", "ImageId" ]},
-        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "PNR", { "Ref" : "EnvironmentSize" }]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "PNR", { "Ref" : "EnvironmentType" }]},
         "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
         "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
         "NetworkInterfaces" : [{
@@ -1939,9 +1916,9 @@
             "type" : "S3",
             "roleName" : { "Ref" : "DataStagingRole" },
             "buckets" : [
-              { "Ref" : "ProductsBucket" },
-              { "Ref" : "ConfigurationsBucket" },
-              { "Ref" : "ApplicationsBucket" }
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }},
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }},
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ApplicationsBucket" }}
             ]
           }
         },
@@ -2169,17 +2146,17 @@
           },
           "InstallACIProduct" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ProductsBucket}/${ProductFolder}/${DataStagingProductObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }}, "/", { "Ref" : "ProductFolder" }, "/", { "Ref" : "DataStagingProductObject" }]]}
             }
           },
           "InstallACIConfiguration" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ConfigurationsBucket}/${ConfigurationFolder}/${DataStagingConfigurationObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/", { "Ref" : "DataStagingConfigurationObject" }]]}
             }
           },
           "InstallACIApplication" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ApplicationsBucket}/${ApplicationFolder}/${DataStagingApplicationObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ApplicationsBucket" }}, "/", { "Ref" : "ApplicationFolder" }, "/", { "Ref" : "DataStagingApplicationObject" }]]}
             }
           },
           "ConfigureHostname" : {
@@ -2194,7 +2171,7 @@
       },
       "Properties" : {
         "ImageId" : { "Fn::GetAtt" : [ "GetWindowsImageId", "ImageId" ]},
-        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "ACI", { "Ref" : "EnvironmentSize" }]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "ACI", { "Ref" : "EnvironmentType" }]},
         "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
         "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
         "NetworkInterfaces" : [{

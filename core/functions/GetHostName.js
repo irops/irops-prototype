@@ -108,7 +108,7 @@ var componentNameToCode = {
   'ACI'               : 'aci',
   'Logging'           : 'log',
   'Deployment'        : 'dep',
-  'Publish'           : 'pub',
+  'Publishing'        : 'pub',
   'DomainController'  : 'dc',
   'SFTP'              : 'ftp',
   'PolicyServer'      : 'pol',

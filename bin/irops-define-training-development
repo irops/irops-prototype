@@ -79,28 +79,32 @@ export ENVIRONMENT_CODE=d
 export ENVIRONMENT_NAME="Development"
 export ENVIRONMENT_DOMAIN=$ENVIRONMENT_CODE.$AWS_DEFAULT_REGION.$COMPANY_CODE.iropshub.com
 export ENVIRONMENT_NETWORK=172.21.152.0/21
-export ENVIRONMENT_SIZE=small
+export ENVIRONMENT_TYPE=small
+export ENVIRONMENT_ZONES=1
 
 # Core
 export CORE_CODE=c
 export CORE_NAME="Core"
 export CORE_DOMAIN=$CORE_CODE.$AWS_DEFAULT_REGION.$COMPANY_CODE.iropshub.com
 export CORE_NETWORK=172.21.184.0/22
-export CORE_SIZE=small
+export CORE_TYPE=small
+export CORE_ZONES=2
 
 # Build
 export BUILD_CODE=b
 export BUILD_NAME="Build"
 export BUILD_DOMAIN=$BUILD_CODE.$AWS_DEFAULT_REGION.$COMPANY_CODE.iropshub.com
 export BUILD_NETWORK=172.21.188.0/23
-export BUILD_SIZE=small
+export BUILD_TYPE=small
+export BUILD_ZONES=2
 
 # Identity
 export IDENTITY_CODE=i
 export IDENTITY_NAME="Identity"
 export IDENTITY_DOMAIN=$IDENTITY_CODE.us-east-1.$COMPANY_CODE.iropshub.com
 export IDENTITY_NETWORK=172.21.62.0/23
-export IDENTITY_SIZE=small
+export IDENTITY_TYPE=small
+export IDENTITY_ZONES=2
 
 # Gateway
 export GATEWAY_CODE=clt

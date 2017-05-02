@@ -14,6 +14,7 @@
             "CustomIdentifierFunctionsStackName",
             "StandardCIDRFunctionsStackName",
             "StandardAMIFunctionsStackName",
+            "StandardBucketsStackName",
             "StandardTopicsStackName"
           ]
         },
@@ -26,7 +27,6 @@
         {
           "Label" : { "default" : "Template Configuration" },
           "Parameters" : [
-            "TemplatesBucket",
             "TemplateFolder"
           ]
         },
@@ -40,7 +40,8 @@
         {
           "Label" : { "default" : "Environment Configuration" },
           "Parameters" : [
-            "EnvironmentSize",
+            "EnvironmentType",
+            "EnvironmentZones",
             "LinuxOSName",
             "WindowsOSName"
           ]
@@ -48,16 +49,13 @@
         {
           "Label" : { "default" : "Application Dependencies Configuration" },
           "Parameters" : [
-            "ProductsBucket",
             "ProductFolder",
             "CalculationProductObject",
             "MongoDBProductObject",
             "RabbitMQProductObject",
             "DataStagingProductObject",
             "LoggingProductObject",
-            "DeploymentProductObject",
-            "PublishProductObject",
-            "ConfigurationsBucket",
+            "PublishingProductObject",
             "ConfigurationFolder",
             "WebConfigurationObject",
             "CalculationConfigurationObject",
@@ -65,14 +63,12 @@
             "RabbitMQConfigurationObject",
             "DataStagingConfigurationObject",
             "LoggingConfigurationObject",
-            "DeploymentConfigurationObject",
-            "PublishConfigurationObject"
+            "PublishingConfigurationObject"
           ]
         },
         {
           "Label" : { "default" : "Application Configuration" },
           "Parameters" : [
-            "ApplicationsBucket",
             "ApplicationFolder",
             "WebApplicationObject",
             "CalculationApplicationObject",
@@ -80,8 +76,7 @@
             "RabbitMQApplicationObject",
             "DataStagingApplicationObject",
             "LoggingApplicationObject",
-            "DeploymentApplicationObject",
-            "PublishApplicationObject",
+            "PublishingApplicationObject",
             "ApplicationName",
             "ApplicationDomain",
             "ApplicationVersion",
@@ -112,25 +107,23 @@
         "CustomIdentifierFunctionsStackName" : { "default" : "CustomIdentifierFunctions Stack Name" },
         "StandardCIDRFunctionsStackName" : { "default" : "StandardCIDRFunctions Stack Name" },
         "StandardAMIFunctionsStackName" : { "default" : "StandardAMIFunctions Stack Name" },
+        "StandardBucketsStackName" : { "default" : "StandardBuckets Stack Name" },
         "StandardTopicsStackName" : { "default" : "StandardTopics Stack Name" },
         "KeyName" : { "default" : "Key Name" },
-        "TemplatesBucket" : { "default" : "Templates Bucket" },
         "TemplateFolder" : { "default" : "Template Folder" },
         "CompanyName" : { "default" : "Company Name" },
         "SystemName" : { "default" : "System Name" },
-        "EnvironmentSize" : { "default" : "Environment Size" },
+        "EnvironmentType" : { "default" : "Environment Type" },
+        "EnvironmentZones" : { "default" : "Environment Zones" },
         "LinuxOSName" : { "default" : "Linux Operating System Name" },
         "WindowsOSName" : { "default" : "Windows Operating System Name" },
-        "ProductsBucket" : { "default" : "Products Bucket" },
         "ProductFolder" : { "default" : "Product Folder" },
         "CalculationProductObject" : { "default" : "Calculation Product Object" },
         "MongoDBProductObject" : { "default" : "MongoDB Product Object" },
         "RabbitMQProductObject" : { "default" : "RabbitMQ Product Object" },
         "DataStagingProductObject" : { "default" : "DataStaging Product Object" },
         "LoggingProductObject" : { "default" : "Logging Product Object" },
-        "DeploymentProductObject" : { "default" : "Deployment Product Object" },
-        "PublishProductObject" : { "default" : "Publish Product Object" },
-        "ConfigurationsBucket" : { "default" : "Configurations Bucket" },
+        "PublishingProductObject" : { "default" : "Publishing Product Object" },
         "ConfigurationFolder" : { "default" : "Configuration Folder" },
         "WebConfigurationObject" : { "default" : "Web Configuration Object" },
         "CalculationConfigurationObject" : { "default" : "Calculation Configuration Object" },
@@ -138,9 +131,7 @@
         "RabbitMQConfigurationObject" : { "default" : "RabbitMQ Configuration Object" },
         "DataStagingConfigurationObject" : { "default" : "DataStaging Configuration Object" },
         "LoggingConfigurationObject" : { "default" : "Logging Configuration Object" },
-        "DeploymentConfigurationObject" : { "default" : "Deployment Configuration Object" },
-        "PublishConfigurationObject" : { "default" : "Publish Configuration Object" },
-        "ApplicationsBucket" : { "default" : "Applications Bucket" },
+        "PublishingConfigurationObject" : { "default" : "Publishing Configuration Object" },
         "ApplicationFolder" : { "default" : "Application Folder" },
         "WebApplicationObject" : { "default" : "Web Application Object" },
         "CalculationApplicationObject" : { "default" : "Calculation Application Object" },
@@ -148,8 +139,7 @@
         "RabbitMQApplicationObject" : { "default" : "RabbitMQ Application Object" },
         "DataStagingApplicationObject" : { "default" : "DataStaging Application Object" },
         "LoggingApplicationObject" : { "default" : "Logging Application Object" },
-        "DeploymentApplicationObject" : { "default" : "Deployment Application Object" },
-        "PublishApplicationObject" : { "default" : "Publish Application Object" },
+        "PublishingApplicationObject" : { "default" : "Publishing Application Object" },
         "ApplicationName" : { "default" : "Application Name" },
         "ApplicationDomain" : { "default" : "Application Domain Name" },
         "ApplicationVersion" : { "default" : "Application Version" },
@@ -217,6 +207,16 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
+    "StandardBucketsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Buckets",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardBuckets",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
     "StandardTopicsStackName" : {
       "Description" : "Name of the CloudFormation Stack containing Standard Topics",
       "Type" : "String",
@@ -236,17 +236,8 @@
       "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
     },
 
-    "TemplatesBucket" : {
-      "Description" : "S3 bucket containing Templates referenced by this Template",
-      "Type" : "String",
-      "MaxLength" : 64,
-      "Default" : "templates-us-west-2-irops",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
-    },
-
     "TemplateFolder" : {
-      "Description" : "Folder within the S3 bucket containing Templates referenced by this Template",
+      "Description" : "Folder within the S3 Templates bucket containing Templates referenced by this Template",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "application",
@@ -274,12 +265,20 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
-    "EnvironmentSize" : {
-      "Description" : "Size of the Environment to build. Used to select size-related options in Mappings",
+    "EnvironmentType" : {
+      "Description" : "Type of the Environment to build. Used to select size-related options in Mappings",
       "Type" : "String",
       "Default" : "small",
       "AllowedValues" : [ "small", "medium", "large", "xlarge" ],
       "ConstraintDescription" : "must be small, medium, large or xlarge."
+    },
+
+    "EnvironmentZones" : {
+      "Description" : "Number of Availability Zones to build",
+      "Type" : "String",
+      "Default" : "2",
+      "AllowedValues" : [ "1", "2" ],
+      "ConstraintDescription" : "must be 1 or 2."
     },
 
     "LinuxOSName" : {
@@ -298,18 +297,8 @@
       "ConstraintDescription" : "must be \"Windows Server 2012 R2\" or \"Windows Server 2016\"."
     },
 
-    "ProductsBucket" : {
-      "Description" : "S3 bucket containing 3rd-Party Products to be deployed",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 64,
-      "Default" : "products-us-west-2-production",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
-    },
-
     "ProductFolder" : {
-      "Description" : "Folder within the S3 bucket containing Products deployed by this Template",
+      "Description" : "Folder within the S3 Products bucket containing Products deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -363,36 +352,17 @@
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
-    "DeploymentProductObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine Deployment Component installer",
+    "PublishingProductObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Engine Publishing Component installer",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
       "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
-    },
-
-    "PublishProductObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine Publish Component installer",
-      "Type" : "String",
-      "MaxLength" : 64,
-      "Default" : "",
-      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
-      "ConstraintDescription" : "must be a valid filename, not containing slashes."
-    },
-
-    "ConfigurationsBucket" : {
-      "Description" : "S3 bucket containing Configurations to be deployed",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 64,
-      "Default" : "configurations-us-west-2-irops",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
     },
 
     "ConfigurationFolder" : {
-      "Description" : "Folder within the S3 bucket containing Configurations deployed by this Template",
+      "Description" : "Folder within the S3 Configurations bucket containing Configurations deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -455,36 +425,17 @@
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
-    "DeploymentConfigurationObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine Deployment Component configuration",
+    "PublishingConfigurationObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Engine Publishing Component configuration",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
       "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
-    },
-
-    "PublishConfigurationObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine Publish Component configuration",
-      "Type" : "String",
-      "MaxLength" : 64,
-      "Default" : "",
-      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
-      "ConstraintDescription" : "must be a valid filename, not containing slashes."
-    },
-
-    "ApplicationsBucket" : {
-      "Description" : "S3 bucket containing Applications to be deployed",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 64,
-      "Default" : "applications-us-west-2-irops",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
     },
 
     "ApplicationFolder" : {
-      "Description" : "Folder within the S3 bucket containing Applications deployed by this Template",
+      "Description" : "Folder within the S3 Applications bucket containing Applications deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -547,17 +498,8 @@
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
-    "DeploymentApplicationObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine Deployment Component application",
-      "Type" : "String",
-      "MaxLength" : 64,
-      "Default" : "",
-      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
-      "ConstraintDescription" : "must be a valid filename, not containing slashes."
-    },
-
-    "PublishApplicationObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine Publish Component application",
+    "PublishingApplicationObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Engine Publishing Component application",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
@@ -701,18 +643,16 @@
     "Roles" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplateFolder" }, "/Application-Engine-Roles.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-TemplatesBucket" }}, "/", { "Ref" : "TemplateFolder" }, "/Application-Engine-Roles.json" ]]},
         "Parameters" : {
-          "ProductsBucket" : { "Ref" : "ProductsBucket" },
+          "StandardBucketsStackName" : { "Ref" : "StandardBucketsStackName" },
           "ProductFolder" : { "Ref" : "ProductFolder" },
           "CalculationProductObject" : { "Ref" : "CalculationProductObject" },
           "MongoDBProductObject" : { "Ref" : "MongoDBProductObject" },
           "RabbitMQProductObject" : { "Ref" : "RabbitMQProductObject" },
           "DataStagingProductObject" : { "Ref" : "DataStagingProductObject" },
           "LoggingProductObject" : { "Ref" : "LoggingProductObject" },
-          "DeploymentProductObject" : { "Ref" : "DeploymentProductObject" },
-          "PublishProductObject" : { "Ref" : "PublishProductObject" },
-          "ConfigurationsBucket" : { "Ref" : "ConfigurationsBucket" },
+          "PublishingProductObject" : { "Ref" : "PublishingProductObject" },
           "ConfigurationFolder" : { "Ref" : "ConfigurationFolder" },
           "WebConfigurationObject" : { "Ref" : "WebConfigurationObject" },
           "CalculationConfigurationObject" : { "Ref" : "CalculationConfigurationObject" },
@@ -720,9 +660,7 @@
           "RabbitMQConfigurationObject" : { "Ref" : "RabbitMQConfigurationObject" },
           "DataStagingConfigurationObject" : { "Ref" : "DataStagingConfigurationObject" },
           "LoggingConfigurationObject" : { "Ref" : "LoggingConfigurationObject" },
-          "DeploymentConfigurationObject" : { "Ref" : "DeploymentConfigurationObject" },
-          "PublishConfigurationObject" : { "Ref" : "PublishConfigurationObject" },
-          "ApplicationsBucket" : { "Ref" : "ApplicationsBucket" },
+          "PublishingConfigurationObject" : { "Ref" : "PublishingConfigurationObject" },
           "ApplicationFolder" : { "Ref" : "ApplicationFolder" },
           "WebApplicationObject" : { "Ref" : "WebApplicationObject" },
           "CalculationApplicationObject" : { "Ref" : "CalculationApplicationObject" },
@@ -730,8 +668,7 @@
           "RabbitMQApplicationObject" : { "Ref" : "RabbitMQApplicationObject" },
           "DataStagingApplicationObject" : { "Ref" : "DataStagingApplicationObject" },
           "LoggingApplicationObject" : { "Ref" : "LoggingApplicationObject" },
-          "DeploymentApplicationObject" : { "Ref" : "DeploymentApplicationObject" },
-          "PublishApplicationObject" : { "Ref" : "PublishApplicationObject" },
+          "PublishingApplicationObject" : { "Ref" : "PublishingApplicationObject" },
           "ApplicationName" : { "Ref" : "ApplicationName" },
           "LogRetention" : { "Ref" : "LogRetention" }
         }
@@ -741,7 +678,7 @@
     "Logs" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplateFolder" }, "/Application-Engine-Logs.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-TemplatesBucket" }}, "/", { "Ref" : "TemplateFolder" }, "/Application-Engine-Logs.json" ]]},
         "Parameters" : {
           "VPCStackName" : { "Ref" : "VPCStackName" },
           "StandardTopicsStackName" : { "Ref" : "StandardTopicsStackName" },
@@ -756,7 +693,7 @@
     "SecurityGroups" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplateFolder" }, "/Application-Engine-SecurityGroups.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-TemplatesBucket" }}, "/", { "Ref" : "TemplateFolder" }, "/Application-Engine-SecurityGroups.json" ]]},
         "Parameters" : {
           "VPNStackName" : { "Ref" : "VPNStackName" },
           "VPCStackName" : { "Ref" : "VPCStackName" },
@@ -777,7 +714,7 @@
     "LoadBalancers" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplateFolder" }, "/Application-Engine-LoadBalancers.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-TemplatesBucket" }}, "/", { "Ref" : "TemplateFolder" }, "/Application-Engine-LoadBalancers.json" ]]},
         "Parameters" : {
           "VPCStackName" : { "Ref" : "VPCStackName" },
           "WebLoadBalancerSecurityGroup" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.WebLoadBalancerSecurityGroup" ]},
@@ -789,12 +726,13 @@
     "WebInstances" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplateFolder" }, "/Application-Engine-WebInstances.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-TemplatesBucket" }}, "/", { "Ref" : "TemplateFolder" }, "/Application-Engine-WebInstances.json" ]]},
         "Parameters" : {
           "VPCStackName" : { "Ref" : "VPCStackName" },
           "CustomIdentifierFunctionsStackName" : { "Ref" : "CustomIdentifierFunctionsStackName" },
           "StandardCIDRFunctionsStackName" : { "Ref" : "StandardCIDRFunctionsStackName" },
           "StandardAMIFunctionsStackName" : { "Ref" : "StandardAMIFunctionsStackName" },
+          "StandardBucketsStackName" : { "Ref" : "StandardBucketsStackName" },
           "StandardTopicsStackName" : { "Ref" : "StandardTopicsStackName" },
           "KeyName" : { "Ref" : "KeyName" },
           "WebRole" : { "Fn::GetAtt" : [ "Roles", "Outputs.WebRole" ]},
@@ -802,12 +740,11 @@
           "WebInstanceSecurityGroup" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.WebInstanceSecurityGroup" ]},
           "CompanyName" : { "Ref" : "CompanyName" },
           "SystemName" : { "Ref" : "SystemName" },
-          "EnvironmentSize" : { "Ref" : "EnvironmentSize" },
+          "EnvironmentType" : { "Ref" : "EnvironmentType" },
+          "EnvironmentZones" : { "Ref" : "EnvironmentZones" },
           "WindowsOSName" : { "Ref" : "WindowsOSName" },
-          "ConfigurationsBucket" : { "Ref" : "ConfigurationsBucket" },
           "ConfigurationFolder" : { "Ref" : "ConfigurationFolder" },
           "WebConfigurationObject" : { "Ref" : "WebConfigurationObject" },
-          "ApplicationsBucket" : { "Ref" : "ApplicationsBucket" },
           "ApplicationFolder" : { "Ref" : "ApplicationFolder" },
           "WebApplicationObject" : { "Ref" : "WebApplicationObject" },
           "ApplicationName" : { "Ref" : "ApplicationName" },
@@ -822,12 +759,13 @@
     "CalculationInstances" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplateFolder" }, "/Application-Engine-CalculationInstances.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-TemplatesBucket" }}, "/", { "Ref" : "TemplateFolder" }, "/Application-Engine-CalculationInstances.json" ]]},
         "Parameters" : {
           "VPCStackName" : { "Ref" : "VPCStackName" },
           "CustomIdentifierFunctionsStackName" : { "Ref" : "CustomIdentifierFunctionsStackName" },
           "StandardCIDRFunctionsStackName" : { "Ref" : "StandardCIDRFunctionsStackName" },
           "StandardAMIFunctionsStackName" : { "Ref" : "StandardAMIFunctionsStackName" },
+          "StandardBucketsStackName" : { "Ref" : "StandardBucketsStackName" },
           "StandardTopicsStackName" : { "Ref" : "StandardTopicsStackName" },
           "KeyName" : { "Ref" : "KeyName" },
           "CalculationRole" : { "Fn::GetAtt" : [ "Roles", "Outputs.CalculationRole" ]},
@@ -835,15 +773,13 @@
           "CalculationInstanceSecurityGroup" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.CalculationInstanceSecurityGroup" ]},
           "CompanyName" : { "Ref" : "CompanyName" },
           "SystemName" : { "Ref" : "SystemName" },
-          "EnvironmentSize" : { "Ref" : "EnvironmentSize" },
+          "EnvironmentType" : { "Ref" : "EnvironmentType" },
+          "EnvironmentZones" : { "Ref" : "EnvironmentZones" },
           "WindowsOSName" : { "Ref" : "WindowsOSName" },
-          "ProductsBucket" : { "Ref" : "ProductsBucket" },
           "ProductFolder" : { "Ref" : "ProductFolder" },
           "CalculationProductObject" : { "Ref" : "CalculationProductObject" },
-          "ConfigurationsBucket" : { "Ref" : "ConfigurationsBucket" },
           "ConfigurationFolder" : { "Ref" : "ConfigurationFolder" },
           "CalculationConfigurationObject" : { "Ref" : "CalculationConfigurationObject" },
-          "ApplicationsBucket" : { "Ref" : "ApplicationsBucket" },
           "ApplicationFolder" : { "Ref" : "ApplicationFolder" },
           "CalculationApplicationObject" : { "Ref" : "CalculationApplicationObject" },
           "ApplicationName" : { "Ref" : "ApplicationName" },
@@ -858,12 +794,13 @@
     "MongoDBInstances" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplateFolder" }, "/Application-Engine-MongoDBInstances.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-TemplatesBucket" }}, "/", { "Ref" : "TemplateFolder" }, "/Application-Engine-MongoDBInstances.json" ]]},
         "Parameters" : {
           "VPCStackName" : { "Ref" : "VPCStackName" },
           "CustomIdentifierFunctionsStackName" : { "Ref" : "CustomIdentifierFunctionsStackName" },
           "StandardCIDRFunctionsStackName" : { "Ref" : "StandardCIDRFunctionsStackName" },
           "StandardAMIFunctionsStackName" : { "Ref" : "StandardAMIFunctionsStackName" },
+          "StandardBucketsStackName" : { "Ref" : "StandardBucketsStackName" },
           "StandardTopicsStackName" : { "Ref" : "StandardTopicsStackName" },
           "KeyName" : { "Ref" : "KeyName" },
           "MongoDBRole" : { "Fn::GetAtt" : [ "Roles", "Outputs.MongoDBRole" ]},
@@ -871,15 +808,13 @@
           "MongoDBInstanceSecurityGroup" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.MongoDBInstanceSecurityGroup" ]},
           "CompanyName" : { "Ref" : "CompanyName" },
           "SystemName" : { "Ref" : "SystemName" },
-          "EnvironmentSize" : { "Ref" : "EnvironmentSize" },
+          "EnvironmentType" : { "Ref" : "EnvironmentType" },
+          "EnvironmentZones" : { "Ref" : "EnvironmentZones" },
           "LinuxOSName" : { "Ref" : "LinuxOSName" },
-          "ProductsBucket" : { "Ref" : "ProductsBucket" },
           "ProductFolder" : { "Ref" : "ProductFolder" },
           "MongoDBProductObject" : { "Ref" : "MongoDBProductObject" },
-          "ConfigurationsBucket" : { "Ref" : "ConfigurationsBucket" },
           "ConfigurationFolder" : { "Ref" : "ConfigurationFolder" },
           "MongoDBConfigurationObject" : { "Ref" : "MongoDBConfigurationObject" },
-          "ApplicationsBucket" : { "Ref" : "ApplicationsBucket" },
           "ApplicationFolder" : { "Ref" : "ApplicationFolder" },
           "MongoDBApplicationObject" : { "Ref" : "MongoDBApplicationObject" },
           "ApplicationName" : { "Ref" : "ApplicationName" },
@@ -894,12 +829,13 @@
     "RabbitMQInstances" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplateFolder" }, "/Application-Engine-RabbitMQInstances.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-TemplatesBucket" }}, "/", { "Ref" : "TemplateFolder" }, "/Application-Engine-RabbitMQInstances.json" ]]},
         "Parameters" : {
           "VPCStackName" : { "Ref" : "VPCStackName" },
           "CustomIdentifierFunctionsStackName" : { "Ref" : "CustomIdentifierFunctionsStackName" },
           "StandardCIDRFunctionsStackName" : { "Ref" : "StandardCIDRFunctionsStackName" },
           "StandardAMIFunctionsStackName" : { "Ref" : "StandardAMIFunctionsStackName" },
+          "StandardBucketsStackName" : { "Ref" : "StandardBucketsStackName" },
           "StandardTopicsStackName" : { "Ref" : "StandardTopicsStackName" },
           "KeyName" : { "Ref" : "KeyName" },
           "RabbitMQRole" : { "Fn::GetAtt" : [ "Roles", "Outputs.RabbitMQRole" ]},
@@ -907,15 +843,13 @@
           "RabbitMQInstanceSecurityGroup" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.RabbitMQInstanceSecurityGroup" ]},
           "CompanyName" : { "Ref" : "CompanyName" },
           "SystemName" : { "Ref" : "SystemName" },
-          "EnvironmentSize" : { "Ref" : "EnvironmentSize" },
+          "EnvironmentType" : { "Ref" : "EnvironmentType" },
+          "EnvironmentZones" : { "Ref" : "EnvironmentZones" },
           "LinuxOSName" : { "Ref" : "LinuxOSName" },
-          "ProductsBucket" : { "Ref" : "ProductsBucket" },
           "ProductFolder" : { "Ref" : "ProductFolder" },
           "RabbitMQProductObject" : { "Ref" : "RabbitMQProductObject" },
-          "ConfigurationsBucket" : { "Ref" : "ConfigurationsBucket" },
           "ConfigurationFolder" : { "Ref" : "ConfigurationFolder" },
           "RabbitMQConfigurationObject" : { "Ref" : "RabbitMQConfigurationObject" },
-          "ApplicationsBucket" : { "Ref" : "ApplicationsBucket" },
           "ApplicationFolder" : { "Ref" : "ApplicationFolder" },
           "RabbitMQApplicationObject" : { "Ref" : "RabbitMQApplicationObject" },
           "ApplicationName" : { "Ref" : "ApplicationName" },
@@ -930,12 +864,13 @@
     "DataStagingInstances" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplateFolder" }, "/Application-Engine-DataStagingInstances.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-TemplatesBucket" }}, "/", { "Ref" : "TemplateFolder" }, "/Application-Engine-DataStagingInstances.json" ]]},
         "Parameters" : {
           "VPCStackName" : { "Ref" : "VPCStackName" },
           "CustomIdentifierFunctionsStackName" : { "Ref" : "CustomIdentifierFunctionsStackName" },
           "StandardCIDRFunctionsStackName" : { "Ref" : "StandardCIDRFunctionsStackName" },
           "StandardAMIFunctionsStackName" : { "Ref" : "StandardAMIFunctionsStackName" },
+          "StandardBucketsStackName" : { "Ref" : "StandardBucketsStackName" },
           "StandardTopicsStackName" : { "Ref" : "StandardTopicsStackName" },
           "KeyName" : { "Ref" : "KeyName" },
           "DataStagingRole" : { "Fn::GetAtt" : [ "Roles", "Outputs.DataStagingRole" ]},
@@ -943,15 +878,12 @@
           "DataStagingInstanceSecurityGroup" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.DataStagingInstanceSecurityGroup" ]},
           "CompanyName" : { "Ref" : "CompanyName" },
           "SystemName" : { "Ref" : "SystemName" },
-          "EnvironmentSize" : { "Ref" : "EnvironmentSize" },
+          "EnvironmentType" : { "Ref" : "EnvironmentType" },
           "WindowsOSName" : { "Ref" : "WindowsOSName" },
-          "ProductsBucket" : { "Ref" : "ProductsBucket" },
           "ProductFolder" : { "Ref" : "ProductFolder" },
           "DataStagingProductObject" : { "Ref" : "DataStagingProductObject" },
-          "ConfigurationsBucket" : { "Ref" : "ConfigurationsBucket" },
           "ConfigurationFolder" : { "Ref" : "ConfigurationFolder" },
           "DataStagingConfigurationObject" : { "Ref" : "DataStagingConfigurationObject" },
-          "ApplicationsBucket" : { "Ref" : "ApplicationsBucket" },
           "ApplicationFolder" : { "Ref" : "ApplicationFolder" },
           "DataStagingApplicationObject" : { "Ref" : "DataStagingApplicationObject" },
           "ApplicationName" : { "Ref" : "ApplicationName" },
@@ -966,12 +898,13 @@
     "LoggingInstances" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplateFolder" }, "/Application-Engine-LoggingInstances.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-TemplatesBucket" }}, "/", { "Ref" : "TemplateFolder" }, "/Application-Engine-LoggingInstances.json" ]]},
         "Parameters" : {
           "VPCStackName" : { "Ref" : "VPCStackName" },
           "CustomIdentifierFunctionsStackName" : { "Ref" : "CustomIdentifierFunctionsStackName" },
           "StandardCIDRFunctionsStackName" : { "Ref" : "StandardCIDRFunctionsStackName" },
           "StandardAMIFunctionsStackName" : { "Ref" : "StandardAMIFunctionsStackName" },
+          "StandardBucketsStackName" : { "Ref" : "StandardBucketsStackName" },
           "StandardTopicsStackName" : { "Ref" : "StandardTopicsStackName" },
           "KeyName" : { "Ref" : "KeyName" },
           "LoggingRole" : { "Fn::GetAtt" : [ "Roles", "Outputs.LoggingRole" ]},
@@ -979,15 +912,12 @@
           "LoggingInstanceSecurityGroup" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.LoggingInstanceSecurityGroup" ]},
           "CompanyName" : { "Ref" : "CompanyName" },
           "SystemName" : { "Ref" : "SystemName" },
-          "EnvironmentSize" : { "Ref" : "EnvironmentSize" },
+          "EnvironmentType" : { "Ref" : "EnvironmentType" },
           "WindowsOSName" : { "Ref" : "WindowsOSName" },
-          "ProductsBucket" : { "Ref" : "ProductsBucket" },
           "ProductFolder" : { "Ref" : "ProductFolder" },
           "LoggingProductObject" : { "Ref" : "LoggingProductObject" },
-          "ConfigurationsBucket" : { "Ref" : "ConfigurationsBucket" },
           "ConfigurationFolder" : { "Ref" : "ConfigurationFolder" },
           "LoggingConfigurationObject" : { "Ref" : "LoggingConfigurationObject" },
-          "ApplicationsBucket" : { "Ref" : "ApplicationsBucket" },
           "ApplicationFolder" : { "Ref" : "ApplicationFolder" },
           "LoggingApplicationObject" : { "Ref" : "LoggingApplicationObject" },
           "ApplicationName" : { "Ref" : "ApplicationName" },
@@ -999,69 +929,32 @@
       }
     },
 
-    "DeploymentInstances" : {
+    "PublishingInstances" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplateFolder" }, "/Application-Engine-DeploymentInstances.json" ]]},
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-TemplatesBucket" }}, "/", { "Ref" : "TemplateFolder" }, "/Application-Engine-PublishingInstances.json" ]]},
         "Parameters" : {
           "VPCStackName" : { "Ref" : "VPCStackName" },
           "CustomIdentifierFunctionsStackName" : { "Ref" : "CustomIdentifierFunctionsStackName" },
           "StandardCIDRFunctionsStackName" : { "Ref" : "StandardCIDRFunctionsStackName" },
           "StandardAMIFunctionsStackName" : { "Ref" : "StandardAMIFunctionsStackName" },
+          "StandardBucketsStackName" : { "Ref" : "StandardBucketsStackName" },
           "StandardTopicsStackName" : { "Ref" : "StandardTopicsStackName" },
           "KeyName" : { "Ref" : "KeyName" },
-          "DeploymentRole" : { "Fn::GetAtt" : [ "Roles", "Outputs.DeploymentRole" ]},
+          "PublishingRole" : { "Fn::GetAtt" : [ "Roles", "Outputs.PublishingRole" ]},
           "LogGroup" : { "Fn::If" : [ "ConfigureLogs", { "Fn::GetAtt" : [ "Logs", "Outputs.LogGroup" ]}, "" ]},
-          "DeploymentInstanceSecurityGroup" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.DeploymentInstanceSecurityGroup" ]},
+          "PublishingInstanceSecurityGroup" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.PublishingInstanceSecurityGroup" ]},
           "CompanyName" : { "Ref" : "CompanyName" },
           "SystemName" : { "Ref" : "SystemName" },
-          "EnvironmentSize" : { "Ref" : "EnvironmentSize" },
+          "EnvironmentType" : { "Ref" : "EnvironmentType" },
+          "EnvironmentZones" : { "Ref" : "EnvironmentZones" },
           "WindowsOSName" : { "Ref" : "WindowsOSName" },
-          "ProductsBucket" : { "Ref" : "ProductsBucket" },
           "ProductFolder" : { "Ref" : "ProductFolder" },
-          "DeploymentProductObject" : { "Ref" : "DeploymentProductObject" },
-          "ConfigurationsBucket" : { "Ref" : "ConfigurationsBucket" },
+          "PublishingProductObject" : { "Ref" : "PublishingProductObject" },
           "ConfigurationFolder" : { "Ref" : "ConfigurationFolder" },
-          "DeploymentConfigurationObject" : { "Ref" : "DeploymentConfigurationObject" },
-          "ApplicationsBucket" : { "Ref" : "ApplicationsBucket" },
+          "PublishingConfigurationObject" : { "Ref" : "PublishingConfigurationObject" },
           "ApplicationFolder" : { "Ref" : "ApplicationFolder" },
-          "DeploymentApplicationObject" : { "Ref" : "DeploymentApplicationObject" },
-          "ApplicationName" : { "Ref" : "ApplicationName" },
-          "ApplicationVersion" : { "Ref" : "ApplicationVersion" },
-          "UseStaticAddress" : { "Ref" : "UseStaticAddress" },
-          "LogRetention" : { "Ref" : "LogRetention" },
-          "Schedule" : { "Ref" : "Schedule" }
-        }
-      }
-    },
-
-    "PublishInstances" : {
-      "Type" : "AWS::CloudFormation::Stack",
-      "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Ref" : "TemplatesBucket" }, "/", { "Ref" : "TemplateFolder" }, "/Application-Engine-PublishInstances.json" ]]},
-        "Parameters" : {
-          "VPCStackName" : { "Ref" : "VPCStackName" },
-          "CustomIdentifierFunctionsStackName" : { "Ref" : "CustomIdentifierFunctionsStackName" },
-          "StandardCIDRFunctionsStackName" : { "Ref" : "StandardCIDRFunctionsStackName" },
-          "StandardAMIFunctionsStackName" : { "Ref" : "StandardAMIFunctionsStackName" },
-          "StandardTopicsStackName" : { "Ref" : "StandardTopicsStackName" },
-          "KeyName" : { "Ref" : "KeyName" },
-          "PublishRole" : { "Fn::GetAtt" : [ "Roles", "Outputs.PublishRole" ]},
-          "LogGroup" : { "Fn::If" : [ "ConfigureLogs", { "Fn::GetAtt" : [ "Logs", "Outputs.LogGroup" ]}, "" ]},
-          "PublishInstanceSecurityGroup" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.PublishInstanceSecurityGroup" ]},
-          "CompanyName" : { "Ref" : "CompanyName" },
-          "SystemName" : { "Ref" : "SystemName" },
-          "EnvironmentSize" : { "Ref" : "EnvironmentSize" },
-          "WindowsOSName" : { "Ref" : "WindowsOSName" },
-          "ProductsBucket" : { "Ref" : "ProductsBucket" },
-          "ProductFolder" : { "Ref" : "ProductFolder" },
-          "PublishProductObject" : { "Ref" : "PublishProductObject" },
-          "ConfigurationsBucket" : { "Ref" : "ConfigurationsBucket" },
-          "ConfigurationFolder" : { "Ref" : "ConfigurationFolder" },
-          "PublishConfigurationObject" : { "Ref" : "PublishConfigurationObject" },
-          "ApplicationsBucket" : { "Ref" : "ApplicationsBucket" },
-          "ApplicationFolder" : { "Ref" : "ApplicationFolder" },
-          "PublishApplicationObject" : { "Ref" : "PublishApplicationObject" },
+          "PublishingApplicationObject" : { "Ref" : "PublishingApplicationObject" },
           "ApplicationName" : { "Ref" : "ApplicationName" },
           "ApplicationVersion" : { "Ref" : "ApplicationVersion" },
           "UseStaticAddress" : { "Ref" : "UseStaticAddress" },
@@ -1109,16 +1002,10 @@
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-LoggingInstanceSecurityGroup" }}
     },
 
-    "DeploymentInstanceSecurityGroup" : {
-      "Description" : "The DeploymentInstance SecurityGroup",
-      "Value" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.DeploymentInstanceSecurityGroup" ]},
-      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-DeploymentInstanceSecurityGroup" }}
-    },
-
-    "PublishInstanceSecurityGroup" : {
-      "Description" : "The PublishInstance SecurityGroup",
-      "Value" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.PublishInstanceSecurityGroup" ]},
-      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-PublishInstanceSecurityGroup" }}
+    "PublishingInstanceSecurityGroup" : {
+      "Description" : "The PublishingInstance SecurityGroup",
+      "Value" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.PublishingInstanceSecurityGroup" ]},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-PublishingInstanceSecurityGroup" }}
     },
   }
 }

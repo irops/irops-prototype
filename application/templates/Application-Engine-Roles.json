@@ -7,18 +7,21 @@
     "AWS::CloudFormation::Interface" : {
       "ParameterGroups" : [
         {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "StandardBucketsStackName"
+          ]
+        },
+        {
           "Label" : { "default" : "Application Dependencies Configuration" },
           "Parameters" : [
-            "ProductsBucket",
             "ProductFolder",
             "CalculationProductObject",
             "MongoDBProductObject",
             "RabbitMQProductObject",
             "DataStagingProductObject",
             "LoggingProductObject",
-            "DeploymentProductObject",
-            "PublishProductObject",
-            "ConfigurationsBucket",
+            "PublishingProductObject",
             "ConfigurationFolder",
             "WebConfigurationObject",
             "CalculationConfigurationObject",
@@ -26,14 +29,12 @@
             "RabbitMQConfigurationObject",
             "DataStagingConfigurationObject",
             "LoggingConfigurationObject",
-            "DeploymentConfigurationObject",
-            "PublishConfigurationObject"
+            "PublishingConfigurationObject"
           ]
         },
         {
           "Label" : { "default" : "Application Configuration" },
           "Parameters" : [
-            "ApplicationsBucket",
             "ApplicationFolder",
             "WebApplicationObject",
             "CalculationApplicationObject",
@@ -41,8 +42,7 @@
             "RabbitMQApplicationObject",
             "DataStagingApplicationObject",
             "LoggingApplicationObject",
-            "DeploymentApplicationObject",
-            "PublishApplicationObject",
+            "PublishingApplicationObject",
             "ApplicationName",
             "LogRetention"
           ]
@@ -50,16 +50,14 @@
       ],
 
       "ParameterLabels" : {
-        "ProductsBucket" : { "default" : "Products Bucket" },
+        "StandardBucketsStackName" : { "default" : "StandardBuckets Stack Name" },
         "ProductFolder" : { "default" : "Product Folder" },
         "CalculationProductObject" : { "default" : "Calculation Product Object" },
         "MongoDBProductObject" : { "default" : "MongoDB Product Object" },
         "RabbitMQProductObject" : { "default" : "RabbitMQ Product Object" },
         "DataStagingProductObject" : { "default" : "DataStaging Product Object" },
         "LoggingProductObject" : { "default" : "Logging Product Object" },
-        "DeploymentProductObject" : { "default" : "Deployment Product Object" },
-        "PublishProductObject" : { "default" : "Publish Product Object" },
-        "ConfigurationsBucket" : { "default" : "Configurations Bucket" },
+        "PublishingProductObject" : { "default" : "Publishing Product Object" },
         "ConfigurationFolder" : { "default" : "Configuration Folder" },
         "WebConfigurationObject" : { "default" : "Web Configuration Object" },
         "CalculationConfigurationObject" : { "default" : "Calculation Configuration Object" },
@@ -67,9 +65,7 @@
         "RabbitMQConfigurationObject" : { "default" : "RabbitMQ Configuration Object" },
         "DataStagingConfigurationObject" : { "default" : "DataStaging Configuration Object" },
         "LoggingConfigurationObject" : { "default" : "Logging Configuration Object" },
-        "DeploymentConfigurationObject" : { "default" : "Deployment Configuration Object" },
-        "PublishConfigurationObject" : { "default" : "Publish Configuration Object" },
-        "ApplicationsBucket" : { "default" : "Applications Bucket" },
+        "PublishingConfigurationObject" : { "default" : "Publishing Configuration Object" },
         "ApplicationFolder" : { "default" : "Application Folder" },
         "WebApplicationObject" : { "default" : "Web Application Object" },
         "CalculationApplicationObject" : { "default" : "Calculation Application Object" },
@@ -77,8 +73,7 @@
         "RabbitMQApplicationObject" : { "default" : "RabbitMQ Application Object" },
         "DataStagingApplicationObject" : { "default" : "DataStaging Application Object" },
         "LoggingApplicationObject" : { "default" : "Logging Application Object" },
-        "DeploymentApplicationObject" : { "default" : "Deployment Application Object" },
-        "PublishApplicationObject" : { "default" : "Publish Application Object" },
+        "PublishingApplicationObject" : { "default" : "Publishing Application Object" },
         "ApplicationName" : { "default" : "Application Name" },
         "LogRetention" : { "default" : "Log Retention" }
       }
@@ -86,18 +81,18 @@
   },
 
   "Parameters" : {
-    "ProductsBucket" : {
-      "Description" : "S3 bucket containing 3rd-Party Products to be deployed",
+    "StandardBucketsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Buckets",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 64,
-      "Default" : "products-us-west-2-production",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
+      "Default" : "StandardBuckets",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
     "ProductFolder" : {
-      "Description" : "Folder within the S3 bucket containing Products deployed by this Template",
+      "Description" : "Folder within the S3 Products bucket containing Products deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -151,36 +146,17 @@
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
-    "DeploymentProductObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine Deployment Component installer",
+    "PublishingProductObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Engine Publishing Component installer",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
       "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
-    },
-
-    "PublishProductObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine Publish Component installer",
-      "Type" : "String",
-      "MaxLength" : 64,
-      "Default" : "",
-      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
-      "ConstraintDescription" : "must be a valid filename, not containing slashes."
-    },
-
-    "ConfigurationsBucket" : {
-      "Description" : "S3 bucket containing Configurations to be deployed",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 64,
-      "Default" : "configurations-us-west-2-irops",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
     },
 
     "ConfigurationFolder" : {
-      "Description" : "Folder within the S3 bucket containing Configurations deployed by this Template",
+      "Description" : "Folder within the S3 Configurations bucket containing Configurations deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -243,36 +219,17 @@
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
-    "DeploymentConfigurationObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine Deployment Component configuration",
+    "PublishingConfigurationObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Engine Publishing Component configuration",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
       "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
-    },
-
-    "PublishConfigurationObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine Publish Component configuration",
-      "Type" : "String",
-      "MaxLength" : 64,
-      "Default" : "",
-      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
-      "ConstraintDescription" : "must be a valid filename, not containing slashes."
-    },
-
-    "ApplicationsBucket" : {
-      "Description" : "S3 bucket containing Applications to be deployed",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 64,
-      "Default" : "applications-us-west-2-irops",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
     },
 
     "ApplicationFolder" : {
-      "Description" : "Folder within the S3 bucket containing Applications deployed by this Template",
+      "Description" : "Folder within the S3 Applications bucket containing Applications deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -335,17 +292,8 @@
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
-    "DeploymentApplicationObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine Deployment Component application",
-      "Type" : "String",
-      "MaxLength" : 64,
-      "Default" : "",
-      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
-      "ConstraintDescription" : "must be a valid filename, not containing slashes."
-    },
-
-    "PublishApplicationObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine Publish Component application",
+    "PublishingApplicationObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Engine Publishing Component application",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
@@ -378,47 +326,41 @@
     "InstallRabbitMQProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "RabbitMQProductObject" }, "" ]}]},
     "InstallDataStagingProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "DataStagingProductObject" }, "" ]}]},
     "InstallLoggingProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LoggingProductObject" }, "" ]}]},
-    "InstallDeploymentProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "DeploymentProductObject" }, "" ]}]},
-    "InstallPublishProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublishProductObject" }, "" ]}]},
+    "InstallPublishingProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublishingProductObject" }, "" ]}]},
     "InstallProduct" : { "Fn::Or" : [{ "Condition" : "InstallCalculationProduct" },
                                      { "Condition" : "InstallMongoDBProduct" },
                                      { "Condition" : "InstallRabbitMQProduct" },
                                      { "Condition" : "InstallDataStagingProduct" },
                                      { "Condition" : "InstallLoggingProduct" },
-                                     { "Condition" : "InstallDeploymentProduct" },
-                                     { "Condition" : "InstallPublishProduct" }]},
+                                     { "Condition" : "InstallPublishingProduct" }]},
     "InstallWebConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "WebConfigurationObject" }, "" ]}]},
     "InstallCalculationConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "CalculationConfigurationObject" }, "" ]}]},
     "InstallMongoDBConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "MongoDBConfigurationObject" }, "" ]}]},
     "InstallRabbitMQConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "RabbitMQConfigurationObject" }, "" ]}]},
     "InstallDataStagingConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "DataStagingConfigurationObject" }, "" ]}]},
     "InstallLoggingConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LoggingConfigurationObject" }, "" ]}]},
-    "InstallDeploymentConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "DeploymentConfigurationObject" }, "" ]}]},
-    "InstallPublishConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublishConfigurationObject" }, "" ]}]},
+    "InstallPublishingConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublishingConfigurationObject" }, "" ]}]},
     "InstallConfiguration" : { "Fn::Or" : [{ "Condition" : "InstallWebConfiguration" },
                                            { "Condition" : "InstallCalculationConfiguration" },
                                            { "Condition" : "InstallMongoDBConfiguration" },
                                            { "Condition" : "InstallRabbitMQConfiguration" },
                                            { "Condition" : "InstallDataStagingConfiguration" },
                                            { "Condition" : "InstallLoggingConfiguration" },
-                                           { "Condition" : "InstallDeploymentConfiguration" },
-                                           { "Condition" : "InstallPublishConfiguration" }]},
+                                           { "Condition" : "InstallPublishingConfiguration" }]},
     "InstallWebApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "WebApplicationObject" }, "" ]}]},
     "InstallCalculationApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "CalculationApplicationObject" }, "" ]}]},
     "InstallMongoDBApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "MongoDBApplicationObject" }, "" ]}]},
     "InstallRabbitMQApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "RabbitMQApplicationObject" }, "" ]}]},
     "InstallDataStagingApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "DataStagingApplicationObject" }, "" ]}]},
     "InstallLoggingApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LoggingApplicationObject" }, "" ]}]},
-    "InstallDeploymentApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "DeploymentApplicationObject" }, "" ]}]},
-    "InstallPublishApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublishApplicationObject" }, "" ]}]},
+    "InstallPublishingApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublishingApplicationObject" }, "" ]}]},
     "InstallApplication" : { "Fn::Or" : [{ "Condition" : "InstallWebApplication" },
                                          { "Condition" : "InstallCalculationApplication" },
                                          { "Condition" : "InstallMongoDBApplication" },
                                          { "Condition" : "InstallRabbitMQApplication" },
                                          { "Condition" : "InstallDataStagingApplication" },
                                          { "Condition" : "InstallLoggingApplication" },
-                                         { "Condition" : "InstallDeploymentApplication" },
-                                         { "Condition" : "InstallPublishApplication" }]},
+                                         { "Condition" : "InstallPublishingApplication" }]},
     "ConfigureLogs" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LogRetention" }, "0" ]}]}
   },
 
@@ -519,23 +461,7 @@
       }
     },
 
-    "DeploymentRole" : {
-      "Type" : "AWS::IAM::Role",
-      "Properties" : {
-        "Path" : "/",
-        "AssumeRolePolicyDocument" : {
-          "Version" : "2012-10-17",
-          "Statement" : [{
-            "Effect" : "Allow",
-            "Principal" : { "Service" : [ "ec2.amazonaws.com" ]},
-            "Action" : [ "sts:AssumeRole" ]
-          }]
-        },
-        "ManagedPolicyArns" : [ "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM" ]
-      }
-    },
-
-    "PublishRole" : {
+    "PublishingRole" : {
       "Type" : "AWS::IAM::Role",
       "Properties" : {
         "Path" : "/",
@@ -562,7 +488,7 @@
             "Action" : [
               "s3:GetObject"
             ],
-            "Resource" : { "Fn::Sub" : "arn:aws:s3:::${ProductsBucket}/${ProductFolder}/*" }
+            "Resource" : { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }}, "/", { "Ref" : "ProductFolder" }, "/*" ]]}
           }]
         },
         "Roles" : [
@@ -571,8 +497,7 @@
           { "Fn::If" : [ "InstallRabbitMQProduct", { "Ref" : "RabbitMQRole" }, { "Ref": "AWS::NoValue" }]},
           { "Fn::If" : [ "InstallDataStagingProduct", { "Ref" : "DataStagingRole" }, { "Ref": "AWS::NoValue" }]},
           { "Fn::If" : [ "InstallLoggingProduct", { "Ref" : "LoggingRole" }, { "Ref": "AWS::NoValue" }]},
-          { "Fn::If" : [ "InstallDeploymentProduct", { "Ref" : "DeploymentRole" }, { "Ref": "AWS::NoValue" }]},
-          { "Fn::If" : [ "InstallPublishProduct", { "Ref" : "PublishRole" }, { "Ref": "AWS::NoValue" }]}
+          { "Fn::If" : [ "InstallPublishingProduct", { "Ref" : "PublishingRole" }, { "Ref": "AWS::NoValue" }]}
         ]
       },
       "Condition" : "InstallProduct"
@@ -589,7 +514,7 @@
             "Action" : [
               "s3:GetObject"
             ],
-            "Resource" : { "Fn::Sub" : "arn:aws:s3:::${ConfigurationsBucket}/${ConfigurationFolder}/*" }
+            "Resource" : { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/*" ]]}
           }]
         },
         "Roles" : [
@@ -599,8 +524,7 @@
           { "Fn::If" : [ "InstallRabbitMQConfiguration", { "Ref" : "RabbitMQRole" }, { "Ref": "AWS::NoValue" }]},
           { "Fn::If" : [ "InstallDataStagingConfiguration", { "Ref" : "DataStagingRole" }, { "Ref": "AWS::NoValue" }]},
           { "Fn::If" : [ "InstallLoggingConfiguration", { "Ref" : "LoggingRole" }, { "Ref": "AWS::NoValue" }]},
-          { "Fn::If" : [ "InstallDeploymentConfiguration", { "Ref" : "DeploymentRole" }, { "Ref": "AWS::NoValue" }]},
-          { "Fn::If" : [ "InstallPublishConfiguration", { "Ref" : "PublishRole" }, { "Ref": "AWS::NoValue" }]}
+          { "Fn::If" : [ "InstallPublishingConfiguration", { "Ref" : "PublishingRole" }, { "Ref": "AWS::NoValue" }]}
         ]
       },
       "Condition" : "InstallConfiguration"
@@ -617,7 +541,7 @@
             "Action" : [
               "s3:GetObject"
             ],
-            "Resource" : { "Fn::Sub" : "arn:aws:s3:::${ApplicationsBucket}/${ApplicationFolder}/*" }
+            "Resource" : { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ApplicationsBucket" }}, "/", { "Ref" : "ApplicationFolder" }, "/*" ]]}
           }]
         },
         "Roles" : [
@@ -627,8 +551,7 @@
           { "Fn::If" : [ "InstallRabbitMQApplication", { "Ref" : "RabbitMQRole" }, { "Ref": "AWS::NoValue" }]},
           { "Fn::If" : [ "InstallDataStagingApplication", { "Ref" : "DataStagingRole" }, { "Ref": "AWS::NoValue" }]},
           { "Fn::If" : [ "InstallLoggingApplication", { "Ref" : "LoggingRole" }, { "Ref": "AWS::NoValue" }]},
-          { "Fn::If" : [ "InstallDeploymentApplication", { "Ref" : "DeploymentRole" }, { "Ref": "AWS::NoValue" }]},
-          { "Fn::If" : [ "InstallPublishApplication", { "Ref" : "PublishRole" }, { "Ref": "AWS::NoValue" }]}
+          { "Fn::If" : [ "InstallPublishingApplication", { "Ref" : "PublishingRole" }, { "Ref": "AWS::NoValue" }]}
         ]
       },
       "Condition" : "InstallApplication"
@@ -658,8 +581,7 @@
           { "Ref" : "RabbitMQRole" },
           { "Ref" : "DataStagingRole" },
           { "Ref" : "LoggingRole" },
-          { "Ref" : "DeploymentRole" },
-          { "Ref" : "PublishRole" }
+          { "Ref" : "PublishingRole" }
         ]
       },
       "Condition" : "ConfigureLogs"
@@ -697,14 +619,9 @@
       "Value" : { "Ref" : "LoggingRole" }
     },
 
-    "DeploymentRole" : {
-      "Description" : "The DeploymentRole",
-      "Value" : { "Ref" : "DeploymentRole" }
-    },
-
-    "PublishRole" : {
-      "Description" : "The PublishRole",
-      "Value" : { "Ref" : "PublishRole" }
+    "PublishingRole" : {
+      "Description" : "The PublishingRole",
+      "Value" : { "Ref" : "PublishingRole" }
     }
   }
 }

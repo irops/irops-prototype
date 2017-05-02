@@ -13,6 +13,7 @@
             "CustomIdentifierFunctionsStackName",
             "StandardCIDRFunctionsStackName",
             "StandardAMIFunctionsStackName",
+            "StandardBucketsStackName",
             "StandardTopicsStackName"
           ]
         },
@@ -35,17 +36,16 @@
         {
           "Label" : { "default" : "Environment Configuration" },
           "Parameters" : [
-            "EnvironmentSize",
+            "EnvironmentType",
+            "EnvironmentZones",
             "WindowsOSName"
           ]
         },
         {
           "Label" : { "default" : "Application Dependencies Configuration" },
           "Parameters" : [
-            "ProductsBucket",
             "ProductFolder",
             "CalculationProductObject",
-            "ConfigurationsBucket",
             "ConfigurationFolder",
             "CalculationConfigurationObject"
           ]
@@ -53,7 +53,6 @@
         {
           "Label" : { "default" : "Application Configuration" },
           "Parameters" : [
-            "ApplicationsBucket",
             "ApplicationFolder",
             "CalculationApplicationObject",
             "ApplicationName",
@@ -70,6 +69,7 @@
         "CustomIdentifierFunctionsStackName" : { "default" : "CustomIdentifierFunctions Stack Name" },
         "StandardCIDRFunctionsStackName" : { "default" : "StandardCIDRFunctions Stack Name" },
         "StandardAMIFunctionsStackName" : { "default" : "StandardAMIFunctions Stack Name" },
+        "StandardBucketsStackName" : { "default" : "StandardBuckets Stack Name" },
         "StandardTopicsStackName" : { "default" : "StandardTopics Stack Name" },
         "KeyName" : { "default" : "Key Name" },
         "CalculationRole" : { "default" : "CalculationRole" },
@@ -77,15 +77,13 @@
         "CalculationInstanceSecurityGroup" : { "default" : "CalculationInstance SecurityGroup" },
         "CompanyName" : { "default" : "Company Name" },
         "SystemName" : { "default" : "System Name" },
-        "EnvironmentSize" : { "default" : "Environment Size" },
+        "EnvironmentType" : { "default" : "Environment Type" },
+        "EnvironmentZones" : { "default" : "Environment Zones" },
         "WindowsOSName" : { "default" : "Windows Operating System Name" },
-        "ProductsBucket" : { "default" : "Products Bucket" },
         "ProductFolder" : { "default" : "Product Folder" },
         "CalculationProductObject" : { "default" : "Calculation Product Object" },
-        "ConfigurationsBucket" : { "default" : "Configurations Bucket" },
         "ConfigurationFolder" : { "default" : "Configuration Folder" },
         "CalculationConfigurationObject" : { "default" : "Calculation Configuration Object" },
-        "ApplicationsBucket" : { "default" : "Applications Bucket" },
         "ApplicationFolder" : { "default" : "Application Folder" },
         "CalculationApplicationObject" : { "default" : "Calculation Application Object" },
         "ApplicationName" : { "default" : "Application Name" },
@@ -132,6 +130,16 @@
       "MaxLength" : 64,
       "Default" : "StandardAMIFunctions",
       "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "StandardBucketsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Buckets",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardBuckets",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
@@ -198,12 +206,20 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
-    "EnvironmentSize" : {
-      "Description" : "Size of the Environment to build. Used to select size-related options in Mappings",
+    "EnvironmentType" : {
+      "Description" : "Type of the Environment to build. Used to select size-related options in Mappings",
       "Type" : "String",
       "Default" : "small",
       "AllowedValues" : [ "small", "medium", "large", "xlarge" ],
       "ConstraintDescription" : "must be small, medium, large or xlarge."
+    },
+
+    "EnvironmentZones" : {
+      "Description" : "Number of Availability Zones to build",
+      "Type" : "String",
+      "Default" : "2",
+      "AllowedValues" : [ "1", "2" ],
+      "ConstraintDescription" : "must be 1 or 2."
     },
 
     "WindowsOSName" : {
@@ -214,18 +230,8 @@
       "ConstraintDescription" : "must be \"Windows Server 2012 R2\" or \"Windows Server 2016\"."
     },
 
-    "ProductsBucket" : {
-      "Description" : "S3 bucket containing 3rd-Party Products to be deployed",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 64,
-      "Default" : "products-us-west-2-production",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
-    },
-
     "ProductFolder" : {
-      "Description" : "Folder within the S3 bucket containing Products deployed by this Template",
+      "Description" : "Folder within the S3 Products bucket containing Products deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -243,18 +249,8 @@
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
-    "ConfigurationsBucket" : {
-      "Description" : "S3 bucket containing Configurations to be deployed",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 64,
-      "Default" : "configurations-us-west-2-irops",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
-    },
-
     "ConfigurationFolder" : {
-      "Description" : "Folder within the S3 bucket containing Configurations deployed by this Template",
+      "Description" : "Folder within the S3 Configurations bucket containing Configurations deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -272,18 +268,8 @@
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
-    "ApplicationsBucket" : {
-      "Description" : "S3 bucket containing Applications to be deployed",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 64,
-      "Default" : "applications-us-west-2-irops",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
-    },
-
     "ApplicationFolder" : {
-      "Description" : "Folder within the S3 bucket containing Applications deployed by this Template",
+      "Description" : "Folder within the S3 Applications bucket containing Applications deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -348,16 +334,19 @@
 
   "Mappings" : {
     "InstanceTypeMap" : {
-      "Calculation" : { "micro" : "t2.medium", "small" : "c4.large", "medium" : "c4.xlarge", "large" : "c4.2xlarge", "xlarge" : "c4.4xlarge" }
+      "Calculation" : { "small" : "t2.xlarge", "medium" : "r4.2xlarge", "large" : "r4.4xlarge", "xlarge" : "r4.8xlarge" }
     }
   },
 
   "Conditions" : {
+    "ConfigureGlobalS3" : { "Fn::Equals" : [{ "Ref" : "AWS::Region" }, "us-east-1" ]},
     "ConfigureKey" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "KeyName" }, "" ]}]},
+    "ConfigureMultiZone" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "EnvironmentZones" }, "1" ]}]},
     "InstallProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "CalculationProductObject" }, "" ]}]},
     "InstallConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "CalculationConfigurationObject" }, "" ]}]},
     "InstallApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "CalculationApplicationObject" }, "" ]}]},
     "ConfigureStaticAddress" : { "Fn::Equals" : [{ "Ref" : "UseStaticAddress" }, "true" ]},
+    "ConfigureStaticAddress&MultiZone" : { "Fn::And" : [{ "Condition" : "ConfigureStaticAddress" }, { "Condition" : "ConfigureMultiZone" }]},
     "ConfigureLogs" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LogRetention" }, "0" ]}]},
     "ConfigureSchedule" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "Schedule" }, "" ]}]}
   },
@@ -409,9 +398,9 @@
             "type" : "S3",
             "roleName" : { "Ref" : "CalculationRole" },
             "buckets" : [
-              { "Ref" : "ProductsBucket" },
-              { "Ref" : "ConfigurationsBucket" },
-              { "Ref" : "ApplicationsBucket" }
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }},
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }},
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ApplicationsBucket" }}
             ]
           }
         },
@@ -639,17 +628,17 @@
           },
           "InstallCalculationProduct" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ProductsBucket}/${ProductFolder}/${CalculationProductObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }}, "/", { "Ref" : "ProductFolder" }, "/", { "Ref" : "CalculationProductObject" }]]}
             }
           },
           "InstallCalculationConfiguration" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ConfigurationsBucket}/${ConfigurationFolder}/${CalculationConfigurationObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/", { "Ref" : "CalculationConfigurationObject" }]]}
             }
           },
           "InstallCalculationApplication" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ApplicationsBucket}/${ApplicationFolder}/${CalculationApplicationObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ApplicationsBucket" }}, "/", { "Ref" : "ApplicationFolder" }, "/", { "Ref" : "CalculationApplicationObject" }]]}
             }
           },
           "ConfigureHostname" : {
@@ -664,7 +653,7 @@
       },
       "Properties" : {
         "ImageId" : { "Fn::GetAtt" : [ "GetWindowsImageId", "ImageId" ]},
-        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Calculation", { "Ref" : "EnvironmentSize" }]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Calculation", { "Ref" : "EnvironmentType" }]},
         "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
         "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
         "NetworkInterfaces" : [{
@@ -700,7 +689,7 @@
         "ServiceToken" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardCIDRFunctionsStackName}-AddressCalculatorFunctionArn" }},
         "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-ApplicationSubnetB" }}
       },
-      "Condition" : "ConfigureStaticAddress"
+      "Condition" : "ConfigureStaticAddress&MultiZone"
     },
 
     "CalculationInstance01B" : {
@@ -711,9 +700,9 @@
             "type" : "S3",
             "roleName" : { "Ref" : "CalculationRole" },
             "buckets" : [
-              { "Ref" : "ProductsBucket" },
-              { "Ref" : "ConfigurationsBucket" },
-              { "Ref" : "ApplicationsBucket" }
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }},
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }},
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ApplicationsBucket" }}
             ]
           }
         },
@@ -941,17 +930,17 @@
           },
           "InstallCalculationProduct" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ProductsBucket}/${ProductFolder}/${CalculationProductObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }}, "/", { "Ref" : "ProductFolder" }, "/", { "Ref" : "CalculationProductObject" }]]}
             }
           },
           "InstallCalculationConfiguration" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ConfigurationsBucket}/${ConfigurationFolder}/${CalculationConfigurationObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/", { "Ref" : "CalculationConfigurationObject" }]]}
             }
           },
           "InstallCalculationApplication" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ApplicationsBucket}/${ApplicationFolder}/${CalculationApplicationObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ApplicationsBucket" }}, "/", { "Ref" : "ApplicationFolder" }, "/", { "Ref" : "CalculationApplicationObject" }]]}
             }
           },
           "ConfigureHostname" : {
@@ -966,14 +955,14 @@
       },
       "Properties" : {
         "ImageId" : { "Fn::GetAtt" : [ "GetWindowsImageId", "ImageId" ]},
-        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Calculation", { "Ref" : "EnvironmentSize" }]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Calculation", { "Ref" : "EnvironmentType" }]},
         "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
         "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
         "NetworkInterfaces" : [{
           "Description"              : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "CalculationNetworkInterface01B", "eth0" ]]},
           "DeviceIndex"              : "0",
           "SubnetId"                 : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-ApplicationSubnetB" }},
-          "PrivateIpAddress"         : { "Fn::If" : [ "ConfigureStaticAddress", { "Fn::GetAtt" : [ "AddressCalculatorB", "Address4" ]}, { "Ref" : "AWS::NoValue" }]},
+          "PrivateIpAddress"         : { "Fn::If" : [ "ConfigureStaticAddress&MultiZone", { "Fn::GetAtt" : [ "AddressCalculatorB", "Address4" ]}, { "Ref" : "AWS::NoValue" }]},
           "GroupSet"                 : [{ "Ref" :  "CalculationInstanceSecurityGroup" }],
           "AssociatePublicIpAddress" : "false",
           "DeleteOnTermination"      : "true"
@@ -993,7 +982,8 @@
         "ResourceSignal" : {
           "Timeout" : "PT20M"
         }
-      }
+      },
+      "Condition" : "ConfigureMultiZone"
     }
   },
 
@@ -1010,12 +1000,14 @@
 
     "CalculationInstance01B" : {
       "Description" : "The CalculationInstance01B",
-      "Value" : { "Ref" : "CalculationInstance01B" }
+      "Value" : { "Ref" : "CalculationInstance01B" },
+      "Condition" : "ConfigureMultiZone"
     },
 
     "CalculationHostName01B" : {
       "Description" : "The CalculationHostName01B",
-      "Value" : { "Fn::Join" : [ "", [ { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01b.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]}
+      "Value" : { "Fn::Join" : [ "", [ { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01b.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]},
+      "Condition" : "ConfigureMultiZone"
     }
   }
 }

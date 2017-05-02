@@ -13,6 +13,7 @@
             "CustomIdentifierFunctionsStackName",
             "StandardCIDRFunctionsStackName",
             "StandardAMIFunctionsStackName",
+            "StandardBucketsStackName",
             "StandardTopicsStackName"
           ]
         },
@@ -35,17 +36,15 @@
         {
           "Label" : { "default" : "Environment Configuration" },
           "Parameters" : [
-            "EnvironmentSize",
+            "EnvironmentType",
             "WindowsOSName"
           ]
         },
         {
           "Label" : { "default" : "Application Dependencies Configuration" },
           "Parameters" : [
-            "ProductsBucket",
             "ProductFolder",
             "LoggingProductObject",
-            "ConfigurationsBucket",
             "ConfigurationFolder",
             "LoggingConfigurationObject"
           ]
@@ -53,7 +52,6 @@
         {
           "Label" : { "default" : "Application Configuration" },
           "Parameters" : [
-            "ApplicationsBucket",
             "ApplicationFolder",
             "LoggingApplicationObject",
             "ApplicationName",
@@ -70,6 +68,7 @@
         "CustomIdentifierFunctionsStackName" : { "default" : "CustomIdentifierFunctions Stack Name" },
         "StandardCIDRFunctionsStackName" : { "default" : "StandardCIDRFunctions Stack Name" },
         "StandardAMIFunctionsStackName" : { "default" : "StandardAMIFunctions Stack Name" },
+        "StandardBucketsStackName" : { "default" : "StandardBuckets Stack Name" },
         "StandardTopicsStackName" : { "default" : "StandardTopics Stack Name" },
         "KeyName" : { "default" : "Key Name" },
         "LoggingRole" : { "default" : "LoggingRole" },
@@ -77,15 +76,12 @@
         "LoggingInstanceSecurityGroup" : { "default" : "LoggingInstance SecurityGroup" },
         "CompanyName" : { "default" : "Company Name" },
         "SystemName" : { "default" : "System Name" },
-        "EnvironmentSize" : { "default" : "Environment Size" },
+        "EnvironmentType" : { "default" : "Environment Type" },
         "WindowsOSName" : { "default" : "Windows Operating System Name" },
-        "ProductsBucket" : { "default" : "Products Bucket" },
         "ProductFolder" : { "default" : "Product Folder" },
         "LoggingProductObject" : { "default" : "Logging Product Object" },
-        "ConfigurationsBucket" : { "default" : "Configurations Bucket" },
         "ConfigurationFolder" : { "default" : "Configuration Folder" },
         "LoggingConfigurationObject" : { "default" : "Logging Configuration Object" },
-        "ApplicationsBucket" : { "default" : "Applications Bucket" },
         "ApplicationFolder" : { "default" : "Application Folder" },
         "LoggingApplicationObject" : { "default" : "Logging Application Object" },
         "ApplicationName" : { "default" : "Application Name" },
@@ -132,6 +128,16 @@
       "MaxLength" : 64,
       "Default" : "StandardAMIFunctions",
       "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "StandardBucketsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Buckets",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardBuckets",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
@@ -198,8 +204,8 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
-    "EnvironmentSize" : {
-      "Description" : "Size of the Environment to build. Used to select size-related options in Mappings",
+    "EnvironmentType" : {
+      "Description" : "Type of the Environment to build. Used to select size-related options in Mappings",
       "Type" : "String",
       "Default" : "small",
       "AllowedValues" : [ "small", "medium", "large", "xlarge" ],
@@ -214,18 +220,8 @@
       "ConstraintDescription" : "must be \"Windows Server 2012 R2\" or \"Windows Server 2016\"."
     },
 
-    "ProductsBucket" : {
-      "Description" : "S3 bucket containing 3rd-Party Products to be deployed",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 64,
-      "Default" : "products-us-west-2-production",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
-    },
-
     "ProductFolder" : {
-      "Description" : "Folder within the S3 bucket containing Products deployed by this Template",
+      "Description" : "Folder within the S3 Products bucket containing Products deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -243,18 +239,8 @@
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
-    "ConfigurationsBucket" : {
-      "Description" : "S3 bucket containing Configurations to be deployed",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 64,
-      "Default" : "configurations-us-west-2-irops",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
-    },
-
     "ConfigurationFolder" : {
-      "Description" : "Folder within the S3 bucket containing Configurations deployed by this Template",
+      "Description" : "Folder within the S3 Configurations bucket containing Configurations deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -272,18 +258,8 @@
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
-    "ApplicationsBucket" : {
-      "Description" : "S3 bucket containing Applications to be deployed",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 64,
-      "Default" : "applications-us-west-2-irops",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
-    },
-
     "ApplicationFolder" : {
-      "Description" : "Folder within the S3 bucket containing Applications deployed by this Template",
+      "Description" : "Folder within the S3 Applications bucket containing Applications deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -348,11 +324,12 @@
 
   "Mappings" : {
     "InstanceTypeMap" : {
-      "Logging" : { "small" : "t2.small", "medium" : "t2.large", "large" : "c4.large", "xlarge" : "c4.2xlarge" }
+      "Logging" : { "small" : "t2.large", "medium" : "m4.xlarge", "large" : "m4.2xlarge", "xlarge" : "m4.4xlarge" }
     }
   },
 
   "Conditions" : {
+    "ConfigureGlobalS3" : { "Fn::Equals" : [{ "Ref" : "AWS::Region" }, "us-east-1" ]},
     "ConfigureKey" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "KeyName" }, "" ]}]},
     "InstallProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LoggingProductObject" }, "" ]}]},
     "InstallConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LoggingConfigurationObject" }, "" ]}]},
@@ -409,9 +386,9 @@
             "type" : "S3",
             "roleName" : { "Ref" : "LoggingRole" },
             "buckets" : [
-              { "Ref" : "ProductsBucket" },
-              { "Ref" : "ConfigurationsBucket" },
-              { "Ref" : "ApplicationsBucket" }
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }},
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }},
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ApplicationsBucket" }}
             ]
           }
         },
@@ -639,17 +616,17 @@
           },
           "InstallLoggingProduct" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ProductsBucket}/${ProductFolder}/${LoggingProductObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }}, "/", { "Ref" : "ProductFolder" }, "/", { "Ref" : "LoggingProductObject" }]]}
             }
           },
           "InstallLoggingConfiguration" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ConfigurationsBucket}/${ConfigurationFolder}/${LoggingConfigurationObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/", { "Ref" : "LoggingConfigurationObject" }]]}
             }
           },
           "InstallLoggingApplication" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ApplicationsBucket}/${ApplicationFolder}/${LoggingApplicationObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ApplicationsBucket" }}, "/", { "Ref" : "ApplicationFolder" }, "/", { "Ref" : "LoggingApplicationObject" }]]}
             }
           },
           "ConfigureHostname" : {
@@ -664,7 +641,7 @@
       },
       "Properties" : {
         "ImageId" : { "Fn::GetAtt" : [ "GetWindowsImageId", "ImageId" ]},
-        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Logging", { "Ref" : "EnvironmentSize" }]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Logging", { "Ref" : "EnvironmentType" }]},
         "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
         "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
         "NetworkInterfaces" : [{

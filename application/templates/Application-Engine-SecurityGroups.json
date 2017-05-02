@@ -381,34 +381,10 @@
       }
     },
 
-    "DeploymentInstanceSecurityGroup" : {
+    "PublishingInstanceSecurityGroup" : {
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
-        "GroupDescription" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "DeploymentInstanceSecurityGroup" ]]},
-        "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPC" }},
-        "SecurityGroupIngress" : [
-          { "IpProtocol" : "icmp", "FromPort" :    "-1", "ToPort" :    "-1", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPNStackName}-SecurityGroup" }}},
-          { "IpProtocol" : "tcp",  "FromPort" :  "3389", "ToPort" :  "3389", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPNStackName}-SecurityGroup" }}},
-          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork",  { "IpProtocol" : "icmp", "FromPort" :    "-1", "ToPort" :    "-1", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork" }},  { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork",  { "IpProtocol" : "tcp",  "FromPort" :  "3389", "ToPort" :  "3389", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork" }},  { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork",  { "IpProtocol" : "tcp",  "FromPort" : "10933", "ToPort" : "10933", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork" }},  { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork1", { "IpProtocol" : "icmp", "FromPort" :    "-1", "ToPort" :    "-1", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" :  "3389", "ToPort" :  "3389", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "10933", "ToPort" : "10933", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork2", { "IpProtocol" : "icmp", "FromPort" :    "-1", "ToPort" :    "-1", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" :  "3389", "ToPort" :  "3389", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "10933", "ToPort" : "10933", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]}
-        ],
-        "Tags" : [
-          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "DeploymentInstanceSecurityGroup" ]]}}
-        ]
-      }
-    },
-
-    "PublishInstanceSecurityGroup" : {
-      "Type" : "AWS::EC2::SecurityGroup",
-      "Properties" : {
-        "GroupDescription" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "PublishInstanceSecurityGroup" ]]},
+        "GroupDescription" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "PublishingInstanceSecurityGroup" ]]},
         "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPC" }},
         "SecurityGroupIngress" : [
           { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPNStackName}-SecurityGroup" }}},
@@ -429,7 +405,7 @@
           { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]}
         ],
         "Tags" : [
-          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "PublishInstanceSecurityGroup" ]]}}
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "PublishingInstanceSecurityGroup" ]]}}
         ]
       }
     }
@@ -471,14 +447,9 @@
       "Value" : { "Ref" : "LoggingInstanceSecurityGroup" }
     },
 
-    "DeploymentInstanceSecurityGroup" : {
-      "Description" : "The DeploymentInstance SecurityGroup",
-      "Value" : { "Ref" : "DeploymentInstanceSecurityGroup" }
-    },
-
-    "PublishInstanceSecurityGroup" : {
-      "Description" : "The PublishInstance SecurityGroup",
-      "Value" : { "Ref" : "PublishInstanceSecurityGroup" }
+    "PublishingInstanceSecurityGroup" : {
+      "Description" : "The PublishingInstance SecurityGroup",
+      "Value" : { "Ref" : "PublishingInstanceSecurityGroup" }
     }
   }
 }

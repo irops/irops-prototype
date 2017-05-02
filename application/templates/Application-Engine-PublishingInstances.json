@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
 
-  "Description" : "Application-Engine-PublishInstances Template. This is a layer in the Engine application, which creates the InstanceProfile, and separate PublishInstances.",
+  "Description" : "Application-Engine-PublishingInstances Template. This is a layer in the Engine application, which creates the InstanceProfile, and separate PublishingInstances.",
 
   "Metadata" : {
     "AWS::CloudFormation::Interface" : {
@@ -13,6 +13,7 @@
             "CustomIdentifierFunctionsStackName",
             "StandardCIDRFunctionsStackName",
             "StandardAMIFunctionsStackName",
+            "StandardBucketsStackName",
             "StandardTopicsStackName"
           ]
         },
@@ -20,9 +21,9 @@
           "Label" : { "default" : "Resource Dependencies" },
           "Parameters" : [
             "KeyName",
-            "PublishRole",
+            "PublishingRole",
             "LogGroup",
-            "PublishInstanceSecurityGroup"
+            "PublishingInstanceSecurityGroup"
           ]
         },
         {
@@ -35,27 +36,25 @@
         {
           "Label" : { "default" : "Environment Configuration" },
           "Parameters" : [
-            "EnvironmentSize",
+            "EnvironmentType",
+            "EnvironmentZones",
             "WindowsOSName"
           ]
         },
         {
           "Label" : { "default" : "Application Dependencies Configuration" },
           "Parameters" : [
-            "ProductsBucket",
             "ProductFolder",
-            "PublishProductObject",
-            "ConfigurationsBucket",
+            "PublishingProductObject",
             "ConfigurationFolder",
-            "PublishConfigurationObject"
+            "PublishingConfigurationObject"
           ]
         },
         {
           "Label" : { "default" : "Application Configuration" },
           "Parameters" : [
-            "ApplicationsBucket",
             "ApplicationFolder",
-            "PublishApplicationObject",
+            "PublishingApplicationObject",
             "ApplicationName",
             "ApplicationVersion",
             "UseStaticAddress",
@@ -70,24 +69,23 @@
         "CustomIdentifierFunctionsStackName" : { "default" : "CustomIdentifierFunctions Stack Name" },
         "StandardCIDRFunctionsStackName" : { "default" : "StandardCIDRFunctions Stack Name" },
         "StandardAMIFunctionsStackName" : { "default" : "StandardAMIFunctions Stack Name" },
+        "StandardBucketsStackName" : { "default" : "StandardBuckets Stack Name" },
         "StandardTopicsStackName" : { "default" : "StandardTopics Stack Name" },
         "KeyName" : { "default" : "Key Name" },
-        "PublishRole" : { "default" : "PublishRole" },
+        "PublishingRole" : { "default" : "PublishingRole" },
         "LogGroup" : { "default" : "LogGroup" },
-        "PublishInstanceSecurityGroup" : { "default" : "PublishInstance SecurityGroup" },
+        "PublishingInstanceSecurityGroup" : { "default" : "PublishingInstance SecurityGroup" },
         "CompanyName" : { "default" : "Company Name" },
         "SystemName" : { "default" : "System Name" },
-        "EnvironmentSize" : { "default" : "Environment Size" },
+        "EnvironmentType" : { "default" : "Environment Type" },
+        "EnvironmentZones" : { "default" : "Environment Zones" },
         "WindowsOSName" : { "default" : "Windows Operating System Name" },
-        "ProductsBucket" : { "default" : "Products Bucket" },
         "ProductFolder" : { "default" : "Product Folder" },
-        "PublishProductObject" : { "default" : "Publish Product Object" },
-        "ConfigurationsBucket" : { "default" : "Configurations Bucket" },
+        "PublishingProductObject" : { "default" : "Publishing Product Object" },
         "ConfigurationFolder" : { "default" : "Configuration Folder" },
-        "PublishConfigurationObject" : { "default" : "Publish Configuration Object" },
-        "ApplicationsBucket" : { "default" : "Applications Bucket" },
+        "PublishingConfigurationObject" : { "default" : "Publishing Configuration Object" },
         "ApplicationFolder" : { "default" : "Application Folder" },
-        "PublishApplicationObject" : { "default" : "Publish Application Object" },
+        "PublishingApplicationObject" : { "default" : "Publishing Application Object" },
         "ApplicationName" : { "default" : "Application Name" },
         "ApplicationVersion" : { "default" : "Application Version" },
         "UseStaticAddress" : { "default" : "Use Static Address" },
@@ -135,6 +133,16 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
+    "StandardBucketsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Buckets",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardBuckets",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
     "StandardTopicsStackName" : {
       "Description" : "Name of the CloudFormation Stack containing Standard Topics",
       "Type" : "String",
@@ -154,8 +162,8 @@
       "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
     },
 
-    "PublishRole" : {
-      "Description" : "Name of an existing Role which provides permissions needed by the PublishInstance",
+    "PublishingRole" : {
+      "Description" : "Name of an existing Role which provides permissions needed by the PublishingInstance",
       "Type" : "String",
       "MaxLength" : 128,
       "AllowedPattern" : "^[-a-zA-Z0-9]*$",
@@ -170,8 +178,8 @@
       "ConstraintDescription" : "must be the name of an existing LogGroup."
     },
 
-    "PublishInstanceSecurityGroup" : {
-      "Description" : "ID of an existing SecurityGroup which controls access to the PublishInstances",
+    "PublishingInstanceSecurityGroup" : {
+      "Description" : "ID of an existing SecurityGroup which controls access to the PublishingInstances",
       "Type" : "AWS::EC2::SecurityGroup::Id",
       "MaxLength" : 32,
       "AllowedPattern" : "^sg-[0-9a-f]{8}$",
@@ -198,12 +206,20 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
-    "EnvironmentSize" : {
-      "Description" : "Size of the Environment to build. Used to select size-related options in Mappings",
+    "EnvironmentType" : {
+      "Description" : "Type of the Environment to build. Used to select size-related options in Mappings",
       "Type" : "String",
       "Default" : "small",
       "AllowedValues" : [ "small", "medium", "large", "xlarge" ],
       "ConstraintDescription" : "must be small, medium, large or xlarge."
+    },
+
+    "EnvironmentZones" : {
+      "Description" : "Number of Availability Zones to build",
+      "Type" : "String",
+      "Default" : "2",
+      "AllowedValues" : [ "1", "2" ],
+      "ConstraintDescription" : "must be 1 or 2."
     },
 
     "WindowsOSName" : {
@@ -214,18 +230,8 @@
       "ConstraintDescription" : "must be \"Windows Server 2012 R2\" or \"Windows Server 2016\"."
     },
 
-    "ProductsBucket" : {
-      "Description" : "S3 bucket containing 3rd-Party Products to be deployed",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 64,
-      "Default" : "products-us-west-2-production",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
-    },
-
     "ProductFolder" : {
-      "Description" : "Folder within the S3 bucket containing Products deployed by this Template",
+      "Description" : "Folder within the S3 Products bucket containing Products deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -234,27 +240,17 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
-    "PublishProductObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine Publish Component installer",
+    "PublishingProductObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Engine Publishing Component installer",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
       "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
-    },
-
-    "ConfigurationsBucket" : {
-      "Description" : "S3 bucket containing Configurations to be deployed",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 64,
-      "Default" : "configurations-us-west-2-irops",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
     },
 
     "ConfigurationFolder" : {
-      "Description" : "Folder within the S3 bucket containing Configurations deployed by this Template",
+      "Description" : "Folder within the S3 Configurations bucket containing Configurations deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -263,8 +259,8 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
-    "PublishConfigurationObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine Publish Component configuration",
+    "PublishingConfigurationObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Engine Publishing Component configuration",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
@@ -272,18 +268,8 @@
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
-    "ApplicationsBucket" : {
-      "Description" : "S3 bucket containing Applications to be deployed",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 64,
-      "Default" : "applications-us-west-2-irops",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
-    },
-
     "ApplicationFolder" : {
-      "Description" : "Folder within the S3 bucket containing Applications deployed by this Template",
+      "Description" : "Folder within the S3 Applications bucket containing Applications deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -292,8 +278,8 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
-    "PublishApplicationObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine Publish Component application",
+    "PublishingApplicationObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Engine Publishing Component application",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
@@ -348,16 +334,19 @@
 
   "Mappings" : {
     "InstanceTypeMap" : {
-      "Publish" : { "small" : "t2.small", "medium" : "t2.medium", "large" : "m4.large", "xlarge" : "m4.xlarge" }
+      "Publishing" : { "small" : "t2.large", "medium" : "r4.xlarge", "large" : "r4.2xlarge", "xlarge" : "r4.4xlarge" }
     }
   },
 
   "Conditions" : {
+    "ConfigureGlobalS3" : { "Fn::Equals" : [{ "Ref" : "AWS::Region" }, "us-east-1" ]},
     "ConfigureKey" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "KeyName" }, "" ]}]},
-    "InstallProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublishProductObject" }, "" ]}]},
-    "InstallConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublishConfigurationObject" }, "" ]}]},
-    "InstallApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublishApplicationObject" }, "" ]}]},
+    "ConfigureMultiZone" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "EnvironmentZones" }, "1" ]}]},
+    "InstallProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublishingProductObject" }, "" ]}]},
+    "InstallConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublishingConfigurationObject" }, "" ]}]},
+    "InstallApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublishingApplicationObject" }, "" ]}]},
     "ConfigureStaticAddress" : { "Fn::Equals" : [{ "Ref" : "UseStaticAddress" }, "true" ]},
+    "ConfigureStaticAddress&MultiZone" : { "Fn::And" : [{ "Condition" : "ConfigureStaticAddress" }, { "Condition" : "ConfigureMultiZone" }]},
     "ConfigureLogs" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LogRetention" }, "0" ]}]},
     "ConfigureSchedule" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "Schedule" }, "" ]}]}
   },
@@ -371,7 +360,7 @@
         "LocationName" : { "Ref": "AWS::Region" },
         "EnvironmentName" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }},
         "ApplicationName" : { "Ref" : "ApplicationName" },
-        "ComponentName" : "Publish"
+        "ComponentName" : "Publishing"
       }
     },
 
@@ -388,7 +377,7 @@
       "Type" : "AWS::IAM::InstanceProfile",
       "Properties" : {
         "Path" : "/",
-        "Roles" : [{ "Ref" : "PublishRole" }]
+        "Roles" : [{ "Ref" : "PublishingRole" }]
       }
     },
 
@@ -401,17 +390,17 @@
       "Condition" : "ConfigureStaticAddress"
     },
 
-    "PublishInstance01A" : {
+    "PublishingInstance01A" : {
       "Type" : "AWS::EC2::Instance",
       "Metadata" : {
         "AWS::CloudFormation::Authentication" : {
           "S3Credentials" : {
             "type" : "S3",
-            "roleName" : { "Ref" : "PublishRole" },
+            "roleName" : { "Ref" : "PublishingRole" },
             "buckets" : [
-              { "Ref" : "ProductsBucket" },
-              { "Ref" : "ConfigurationsBucket" },
-              { "Ref" : "ApplicationsBucket" }
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }},
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }},
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ApplicationsBucket" }}
             ]
           }
         },
@@ -422,9 +411,9 @@
               "ConfigureOS",
               "ConfigureCFN",
               "InstallAtomEditor",
-              { "Fn::If" : [ "InstallProduct", "InstallPublishProduct", { "Ref": "AWS::NoValue" }]},
-              { "Fn::If" : [ "InstallConfiguration", "InstallPublishConfiguration", { "Ref": "AWS::NoValue" }]},
-              { "Fn::If" : [ "InstallApplication", "InstallPublishApplication", { "Ref": "AWS::NoValue" }]}
+              { "Fn::If" : [ "InstallProduct", "InstallPublishingProduct", { "Ref": "AWS::NoValue" }]},
+              { "Fn::If" : [ "InstallConfiguration", "InstallPublishingConfiguration", { "Ref": "AWS::NoValue" }]},
+              { "Fn::If" : [ "InstallApplication", "InstallPublishingApplication", { "Ref": "AWS::NoValue" }]}
             ]
           },
           "ConfigureLogs" : {
@@ -504,7 +493,7 @@
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
                            { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
-                  "        \"LogStream\": \"Publish/{instance_id}/ApplicationEventLog\"",
+                  "        \"LogStream\": \"Publishing/{instance_id}/ApplicationEventLog\"",
                   "      }",
                   "    },",
                   "    {",
@@ -515,7 +504,7 @@
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
                            { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
-                  "        \"LogStream\": \"Publish/{instance_id}/SystemEventLog\"",
+                  "        \"LogStream\": \"Publishing/{instance_id}/SystemEventLog\"",
                   "      }",
                   "    },",
                   "    {",
@@ -526,7 +515,7 @@
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
                            { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
-                  "        \"LogStream\": \"Publish/{instance_id}/SecurityEventLog\"",
+                  "        \"LogStream\": \"Publishing/{instance_id}/SecurityEventLog\"",
                   "      }",
                   "    },",
                   "    {",
@@ -537,7 +526,7 @@
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
                            { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
-                  "        \"LogStream\": \"Publish/{instance_id}/EC2ConfigLog\"",
+                  "        \"LogStream\": \"Publishing/{instance_id}/EC2ConfigLog\"",
                   "      }",
                   "    },",
                   "    {",
@@ -548,7 +537,7 @@
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
                            { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
-                  "        \"LogStream\": \"Publish/{instance_id}/CfnInitLog\"",
+                  "        \"LogStream\": \"Publishing/{instance_id}/CfnInitLog\"",
                   "      }",
                   "    },",
                   "    {",
@@ -612,8 +601,8 @@
                 "content": { "Fn::Join" : [ "\n", [
                   "[cfn-auto-reloader-hook]",
                   "triggers=post.update",
-                  "path=Resources.PublishInstance01A.Metadata.AWS::CloudFormation::Init",
-                  { "Fn::Sub" : "action=cfn-init.exe --verbose --configsets All --stack ${AWS::StackId} --resource PublishInstance01A --region ${AWS::Region}" }
+                  "path=Resources.PublishingInstance01A.Metadata.AWS::CloudFormation::Init",
+                  { "Fn::Sub" : "action=cfn-init.exe --verbose --configsets All --stack ${AWS::StackId} --resource PublishingInstance01A --region ${AWS::Region}" }
                 ]]}
               }
             },
@@ -637,19 +626,19 @@
               }
             }
           },
-          "InstallPublishProduct" : {
+          "InstallPublishingProduct" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ProductsBucket}/${ProductFolder}/${PublishProductObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }}, "/", { "Ref" : "ProductFolder" }, "/", { "Ref" : "PublishingProductObject" }]]}
             }
           },
-          "InstallPublishConfiguration" : {
+          "InstallPublishingConfiguration" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ConfigurationsBucket}/${ConfigurationFolder}/${PublishConfigurationObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/", { "Ref" : "PublishingConfigurationObject" }]]}
             }
           },
-          "InstallPublishApplication" : {
+          "InstallPublishingApplication" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ApplicationsBucket}/${ApplicationFolder}/${PublishApplicationObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ApplicationsBucket" }}, "/", { "Ref" : "ApplicationFolder" }, "/", { "Ref" : "PublishingApplicationObject" }]]}
             }
           },
           "ConfigureHostname" : {
@@ -664,26 +653,26 @@
       },
       "Properties" : {
         "ImageId" : { "Fn::GetAtt" : [ "GetWindowsImageId", "ImageId" ]},
-        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Publish", { "Ref" : "EnvironmentSize" }]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Publishing", { "Ref" : "EnvironmentType" }]},
         "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
         "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
         "NetworkInterfaces" : [{
-          "Description"              : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "PublishNetworkInterface01A", "eth0" ]]},
+          "Description"              : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "PublishingNetworkInterface01A", "eth0" ]]},
           "DeviceIndex"              : "0",
           "SubnetId"                 : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-ApplicationSubnetA" }},
           "PrivateIpAddress"         : { "Fn::If" : [ "ConfigureStaticAddress", { "Fn::GetAtt" : [ "AddressCalculatorA", "Address4" ]}, { "Ref" : "AWS::NoValue" }]},
-          "GroupSet"                 : [{ "Ref" :  "PublishInstanceSecurityGroup" }],
+          "GroupSet"                 : [{ "Ref" :  "PublishingInstanceSecurityGroup" }],
           "AssociatePublicIpAddress" : "false",
           "DeleteOnTermination"      : "true"
         }],
         "Tags" : [
-          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "PublishInstance01A" ]]}},
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "PublishingInstance01A" ]]}},
           { "Fn::If" : [ "ConfigureSchedule", { "Key" : "Schedule", "Value" : { "Ref" : "Schedule" }}, { "Ref" : "AWS::NoValue" }]}
         ],
         "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "\n", [
           "<script>",
-          { "Fn::Sub" : "cfn-init.exe --verbose --configsets All --stack ${AWS::StackId} --resource PublishInstance01A --region ${AWS::Region}" },
-          { "Fn::Sub" : "cfn-signal.exe --exit-code %ERRORLEVEL% --stack ${AWS::StackName} --resource PublishInstance01A --region ${AWS::Region}" },
+          { "Fn::Sub" : "cfn-init.exe --verbose --configsets All --stack ${AWS::StackId} --resource PublishingInstance01A --region ${AWS::Region}" },
+          { "Fn::Sub" : "cfn-signal.exe --exit-code %ERRORLEVEL% --stack ${AWS::StackName} --resource PublishingInstance01A --region ${AWS::Region}" },
           "</script>"
         ]]}}
       },
@@ -700,20 +689,20 @@
         "ServiceToken" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardCIDRFunctionsStackName}-AddressCalculatorFunctionArn" }},
         "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-ApplicationSubnetB" }}
       },
-      "Condition" : "ConfigureStaticAddress"
+      "Condition" : "ConfigureStaticAddress&MultiZone"
     },
 
-    "PublishInstance01B" : {
+    "PublishingInstance02B" : {
       "Type" : "AWS::EC2::Instance",
       "Metadata" : {
         "AWS::CloudFormation::Authentication" : {
           "S3Credentials" : {
             "type" : "S3",
-            "roleName" : { "Ref" : "PublishRole" },
+            "roleName" : { "Ref" : "PublishingRole" },
             "buckets" : [
-              { "Ref" : "ProductsBucket" },
-              { "Ref" : "ConfigurationsBucket" },
-              { "Ref" : "ApplicationsBucket" }
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }},
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }},
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ApplicationsBucket" }}
             ]
           }
         },
@@ -724,9 +713,9 @@
               "ConfigureOS",
               "ConfigureCFN",
               "InstallAtomEditor",
-              { "Fn::If" : [ "InstallProduct", "InstallPublishProduct", { "Ref": "AWS::NoValue" }]},
-              { "Fn::If" : [ "InstallConfiguration", "InstallPublishConfiguration", { "Ref": "AWS::NoValue" }]},
-              { "Fn::If" : [ "InstallApplication", "InstallPublishApplication", { "Ref": "AWS::NoValue" }]}
+              { "Fn::If" : [ "InstallProduct", "InstallPublishingProduct", { "Ref": "AWS::NoValue" }]},
+              { "Fn::If" : [ "InstallConfiguration", "InstallPublishingConfiguration", { "Ref": "AWS::NoValue" }]},
+              { "Fn::If" : [ "InstallApplication", "InstallPublishingApplication", { "Ref": "AWS::NoValue" }]}
             ]
           },
           "ConfigureLogs" : {
@@ -806,7 +795,7 @@
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
                            { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
-                  "        \"LogStream\": \"Publish/{instance_id}/ApplicationEventLog\"",
+                  "        \"LogStream\": \"Publishing/{instance_id}/ApplicationEventLog\"",
                   "      }",
                   "    },",
                   "    {",
@@ -817,7 +806,7 @@
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
                            { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
-                  "        \"LogStream\": \"Publish/{instance_id}/SystemEventLog\"",
+                  "        \"LogStream\": \"Publishing/{instance_id}/SystemEventLog\"",
                   "      }",
                   "    },",
                   "    {",
@@ -828,7 +817,7 @@
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
                            { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
-                  "        \"LogStream\": \"Publish/{instance_id}/SecurityEventLog\"",
+                  "        \"LogStream\": \"Publishing/{instance_id}/SecurityEventLog\"",
                   "      }",
                   "    },",
                   "    {",
@@ -839,7 +828,7 @@
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
                            { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
-                  "        \"LogStream\": \"Publish/{instance_id}/EC2ConfigLog\"",
+                  "        \"LogStream\": \"Publishing/{instance_id}/EC2ConfigLog\"",
                   "      }",
                   "    },",
                   "    {",
@@ -850,7 +839,7 @@
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
                            { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
-                  "        \"LogStream\": \"Publish/{instance_id}/CfnInitLog\"",
+                  "        \"LogStream\": \"Publishing/{instance_id}/CfnInitLog\"",
                   "      }",
                   "    },",
                   "    {",
@@ -914,8 +903,8 @@
                 "content": { "Fn::Join" : [ "\n", [
                   "[cfn-auto-reloader-hook]",
                   "triggers=post.update",
-                  "path=Resources.PublishInstance01B.Metadata.AWS::CloudFormation::Init",
-                  { "Fn::Sub" : "action=cfn-init.exe --verbose --configsets All --stack ${AWS::StackId} --resource PublishInstance01B --region ${AWS::Region}" }
+                  "path=Resources.PublishingInstance02B.Metadata.AWS::CloudFormation::Init",
+                  { "Fn::Sub" : "action=cfn-init.exe --verbose --configsets All --stack ${AWS::StackId} --resource PublishingInstance02B --region ${AWS::Region}" }
                 ]]}
               }
             },
@@ -939,25 +928,25 @@
               }
             }
           },
-          "InstallPublishProduct" : {
+          "InstallPublishingProduct" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ProductsBucket}/${ProductFolder}/${PublishProductObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }}, "/", { "Ref" : "ProductFolder" }, "/", { "Ref" : "PublishingProductObject" }]]}
             }
           },
-          "InstallPublishConfiguration" : {
+          "InstallPublishingConfiguration" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ConfigurationsBucket}/${ConfigurationFolder}/${PublishConfigurationObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/", { "Ref" : "PublishingConfigurationObject" }]]}
             }
           },
-          "InstallPublishApplication" : {
+          "InstallPublishingApplication" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ApplicationsBucket}/${ApplicationFolder}/${PublishApplicationObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ApplicationsBucket" }}, "/", { "Ref" : "ApplicationFolder" }, "/", { "Ref" : "PublishingApplicationObject" }]]}
             }
           },
           "ConfigureHostname" : {
             "commands" : {
               "01-set-hostname" : {
-                "command" : { "Fn::Join" : [ "", [ "powershell.exe Rename-Computer -NewName ", { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01b", " -Restart" ]]},
+                "command" : { "Fn::Join" : [ "", [ "powershell.exe Rename-Computer -NewName ", { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "02b", " -Restart" ]]},
                 "waitAfterCompletion" : "forever"
               }
             }
@@ -966,26 +955,26 @@
       },
       "Properties" : {
         "ImageId" : { "Fn::GetAtt" : [ "GetWindowsImageId", "ImageId" ]},
-        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Publish", { "Ref" : "EnvironmentSize" }]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Publishing", { "Ref" : "EnvironmentType" }]},
         "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
         "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
         "NetworkInterfaces" : [{
-          "Description"              : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "PublishNetworkInterface01B", "eth0" ]]},
+          "Description"              : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "PublishingNetworkInterface01B", "eth0" ]]},
           "DeviceIndex"              : "0",
           "SubnetId"                 : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-ApplicationSubnetB" }},
-          "PrivateIpAddress"         : { "Fn::If" : [ "ConfigureStaticAddress", { "Fn::GetAtt" : [ "AddressCalculatorB", "Address4" ]}, { "Ref" : "AWS::NoValue" }]},
-          "GroupSet"                 : [{ "Ref" :  "PublishInstanceSecurityGroup" }],
+          "PrivateIpAddress"         : { "Fn::If" : [ "ConfigureStaticAddress&MultiZone", { "Fn::GetAtt" : [ "AddressCalculatorB", "Address5" ]}, { "Ref" : "AWS::NoValue" }]},
+          "GroupSet"                 : [{ "Ref" :  "PublishingInstanceSecurityGroup" }],
           "AssociatePublicIpAddress" : "false",
           "DeleteOnTermination"      : "true"
         }],
         "Tags" : [
-          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "PublishInstance01B" ]]}},
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "PublishingInstance02B" ]]}},
           { "Fn::If" : [ "ConfigureSchedule", { "Key" : "Schedule", "Value" : { "Ref" : "Schedule" }}, { "Ref" : "AWS::NoValue" }]}
         ],
         "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "\n", [
           "<script>",
-          { "Fn::Sub" : "cfn-init.exe --verbose --configsets All --stack ${AWS::StackId} --resource PublishInstance01B --region ${AWS::Region}" },
-          { "Fn::Sub" : "cfn-signal.exe --exit-code %ERRORLEVEL% --stack ${AWS::StackName} --resource PublishInstance01B --region ${AWS::Region}" },
+          { "Fn::Sub" : "cfn-init.exe --verbose --configsets All --stack ${AWS::StackId} --resource PublishingInstance02B --region ${AWS::Region}" },
+          { "Fn::Sub" : "cfn-signal.exe --exit-code %ERRORLEVEL% --stack ${AWS::StackName} --resource PublishingInstance02B --region ${AWS::Region}" },
           "</script>"
         ]]}}
       },
@@ -993,29 +982,32 @@
         "ResourceSignal" : {
           "Timeout" : "PT20M"
         }
-      }
+      },
+      "Condition" : "ConfigureMultiZone"
     }
   },
 
   "Outputs" : {
-    "PublishInstance01A" : {
-      "Description" : "The PublishInstance01A",
-      "Value" : { "Ref" : "PublishInstance01A" }
+    "PublishingInstance01A" : {
+      "Description" : "The PublishingInstance01A",
+      "Value" : { "Ref" : "PublishingInstance01A" }
     },
 
-    "PublishHostName01A" : {
-      "Description" : "The PublishHostName01A",
+    "PublishingHostName01A" : {
+      "Description" : "The PublishingHostName01A",
       "Value" : { "Fn::Join" : [ "", [ { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01a.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]}
     },
 
-    "PublishInstance01B" : {
-      "Description" : "The PublishInstance01B",
-      "Value" : { "Ref" : "PublishInstance01B" }
+    "PublishingInstance02B" : {
+      "Description" : "The PublishingInstance02B",
+      "Value" : { "Ref" : "PublishingInstance02B" },
+      "Condition" : "ConfigureMultiZone"
     },
 
-    "PublishHostName01B" : {
-      "Description" : "The PublishHostName01B",
-      "Value" : { "Fn::Join" : [ "", [ { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01b.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]}
+    "PublishingHostName01B" : {
+      "Description" : "The PublishingHostName01B",
+      "Value" : { "Fn::Join" : [ "", [ { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "02b.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]},
+      "Condition" : "ConfigureMultiZone"
     }
   }
 }
