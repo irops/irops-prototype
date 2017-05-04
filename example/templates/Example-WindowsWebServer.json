@@ -12,6 +12,7 @@
             "VPCStackName",
             "CustomIdentifierFunctionsStackName",
             "StandardAMIFunctionsStackName",
+            "StandardBucketsStackName",
             "StandardTopicsStackName"
           ]
         },
@@ -31,14 +32,13 @@
         {
           "Label" : { "default" : "Environment Configuration" },
           "Parameters" : [
-            "EnvironmentSize",
-            "InstanceOS"
+            "EnvironmentType",
+            "OSName"
           ]
         },
         {
           "Label" : { "default" : "Application Configuration" },
           "Parameters" : [
-            "ApplicationsBucket",
             "ApplicationFolder",
             "ApplicationObject",
             "ApplicationName",
@@ -70,13 +70,13 @@
         "VPCStackName" : { "default" : "VPC Stack Name" },
         "CustomIdentifierFunctionsStackName" : { "default" : "CustomIdentifierFunctions Stack Name" },
         "StandardAMIFunctionsStackName" : { "default" : "StandardAMIFunctions Stack Name" },
+        "StandardBucketsStackName" : { "default" : "StandardBuckets Stack Name" },
         "StandardTopicsStackName" : { "default" : "StandardTopics Stack Name" },
         "KeyName" : { "default" : "Key Name" },
         "CompanyName" : { "default" : "Company Name" },
         "SystemName" : { "default" : "System Name" },
-        "EnvironmentSize" : { "default" : "Environment Size" },
-        "InstanceOS" : { "default" : "Instance Operating System" },
-        "ApplicationsBucket" : { "default" : "Applications Bucket" },
+        "EnvironmentType" : { "default" : "Environment Type" },
+        "OSName" : { "default" : "Operating System Name" },
         "ApplicationFolder" : { "default" : "Application Folder" },
         "ApplicationObject" : { "default" : "Application Object" },
         "ApplicationName" : { "default" : "Application Name" },
@@ -128,6 +128,16 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
+    "StandardBucketsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Buckets",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardBuckets",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
     "StandardTopicsStackName" : {
       "Description" : "Name of the CloudFormation Stack containing Standard Topics",
       "Type" : "String",
@@ -167,15 +177,15 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
-    "EnvironmentSize" : {
-      "Description" : "Size of the Environment to build. Used to select size-related options in Mappings",
+    "EnvironmentType" : {
+      "Description" : "Type of the Environment to build. Used to select size-related options in Mappings",
       "Type" : "String",
-      "Default" : "micro",
+      "Default" : "small",
       "AllowedValues" : [ "micro", "small", "medium", "large", "xlarge", "mlarge", "mxlarge", "m2xlarge", "clarge", "cxlarge", "c2xlarge" ],
       "ConstraintDescription" : "must be micro, small, medium, large, xlarge, mlarge, mxlarge, m2xlarge, clarge, cxlarge or c2xlarge."
     },
 
-    "InstanceOS" : {
+    "OSName" : {
       "Description" : "The Operating System to use for Instances",
       "Type" : "String",
       "Default" : "Windows Server 2012 R2",
@@ -183,18 +193,8 @@
       "ConstraintDescription" : "must be \"Windows Server 2012 R2\" or \"Windows Server 2016\"."
     },
 
-    "ApplicationsBucket" : {
-      "Description" : "S3 bucket containing Applications to be deployed",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 64,
-      "Default" : "examples-us-west-2-irops",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
-    },
-
     "ApplicationFolder" : {
-      "Description" : "Folder within S3 bucket containing WebServer Application objects",
+      "Description" : "Folder within the S3 Applications bucket containing Applications deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -204,7 +204,7 @@
     },
 
     "ApplicationObject" : {
-      "Description" : "Object within S3 bucket and folder containing WebServer Application object",
+      "Description" : "Object within the S3 bucket and folder containing the WindowsWebServer Application",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
@@ -348,14 +348,15 @@
 
   "Mappings" : {
     "InstanceTypeMap" : {
-      "WindowsServer" : { "micro" : "t2.micro", "small" : "t2.small", "medium" : "t2.medium", "large" : "t2.large", "xlarge" : "t2.xlarge",
-                          "mlarge" : "m4.large", "mxlarge" : "m4.xlarge", "m2xlarge" : "m4.2xlarge",
-                          "clarge" : "c4.large", "cxlarge" : "c4.xlarge", "c2xlarge" : "c4.2xlarge" }
+      "Web" : { "micro" : "t2.micro", "small" : "t2.small", "medium" : "t2.medium", "large" : "t2.large", "xlarge" : "t2.xlarge",
+                "mlarge" : "m4.large", "mxlarge" : "m4.xlarge", "m2xlarge" : "m4.2xlarge",
+                "clarge" : "c4.large", "cxlarge" : "c4.xlarge", "c2xlarge" : "c4.2xlarge" }
     }
   },
 
   "Conditions" : {
-    "DownloadApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationObject" }, "" ]}]},
+    "ConfigureGlobalS3" : { "Fn::Equals" : [{ "Ref" : "AWS::Region" }, "us-east-1" ]},
+    "InstallApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationObject" }, "" ]}]},
     "ConfigureDomainName" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationDomain" }, "" ]}]},
     "ConfigureLogs" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LogRetention" }, "0" ]}]},
     "ConfigurePublicUserNetwork" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicUserNetwork" }, "" ]}]},
@@ -389,7 +390,7 @@
       "Properties" : {
         "ServiceToken" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardAMIFunctionsStackName}-GetWindowsImageIdFunctionArn" }},
         "Region" : { "Ref" : "AWS::Region" },
-        "OSName" : { "Ref" : "InstanceOS" }
+        "OSName" : { "Ref" : "OSName" }
       }
     },
 
@@ -420,12 +421,12 @@
             "Action" : [
               "s3:GetObject"
             ],
-            "Resource" : { "Fn::Sub" : "arn:aws:s3:::${ApplicationsBucket}/${ApplicationFolder}/*" }
+            "Resource" : { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ExamplesBucket" }}, "/", { "Ref" : "ApplicationFolder" }, "/*" ]]}
           }]
         },
         "Roles" : [{ "Ref" : "Role" }]
       },
-      "Condition" : "DownloadApplication"
+      "Condition" : "InstallApplication"
     },
 
     "LogMonitoringPolicy" : {
@@ -594,115 +595,22 @@
           "S3Credentials" : {
             "type" : "S3",
             "roleName" : { "Ref" : "Role" },
-            "buckets" : [{ "Ref" : "ApplicationsBucket" }]
+            "buckets" : [
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ExamplesBucket" }}
+            ]
           }
         },
         "AWS::CloudFormation::Init" : {
           "configSets" : {
             "All" : [
+              { "Fn::If" : [ "ConfigureLogs", "ConfigureLogs", { "Ref": "AWS::NoValue" }]},
               "ConfigureOS",
-              "ConfigureHostname",
               "ConfigureCFN",
               "InstallWebServer",
               "InstallAwsCli",
               "InstallAtomEditor",
-              { "Fn::If" : [ "DownloadApplication", "DownloadApplication", "ConfigureApplication" ]},
-              "ConfigureLogs"
+              { "Fn::If" : [ "InstallApplication", "InstallApplication", "ConfigureApplication" ]}
             ]
-          },
-          "ConfigureOS" : {
-            "commands" : {
-              "01-disable-windows-firewall" : {
-                "command" : "powershell.exe -Command \"Get-NetFirewallProfile | Set-NetFirewallProfile -Enabled False\"",
-                "waitAfterCompletion" : "0"
-              },
-              "02-set-execution-policy" : {
-                "command" : "powershell.exe -Command \"Set-ExecutionPolicy RemoteSigned -Force\"",
-                "waitAfterCompletion" : "0"
-              }
-            }
-          },
-          "ConfigureHostname" : {
-            "commands" : {
-              "01-set-hostname" : {
-                "command" : { "Fn::Join" : [ "", [ "powershell.exe Rename-Computer -NewName ", { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01", " -Restart" ]]},
-                "waitAfterCompletion" : "forever"
-              }
-            }
-          },
-          "ConfigureCFN" : {
-            "files" : {
-              "c:\\cfn\\cfn-hup.conf" : {
-                "content" : { "Fn::Join" : [ "\n", [
-                  "[main]",
-                  { "Fn::Sub" : "stack=${AWS::StackId}" },
-                  { "Fn::Sub" : "region=${AWS::Region}" }
-                  ]]}
-              },
-              "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf" : {
-                "content": { "Fn::Join" : [ "\n", [
-                  "[cfn-auto-reloader-hook]",
-                  "triggers=post.update",
-                  "path=Resources.Instance.Metadata.AWS::CloudFormation::Init",
-                  { "Fn::Sub" : "action=cfn-init.exe --verbose --configsets All --stack ${AWS::StackId} --resource Instance --region ${AWS::Region}" }
-                ]]}
-              }
-            },
-            "services" : {
-              "windows" : {
-                "cfn-hup" : {
-                  "enabled" : "true",
-                  "ensureRunning" : "true",
-                  "files" : [
-                    "c:\\cfn\\cfn-hup.conf",
-                    "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf"
-                  ]
-                }
-              }
-            }
-          },
-          "InstallWebServer" : {
-            "commands" : {
-              "01_install_webserver" : {
-                "command" : "powershell.exe -Command \"Install-WindowsFeature Web-Server -IncludeAllSubFeature\"",
-                "waitAfterCompletion" : "0"
-              }
-            }
-          },
-          "InstallAwsCli" : {
-            "packages" : {
-              "msi" : {
-                "awscli" : "https://s3.amazonaws.com/aws-cli/AWSCLI64.msi"
-              }
-            }
-          },
-          "InstallAtomEditor" : {
-            "packages" : {
-              "msi" : {
-                "atom" : "https://github.com/atom/atom/releases/download/v1.16.0/AtomSetup-x64.msi"
-              }
-            }
-          },
-          "DownloadApplication" : {
-            "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ApplicationsBucket}/${ApplicationFolder}/${ApplicationObject}" }
-            }
-          },
-          "ConfigureApplication" : {
-            "files" : {
-              "c:\\Inetpub\\wwwroot\\index.htm" : {
-                "content" : { "Fn::Join" : [ "\n", [
-                  "<html>",
-                  "<head>",
-                  { "Fn::Sub" : "<title>${ApplicationName} Test Application</title>" },
-                  "</head>",
-                  "<body>",
-                  { "Fn::Sub" : "<h1>${ApplicationName} (${ApplicationVersion})</h1>" },
-                  "</body>",
-                  "</html>"
-                ]]}
-              }
-            }
           },
           "ConfigureLogs" : {
             "files" : {
@@ -711,7 +619,7 @@
                   "{",
                   "  \"IsEnabled\" : true,",
                   "  \"EngineConfiguration\" : {",
-                  "    \"PollInterval\" : \"00:00:05\",",
+                  "    \"PollInterval\" : \"00:00:10\",",
                   "    \"Components\" : [{",
                   "      \"Id\" : \"ApplicationEventLog\",",
                   "      \"FullName\" : \"AWS.EC2.Windows.CloudWatch.EventLog.EventLogInputComponent,AWS.EC2.Windows.CloudWatch\",",
@@ -794,7 +702,7 @@
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
                            { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
-                  "        \"LogStream\": \"{instance_id}/ApplicationEventLog\"",
+                  "        \"LogStream\": \"Web/{instance_id}/ApplicationEventLog\"",
                   "      }",
                   "    },",
                   "    {",
@@ -805,7 +713,7 @@
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
                            { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
-                  "        \"LogStream\": \"{instance_id}/SystemEventLog\"",
+                  "        \"LogStream\": \"Web/{instance_id}/SystemEventLog\"",
                   "      }",
                   "    },",
                   "    {",
@@ -816,7 +724,7 @@
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
                            { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
-                  "        \"LogStream\": \"{instance_id}/SecurityEventLog\"",
+                  "        \"LogStream\": \"Web/{instance_id}/SecurityEventLog\"",
                   "      }",
                   "    },",
                   "    {",
@@ -827,7 +735,7 @@
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
                            { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
-                  "        \"LogStream\": \"{instance_id}/EC2ConfigLog\"",
+                  "        \"LogStream\": \"Web/{instance_id}/EC2ConfigLog\"",
                   "      }",
                   "    },",
                   "    {",
@@ -838,7 +746,7 @@
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
                            { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
-                  "        \"LogStream\": \"{instance_id}/CfnInitLog\"",
+                  "        \"LogStream\": \"Web/{instance_id}/CfnInitLog\"",
                   "      }",
                   "    },",
                   "    {",
@@ -849,7 +757,7 @@
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
                            { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
-                  "        \"LogStream\": \"{instance_id}/IISLogs\"",
+                  "        \"LogStream\": \"Web/{instance_id}/IISLogs\"",
                   "      }",
                   "    },",
                   "    {",
@@ -888,32 +796,136 @@
                 "waitAfterCompletion" : "30"
               }
             }
+          },
+          "ConfigureOS" : {
+            "commands" : {
+              "01-disable-windows-firewall" : {
+                "command" : "powershell.exe -Command \"Get-NetFirewallProfile | Set-NetFirewallProfile -Enabled False\"",
+                "waitAfterCompletion" : "0"
+              },
+              "02-set-execution-policy" : {
+                "command" : "powershell.exe -Command \"Set-ExecutionPolicy RemoteSigned -Force\"",
+                "waitAfterCompletion" : "0"
+              }
+            }
+          },
+          "ConfigureCFN" : {
+            "files" : {
+              "c:\\cfn\\cfn-hup.conf" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "[main]",
+                  { "Fn::Sub" : "stack=${AWS::StackId}" },
+                  { "Fn::Sub" : "region=${AWS::Region}" }
+                  ]]}
+              },
+              "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf" : {
+                "content": { "Fn::Join" : [ "\n", [
+                  "[cfn-auto-reloader-hook]",
+                  "triggers=post.update",
+                  "path=Resources.Instance.Metadata.AWS::CloudFormation::Init",
+                  { "Fn::Sub" : "action=cfn-init.exe --verbose --configsets All --stack ${AWS::StackId} --resource Instance --region ${AWS::Region}" }
+                ]]}
+              }
+            },
+            "services" : {
+              "windows" : {
+                "cfn-hup" : {
+                  "enabled" : "true",
+                  "ensureRunning" : "true",
+                  "files" : [
+                    "c:\\cfn\\cfn-hup.conf",
+                    "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf"
+                  ]
+                }
+              }
+            }
+          },
+          "InstallWebServer" : {
+            "commands" : {
+              "01_install_webserver" : {
+                "command" : "powershell.exe -Command \"Install-WindowsFeature Web-Server -IncludeAllSubFeature\"",
+                "waitAfterCompletion" : "0"
+              }
+            }
+          },
+          "InstallAwsCli" : {
+            "packages" : {
+              "msi" : {
+                "awscli" : "https://s3.amazonaws.com/aws-cli/AWSCLI64.msi"
+              }
+            }
+          },
+          "InstallAtomEditor" : {
+            "packages" : {
+              "msi" : {
+                "atom" : "https://github.com/atom/atom/releases/download/v1.16.0/AtomSetup-x64.msi"
+              }
+            }
+          },
+          "InstallApplication" : {
+            "sources" : {
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ExamplesBucket" }}, "/", { "Ref" : "ApplicationFolder" }, "/", { "Ref" : "ApplicationObject" }]]}
+            }
+          },
+          "ConfigureApplication" : {
+            "files" : {
+              "c:\\Inetpub\\wwwroot\\index.htm" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "<html>",
+                  "<head>",
+                  { "Fn::Sub" : "<title>${ApplicationName} Test Application</title>" },
+                  "</head>",
+                  "<body>",
+                  { "Fn::Sub" : "<h1>${ApplicationName} (${ApplicationVersion})</h1>" },
+                  "</body>",
+                  "</html>"
+                ]]}
+              }
+            }
+          },
+          "ConfigureHostname" : {
+            "commands" : {
+              "01-set-hostname" : {
+                "command" : { "Fn::Join" : [ "", [ "powershell.exe Rename-Computer -NewName ", { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01a", " -Restart" ]]},
+                "waitAfterCompletion" : "forever"
+              }
+            }
           }
         }
       },
       "Properties" : {
         "ImageId" : { "Fn::GetAtt" : [ "GetWindowsImageId", "ImageId" ]},
-        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "WindowsServer", { "Ref" : "EnvironmentSize" }]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Web", { "Ref" : "EnvironmentType" }]},
         "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
         "KeyName" : { "Ref" : "KeyName" },
         "NetworkInterfaces" : [{
-          "Description"              : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "NetworkInterface0" ]]},
+          "Description"              : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "NetworkInterface", "eth0" ]]},
           "DeviceIndex"              : "0",
           "SubnetId"                 : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-WebSubnetA" }},
           "GroupSet"                 : [{ "Ref" :  "SecurityGroup" }],
           "AssociatePublicIpAddress" : "true",
           "DeleteOnTermination"      : "true"
         }],
+        "BlockDeviceMappings" : [{
+          "DeviceName" : "/dev/sda1",
+          "Ebs" : {
+            "VolumeSize" : "50"
+          }
+        },
+        {
+          "DeviceName" : "/dev/xvdb",
+          "Ebs" : {
+            "VolumeSize" : "50",
+            "VolumeType" : "io1",
+            "Iops" : "500",
+            "DeleteOnTermination" : "false"
+          }
+        }],
         "Tags" : [
           { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "Instance" ]]}}
         ],
         "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "\n", [
           "<script>",
-          "wmic product where \"description='Amazon SSM Agent' \" uninstall",
-          "wmic product where \"description='aws-cfn-bootstrap' \" uninstall ",
-          "start /wait c:\\Windows\\system32\\msiexec /passive /qn /i https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-win64-latest.msi",
-          "powershell.exe -Command \"iwr https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/windows_amd64/AmazonSSMAgentSetup.exe -UseBasicParsing -OutFile C:\\AmazonSSMAgentSetup.exe\"",
-          "start /wait C:\\AmazonSSMAgentSetup.exe /install /quiet",
           { "Fn::Sub" : "cfn-init.exe --verbose --configsets All --stack ${AWS::StackId} --resource Instance --region ${AWS::Region}" },
           { "Fn::Sub" : "cfn-signal.exe --exit-code %ERRORLEVEL% --stack ${AWS::StackName} --resource Instance --region ${AWS::Region}" },
           "</script>"
@@ -921,7 +933,7 @@
       },
       "CreationPolicy" : {
         "ResourceSignal" : {
-          "Timeout" : "PT30M"
+          "Timeout" : "PT20M"
         }
       }
     },
