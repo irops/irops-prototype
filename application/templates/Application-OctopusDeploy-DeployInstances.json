@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
 
-  "Description" : "Application-Engine-DeploymentInstances Template. This is a layer in the Engine application, which creates the InstanceProfile, and one DeploymentInstance.",
+  "Description" : "Application-OctopusDeploy-DeployInstances Template. This is a layer in the OctopusDeploy application, which creates the InstanceProfile, and one DeployInstance.",
 
   "Metadata" : {
     "AWS::CloudFormation::Interface" : {
@@ -13,6 +13,7 @@
             "CustomIdentifierFunctionsStackName",
             "StandardCIDRFunctionsStackName",
             "StandardAMIFunctionsStackName",
+            "StandardBucketsStackName",
             "StandardTopicsStackName"
           ]
         },
@@ -20,9 +21,9 @@
           "Label" : { "default" : "Resource Dependencies" },
           "Parameters" : [
             "KeyName",
-            "DeploymentRole",
+            "Role",
             "LogGroup",
-            "DeploymentInstanceSecurityGroup"
+            "InstanceSecurityGroup"
           ]
         },
         {
@@ -35,29 +36,23 @@
         {
           "Label" : { "default" : "Environment Configuration" },
           "Parameters" : [
-            "EnvironmentSize",
-            "WindowsOSName"
+            "EnvironmentType",
+            "OSName"
           ]
         },
         {
           "Label" : { "default" : "Application Dependencies Configuration" },
           "Parameters" : [
-            "ProductsBucket",
             "ProductFolder",
-            "DeploymentProductObject",
-            "ConfigurationsBucket",
+            "ProductObject",
             "ConfigurationFolder",
-            "DeploymentConfigurationObject"
+            "ConfigurationObject"
           ]
         },
         {
           "Label" : { "default" : "Application Configuration" },
           "Parameters" : [
-            "ApplicationsBucket",
-            "ApplicationFolder",
-            "DeploymentApplicationObject",
             "ApplicationName",
-            "ApplicationVersion",
             "UseStaticAddress",
             "LogRetention",
             "Schedule"
@@ -70,26 +65,21 @@
         "CustomIdentifierFunctionsStackName" : { "default" : "CustomIdentifierFunctions Stack Name" },
         "StandardCIDRFunctionsStackName" : { "default" : "StandardCIDRFunctions Stack Name" },
         "StandardAMIFunctionsStackName" : { "default" : "StandardAMIFunctions Stack Name" },
+        "StandardBucketsStackName" : { "default" : "StandardBuckets Stack Name" },
         "StandardTopicsStackName" : { "default" : "StandardTopics Stack Name" },
         "KeyName" : { "default" : "Key Name" },
-        "DeploymentRole" : { "default" : "DeploymentRole" },
+        "Role" : { "default" : "Role" },
         "LogGroup" : { "default" : "LogGroup" },
-        "DeploymentInstanceSecurityGroup" : { "default" : "DeploymentInstance SecurityGroup" },
+        "SecurityGroup" : { "default" : "SecurityGroup" },
         "CompanyName" : { "default" : "Company Name" },
         "SystemName" : { "default" : "System Name" },
         "EnvironmentSize" : { "default" : "Environment Size" },
-        "WindowsOSName" : { "default" : "Windows Operating System Name" },
-        "ProductsBucket" : { "default" : "Products Bucket" },
+        "OSName" : { "default" : "Operating System Name" },
         "ProductFolder" : { "default" : "Product Folder" },
-        "DeploymentProductObject" : { "default" : "Deployment Product Object" },
-        "ConfigurationsBucket" : { "default" : "Configurations Bucket" },
+        "ProductObject" : { "default" : "Product Object" },
         "ConfigurationFolder" : { "default" : "Configuration Folder" },
-        "DeploymentConfigurationObject" : { "default" : "Deployment Configuration Object" },
-        "ApplicationsBucket" : { "default" : "Applications Bucket" },
-        "ApplicationFolder" : { "default" : "Application Folder" },
-        "DeploymentApplicationObject" : { "default" : "Deployment Application Object" },
+        "ConfigurationObject" : { "default" : "Configuration Object" },
         "ApplicationName" : { "default" : "Application Name" },
-        "ApplicationVersion" : { "default" : "Application Version" },
         "UseStaticAddress" : { "default" : "Use Static Address" },
         "LogRetention" : { "default" : "Log Retention" },
         "Schedule" : { "default" : "Schedule" }
@@ -135,6 +125,16 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
+    "StandardBucketsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Buckets",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardBuckets",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
     "StandardTopicsStackName" : {
       "Description" : "Name of the CloudFormation Stack containing Standard Topics",
       "Type" : "String",
@@ -154,8 +154,8 @@
       "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
     },
 
-    "DeploymentRole" : {
-      "Description" : "Name of an existing Role which provides permissions needed by the DeploymentInstance",
+    "Role" : {
+      "Description" : "Name of an existing Role which provides permissions needed by the Instances",
       "Type" : "String",
       "MaxLength" : 128,
       "AllowedPattern" : "^[-a-zA-Z0-9]*$",
@@ -170,8 +170,8 @@
       "ConstraintDescription" : "must be the name of an existing LogGroup."
     },
 
-    "DeploymentInstanceSecurityGroup" : {
-      "Description" : "ID of an existing SecurityGroup which controls access to the DeploymentInstances",
+    "SecurityGroup" : {
+      "Description" : "ID of an existing SecurityGroup which controls access to the Instances",
       "Type" : "AWS::EC2::SecurityGroup::Id",
       "MaxLength" : 32,
       "AllowedPattern" : "^sg-[0-9a-f]{8}$",
@@ -198,102 +198,53 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
-    "EnvironmentSize" : {
-      "Description" : "Size of the Environment to build. Used to select size-related options in Mappings",
+    "EnvironmentType" : {
+      "Description" : "Type of the Environment to build. Used to select size-related options in Mappings",
       "Type" : "String",
       "Default" : "small",
       "AllowedValues" : [ "small", "medium", "large", "xlarge" ],
       "ConstraintDescription" : "must be small, medium, large or xlarge."
     },
 
-    "WindowsOSName" : {
-      "Description" : "The Operating System to use for Windows Instances",
+    "OSName" : {
+      "Description" : "The Operating System to use for Instances",
       "Type" : "String",
       "Default" : "Windows Server 2012 R2",
       "AllowedValues" : [ "Windows Server 2012 R2", "Windows Server 2016" ],
       "ConstraintDescription" : "must be \"Windows Server 2012 R2\" or \"Windows Server 2016\"."
     },
 
-    "ProductsBucket" : {
-      "Description" : "S3 bucket containing 3rd-Party Products to be deployed",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 64,
-      "Default" : "products-us-west-2-production",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
-    },
-
     "ProductFolder" : {
-      "Description" : "Folder within the S3 bucket containing Products deployed by this Template",
+      "Description" : "Folder within the S3 Products bucket containing Products deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
-      "Default" : "Engine",
+      "Default" : "OctopusDeploy",
       "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
-    "DeploymentProductObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine Deployment Component installer",
+    "ProductObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the OctopusDeploy installer",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
       "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
-    },
-
-    "ConfigurationsBucket" : {
-      "Description" : "S3 bucket containing Configurations to be deployed",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 64,
-      "Default" : "configurations-us-west-2-irops",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
     },
 
     "ConfigurationFolder" : {
-      "Description" : "Folder within the S3 bucket containing Configurations deployed by this Template",
+      "Description" : "Folder within the S3 Configurations bucket containing Configurations deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
-      "Default" : "Engine",
+      "Default" : "OctopusDeploy",
       "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
-    "DeploymentConfigurationObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine Deployment Component configuration",
-      "Type" : "String",
-      "MaxLength" : 64,
-      "Default" : "",
-      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
-      "ConstraintDescription" : "must be a valid filename, not containing slashes."
-    },
-
-    "ApplicationsBucket" : {
-      "Description" : "S3 bucket containing Applications to be deployed",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 64,
-      "Default" : "applications-us-west-2-irops",
-      "AllowedPattern" : "^[a-z][-a-z0-9]*$",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
-    },
-
-    "ApplicationFolder" : {
-      "Description" : "Folder within the S3 bucket containing Applications deployed by this Template",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 32,
-      "Default" : "Engine",
-      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
-      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
-    },
-
-    "DeploymentApplicationObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine Deployment Component application",
+    "ConfigurationObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the OctopusDeploy configuration",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
@@ -306,7 +257,7 @@
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
-      "Default" : "Engine",
+      "Default" : "OctopusDeploy",
       "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
@@ -348,15 +299,14 @@
 
   "Mappings" : {
     "InstanceTypeMap" : {
-      "Deployment" : { "small" : "t2.small", "medium" : "t2.medium", "large" : "t2.large", "xlarge" : "t2.xlarge" }
+      "Deploy" : { "small" : "t2.small", "medium" : "t2.medium", "large" : "t2.large", "xlarge" : "t2.xlarge" }
     }
   },
 
   "Conditions" : {
-    "ConfigureKey" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "KeyName" }, "" ]}]},
-    "InstallProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "DeploymentProductObject" }, "" ]}]},
-    "InstallConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "DeploymentConfigurationObject" }, "" ]}]},
-    "InstallApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "DeploymentApplicationObject" }, "" ]}]},
+    "ConfigureGlobalS3" : { "Fn::Equals" : [{ "Ref" : "AWS::Region" }, "us-east-1" ]},
+    "InstallProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ProductObject" }, "" ]}]},
+    "InstallConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ConfigurationObject" }, "" ]}]},
     "ConfigureStaticAddress" : { "Fn::Equals" : [{ "Ref" : "UseStaticAddress" }, "true" ]},
     "ConfigureLogs" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LogRetention" }, "0" ]}]},
     "ConfigureSchedule" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "Schedule" }, "" ]}]}
@@ -371,7 +321,7 @@
         "LocationName" : { "Ref": "AWS::Region" },
         "EnvironmentName" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }},
         "ApplicationName" : { "Ref" : "ApplicationName" },
-        "ComponentName" : "Deployment"
+        "ComponentName" : "Deploy"
       }
     },
 
@@ -380,7 +330,7 @@
       "Properties" : {
         "ServiceToken" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardAMIFunctionsStackName}-GetWindowsImageIdFunctionArn" }},
         "Region" : { "Ref" : "AWS::Region" },
-        "OSName" : { "Ref" : "WindowsOSName" }
+        "OSName" : { "Ref" : "OSName" }
       }
     },
 
@@ -388,7 +338,7 @@
       "Type" : "AWS::IAM::InstanceProfile",
       "Properties" : {
         "Path" : "/",
-        "Roles" : [{ "Ref" : "DeploymentRole" }]
+        "Roles" : [{ "Ref" : "Role" }]
       }
     },
 
@@ -396,22 +346,21 @@
       "Type" : "Custom::AddressCalculator",
       "Properties" : {
         "ServiceToken" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardCIDRFunctionsStackName}-AddressCalculatorFunctionArn" }},
-        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-ApplicationSubnetA" }}
+        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-BuildSubnetA" }}
       },
       "Condition" : "ConfigureStaticAddress"
     },
 
-    "DeploymentInstance01A" : {
+    "DeployInstance01" : {
       "Type" : "AWS::EC2::Instance",
       "Metadata" : {
         "AWS::CloudFormation::Authentication" : {
           "S3Credentials" : {
             "type" : "S3",
-            "roleName" : { "Ref" : "DeploymentRole" },
+            "roleName" : { "Ref" : "Role" },
             "buckets" : [
-              { "Ref" : "ProductsBucket" },
-              { "Ref" : "ConfigurationsBucket" },
-              { "Ref" : "ApplicationsBucket" }
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }},
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}
             ]
           }
         },
@@ -421,10 +370,10 @@
               { "Fn::If" : [ "ConfigureLogs", "ConfigureLogs", { "Ref": "AWS::NoValue" }]},
               "ConfigureOS",
               "ConfigureCFN",
+              "InstallWebServer",
               "InstallAtomEditor",
-              { "Fn::If" : [ "InstallProduct", "InstallDeploymentProduct", { "Ref": "AWS::NoValue" }]},
-              { "Fn::If" : [ "InstallConfiguration", "InstallDeploymentConfiguration", { "Ref": "AWS::NoValue" }]},
-              { "Fn::If" : [ "InstallApplication", "InstallDeploymentApplication", { "Ref": "AWS::NoValue" }]}
+              { "Fn::If" : [ "InstallProduct", "InstallProduct", { "Ref": "AWS::NoValue" }]},
+              { "Fn::If" : [ "InstallConfiguration", "InstallConfiguration", { "Ref": "AWS::NoValue" }]}
             ]
           },
           "ConfigureLogs" : {
@@ -484,6 +433,19 @@
                   "      }",
                   "    },",
                   "    {",
+                  "      \"Id\" : \"IISLogs\",",
+                  "      \"FullName\" : \"AWS.EC2.Windows.CloudWatch.CustomLog.CustomLogInputComponent,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\" : {",
+                  "        \"LogDirectoryPath\" : \"C:\\\\inetpub\\\\logs\\\\LogFiles\\\\W3SVC1\",",
+                  "        \"TimestampFormat\" : \"yyyy-MM-dd HH:mm:ss\",",
+                  "        \"Encoding\" : \"UTF-8\",",
+                  "        \"Filter\" : \"\",",
+                  "        \"CultureName\" : \"en-US\",",
+                  "        \"TimeZoneKind\" : \"UTC\",",
+                  "        \"LineCount\" : \"3\"",
+                  "      }",
+                  "    },",
+                  "    {",
                   "      \"Id\" : \"MemoryPerformanceCounter\",",
                   "      \"FullName\" : \"AWS.EC2.Windows.CloudWatch.PerformanceCounterComponent.PerformanceCounterInputComponent,AWS.EC2.Windows.CloudWatch\",",
                   "      \"Parameters\" : {",
@@ -504,7 +466,7 @@
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
                            { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
-                  "        \"LogStream\": \"Deployment/{instance_id}/ApplicationEventLog\"",
+                  "        \"LogStream\": \"OctopusDeploy/{instance_id}/ApplicationEventLog\"",
                   "      }",
                   "    },",
                   "    {",
@@ -515,7 +477,7 @@
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
                            { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
-                  "        \"LogStream\": \"Deployment/{instance_id}/SystemEventLog\"",
+                  "        \"LogStream\": \"OctopusDeploy/{instance_id}/SystemEventLog\"",
                   "      }",
                   "    },",
                   "    {",
@@ -526,7 +488,7 @@
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
                            { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
-                  "        \"LogStream\": \"Deployment/{instance_id}/SecurityEventLog\"",
+                  "        \"LogStream\": \"OctopusDeploy/{instance_id}/SecurityEventLog\"",
                   "      }",
                   "    },",
                   "    {",
@@ -537,7 +499,7 @@
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
                            { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
-                  "        \"LogStream\": \"Deployment/{instance_id}/EC2ConfigLog\"",
+                  "        \"LogStream\": \"OctopusDeploy/{instance_id}/EC2ConfigLog\"",
                   "      }",
                   "    },",
                   "    {",
@@ -548,7 +510,18 @@
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
                            { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
-                  "        \"LogStream\": \"Deployment/{instance_id}/CfnInitLog\"",
+                  "        \"LogStream\": \"OctopusDeploy/{instance_id}/CfnInitLog\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\": \"CloudWatchIISLogs\",",
+                  "      \"FullName\": \"AWS.EC2.Windows.CloudWatch.CloudWatchLogsOutput,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\": {",
+                  "        \"AccessKey\": \"\",",
+                  "        \"SecretKey\": \"\",",
+                           { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
+                           { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
+                  "        \"LogStream\": \"Web/{instance_id}/IISLogs\"",
                   "      }",
                   "    },",
                   "    {",
@@ -568,6 +541,7 @@
                   "        \"SecurityEventLog,CloudWatchSecurityEventLog\",",
                   "        \"EC2ConfigLog,CloudWatchEC2ConfigLog\",",
                   "        \"CfnInitLog,CloudWatchCfnInitLog\",",
+                  "        \"IISLogs,CloudWatchIISLogs\",",
                   "        \"MemoryPerformanceCounter,CloudWatch\"",
                   "      ]",
                   "    }",
@@ -612,8 +586,8 @@
                 "content": { "Fn::Join" : [ "\n", [
                   "[cfn-auto-reloader-hook]",
                   "triggers=post.update",
-                  "path=Resources.DeploymentInstance01A.Metadata.AWS::CloudFormation::Init",
-                  { "Fn::Sub" : "action=cfn-init.exe --verbose --configsets All --stack ${AWS::StackId} --resource DeploymentInstance01A --region ${AWS::Region}" }
+                  "path=Resources.DeployInstance01.Metadata.AWS::CloudFormation::Init",
+                  { "Fn::Sub" : "action=cfn-init.exe --verbose --configsets All --stack ${AWS::StackId} --resource DeployInstance01 --region ${AWS::Region}" }
                 ]]}
               }
             },
@@ -630,6 +604,14 @@
               }
             }
           },
+          "InstallWebServer" : {
+            "commands" : {
+              "01_install_webserver" : {
+                "command" : "powershell.exe -Command \"Install-WindowsFeature Web-Server -IncludeAllSubFeature\"",
+                "waitAfterCompletion" : "0"
+              }
+            }
+          },
           "InstallAtomEditor" : {
             "packages" : {
               "msi" : {
@@ -637,25 +619,22 @@
               }
             }
           },
-          "InstallDeploymentProduct" : {
-            "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ProductsBucket}/${ProductFolder}/${DeploymentProductObject}" }
+          "InstallProduct" : {
+            "packages" : {
+              "msi" : {
+                "octopus" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }}, "/", { "Ref" : "ProductFolder" }, "/", { "Ref" : "ProductObject" }]]}
+              }
             }
           },
-          "InstallDeploymentConfiguration" : {
+          "InstallConfiguration" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ConfigurationsBucket}/${ConfigurationFolder}/${DeploymentConfigurationObject}" }
-            }
-          },
-          "InstallDeploymentApplication" : {
-            "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ApplicationsBucket}/${ApplicationFolder}/${DeploymentApplicationObject}" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/", { "Ref" : "ConfigurationObject" }]]}
             }
           },
           "ConfigureHostname" : {
             "commands" : {
               "01-set-hostname" : {
-                "command" : { "Fn::Join" : [ "", [ "powershell.exe Rename-Computer -NewName ", { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01a", " -Restart" ]]},
+                "command" : { "Fn::Join" : [ "", [ "powershell.exe Rename-Computer -NewName ", { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01", " -Restart" ]]},
                 "waitAfterCompletion" : "forever"
               }
             }
@@ -664,46 +643,60 @@
       },
       "Properties" : {
         "ImageId" : { "Fn::GetAtt" : [ "GetWindowsImageId", "ImageId" ]},
-        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Deployment", { "Ref" : "EnvironmentSize" }]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Deploy", { "Ref" : "EnvironmentType" }]},
         "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
-        "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
+        "KeyName" : { "Ref" : "KeyName" },
         "NetworkInterfaces" : [{
-          "Description"              : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "DeploymentNetworkInterface01A", "eth0" ]]},
+          "Description"              : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "NetworkInterface01", "eth0" ]]},
           "DeviceIndex"              : "0",
-          "SubnetId"                 : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-ApplicationSubnetA" }},
+          "SubnetId"                 : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-BuildSubnetA" }},
           "PrivateIpAddress"         : { "Fn::If" : [ "ConfigureStaticAddress", { "Fn::GetAtt" : [ "AddressCalculatorA", "Address4" ]}, { "Ref" : "AWS::NoValue" }]},
-          "GroupSet"                 : [{ "Ref" :  "DeploymentInstanceSecurityGroup" }],
+          "GroupSet"                 : [{ "Ref" :  "SecurityGroup" }],
           "AssociatePublicIpAddress" : "false",
           "DeleteOnTermination"      : "true"
         }],
+        "BlockDeviceMappings" : [{
+          "DeviceName" : "/dev/sda1",
+          "Ebs" : {
+            "VolumeSize" : "50"
+          }
+        },
+        {
+          "DeviceName" : "/dev/xvdb",
+          "Ebs" : {
+            "VolumeSize" : "100",
+            "VolumeType" : "gp2",
+            "DeleteOnTermination" : "false"
+          }
+        }],
         "Tags" : [
-          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "DeploymentInstance01A" ]]}},
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "DeployInstance01" ]]}},
           { "Fn::If" : [ "ConfigureSchedule", { "Key" : "Schedule", "Value" : { "Ref" : "Schedule" }}, { "Ref" : "AWS::NoValue" }]}
         ],
         "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "\n", [
           "<script>",
-          { "Fn::Sub" : "cfn-init.exe --verbose --configsets All --stack ${AWS::StackId} --resource DeploymentInstance01A --region ${AWS::Region}" },
-          { "Fn::Sub" : "cfn-signal.exe --exit-code %ERRORLEVEL% --stack ${AWS::StackName} --resource DeploymentInstance01A --region ${AWS::Region}" },
+          { "Fn::Sub" : "cfn-init.exe --verbose --configsets All --stack ${AWS::StackId} --resource DeployInstance01 --region ${AWS::Region}" },
+          { "Fn::Sub" : "cfn-signal.exe --exit-code %ERRORLEVEL% --stack ${AWS::StackName} --resource DeployInstance01 --region ${AWS::Region}" },
           "</script>"
         ]]}}
       },
       "CreationPolicy" : {
         "ResourceSignal" : {
-          "Timeout" : "PT20M"
+          "Timeout" : "PT30M"
         }
       }
     }
   },
 
   "Outputs" : {
-    "DeploymentInstance01A" : {
-      "Description" : "The DeploymentInstance01A",
-      "Value" : { "Ref" : "DeploymentInstance01A" }
+    "DeployInstance01" : {
+      "Description" : "The DeployInstance01",
+      "Value" : { "Ref" : "DeployInstance01" }
     },
 
-    "DeploymentHostName01A" : {
-      "Description" : "The DeploymentHostName01A",
-      "Value" : { "Fn::Join" : [ "", [ { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01a.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]}
+    "DeployHostName01" : {
+      "Description" : "The DeployHostName01",
+      "Value" : { "Fn::Join" : [ "", [ { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]}
     }
   }
 }
