@@ -250,12 +250,12 @@ else
       Core)
         os_name="Windows Server 2012 R2"
         use_static_address=false
-        log_retention=0
+        log_retention=14
         schedule="";; # 13:00 - 2:00 UTC = 5:00 AM - 6:00 PM PST = 8:00 AM - 9:00 PM EST
       Build)
         os_name="Windows Server 2012 R2"
         use_static_address=false
-        log_retention=0
+        log_retention=14
         schedule="";; # 13:00 - 2:00 UTC = 5:00 AM - 6:00 PM PST = 8:00 AM - 9:00 PM EST
       *)
         echo "-E $environment invalid! Must be Production, Staging, Testing, Development, Core or Build"
