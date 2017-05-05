@@ -43,7 +43,7 @@
     },
 
     "ApplicationFolder" : {
-      "Description" : "Folder within S3 bucket containing WebServer Application objects",
+      "Description" : "Folder within the S3 Applications bucket containing Applications deployed by this Template",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
@@ -53,7 +53,7 @@
     },
 
     "ApplicationObject" : {
-      "Description" : "Object within S3 bucket and folder containing WebServer Application object",
+      "Description" : "Object within the S3 bucket and folder containing the LinuxWebServer Application",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",

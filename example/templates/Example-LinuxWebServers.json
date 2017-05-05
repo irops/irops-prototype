@@ -936,7 +936,6 @@
               }
             }
           },
-
           "ConfigureHostname" : {
             "files" : {
               "/root/bin/sethostname" : {
@@ -982,7 +981,6 @@
               }
             }
           },
-
           "InstallApache" : {
             "packages" : {
               "yum" : {
