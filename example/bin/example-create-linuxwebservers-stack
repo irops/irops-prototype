@@ -28,11 +28,10 @@ owner=${OWNER_EMAIL:-$USER@hpe.com}
 company=${COMPANY_NAME:-Travel}
 system=${SYSTEM_NAME:-IROPS}
 environment=${ENVIRONMENT_NAME:-Production}
-environment_size=${ENVIRONMENT_SIZE:-micro}
+environment_type=${ENVIRONMENT_TYPE:-small}
 application=${APPLICATION_NAME:-LinuxWebServers}
 application_domain=${APPLICATION_DOMAIN:-lws}
 application_version=${APPLICATION_VERSION:-2.0.0}
-key=${AWS_KEY_NAME:-example}
 public_user_network=${PUBLIC_USER_NETWORK:-0.0.0.0/0}
 public_user_network1=${PUBLIC_USER_NETWORK1:-}
 public_user_network2=${PUBLIC_USER_NETWORK2:-}
@@ -48,6 +47,7 @@ private_administrator_network2=${PRIVATE_ADMINISTRATOR_NETWORK2:-}
 region=${AWS_DEFAULT_REGION:-us-west-2}
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-administrator}
+key=${AWS_KEY_NAME:-example}
 
 
 #  2. Define functions
@@ -55,12 +55,11 @@ user=${AWS_USER_NAME:-administrator}
 usage () {
     echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v] [-d]"
     echo "                  [-O owner] [-C company ] [-S system]"
-    echo "                  [-E environment] [-Z size]"
+    echo "                  [-E environment] [-T type]"
     echo "                  [-A application ] [-D domain] [-V version]"
-    echo "                  [-k key]"
     echo "                  [-p network] [-P network ]"
     echo "                  [-n network] [-N network ]"
-    echo "                  [-r region ] [-a account] [-u user]"
+    echo "                  [-r region ] [-a account] [-u user] [-k key]"
     echo "  -I              non-interactive"
     echo "  -s              slower: increase pauses by 25%"
     echo "  -f              faster: reduce pauses by 25%"
@@ -70,11 +69,10 @@ usage () {
     echo "  -C company      Company Name (default: $company)"
     echo "  -S system       System Name (default: $system)"
     echo "  -E environment  Environment Name (default: $environment)"
-    echo "  -Z size         Environment Size (default: $environment_size)"
+    echo "  -T type         Environment Type (default: $environment_type)"
     echo "  -A application  Application Name (default: $application)"
     echo "  -D domain       Application Domain (default: $application_domain)"
     echo "  -V version      Application Version (default: $application_version)"
-    echo "  -k key          Key (default: $key)"
     echo "  -p network      Public User Network (default: $public_user_network)"
     echo "  -P network      Public Administrator Network (default: $public_administrator_network)"
     echo "  -n network      Private User Network (default: $private_user_network)"
@@ -82,6 +80,7 @@ usage () {
     echo "  -r region       Region (default: $region)"
     echo "  -a account      Account (default: $account)"
     echo "  -u user         User (default: $user)"
+    echo "  -k key          Key (default: $key)"
 }
 
 run() {
@@ -165,7 +164,7 @@ next() {
 #  3. Parse command line options
 #     - Note, using options 1-8 as hidden options to set additional network ranges
 
-while getopts IsfvdO:C:S:E:Z:A:D:V:k:p:1:2:P:3:4:n:5:6:N:7:8:r:a:u:? arg; do
+while getopts IsfvdO:C:S:E:T:A:D:V:p:1:2:P:3:4:n:5:6:N:7:8:r:a:u:k:? arg; do
     case $arg in
     I)  interactive=0;;
     s)  ((speed < speed_max)) && ((speed=speed+25));;
@@ -176,11 +175,10 @@ while getopts IsfvdO:C:S:E:Z:A:D:V:k:p:1:2:P:3:4:n:5:6:N:7:8:r:a:u:? arg; do
     C)  company="$OPTARG";;
     S)  system="$OPTARG";;
     E)  environment="$OPTARG";;
-    Z)  environment_size="$OPTARG";;
+    T)  environment_type="$OPTARG";;
     A)  application="$OPTARG";;
     D)  application_domain="$OPTARG";;
     V)  application_version="$OPTARG";;
-    k)  key="$OPTARG";;
     p)  public_user_network="$OPTARG";;
     1)  public_user_network1="$OPTARG";;
     2)  public_user_network2="$OPTARG";;
@@ -196,6 +194,7 @@ while getopts IsfvdO:C:S:E:Z:A:D:V:k:p:1:2:P:3:4:n:5:6:N:7:8:r:a:u:? arg; do
     r)  region="$OPTARG";;
     a)  account="$OPTARG";;
     u)  user="$OPTARG";;
+    k)  key="$OPTARG";;
     ?)  usage
         exit 1;;
     esac
@@ -216,86 +215,112 @@ if [ -z $company ]; then
     echo "-C company missing!"
     echo "Could not automatically determine company, and it was not specified as a parameter"
     exit 12
+else
+    case $company in
+      Travel)
+        ;;
+      *)
+        echo "-C $company invalid! Must be Travel"
+        exit 13;;
+    esac
 fi
 
 if [ -z $system ]; then
     echo "-S system missing!"
     echo "Could not automatically determine system, and it was not specified as a parameter"
     exit 14
+else
+    case $system in
+      IROPS)
+        ;;
+      *)
+        echo "-S $system invalid! Must be IROPS"
+        exit 15;;
+    esac
 fi
 
 if [ -z $environment ]; then
     echo "-E environment missing!"
     echo "Could not automatically determine environment, and it was not specified as a parameter"
-    exit 16
+    exit 20
 else
     case $environment in
       Production)
-        instance_os=RHEL
+        os_name="RHEL 7.3"
         log_retention=30
         normal_schedule=""    # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
         reduced_schedule="";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
       Staging)
-        instance_os=AMZN
+        os_name="Amazon Linux 2017.03.0"
         log_retention=7
         normal_schedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
         reduced_schedule="0 4 * * *";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
       Testing)
-        instance_os=AMZN
+        os_name="Amazon Linux"
         log_retention=0
         normal_schedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
         reduced_schedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
       Development)
-        instance_os=AMZN
+        os_name="Amazon Linux"
         log_retention=0
         normal_schedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
         reduced_schedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
       Core)
-        instance_os=AMZN
+        os_name="Amazon Linux"
         log_retention=14
         normal_schedule=""    # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
         reduced_schedule="";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
       Build)
-        instance_os=AMZN
+        os_name="Amazon Linux"
         log_retention=0
         normal_schedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
         reduced_schedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
       *)
-        instance_os=AMZN
+        os_name="Amazon Linux"
         log_retention=0
         normal_schedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
         reduced_schedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
     esac
 fi
 
-if [ -z $environment_size ]; then
-    echo "-Z size missing!"
-    echo "Could not automatically determine size, and it was not specified as a parameter"
-    exit 18
+if [ -z $environment_type ]; then
+    echo "-T type missing!"
+    echo "Could not automatically determine environment type, and it was not specified as a parameter"
+    exit 22
+else
+    case $environment_type in
+      micro|small|medium|large|xlarge)
+        ;;
+      *)
+        echo "-T $environment_type invalid! Must be micro, small, medium, large or xlarge"
+        exit 23;;
+    esac
 fi
 
 if [ -z $application ]; then
     echo "-A application missing!"
     echo "Could not automatically determine application, and it was not specified as a parameter"
-    exit 20
+    exit 30
+else
+    case $application in
+      LinuxWebServers)
+        ;;
+      *)
+        echo "-A $application invalid! Must be LinuxWebServers"
+        exit 31;;
+    esac
 fi
 
 if [ -z $application_domain ]; then
     echo "-D domain missing!"
     echo "Could not automatically determine domain, and it was not specified as a parameter"
-    exit 22
+    exit 32
 fi
 
 if [ -z $application_version ]; then
     echo "-V version missing!"
     echo "Could not automatically determine version, and it was not specified as a parameter"
-    exit 24
-fi
-
-if [ -z $key ]; then
-    echo "-k key missing!"
-    echo "Could not automatically determine key, and it was not specified as a parameter"
-    exit 30
+    exit 34
 fi
 
 if [ -z $public_user_network ]; then
@@ -350,28 +375,42 @@ if [ -z $user ]; then
     exit 54
 fi
 
+if [ -z $key ]; then
+    echo "-k key missing!"
+    echo "Could not automatically determine key, and it was not specified as a parameter"
+    exit 56
+fi
+
 profile=$account-$user
 
 if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     echo "Could not find ($account) Account ($user) User AWSCLI profile!"
     echo "Expected to find: [profile $profile] in ~/.aws/config"
+    exit 58
+fi
+
+if ! aws cloudformation describe-stacks --stack-name StandardTopics \
+                                        --profile $profile --region $region --output text &> /dev/null; then
+    echo "StandardTopics Stack does not exist!"
     exit 60
 fi
 
-templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
-template_folder=example
-
-if ! aws s3api head-bucket --bucket $templates_bucket --profile $profile --region $region 2> /dev/null; then
-    unset templates_bucket
+if ! aws cloudformation describe-stacks --stack-name StandardBuckets \
+                                        --profile $profile --region $region --output text &> /dev/null; then
+    echo "StandardBuckets Stack does not exist!"
+    exit 61
 fi
 
-examples_bucket=${AWS_EXAMPLES_BUCKET:-examples-$region-$account}
-example_folder=LinuxWebServer
-example_object=LinuxWebServer-$application_version.tgz
+if ! aws cloudformation describe-stacks --stack-name StandardAMIFunctions \
+                                        --profile $profile --region $region --output text &> /dev/null; then
+    echo "StandardAMIFunctions Stack does not exist!"
+    exit 62
+fi
 
-if ! aws s3api head-bucket --bucket $examples_bucket --profile $profile --region $region 2> /dev/null; then
-    echo "$examples_bucket S3 bucket does not exist!"
-    exit 68
+if ! aws cloudformation describe-stacks --stack-name CustomIdentifierFunctions \
+                                        --profile $profile --region $region --output text &> /dev/null; then
+    echo "CustomIdentifierFunctions Stack does not exist!"
+    exit 64
 fi
 
 if ! aws cloudformation describe-stacks --stack-name $environment-VPC \
@@ -380,23 +419,12 @@ if ! aws cloudformation describe-stacks --stack-name $environment-VPC \
     exit 70
 fi
 
-if ! aws cloudformation describe-stacks --stack-name CustomIdentifierFunctions \
-                                        --profile $profile --region $region --output text &> /dev/null; then
-    echo "CustomIdentifierFunctions Stack does not exist!"
-    exit 72
-fi
+templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
+template_folder=example
 
-if ! aws cloudformation describe-stacks --stack-name StandardAMIFunctions \
-                                        --profile $profile --region $region --output text &> /dev/null; then
-    echo "StandardAMIFunctions Stack does not exist!"
-    exit 74
-fi
-
-if ! aws cloudformation describe-stacks --stack-name StandardTopics \
-                                        --profile $profile --region $region --output text &> /dev/null; then
-    echo "StandardTopics Stack does not exist!"
-    exit 76
-fi
+examples_bucket=${AWS_EXAMPLES_BUCKET:-examples-$region-$account}
+example_folder=LinuxWebServer
+example_object=LinuxWebServer-$application_version.tgz
 
 # Prevent certain environment variables from breaking commands
 unset AWS_DEFAULT_PROFILE
@@ -452,42 +480,34 @@ EOS
 run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
 eval_statement="${statement//\\$'\n'}"
 
-if [ ! -z $templates_bucket ]; then
-    clear
-    echo
-    echo "============================================================"
-    echo
-    echo "$(printf '%2d' $step). Sync Template and Policy to ($templates_bucket) Bucket"
-    echo
-    echo "============================================================"
-    echo
-    echo "Commands:"
-    echo
-    echo "$statement"
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Sync Template and Policy to ($templates_bucket) Bucket"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
 
-    next 50
+next 50
 
-    echo
-    echo "$run_statement"
-    eval "$eval_statement"
+echo
+echo "$run_statement"
+eval "$eval_statement"
 
-    next 50
-fi
+next 50
 
 
 ((++step))
 if [ $dummy = 1 ]; then
-    # unset download location, which triggers creation of dummy application page within the template
-    unset examples_bucket
+    unset example_object
 fi
 
-if [ ! -z $templates_bucket ]; then
-    template_parameter="--template-url https://$s3_domain/$templates_bucket/$template_folder/Example-LinuxWebServers.json"
-    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$template_folder/Example-LinuxWebServers-StackPolicy.json"
-else
-    template_parameter="--template-body file://$templatesdir/Example-LinuxWebServers.json"
-    stack_policy_parameter="--stack-policy-body file://$templatesdir/Example-LinuxWebServers-StackPolicy.json"
-fi
+template_parameter="--template-url https://$s3_domain/$templates_bucket/$template_folder/Example-LinuxWebServers.json"
+stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$template_folder/Example-LinuxWebServers-StackPolicy.json"
 read -r -d '' statement << EOS
 aws cloudformation create-stack --stack-name $environment-$application \\
                                 $template_parameter \\
@@ -495,13 +515,13 @@ aws cloudformation create-stack --stack-name $environment-$application \\
                                 --parameters ParameterKey=VPCStackName,ParameterValue=$environment-VPC \\
                                              ParameterKey=CustomIdentifierFunctionsStackName,ParameterValue=CustomIdentifierFunctions \\
                                              ParameterKey=StandardAMIFunctionsStackName,ParameterValue=StandardAMIFunctions \\
+                                             ParameterKey=StandardBucketsStackName,ParameterValue=StandardBuckets \\
                                              ParameterKey=StandardTopicsStackName,ParameterValue=StandardTopics \\
                                              ParameterKey=KeyName,ParameterValue=$key \\
                                              ParameterKey=CompanyName,ParameterValue=$company \\
                                              ParameterKey=SystemName,ParameterValue=$system \\
-                                             ParameterKey=EnvironmentSize,ParameterValue=$environment_size \\
-                                             ParameterKey=InstanceOS,ParameterValue="$instance_os" \\
-                                             ParameterKey=ApplicationsBucket,ParameterValue=$examples_bucket \\
+                                             ParameterKey=EnvironmentType,ParameterValue=$environment_type \\
+                                             ParameterKey=OSName,ParameterValue="$os_name" \\
                                              ParameterKey=ApplicationFolder,ParameterValue=$example_folder \\
                                              ParameterKey=ApplicationObject,ParameterValue=$example_object \\
                                              ParameterKey=ApplicationName,ParameterValue=$application \\
