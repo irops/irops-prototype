@@ -426,7 +426,7 @@
               { "Fn::If" : [ "ConfigureLogs", { "Fn::If" : [ "ConfigureAMZN", "InstallLogs", "BuildLogs" ]}, { "Ref": "AWS::NoValue" }]},
               { "Fn::If" : [ "ConfigureLogs", "ConfigureLogs", { "Ref": "AWS::NoValue" }]},
               "ConfigureCFN",
-              "ConfigureRabbitMQVolume",
+              "ConfigureVolumes",
               "ConfigureHostname",
               "ConfigureOS",
               { "Fn::If" : [ "InstallProduct", "InstallRabbitMQProduct", { "Ref": "AWS::NoValue" }]},
@@ -658,7 +658,7 @@
               }
             }
           },
-          "ConfigureRabbitMQVolume" : {
+          "ConfigureVolumes" : {
             "packages" : {
               "yum" : {
                 "parted" : [],
@@ -666,10 +666,10 @@
               }
             },
             "files" : {
-              "/root/bin/mount_rabbitmq_volume" : {
+              "/root/bin/configurevolumes" : {
                 "content" : { "Fn::Join" : [ "\n", [
                   "#!/bin/bash",
-                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Wait for Instance to recognize Volume\"",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Wait for Instance to recognize Volume /dev/xvdb\"",
                   "attempt=0",
                   "attempts=30",
                   "delay=5",
@@ -677,24 +677,24 @@
                   "    if fdisk -l /dev/xvdb &> /dev/null; then",
                   "        break",
                   "    else",
-                  "        echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume not yet attached, pausing $delay seconds...\"",
+                  "        echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdb not yet attached, pausing $delay seconds...\"",
                   "        sleep $delay",
                   "    fi",
                   "done",
                   "filesystem_type=$(file -sL /dev/xvdb)",
                   "if [[ $filesystem_type == *\"XFS\"* ]]; then",
-                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume formatted with XFS Filesystem\"",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdb formatted with XFS Filesystem\"",
                   "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Existing Volume: using Snapshot, or mapping Volume to replacement Instance\"",
                   "else",
-                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume not formatted\"",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdb not formatted\"",
                   "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] New Volume: mounted to initial Instance\"",
                   "    mkfs -t xfs /dev/xvdb 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
-                  "    xfs_admin -L /var/lib/rabbitmq /dev/xvdb 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "    xfs_admin -L rabbitmq /dev/xvdb 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
                   "fi",
-                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Add Volume MountPoint to /etc/fstab\"",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Add Volume /dev/xvdb MountPoint to /etc/fstab\"",
                   "sed -i -e \"/\\/var\\/lib\\/rabbitmq/d\" /etc/fstab",
-                  "sed -i -e \"/^LABEL=\\// aLABEL=/var/lib/rabbitmq /var/lib/rabbitmq xfs     defaults,noatime  1   1\" /etc/fstab",
-                  "sed -i -e \"/^UUID=[^ ]* \\// aLABEL=/var/lib/rabbitmq /var/lib/rabbitmq xfs     defaults,noatime  1   1\" /etc/fstab",
+                  "sed -i -e \"/^LABEL=\\// aLABEL=rabbitmq /var/lib/rabbitmq xfs     defaults,noatime  1   1\" /etc/fstab",
+                  "sed -i -e \"/^UUID=[^ ]* \\// aLABEL=rabbitmq /var/lib/rabbitmq xfs     defaults,noatime  1   1\" /etc/fstab",
                   "mkdir /var/lib/rabbitmq 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
                   "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Mounting /var/lib/rabbitmq\"",
                   "mount /var/lib/rabbitmq 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\""
@@ -705,8 +705,8 @@
               }
             },
             "commands" : {
-              "01-mount-rabbitmq-volume" : {
-                "command" : "/root/bin/mount_rabbitmq_volume",
+              "01-configure-volumes" : {
+                "command" : "/root/bin/configurevolumes",
                 "ignoreErrors" : "false"
               }
             }
@@ -780,11 +780,12 @@
           "AssociatePublicIpAddress" : "false",
           "DeleteOnTermination"      : "true"
         }],
-          "BlockDeviceMappings" : [{
-          "DeviceName" : "/dev/sdb",
+        "BlockDeviceMappings" : [{
+          "DeviceName" : { "Fn::If" : [ "ConfigureAMZN", "/dev/xvdb", "/dev/sdb" ]},
           "Ebs" : {
-            "VolumeType" : "gp2",
-            "VolumeSize" : "32",
+            "VolumeType" : "io1",
+            "VolumeSize" : "100",
+            "Iops" : "1000",
             "DeleteOnTermination" : "false"
           }
         }],
@@ -837,7 +838,7 @@
       },
       "CreationPolicy" : {
         "ResourceSignal" : {
-          "Timeout" : "PT20M"
+          "Timeout" : "PT30M"
         }
       }
     },
@@ -874,7 +875,7 @@
               { "Fn::If" : [ "ConfigureLogs", { "Fn::If" : [ "ConfigureAMZN", "InstallLogs", "BuildLogs" ]}, { "Ref": "AWS::NoValue" }]},
               { "Fn::If" : [ "ConfigureLogs", "ConfigureLogs", { "Ref": "AWS::NoValue" }]},
               "ConfigureCFN",
-              "ConfigureRabbitMQVolume",
+              "ConfigureVolumes",
               "ConfigureHostname",
               "ConfigureOS",
               { "Fn::If" : [ "InstallProduct", "InstallRabbitMQProduct", { "Ref": "AWS::NoValue" }]},
@@ -1106,7 +1107,7 @@
               }
             }
           },
-          "ConfigureRabbitMQVolume" : {
+          "ConfigureVolumes" : {
             "packages" : {
               "yum" : {
                 "parted" : [],
@@ -1114,10 +1115,10 @@
               }
             },
             "files" : {
-              "/root/bin/mount_rabbitmq_volume" : {
+              "/root/bin/configurevolumes" : {
                 "content" : { "Fn::Join" : [ "\n", [
                   "#!/bin/bash",
-                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Wait for Instance to recognize Volume\"",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Wait for Instance to recognize Volume /dev/xvdb\"",
                   "attempt=0",
                   "attempts=30",
                   "delay=5",
@@ -1125,24 +1126,24 @@
                   "    if fdisk -l /dev/xvdb &> /dev/null; then",
                   "        break",
                   "    else",
-                  "        echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume not yet attached, pausing $delay seconds...\"",
+                  "        echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdb not yet attached, pausing $delay seconds...\"",
                   "        sleep $delay",
                   "    fi",
                   "done",
                   "filesystem_type=$(file -sL /dev/xvdb)",
                   "if [[ $filesystem_type == *\"XFS\"* ]]; then",
-                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume formatted with XFS Filesystem\"",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdb formatted with XFS Filesystem\"",
                   "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Existing Volume: using Snapshot, or mapping Volume to replacement Instance\"",
                   "else",
-                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume not formatted\"",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdb not formatted\"",
                   "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] New Volume: mounted to initial Instance\"",
                   "    mkfs -t xfs /dev/xvdb 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
-                  "    xfs_admin -L /var/lib/rabbitmq /dev/xvdb 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "    xfs_admin -L rabbitmq /dev/xvdb 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
                   "fi",
-                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Add Volume MountPoint to /etc/fstab\"",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Add Volume /dev/xvdb MountPoint to /etc/fstab\"",
                   "sed -i -e \"/\\/var\\/lib\\/rabbitmq/d\" /etc/fstab",
-                  "sed -i -e \"/^LABEL=\\// aLABEL=/var/lib/rabbitmq /var/lib/rabbitmq xfs     defaults,noatime  1   1\" /etc/fstab",
-                  "sed -i -e \"/^UUID=[^ ]* \\// aLABEL=/var/lib/rabbitmq /var/lib/rabbitmq xfs     defaults,noatime  1   1\" /etc/fstab",
+                  "sed -i -e \"/^LABEL=\\// aLABEL=rabbitmq /var/lib/rabbitmq xfs     defaults,noatime  1   1\" /etc/fstab",
+                  "sed -i -e \"/^UUID=[^ ]* \\// aLABEL=rabbitmq /var/lib/rabbitmq xfs     defaults,noatime  1   1\" /etc/fstab",
                   "mkdir /var/lib/rabbitmq 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
                   "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Mounting /var/lib/rabbitmq\"",
                   "mount /var/lib/rabbitmq 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\""
@@ -1153,8 +1154,8 @@
               }
             },
             "commands" : {
-              "01-mount-rabbitmq-volume" : {
-                "command" : "/root/bin/mount_rabbitmq_volume",
+              "01-configure-volumes" : {
+                "command" : "/root/bin/configurevolumes",
                 "ignoreErrors" : "false"
               }
             }
@@ -1228,11 +1229,12 @@
           "AssociatePublicIpAddress" : "false",
           "DeleteOnTermination"      : "true"
         }],
-          "BlockDeviceMappings" : [{
-          "DeviceName" : "/dev/sdb",
+        "BlockDeviceMappings" : [{
+          "DeviceName" : { "Fn::If" : [ "ConfigureAMZN", "/dev/xvdb", "/dev/sdb" ]},
           "Ebs" : {
-            "VolumeType" : "gp2",
-            "VolumeSize" : "32",
+            "VolumeType" : "io1",
+            "VolumeSize" : "100",
+            "Iops" : "1000",
             "DeleteOnTermination" : "false"
           }
         }],
@@ -1285,7 +1287,7 @@
       },
       "CreationPolicy" : {
         "ResourceSignal" : {
-          "Timeout" : "PT20M"
+          "Timeout" : "PT30M"
         }
       },
       "Condition" : "ConfigureMultiZone"

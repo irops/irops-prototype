@@ -426,7 +426,7 @@
               { "Fn::If" : [ "ConfigureLogs", { "Fn::If" : [ "ConfigureAMZN", "InstallLogs", "BuildLogs" ]}, { "Ref": "AWS::NoValue" }]},
               { "Fn::If" : [ "ConfigureLogs", "ConfigureLogs", { "Ref": "AWS::NoValue" }]},
               "ConfigureCFN",
-              "ConfigureMongoDBVolume",
+              "ConfigureVolumes",
               "ConfigureHostname",
               "ConfigureOS",
               { "Fn::If" : [ "InstallProduct", "InstallMongoDBProduct", { "Ref": "AWS::NoValue" }]},
@@ -658,7 +658,7 @@
               }
             }
           },
-          "ConfigureMongoDBVolume" : {
+          "ConfigureVolumes" : {
             "packages" : {
               "yum" : {
                 "parted" : [],
@@ -666,10 +666,10 @@
               }
             },
             "files" : {
-              "/root/bin/mount_mongodb_volume" : {
+              "/root/bin/configurevolumes" : {
                 "content" : { "Fn::Join" : [ "\n", [
                   "#!/bin/bash",
-                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Wait for Instance to recognize Volume\"",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Wait for Instance to recognize Volume /dev/xvdb\"",
                   "attempt=0",
                   "attempts=30",
                   "delay=5",
@@ -677,27 +677,87 @@
                   "    if fdisk -l /dev/xvdb &> /dev/null; then",
                   "        break",
                   "    else",
-                  "        echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume not yet attached, pausing $delay seconds...\"",
+                  "        echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdb not yet attached, pausing $delay seconds...\"",
                   "        sleep $delay",
                   "    fi",
                   "done",
                   "filesystem_type=$(file -sL /dev/xvdb)",
                   "if [[ $filesystem_type == *\"XFS\"* ]]; then",
-                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume formatted with XFS Filesystem\"",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdb formatted with XFS Filesystem\"",
                   "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Existing Volume: using Snapshot, or mapping Volume to replacement Instance\"",
                   "else",
-                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume not formatted\"",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdb not formatted\"",
                   "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] New Volume: mounted to initial Instance\"",
                   "    mkfs -t xfs /dev/xvdb 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
-                  "    xfs_admin -L /var/lib/mongodb /dev/xvdb 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "    xfs_admin -L mongodb_data /dev/xvdb 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
                   "fi",
-                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Add Volume MountPoint to /etc/fstab\"",
-                  "sed -i -e \"/\\/var\\/lib\\/mongodb/d\" /etc/fstab",
-                  "sed -i -e \"/^LABEL=\\// aLABEL=/var/lib/mongodb /var/lib/mongodb xfs     defaults,noatime  1   1\" /etc/fstab",
-                  "sed -i -e \"/^UUID=[^ ]* \\// aLABEL=/var/lib/mongodb /var/lib/mongodb xfs     defaults,noatime  1   1\" /etc/fstab",
-                  "mkdir /var/lib/mongodb 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
-                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Mounting /var/lib/mongodb\"",
-                  "mount /var/lib/mongodb 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\""
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Add Volume /dev/xvdb MountPoint to /etc/fstab\"",
+                  "sed -i -e \"/\\/data/d\" /etc/fstab",
+                  "sed -i -e \"/^LABEL=\\// aLABEL=mongodb_data /data xfs     defaults,noatime  1   1\" /etc/fstab",
+                  "sed -i -e \"/^UUID=[^ ]* \\// aLABEL=mongodb_data /data xfs     defaults,noatime  1   1\" /etc/fstab",
+                  "mkdir /data 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Mounting /data\"",
+                  "mount /data 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Wait for Instance to recognize Volume /dev/xvdc\"",
+                  "attempt=0",
+                  "attempts=30",
+                  "delay=5",
+                  "while ((attempt++ <= attempts)); do",
+                  "    if fdisk -l /dev/xvdc &> /dev/null; then",
+                  "        break",
+                  "    else",
+                  "        echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdc not yet attached, pausing $delay seconds...\"",
+                  "        sleep $delay",
+                  "    fi",
+                  "done",
+                  "filesystem_type=$(file -sL /dev/xvdc)",
+                  "if [[ $filesystem_type == *\"XFS\"* ]]; then",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdc formatted with XFS Filesystem\"",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Existing Volume: using Snapshot, or mapping Volume to replacement Instance\"",
+                  "else",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdc not formatted\"",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] New Volume: mounted to initial Instance\"",
+                  "    mkfs -t xfs /dev/xvdc 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "    xfs_admin -L mongodb_jrnl /dev/xvdc 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "fi",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Add Volume /dev/xvdc MountPoint to /etc/fstab\"",
+                  "sed -i -e \"/\\/journal/d\" /etc/fstab",
+                  "sed -i -e \"/^LABEL=\\// aLABEL=mongodb_jrnl /journal xfs     defaults,noatime  1   1\" /etc/fstab",
+                  "sed -i -e \"/^UUID=[^ ]* \\// aLABEL=mongodb_jrnl /journal xfs     defaults,noatime  1   1\" /etc/fstab",
+                  "mkdir /journal 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Mounting /journal\"",
+                  "mount /journal 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Wait for Instance to recognize Volume /dev/xvdd\"",
+                  "attempt=0",
+                  "attempts=30",
+                  "delay=5",
+                  "while ((attempt++ <= attempts)); do",
+                  "    if fdisk -l /dev/xvdd &> /dev/null; then",
+                  "        break",
+                  "    else",
+                  "        echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdd not yet attached, pausing $delay seconds...\"",
+                  "        sleep $delay",
+                  "    fi",
+                  "done",
+                  "filesystem_type=$(file -sL /dev/xvdd)",
+                  "if [[ $filesystem_type == *\"XFS\"* ]]; then",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdd formatted with XFS Filesystem\"",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Existing Volume: using Snapshot, or mapping Volume to replacement Instance\"",
+                  "else",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdd not formatted\"",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] New Volume: mounted to initial Instance\"",
+                  "    mkfs -t xfs /dev/xvdd 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "    xfs_admin -L mongodb_log /dev/xvdd 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "fi",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Add Volume /dev/xvdd MountPoint to /etc/fstab\"",
+                  "sed -i -e \"/\\/log/d\" /etc/fstab",
+                  "sed -i -e \"/^LABEL=\\// aLABEL=mongodb_log /log xfs     defaults,noatime  1   1\" /etc/fstab",
+                  "sed -i -e \"/^UUID=[^ ]* \\// aLABEL=mongodb_log /log xfs     defaults,noatime  1   1\" /etc/fstab",
+                  "mkdir /log 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Mounting /log\"",
+                  "mount /log 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\""
                 ]]},
                 "mode"  : "000700",
                 "owner" : "root",
@@ -705,8 +765,8 @@
               }
             },
             "commands" : {
-              "01-mount-mongodb-volume" : {
-                "command" : "/root/bin/mount_mongodb_volume",
+              "01-configure-volumes" : {
+                "command" : "/root/bin/configurevolumes",
                 "ignoreErrors" : "false"
               }
             }
@@ -780,11 +840,27 @@
           "AssociatePublicIpAddress" : "false",
           "DeleteOnTermination"      : "true"
         }],
-          "BlockDeviceMappings" : [{
-          "DeviceName" : "/dev/sdb",
+        "BlockDeviceMappings" : [{
+          "DeviceName" : { "Fn::If" : [ "ConfigureAMZN", "/dev/xvdb", "/dev/sdb" ]},
           "Ebs" : {
             "VolumeType" : "gp2",
-            "VolumeSize" : "32",
+            "VolumeSize" : "400",
+            "DeleteOnTermination" : "false"
+          }
+        },
+        {
+          "DeviceName" : { "Fn::If" : [ "ConfigureAMZN", "/dev/xvdc", "/dev/sdc" ]},
+          "Ebs" : {
+            "VolumeType" : "gp2",
+            "VolumeSize" : "100",
+            "DeleteOnTermination" : "false"
+          }
+        },
+        {
+          "DeviceName" : { "Fn::If" : [ "ConfigureAMZN", "/dev/xvdd", "/dev/sdd" ]},
+          "Ebs" : {
+            "VolumeType" : "gp2",
+            "VolumeSize" : "50",
             "DeleteOnTermination" : "false"
           }
         }],
@@ -837,7 +913,7 @@
       },
       "CreationPolicy" : {
         "ResourceSignal" : {
-          "Timeout" : "PT20M"
+          "Timeout" : "PT30M"
         }
       }
     },
@@ -865,7 +941,7 @@
               { "Fn::If" : [ "ConfigureLogs", { "Fn::If" : [ "ConfigureAMZN", "InstallLogs", "BuildLogs" ]}, { "Ref": "AWS::NoValue" }]},
               { "Fn::If" : [ "ConfigureLogs", "ConfigureLogs", { "Ref": "AWS::NoValue" }]},
               "ConfigureCFN",
-              "ConfigureMongoDBVolume",
+              "ConfigureVolumes",
               "ConfigureHostname",
               "ConfigureOS",
               { "Fn::If" : [ "InstallProduct", "InstallMongoDBProduct", { "Ref": "AWS::NoValue" }]},
@@ -1097,7 +1173,7 @@
               }
             }
           },
-          "ConfigureMongoDBVolume" : {
+          "ConfigureVolumes" : {
             "packages" : {
               "yum" : {
                 "parted" : [],
@@ -1105,10 +1181,10 @@
               }
             },
             "files" : {
-              "/root/bin/mount_mongodb_volume" : {
+              "/root/bin/configurevolumes" : {
                 "content" : { "Fn::Join" : [ "\n", [
                   "#!/bin/bash",
-                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Wait for Instance to recognize Volume\"",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Wait for Instance to recognize Volume /dev/xvdb\"",
                   "attempt=0",
                   "attempts=30",
                   "delay=5",
@@ -1116,27 +1192,87 @@
                   "    if fdisk -l /dev/xvdb &> /dev/null; then",
                   "        break",
                   "    else",
-                  "        echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume not yet attached, pausing $delay seconds...\"",
+                  "        echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdb not yet attached, pausing $delay seconds...\"",
                   "        sleep $delay",
                   "    fi",
                   "done",
                   "filesystem_type=$(file -sL /dev/xvdb)",
                   "if [[ $filesystem_type == *\"XFS\"* ]]; then",
-                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume formatted with XFS Filesystem\"",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdb formatted with XFS Filesystem\"",
                   "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Existing Volume: using Snapshot, or mapping Volume to replacement Instance\"",
                   "else",
-                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume not formatted\"",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdb not formatted\"",
                   "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] New Volume: mounted to initial Instance\"",
                   "    mkfs -t xfs /dev/xvdb 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
-                  "    xfs_admin -L /var/lib/mongodb /dev/xvdb 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "    xfs_admin -L mongodb_data /dev/xvdb 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
                   "fi",
-                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Add Volume MountPoint to /etc/fstab\"",
-                  "sed -i -e \"/\\/var\\/lib\\/mongodb/d\" /etc/fstab",
-                  "sed -i -e \"/^LABEL=\\// aLABEL=/var/lib/mongodb /var/lib/mongodb xfs     defaults,noatime  1   1\" /etc/fstab",
-                  "sed -i -e \"/^UUID=[^ ]* \\// aLABEL=/var/lib/mongodb /var/lib/mongodb xfs     defaults,noatime  1   1\" /etc/fstab",
-                  "mkdir /var/lib/mongodb 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
-                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Mounting /var/lib/mongodb\"",
-                  "mount /var/lib/mongodb 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\""
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Add Volume /dev/xvdb MountPoint to /etc/fstab\"",
+                  "sed -i -e \"/\\/data/d\" /etc/fstab",
+                  "sed -i -e \"/^LABEL=\\// aLABEL=mongodb_data /data xfs     defaults,noatime  1   1\" /etc/fstab",
+                  "sed -i -e \"/^UUID=[^ ]* \\// aLABEL=mongodb_data /data xfs     defaults,noatime  1   1\" /etc/fstab",
+                  "mkdir /data 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Mounting /data\"",
+                  "mount /data 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Wait for Instance to recognize Volume /dev/xvdc\"",
+                  "attempt=0",
+                  "attempts=30",
+                  "delay=5",
+                  "while ((attempt++ <= attempts)); do",
+                  "    if fdisk -l /dev/xvdc &> /dev/null; then",
+                  "        break",
+                  "    else",
+                  "        echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdc not yet attached, pausing $delay seconds...\"",
+                  "        sleep $delay",
+                  "    fi",
+                  "done",
+                  "filesystem_type=$(file -sL /dev/xvdc)",
+                  "if [[ $filesystem_type == *\"XFS\"* ]]; then",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdc formatted with XFS Filesystem\"",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Existing Volume: using Snapshot, or mapping Volume to replacement Instance\"",
+                  "else",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdc not formatted\"",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] New Volume: mounted to initial Instance\"",
+                  "    mkfs -t xfs /dev/xvdc 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "    xfs_admin -L mongodb_jrnl /dev/xvdc 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "fi",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Add Volume /dev/xvdc MountPoint to /etc/fstab\"",
+                  "sed -i -e \"/\\/journal/d\" /etc/fstab",
+                  "sed -i -e \"/^LABEL=\\// aLABEL=mongodb_jrnl /journal xfs     defaults,noatime  1   1\" /etc/fstab",
+                  "sed -i -e \"/^UUID=[^ ]* \\// aLABEL=mongodb_jrnl /journal xfs     defaults,noatime  1   1\" /etc/fstab",
+                  "mkdir /journal 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Mounting /journal\"",
+                  "mount /journal 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Wait for Instance to recognize Volume /dev/xvdd\"",
+                  "attempt=0",
+                  "attempts=30",
+                  "delay=5",
+                  "while ((attempt++ <= attempts)); do",
+                  "    if fdisk -l /dev/xvdd &> /dev/null; then",
+                  "        break",
+                  "    else",
+                  "        echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdd not yet attached, pausing $delay seconds...\"",
+                  "        sleep $delay",
+                  "    fi",
+                  "done",
+                  "filesystem_type=$(file -sL /dev/xvdd)",
+                  "if [[ $filesystem_type == *\"XFS\"* ]]; then",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdd formatted with XFS Filesystem\"",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Existing Volume: using Snapshot, or mapping Volume to replacement Instance\"",
+                  "else",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdd not formatted\"",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] New Volume: mounted to initial Instance\"",
+                  "    mkfs -t xfs /dev/xvdd 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "    xfs_admin -L mongodb_log /dev/xvdd 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "fi",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Add Volume /dev/xvdd MountPoint to /etc/fstab\"",
+                  "sed -i -e \"/\\/log/d\" /etc/fstab",
+                  "sed -i -e \"/^LABEL=\\// aLABEL=mongodb_log /log xfs     defaults,noatime  1   1\" /etc/fstab",
+                  "sed -i -e \"/^UUID=[^ ]* \\// aLABEL=mongodb_log /log xfs     defaults,noatime  1   1\" /etc/fstab",
+                  "mkdir /log 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Mounting /log\"",
+                  "mount /log 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\""
                 ]]},
                 "mode"  : "000700",
                 "owner" : "root",
@@ -1144,8 +1280,8 @@
               }
             },
             "commands" : {
-              "01-mount-mongodb-volume" : {
-                "command" : "/root/bin/mount_mongodb_volume",
+              "01-configure-volumes" : {
+                "command" : "/root/bin/configurevolumes",
                 "ignoreErrors" : "false"
               }
             }
@@ -1219,11 +1355,27 @@
           "AssociatePublicIpAddress" : "false",
           "DeleteOnTermination"      : "true"
         }],
-          "BlockDeviceMappings" : [{
-          "DeviceName" : "/dev/sdb",
+        "BlockDeviceMappings" : [{
+          "DeviceName" : { "Fn::If" : [ "ConfigureAMZN", "/dev/xvdb", "/dev/sdb" ]},
           "Ebs" : {
             "VolumeType" : "gp2",
-            "VolumeSize" : "32",
+            "VolumeSize" : "400",
+            "DeleteOnTermination" : "false"
+          }
+        },
+        {
+          "DeviceName" : { "Fn::If" : [ "ConfigureAMZN", "/dev/xvdc", "/dev/sdc" ]},
+          "Ebs" : {
+            "VolumeType" : "gp2",
+            "VolumeSize" : "100",
+            "DeleteOnTermination" : "false"
+          }
+        },
+        {
+          "DeviceName" : { "Fn::If" : [ "ConfigureAMZN", "/dev/xvdd", "/dev/sdd" ]},
+          "Ebs" : {
+            "VolumeType" : "gp2",
+            "VolumeSize" : "50",
             "DeleteOnTermination" : "false"
           }
         }],
@@ -1276,7 +1428,7 @@
       },
       "CreationPolicy" : {
         "ResourceSignal" : {
-          "Timeout" : "PT20M"
+          "Timeout" : "PT30M"
         }
       },
       "Condition" : "ConfigureMultiZone"
@@ -1314,7 +1466,7 @@
               { "Fn::If" : [ "ConfigureLogs", { "Fn::If" : [ "ConfigureAMZN", "InstallLogs", "BuildLogs" ]}, { "Ref": "AWS::NoValue" }]},
               { "Fn::If" : [ "ConfigureLogs", "ConfigureLogs", { "Ref": "AWS::NoValue" }]},
               "ConfigureCFN",
-              "ConfigureMongoDBVolume",
+              "ConfigureVolumes",
               "ConfigureHostname",
               "ConfigureOS",
               { "Fn::If" : [ "InstallProduct", "InstallMongoDBProduct", { "Ref": "AWS::NoValue" }]},
@@ -1546,7 +1698,7 @@
               }
             }
           },
-          "ConfigureMongoDBVolume" : {
+          "ConfigureVolumes" : {
             "packages" : {
               "yum" : {
                 "parted" : [],
@@ -1554,10 +1706,10 @@
               }
             },
             "files" : {
-              "/root/bin/mount_mongodb_volume" : {
+              "/root/bin/configurevolumes" : {
                 "content" : { "Fn::Join" : [ "\n", [
                   "#!/bin/bash",
-                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Wait for Instance to recognize Volume\"",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Wait for Instance to recognize Volume /dev/xvdb\"",
                   "attempt=0",
                   "attempts=30",
                   "delay=5",
@@ -1565,27 +1717,87 @@
                   "    if fdisk -l /dev/xvdb &> /dev/null; then",
                   "        break",
                   "    else",
-                  "        echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume not yet attached, pausing $delay seconds...\"",
+                  "        echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdb not yet attached, pausing $delay seconds...\"",
                   "        sleep $delay",
                   "    fi",
                   "done",
                   "filesystem_type=$(file -sL /dev/xvdb)",
                   "if [[ $filesystem_type == *\"XFS\"* ]]; then",
-                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume formatted with XFS Filesystem\"",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdb formatted with XFS Filesystem\"",
                   "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Existing Volume: using Snapshot, or mapping Volume to replacement Instance\"",
                   "else",
-                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume not formatted\"",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdb not formatted\"",
                   "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] New Volume: mounted to initial Instance\"",
                   "    mkfs -t xfs /dev/xvdb 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
-                  "    xfs_admin -L /var/lib/mongodb /dev/xvdb 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "    xfs_admin -L mongodb_data /dev/xvdb 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
                   "fi",
-                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Add Volume MountPoint to /etc/fstab\"",
-                  "sed -i -e \"/\\/var\\/lib\\/mongodb/d\" /etc/fstab",
-                  "sed -i -e \"/^LABEL=\\// aLABEL=/var/lib/mongodb /var/lib/mongodb xfs     defaults,noatime  1   1\" /etc/fstab",
-                  "sed -i -e \"/^UUID=[^ ]* \\// aLABEL=/var/lib/mongodb /var/lib/mongodb xfs     defaults,noatime  1   1\" /etc/fstab",
-                  "mkdir /var/lib/mongodb 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
-                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Mounting /var/lib/mongodb\"",
-                  "mount /var/lib/mongodb 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\""
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Add Volume /dev/xvdb MountPoint to /etc/fstab\"",
+                  "sed -i -e \"/\\/data/d\" /etc/fstab",
+                  "sed -i -e \"/^LABEL=\\// aLABEL=mongodb_data /data xfs     defaults,noatime  1   1\" /etc/fstab",
+                  "sed -i -e \"/^UUID=[^ ]* \\// aLABEL=mongodb_data /data xfs     defaults,noatime  1   1\" /etc/fstab",
+                  "mkdir /data 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Mounting /data\"",
+                  "mount /data 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Wait for Instance to recognize Volume /dev/xvdc\"",
+                  "attempt=0",
+                  "attempts=30",
+                  "delay=5",
+                  "while ((attempt++ <= attempts)); do",
+                  "    if fdisk -l /dev/xvdc &> /dev/null; then",
+                  "        break",
+                  "    else",
+                  "        echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdc not yet attached, pausing $delay seconds...\"",
+                  "        sleep $delay",
+                  "    fi",
+                  "done",
+                  "filesystem_type=$(file -sL /dev/xvdc)",
+                  "if [[ $filesystem_type == *\"XFS\"* ]]; then",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdc formatted with XFS Filesystem\"",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Existing Volume: using Snapshot, or mapping Volume to replacement Instance\"",
+                  "else",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdc not formatted\"",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] New Volume: mounted to initial Instance\"",
+                  "    mkfs -t xfs /dev/xvdc 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "    xfs_admin -L mongodb_jrnl /dev/xvdc 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "fi",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Add Volume /dev/xvdc MountPoint to /etc/fstab\"",
+                  "sed -i -e \"/\\/journal/d\" /etc/fstab",
+                  "sed -i -e \"/^LABEL=\\// aLABEL=mongodb_jrnl /journal xfs     defaults,noatime  1   1\" /etc/fstab",
+                  "sed -i -e \"/^UUID=[^ ]* \\// aLABEL=mongodb_jrnl /journal xfs     defaults,noatime  1   1\" /etc/fstab",
+                  "mkdir /journal 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Mounting /journal\"",
+                  "mount /journal 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Wait for Instance to recognize Volume /dev/xvdd\"",
+                  "attempt=0",
+                  "attempts=30",
+                  "delay=5",
+                  "while ((attempt++ <= attempts)); do",
+                  "    if fdisk -l /dev/xvdd &> /dev/null; then",
+                  "        break",
+                  "    else",
+                  "        echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdd not yet attached, pausing $delay seconds...\"",
+                  "        sleep $delay",
+                  "    fi",
+                  "done",
+                  "filesystem_type=$(file -sL /dev/xvdd)",
+                  "if [[ $filesystem_type == *\"XFS\"* ]]; then",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdd formatted with XFS Filesystem\"",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Existing Volume: using Snapshot, or mapping Volume to replacement Instance\"",
+                  "else",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdd not formatted\"",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] New Volume: mounted to initial Instance\"",
+                  "    mkfs -t xfs /dev/xvdd 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "    xfs_admin -L mongodb_log /dev/xvdd 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "fi",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Add Volume /dev/xvdd MountPoint to /etc/fstab\"",
+                  "sed -i -e \"/\\/log/d\" /etc/fstab",
+                  "sed -i -e \"/^LABEL=\\// aLABEL=mongodb_log /log xfs     defaults,noatime  1   1\" /etc/fstab",
+                  "sed -i -e \"/^UUID=[^ ]* \\// aLABEL=mongodb_log /log xfs     defaults,noatime  1   1\" /etc/fstab",
+                  "mkdir /log 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Mounting /log\"",
+                  "mount /log 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\""
                 ]]},
                 "mode"  : "000700",
                 "owner" : "root",
@@ -1593,8 +1805,8 @@
               }
             },
             "commands" : {
-              "01-mount-mongodb-volume" : {
-                "command" : "/root/bin/mount_mongodb_volume",
+              "01-configure-volumes" : {
+                "command" : "/root/bin/configurevolumes",
                 "ignoreErrors" : "false"
               }
             }
@@ -1668,11 +1880,27 @@
           "AssociatePublicIpAddress" : "false",
           "DeleteOnTermination"      : "true"
         }],
-          "BlockDeviceMappings" : [{
-          "DeviceName" : "/dev/sdb",
+        "BlockDeviceMappings" : [{
+          "DeviceName" : { "Fn::If" : [ "ConfigureAMZN", "/dev/xvdb", "/dev/sdb" ]},
           "Ebs" : {
             "VolumeType" : "gp2",
-            "VolumeSize" : "32",
+            "VolumeSize" : "400",
+            "DeleteOnTermination" : "false"
+          }
+        },
+        {
+          "DeviceName" : { "Fn::If" : [ "ConfigureAMZN", "/dev/xvdc", "/dev/sdc" ]},
+          "Ebs" : {
+            "VolumeType" : "gp2",
+            "VolumeSize" : "100",
+            "DeleteOnTermination" : "false"
+          }
+        },
+        {
+          "DeviceName" : { "Fn::If" : [ "ConfigureAMZN", "/dev/xvdd", "/dev/sdd" ]},
+          "Ebs" : {
+            "VolumeType" : "gp2",
+            "VolumeSize" : "50",
             "DeleteOnTermination" : "false"
           }
         }],
@@ -1725,7 +1953,7 @@
       },
       "CreationPolicy" : {
         "ResourceSignal" : {
-          "Timeout" : "PT20M"
+          "Timeout" : "PT30M"
         }
       },
       "Condition" : "ConfigureMultiZone"

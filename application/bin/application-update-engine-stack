@@ -248,22 +248,22 @@ else
         log_retention=30
         schedule="";;  # 11:00 - 4:00 UTC = 3:00 AM - 8:00 PM PST = 6:00 AM - 11:00 PM EST
       Staging)
-        linux_os_name="Amazon Linux 2017.03.0"
+        linux_os_name="RHEL 7.3"
         windows_os_name="Windows Server 2012 R2"
         use_static_address=false
         log_retention=7
         schedule="";;  # 11:00 - 4:00 UTC = 3:00 AM - 8:00 PM PST = 6:00 AM - 11:00 PM EST
       Testing)
-        linux_os_name="Amazon Linux 2017.03.0"
+        linux_os_name="RHEL 7.3"
         windows_os_name="Windows Server 2012 R2"
         use_static_address=false
-        log_retention=0
+        log_retention=7
         schedule="13:00-2:00";; # 13:00 - 2:00 UTC = 5:00 AM - 6:00 PM PST = 8:00 AM - 9:00 PM EST
       Development)
-        linux_os_name="Amazon Linux"
-        windows_os_name="Windows Server 2016"
+        linux_os_name="RHEL 7.3"
+        windows_os_name="Windows Server 2012 R2"
         use_static_address=false
-        log_retention=0
+        log_retention=14
         schedule="";; # 13:00 - 2:00 UTC = 5:00 AM - 6:00 PM PST = 8:00 AM - 9:00 PM EST
       *)
         echo "-E $environment invalid! Must be Production, Staging, Testing or Development"

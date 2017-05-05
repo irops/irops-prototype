@@ -653,6 +653,20 @@
           "AssociatePublicIpAddress" : "false",
           "DeleteOnTermination"      : "true"
         }],
+        "BlockDeviceMappings" : [{
+          "DeviceName" : "/dev/sda1",
+          "Ebs" : {
+            "VolumeSize" : "50"
+          }
+        },
+        {
+          "DeviceName" : "/dev/xvdb",
+          "Ebs" : {
+            "VolumeSize" : "50",
+            "VolumeType" : "gp2",
+            "DeleteOnTermination" : "false"
+          }
+        }],
         "Tags" : [
           { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "LoggingInstance01A" ]]}},
           { "Fn::If" : [ "ConfigureSchedule", { "Key" : "Schedule", "Value" : { "Ref" : "Schedule" }}, { "Ref" : "AWS::NoValue" }]}
@@ -666,7 +680,7 @@
       },
       "CreationPolicy" : {
         "ResourceSignal" : {
-          "Timeout" : "PT20M"
+          "Timeout" : "PT30M"
         }
       }
     }
