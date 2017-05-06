@@ -398,53 +398,53 @@ template_folder=application
 products_bucket=${AWS_PRODUCTS_BUCKET:-products-$region-$account}
 product_folder=Engine
 #calculation_product_object=Engine-Calculation-Unknown.zip
+#datastaging_product_object=Engine-DataStaging-Unknown.zip
+#publishing_product_object=Engine-Publishing-Unknown.zip
+#logging_product_object=Engine-Logging-Unknown.zip
 #mongodb_product_object=Engine-MongoDB-Unknown.zip
 #rabbitmq_product_object=Engine-RabbitMQ-Unknown.zip
-#datastaging_product_object=Engine-DataStaging-Unknown.zip
-#logging_product_object=Engine-Logging-Unknown.zip
-#publishing_product_object=Engine-Publishing-Unknown.zip
 calculation_product_object=""
+datastaging_product_object=""
+publishing_product_object=""
+logging_product_object=""
 mongodb_product_object=""
 rabbitmq_product_object=""
-datastaging_product_object=""
-logging_product_object=""
-publishing_product_object=""
 
 # Not sure how this will work yet, so leaving as placeholder
 configurations_bucket=${AWS_CONFIGURATIONS_BUCKET:-configurations-$region-$account}
 configuration_folder=Engine
 #web_configuration_object=$environment-Engine-Web.zip
 #calculation_configuration_object=$environment-Engine-Calculation.zip
+#datastaging_configuration_object=$environment-Engine-DataStaging.zip
+#publishing_configuration_object=$environment-Engine-Publishing.zip
+#logging_configuration_object=$environment-Engine-Logging.zip
 #mongodb_configuration_object=$environment-Engine-MongoDB.zip
 #rabbitmq_configuration_object=$environment-Engine-RabbitMQ.zip
-#datastaging_configuration_object=$environment-Engine-DataStaging.zip
-#logging_configuration_object=$environment-Engine-Logging.zip
-#publishing_configuration_object=$environment-Engine-Publishing.zip
 web_configuration_object=""
 calculation_configuration_object=""
+datastaging_configuration_object=""
+publishing_configuration_object=""
+logging_configuration_object=""
 mongodb_configuration_object=""
 rabbitmq_configuration_object=""
-datastaging_configuration_object=""
-logging_configuration_object=""
-publishing_configuration_object=""
 
 # Not sure how this will work yet, so leaving as placeholder
 applications_bucket=${AWS_APPLICATIONS_BUCKET:-applications-$region-$account}
 application_folder=Engine
 #web_application_object=Engine-Web-$application_version.zip
 #calculation_application_object=Engine-Calculation-$application_version.zip
+#datastaging_application_object=Engine-DataStaging-$application_version.zip
+#publishing_application_object=Engine-Publishing-$application_version.zip
+#logging_application_object=Engine-Logging-$application_version.zip
 #mongodb_application_object=Engine-MongoDB-$application_version.zip
 #rabbitmq_application_object=Engine-RabbitMQ-$application_version.zip
-#datastaging_application_object=Engine-DataStaging-$application_version.zip
-#logging_application_object=Engine-Logging-$application_version.zip
-#publishing_application_object=Engine-Publishing-$application_version.zip
 web_application_object=""
 calculation_application_object=""
+datastaging_application_object=""
+publishing_application_object=""
+logging_application_object=""
 mongodb_application_object=""
 rabbitmq_application_object=""
-datastaging_application_object=""
-logging_application_object=""
-publishing_application_object=""
 
 # Prevent certain environment variables from breaking commands
 unset AWS_DEFAULT_PROFILE
@@ -501,11 +501,11 @@ aws s3 sync $templatesdir \\
             --include 'Application-Engine-LoadBalancers.json' \\
             --include 'Application-Engine-WebInstances.json' \\
             --include 'Application-Engine-CalculationInstances.json' \\
+            --include 'Application-Engine-DataStagingInstances.json' \\
+            --include 'Application-Engine-PublishingInstances.json' \\
+            --include 'Application-Engine-LoggingInstances.json' \\
             --include 'Application-Engine-MongoDBInstances.json' \\
             --include 'Application-Engine-RabbitMQInstances.json' \\
-            --include 'Application-Engine-DataStagingInstances.json' \\
-            --include 'Application-Engine-LoggingInstances.json' \\
-            --include 'Application-Engine-PublishingInstances.json' \\
             --profile $profile --region $region --output table
 EOS
 run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
@@ -559,27 +559,27 @@ aws cloudformation update-stack --stack-name $environment-$application \\
                                              ParameterKey=WindowsOSName,ParameterValue="$windows_os_name" \\
                                              ParameterKey=ProductFolder,ParameterValue=$product_folder \\
                                              ParameterKey=CalculationProductObject,ParameterValue=$calculation_product_object \\
+                                             ParameterKey=DataStagingProductObject,ParameterValue=$datastaging_product_object \\
+                                             ParameterKey=PublishingProductObject,ParameterValue=$publishing_product_object \\
+                                             ParameterKey=LoggingProductObject,ParameterValue=$logging_product_object \\
                                              ParameterKey=MongoDBProductObject,ParameterValue=$mongodb_product_object \\
                                              ParameterKey=RabbitMQProductObject,ParameterValue=$rabbitmq_product_object \\
-                                             ParameterKey=DataStagingProductObject,ParameterValue=$datastaging_product_object \\
-                                             ParameterKey=LoggingProductObject,ParameterValue=$logging_product_object \\
-                                             ParameterKey=PublishingProductObject,ParameterValue=$publishing_product_object \\
                                              ParameterKey=ConfigurationFolder,ParameterValue=$configuration_folder \\
                                              ParameterKey=WebConfigurationObject,ParameterValue=$web_configuration_object \\
                                              ParameterKey=CalculationConfigurationObject,ParameterValue=$calculation_configuration_object \\
+                                             ParameterKey=DataStagingConfigurationObject,ParameterValue=$datastaging_configuration_object \\
+                                             ParameterKey=PublishingConfigurationObject,ParameterValue=$publishing_configuration_object \\
+                                             ParameterKey=LoggingConfigurationObject,ParameterValue=$logging_configuration_object \\
                                              ParameterKey=MongoDBConfigurationObject,ParameterValue=$mongodb_configuration_object \\
                                              ParameterKey=RabbitMQConfigurationObject,ParameterValue=$rabbitmq_configuration_object \\
-                                             ParameterKey=DataStagingConfigurationObject,ParameterValue=$datastaging_configuration_object \\
-                                             ParameterKey=LoggingConfigurationObject,ParameterValue=$logging_configuration_object \\
-                                             ParameterKey=PublishingConfigurationObject,ParameterValue=$publishing_configuration_object \\
                                              ParameterKey=ApplicationFolder,ParameterValue=$application_folder \\
                                              ParameterKey=WebApplicationObject,ParameterValue=$eng_web_application_object \\
                                              ParameterKey=CalculationApplicationObject,ParameterValue=$calculation_application_object \\
+                                             ParameterKey=DataStagingApplicationObject,ParameterValue=$datastaging_application_object \\
+                                             ParameterKey=PublishingApplicationObject,ParameterValue=$publish_application_object \\
+                                             ParameterKey=LoggingApplicationObject,ParameterValue=$logging_application_object \\
                                              ParameterKey=MongoDBApplicationObject,ParameterValue=$mongodb_application_object \\
                                              ParameterKey=RabbitMQApplicationObject,ParameterValue=$rabbitmq_application_object \\
-                                             ParameterKey=DataStagingApplicationObject,ParameterValue=$datastaging_application_object \\
-                                             ParameterKey=LoggingApplicationObject,ParameterValue=$logging_application_object \\
-                                             ParameterKey=PublishingApplicationObject,ParameterValue=$publish_application_object \\
                                              ParameterKey=ApplicationName,ParameterValue=$application \\
                                              ParameterKey=ApplicationDomain,ParameterValue=$application_domain \\
                                              ParameterKey=ApplicationVersion,ParameterValue=$application_version \\

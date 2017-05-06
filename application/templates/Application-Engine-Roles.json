@@ -17,19 +17,19 @@
           "Parameters" : [
             "ProductFolder",
             "CalculationProductObject",
+            "DataStagingProductObject",
+            "PublishingProductObject",
+            "LoggingProductObject",
             "MongoDBProductObject",
             "RabbitMQProductObject",
-            "DataStagingProductObject",
-            "LoggingProductObject",
-            "PublishingProductObject",
             "ConfigurationFolder",
             "WebConfigurationObject",
             "CalculationConfigurationObject",
-            "MongoDBConfigurationObject",
-            "RabbitMQConfigurationObject",
             "DataStagingConfigurationObject",
+            "PublishingConfigurationObject",
             "LoggingConfigurationObject",
-            "PublishingConfigurationObject"
+            "MongoDBConfigurationObject",
+            "RabbitMQConfigurationObject"
           ]
         },
         {
@@ -38,11 +38,11 @@
             "ApplicationFolder",
             "WebApplicationObject",
             "CalculationApplicationObject",
+            "DataStagingApplicationObject",
+            "PublishingApplicationObject",
+            "LoggingApplicationObject",
             "MongoDBApplicationObject",
             "RabbitMQApplicationObject",
-            "DataStagingApplicationObject",
-            "LoggingApplicationObject",
-            "PublishingApplicationObject",
             "ApplicationName",
             "LogRetention"
           ]
@@ -53,27 +53,27 @@
         "StandardBucketsStackName" : { "default" : "StandardBuckets Stack Name" },
         "ProductFolder" : { "default" : "Product Folder" },
         "CalculationProductObject" : { "default" : "Calculation Product Object" },
+        "DataStagingProductObject" : { "default" : "DataStaging Product Object" },
+        "PublishingProductObject" : { "default" : "Publishing Product Object" },
+        "LoggingProductObject" : { "default" : "Logging Product Object" },
         "MongoDBProductObject" : { "default" : "MongoDB Product Object" },
         "RabbitMQProductObject" : { "default" : "RabbitMQ Product Object" },
-        "DataStagingProductObject" : { "default" : "DataStaging Product Object" },
-        "LoggingProductObject" : { "default" : "Logging Product Object" },
-        "PublishingProductObject" : { "default" : "Publishing Product Object" },
         "ConfigurationFolder" : { "default" : "Configuration Folder" },
         "WebConfigurationObject" : { "default" : "Web Configuration Object" },
         "CalculationConfigurationObject" : { "default" : "Calculation Configuration Object" },
+        "DataStagingConfigurationObject" : { "default" : "DataStaging Configuration Object" },
+        "PublishingConfigurationObject" : { "default" : "Publishing Configuration Object" },
+        "LoggingConfigurationObject" : { "default" : "Logging Configuration Object" },
         "MongoDBConfigurationObject" : { "default" : "MongoDB Configuration Object" },
         "RabbitMQConfigurationObject" : { "default" : "RabbitMQ Configuration Object" },
-        "DataStagingConfigurationObject" : { "default" : "DataStaging Configuration Object" },
-        "LoggingConfigurationObject" : { "default" : "Logging Configuration Object" },
-        "PublishingConfigurationObject" : { "default" : "Publishing Configuration Object" },
         "ApplicationFolder" : { "default" : "Application Folder" },
         "WebApplicationObject" : { "default" : "Web Application Object" },
         "CalculationApplicationObject" : { "default" : "Calculation Application Object" },
+        "DataStagingApplicationObject" : { "default" : "DataStaging Application Object" },
+        "PublishingApplicationObject" : { "default" : "Publishing Application Object" },
+        "LoggingApplicationObject" : { "default" : "Logging Application Object" },
         "MongoDBApplicationObject" : { "default" : "MongoDB Application Object" },
         "RabbitMQApplicationObject" : { "default" : "RabbitMQ Application Object" },
-        "DataStagingApplicationObject" : { "default" : "DataStaging Application Object" },
-        "LoggingApplicationObject" : { "default" : "Logging Application Object" },
-        "PublishingApplicationObject" : { "default" : "Publishing Application Object" },
         "ApplicationName" : { "default" : "Application Name" },
         "LogRetention" : { "default" : "Log Retention" }
       }
@@ -110,26 +110,17 @@
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
-    "MongoDBProductObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine MongoDB Component installer",
-      "Type" : "String",
-      "MaxLength" : 64,
-      "Default" : "",
-      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
-      "ConstraintDescription" : "must be a valid filename, not containing slashes."
-    },
-
-    "RabbitMQProductObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine RabbitMQ Component installer",
-      "Type" : "String",
-      "MaxLength" : 64,
-      "Default" : "",
-      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
-      "ConstraintDescription" : "must be a valid filename, not containing slashes."
-    },
-
     "DataStagingProductObject" : {
       "Description" : "Object within the S3 bucket and folder containing the Engine DataStaging Component installer",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be a valid filename, not containing slashes."
+    },
+
+    "PublishingProductObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Engine Publishing Component installer",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
@@ -146,8 +137,17 @@
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
-    "PublishingProductObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine Publishing Component installer",
+    "MongoDBProductObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Engine MongoDB Component installer",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be a valid filename, not containing slashes."
+    },
+
+    "RabbitMQProductObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Engine RabbitMQ Component installer",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
@@ -183,26 +183,17 @@
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
-    "MongoDBConfigurationObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine MongoDB Component configuration",
-      "Type" : "String",
-      "MaxLength" : 64,
-      "Default" : "",
-      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
-      "ConstraintDescription" : "must be a valid filename, not containing slashes."
-    },
-
-    "RabbitMQConfigurationObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine RabbitMQ Component configuration",
-      "Type" : "String",
-      "MaxLength" : 64,
-      "Default" : "",
-      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
-      "ConstraintDescription" : "must be a valid filename, not containing slashes."
-    },
-
     "DataStagingConfigurationObject" : {
       "Description" : "Object within the S3 bucket and folder containing the Engine DataStaging Component configuration",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be a valid filename, not containing slashes."
+    },
+
+    "PublishingConfigurationObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Engine Publishing Component configuration",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
@@ -219,8 +210,17 @@
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
-    "PublishingConfigurationObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine Publishing Component configuration",
+    "MongoDBConfigurationObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Engine MongoDB Component configuration",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be a valid filename, not containing slashes."
+    },
+
+    "RabbitMQConfigurationObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Engine RabbitMQ Component configuration",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
@@ -256,26 +256,17 @@
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
-    "MongoDBApplicationObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine MongoDB Component application",
-      "Type" : "String",
-      "MaxLength" : 64,
-      "Default" : "",
-      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
-      "ConstraintDescription" : "must be a valid filename, not containing slashes."
-    },
-
-    "RabbitMQApplicationObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine RabbitMQ Component application",
-      "Type" : "String",
-      "MaxLength" : 64,
-      "Default" : "",
-      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
-      "ConstraintDescription" : "must be a valid filename, not containing slashes."
-    },
-
     "DataStagingApplicationObject" : {
       "Description" : "Object within the S3 bucket and folder containing the Engine DataStaging Component application",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be a valid filename, not containing slashes."
+    },
+
+    "PublishingApplicationObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Engine Publishing Component application",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
@@ -292,8 +283,17 @@
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
-    "PublishingApplicationObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine Publishing Component application",
+    "MongoDBApplicationObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Engine MongoDB Component application",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be a valid filename, not containing slashes."
+    },
+
+    "RabbitMQApplicationObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Engine RabbitMQ Component application",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
@@ -322,45 +322,45 @@
 
   "Conditions" : {
     "InstallCalculationProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "CalculationProductObject" }, "" ]}]},
+    "InstallDataStagingProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "DataStagingProductObject" }, "" ]}]},
+    "InstallPublishingProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublishingProductObject" }, "" ]}]},
+    "InstallLoggingProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LoggingProductObject" }, "" ]}]},
     "InstallMongoDBProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "MongoDBProductObject" }, "" ]}]},
     "InstallRabbitMQProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "RabbitMQProductObject" }, "" ]}]},
-    "InstallDataStagingProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "DataStagingProductObject" }, "" ]}]},
-    "InstallLoggingProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LoggingProductObject" }, "" ]}]},
-    "InstallPublishingProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublishingProductObject" }, "" ]}]},
     "InstallProduct" : { "Fn::Or" : [{ "Condition" : "InstallCalculationProduct" },
-                                     { "Condition" : "InstallMongoDBProduct" },
-                                     { "Condition" : "InstallRabbitMQProduct" },
                                      { "Condition" : "InstallDataStagingProduct" },
+                                     { "Condition" : "InstallPublishingProduct" },
                                      { "Condition" : "InstallLoggingProduct" },
-                                     { "Condition" : "InstallPublishingProduct" }]},
+                                     { "Condition" : "InstallMongoDBProduct" },
+                                     { "Condition" : "InstallRabbitMQProduct" }]},
     "InstallWebConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "WebConfigurationObject" }, "" ]}]},
     "InstallCalculationConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "CalculationConfigurationObject" }, "" ]}]},
+    "InstallDataStagingConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "DataStagingConfigurationObject" }, "" ]}]},
+    "InstallPublishingConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublishingConfigurationObject" }, "" ]}]},
+    "InstallLoggingConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LoggingConfigurationObject" }, "" ]}]},
     "InstallMongoDBConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "MongoDBConfigurationObject" }, "" ]}]},
     "InstallRabbitMQConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "RabbitMQConfigurationObject" }, "" ]}]},
-    "InstallDataStagingConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "DataStagingConfigurationObject" }, "" ]}]},
-    "InstallLoggingConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LoggingConfigurationObject" }, "" ]}]},
-    "InstallPublishingConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublishingConfigurationObject" }, "" ]}]},
     "InstallConfiguration" : { "Fn::Or" : [{ "Condition" : "InstallWebConfiguration" },
                                            { "Condition" : "InstallCalculationConfiguration" },
-                                           { "Condition" : "InstallMongoDBConfiguration" },
-                                           { "Condition" : "InstallRabbitMQConfiguration" },
                                            { "Condition" : "InstallDataStagingConfiguration" },
+                                           { "Condition" : "InstallPublishingConfiguration" },
                                            { "Condition" : "InstallLoggingConfiguration" },
-                                           { "Condition" : "InstallPublishingConfiguration" }]},
+                                           { "Condition" : "InstallMongoDBConfiguration" },
+                                           { "Condition" : "InstallRabbitMQConfiguration" }]},
     "InstallWebApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "WebApplicationObject" }, "" ]}]},
     "InstallCalculationApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "CalculationApplicationObject" }, "" ]}]},
+    "InstallDataStagingApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "DataStagingApplicationObject" }, "" ]}]},
+    "InstallPublishingApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublishingApplicationObject" }, "" ]}]},
+    "InstallLoggingApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LoggingApplicationObject" }, "" ]}]},
     "InstallMongoDBApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "MongoDBApplicationObject" }, "" ]}]},
     "InstallRabbitMQApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "RabbitMQApplicationObject" }, "" ]}]},
-    "InstallDataStagingApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "DataStagingApplicationObject" }, "" ]}]},
-    "InstallLoggingApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LoggingApplicationObject" }, "" ]}]},
-    "InstallPublishingApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublishingApplicationObject" }, "" ]}]},
     "InstallApplication" : { "Fn::Or" : [{ "Condition" : "InstallWebApplication" },
                                          { "Condition" : "InstallCalculationApplication" },
-                                         { "Condition" : "InstallMongoDBApplication" },
-                                         { "Condition" : "InstallRabbitMQApplication" },
                                          { "Condition" : "InstallDataStagingApplication" },
+                                         { "Condition" : "InstallPublishingApplication" },
                                          { "Condition" : "InstallLoggingApplication" },
-                                         { "Condition" : "InstallPublishingApplication" }]},
+                                         { "Condition" : "InstallMongoDBApplication" },
+                                         { "Condition" : "InstallRabbitMQApplication" }]},
     "ConfigureLogs" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LogRetention" }, "0" ]}]}
   },
 
@@ -397,39 +397,23 @@
       }
     },
 
-    "MongoDBRole" : {
-      "Type" : "AWS::IAM::Role",
-      "Properties" : {
-        "Path" : "/",
-        "AssumeRolePolicyDocument" : {
-          "Version" : "2012-10-17",
-          "Statement" : [{
-            "Effect" : "Allow",
-            "Principal" : { "Service" : [ "ec2.amazonaws.com" ]},
-            "Action" : [ "sts:AssumeRole" ]
-          }]
-        },
-        "ManagedPolicyArns" : [ "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM" ]
-      }
-    },
-
-    "RabbitMQRole" : {
-      "Type" : "AWS::IAM::Role",
-      "Properties" : {
-        "Path" : "/",
-        "AssumeRolePolicyDocument" : {
-          "Version" : "2012-10-17",
-          "Statement" : [{
-            "Effect" : "Allow",
-            "Principal" : { "Service" : [ "ec2.amazonaws.com" ]},
-            "Action" : [ "sts:AssumeRole" ]
-          }]
-        },
-        "ManagedPolicyArns" : [ "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM" ]
-      }
-    },
-
     "DataStagingRole" : {
+      "Type" : "AWS::IAM::Role",
+      "Properties" : {
+        "Path" : "/",
+        "AssumeRolePolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Principal" : { "Service" : [ "ec2.amazonaws.com" ]},
+            "Action" : [ "sts:AssumeRole" ]
+          }]
+        },
+        "ManagedPolicyArns" : [ "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM" ]
+      }
+    },
+
+    "PublishingRole" : {
       "Type" : "AWS::IAM::Role",
       "Properties" : {
         "Path" : "/",
@@ -461,7 +445,23 @@
       }
     },
 
-    "PublishingRole" : {
+    "MongoDBRole" : {
+      "Type" : "AWS::IAM::Role",
+      "Properties" : {
+        "Path" : "/",
+        "AssumeRolePolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Principal" : { "Service" : [ "ec2.amazonaws.com" ]},
+            "Action" : [ "sts:AssumeRole" ]
+          }]
+        },
+        "ManagedPolicyArns" : [ "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM" ]
+      }
+    },
+
+    "RabbitMQRole" : {
       "Type" : "AWS::IAM::Role",
       "Properties" : {
         "Path" : "/",
@@ -493,11 +493,11 @@
         },
         "Roles" : [
           { "Fn::If" : [ "InstallCalculationProduct", { "Ref" : "CalculationRole" }, { "Ref": "AWS::NoValue" }]},
-          { "Fn::If" : [ "InstallMongoDBProduct", { "Ref" : "MongoDBRole" }, { "Ref": "AWS::NoValue" }]},
-          { "Fn::If" : [ "InstallRabbitMQProduct", { "Ref" : "RabbitMQRole" }, { "Ref": "AWS::NoValue" }]},
           { "Fn::If" : [ "InstallDataStagingProduct", { "Ref" : "DataStagingRole" }, { "Ref": "AWS::NoValue" }]},
+          { "Fn::If" : [ "InstallPublishingProduct", { "Ref" : "PublishingRole" }, { "Ref": "AWS::NoValue" }]},
           { "Fn::If" : [ "InstallLoggingProduct", { "Ref" : "LoggingRole" }, { "Ref": "AWS::NoValue" }]},
-          { "Fn::If" : [ "InstallPublishingProduct", { "Ref" : "PublishingRole" }, { "Ref": "AWS::NoValue" }]}
+          { "Fn::If" : [ "InstallMongoDBProduct", { "Ref" : "MongoDBRole" }, { "Ref": "AWS::NoValue" }]},
+          { "Fn::If" : [ "InstallRabbitMQProduct", { "Ref" : "RabbitMQRole" }, { "Ref": "AWS::NoValue" }]}
         ]
       },
       "Condition" : "InstallProduct"
@@ -520,11 +520,11 @@
         "Roles" : [
           { "Fn::If" : [ "InstallWebConfiguration", { "Ref" : "WebRole" }, { "Ref": "AWS::NoValue" }]},
           { "Fn::If" : [ "InstallCalculationConfiguration", { "Ref" : "CalculationRole" }, { "Ref": "AWS::NoValue" }]},
-          { "Fn::If" : [ "InstallMongoDBConfiguration", { "Ref" : "MongoDBRole" }, { "Ref": "AWS::NoValue" }]},
-          { "Fn::If" : [ "InstallRabbitMQConfiguration", { "Ref" : "RabbitMQRole" }, { "Ref": "AWS::NoValue" }]},
           { "Fn::If" : [ "InstallDataStagingConfiguration", { "Ref" : "DataStagingRole" }, { "Ref": "AWS::NoValue" }]},
+          { "Fn::If" : [ "InstallPublishingConfiguration", { "Ref" : "PublishingRole" }, { "Ref": "AWS::NoValue" }]},
           { "Fn::If" : [ "InstallLoggingConfiguration", { "Ref" : "LoggingRole" }, { "Ref": "AWS::NoValue" }]},
-          { "Fn::If" : [ "InstallPublishingConfiguration", { "Ref" : "PublishingRole" }, { "Ref": "AWS::NoValue" }]}
+          { "Fn::If" : [ "InstallMongoDBConfiguration", { "Ref" : "MongoDBRole" }, { "Ref": "AWS::NoValue" }]},
+          { "Fn::If" : [ "InstallRabbitMQConfiguration", { "Ref" : "RabbitMQRole" }, { "Ref": "AWS::NoValue" }]}
         ]
       },
       "Condition" : "InstallConfiguration"
@@ -547,11 +547,11 @@
         "Roles" : [
           { "Fn::If" : [ "InstallWebApplication", { "Ref" : "WebRole" }, { "Ref": "AWS::NoValue" }]},
           { "Fn::If" : [ "InstallCalculationApplication", { "Ref" : "CalculationRole" }, { "Ref": "AWS::NoValue" }]},
-          { "Fn::If" : [ "InstallMongoDBApplication", { "Ref" : "MongoDBRole" }, { "Ref": "AWS::NoValue" }]},
-          { "Fn::If" : [ "InstallRabbitMQApplication", { "Ref" : "RabbitMQRole" }, { "Ref": "AWS::NoValue" }]},
           { "Fn::If" : [ "InstallDataStagingApplication", { "Ref" : "DataStagingRole" }, { "Ref": "AWS::NoValue" }]},
+          { "Fn::If" : [ "InstallPublishingApplication", { "Ref" : "PublishingRole" }, { "Ref": "AWS::NoValue" }]},
           { "Fn::If" : [ "InstallLoggingApplication", { "Ref" : "LoggingRole" }, { "Ref": "AWS::NoValue" }]},
-          { "Fn::If" : [ "InstallPublishingApplication", { "Ref" : "PublishingRole" }, { "Ref": "AWS::NoValue" }]}
+          { "Fn::If" : [ "InstallMongoDBApplication", { "Ref" : "MongoDBRole" }, { "Ref": "AWS::NoValue" }]},
+          { "Fn::If" : [ "InstallRabbitMQApplication", { "Ref" : "RabbitMQRole" }, { "Ref": "AWS::NoValue" }]}
         ]
       },
       "Condition" : "InstallApplication"
@@ -577,11 +577,11 @@
         "Roles" : [
           { "Ref" : "WebRole" },
           { "Ref" : "CalculationRole" },
-          { "Ref" : "MongoDBRole" },
-          { "Ref" : "RabbitMQRole" },
           { "Ref" : "DataStagingRole" },
+          { "Ref" : "PublishingRole" },
           { "Ref" : "LoggingRole" },
-          { "Ref" : "PublishingRole" }
+          { "Ref" : "MongoDBRole" },
+          { "Ref" : "RabbitMQRole" }
         ]
       },
       "Condition" : "ConfigureLogs"
@@ -599,6 +599,21 @@
       "Value" : { "Ref" : "CalculationRole" }
     },
 
+    "DataStagingRole" : {
+      "Description" : "The DataStagingRole",
+      "Value" : { "Ref" : "DataStagingRole" }
+    },
+
+    "PublishingRole" : {
+      "Description" : "The PublishingRole",
+      "Value" : { "Ref" : "PublishingRole" }
+    },
+
+    "LoggingRole" : {
+      "Description" : "The LoggingRole",
+      "Value" : { "Ref" : "LoggingRole" }
+    },
+
     "MongoDBRole" : {
       "Description" : "The MongoDBRole",
       "Value" : { "Ref" : "MongoDBRole" }
@@ -607,21 +622,6 @@
     "RabbitMQRole" : {
       "Description" : "The RabbitMQRole",
       "Value" : { "Ref" : "RabbitMQRole" }
-    },
-
-    "DataStagingRole" : {
-      "Description" : "The DataStagingRole",
-      "Value" : { "Ref" : "DataStagingRole" }
-    },
-
-    "LoggingRole" : {
-      "Description" : "The LoggingRole",
-      "Value" : { "Ref" : "LoggingRole" }
-    },
-
-    "PublishingRole" : {
-      "Description" : "The PublishingRole",
-      "Value" : { "Ref" : "PublishingRole" }
     }
   }
 }

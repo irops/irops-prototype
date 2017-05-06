@@ -51,19 +51,19 @@
           "Parameters" : [
             "ProductFolder",
             "CalculationProductObject",
+            "DataStagingProductObject",
+            "PublishingProductObject",
+            "LoggingProductObject",
             "MongoDBProductObject",
             "RabbitMQProductObject",
-            "DataStagingProductObject",
-            "LoggingProductObject",
-            "PublishingProductObject",
             "ConfigurationFolder",
             "WebConfigurationObject",
             "CalculationConfigurationObject",
-            "MongoDBConfigurationObject",
-            "RabbitMQConfigurationObject",
             "DataStagingConfigurationObject",
+            "PublishingConfigurationObject",
             "LoggingConfigurationObject",
-            "PublishingConfigurationObject"
+            "MongoDBConfigurationObject",
+            "RabbitMQConfigurationObject"
           ]
         },
         {
@@ -72,11 +72,11 @@
             "ApplicationFolder",
             "WebApplicationObject",
             "CalculationApplicationObject",
+            "DataStagingApplicationObject",
+            "PublishingApplicationObject",
+            "LoggingApplicationObject",
             "MongoDBApplicationObject",
             "RabbitMQApplicationObject",
-            "DataStagingApplicationObject",
-            "LoggingApplicationObject",
-            "PublishingApplicationObject",
             "ApplicationName",
             "ApplicationDomain",
             "ApplicationVersion",
@@ -119,27 +119,27 @@
         "WindowsOSName" : { "default" : "Windows Operating System Name" },
         "ProductFolder" : { "default" : "Product Folder" },
         "CalculationProductObject" : { "default" : "Calculation Product Object" },
+        "DataStagingProductObject" : { "default" : "DataStaging Product Object" },
+        "PublishingProductObject" : { "default" : "Publishing Product Object" },
+        "LoggingProductObject" : { "default" : "Logging Product Object" },
         "MongoDBProductObject" : { "default" : "MongoDB Product Object" },
         "RabbitMQProductObject" : { "default" : "RabbitMQ Product Object" },
-        "DataStagingProductObject" : { "default" : "DataStaging Product Object" },
-        "LoggingProductObject" : { "default" : "Logging Product Object" },
-        "PublishingProductObject" : { "default" : "Publishing Product Object" },
         "ConfigurationFolder" : { "default" : "Configuration Folder" },
         "WebConfigurationObject" : { "default" : "Web Configuration Object" },
         "CalculationConfigurationObject" : { "default" : "Calculation Configuration Object" },
+        "DataStagingConfigurationObject" : { "default" : "DataStaging Configuration Object" },
+        "PublishingConfigurationObject" : { "default" : "Publishing Configuration Object" },
+        "LoggingConfigurationObject" : { "default" : "Logging Configuration Object" },
         "MongoDBConfigurationObject" : { "default" : "MongoDB Configuration Object" },
         "RabbitMQConfigurationObject" : { "default" : "RabbitMQ Configuration Object" },
-        "DataStagingConfigurationObject" : { "default" : "DataStaging Configuration Object" },
-        "LoggingConfigurationObject" : { "default" : "Logging Configuration Object" },
-        "PublishingConfigurationObject" : { "default" : "Publishing Configuration Object" },
         "ApplicationFolder" : { "default" : "Application Folder" },
         "WebApplicationObject" : { "default" : "Web Application Object" },
         "CalculationApplicationObject" : { "default" : "Calculation Application Object" },
+        "DataStagingApplicationObject" : { "default" : "DataStaging Application Object" },
+        "PublishingApplicationObject" : { "default" : "Publishing Application Object" },
+        "LoggingApplicationObject" : { "default" : "Logging Application Object" },
         "MongoDBApplicationObject" : { "default" : "MongoDB Application Object" },
         "RabbitMQApplicationObject" : { "default" : "RabbitMQ Application Object" },
-        "DataStagingApplicationObject" : { "default" : "DataStaging Application Object" },
-        "LoggingApplicationObject" : { "default" : "Logging Application Object" },
-        "PublishingApplicationObject" : { "default" : "Publishing Application Object" },
         "ApplicationName" : { "default" : "Application Name" },
         "ApplicationDomain" : { "default" : "Application Domain Name" },
         "ApplicationVersion" : { "default" : "Application Version" },
@@ -316,26 +316,17 @@
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
-    "MongoDBProductObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine MongoDB Component installer",
-      "Type" : "String",
-      "MaxLength" : 64,
-      "Default" : "",
-      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
-      "ConstraintDescription" : "must be a valid filename, not containing slashes."
-    },
-
-    "RabbitMQProductObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine RabbitMQ Component installer",
-      "Type" : "String",
-      "MaxLength" : 64,
-      "Default" : "",
-      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
-      "ConstraintDescription" : "must be a valid filename, not containing slashes."
-    },
-
     "DataStagingProductObject" : {
       "Description" : "Object within the S3 bucket and folder containing the Engine DataStaging Component installer",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be a valid filename, not containing slashes."
+    },
+
+    "PublishingProductObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Engine Publishing Component installer",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
@@ -352,8 +343,17 @@
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
-    "PublishingProductObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine Publishing Component installer",
+    "MongoDBProductObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Engine MongoDB Component installer",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be a valid filename, not containing slashes."
+    },
+
+    "RabbitMQProductObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Engine RabbitMQ Component installer",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
@@ -389,26 +389,17 @@
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
-    "MongoDBConfigurationObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine MongoDB Component configuration",
-      "Type" : "String",
-      "MaxLength" : 64,
-      "Default" : "",
-      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
-      "ConstraintDescription" : "must be a valid filename, not containing slashes."
-    },
-
-    "RabbitMQConfigurationObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine RabbitMQ Component configuration",
-      "Type" : "String",
-      "MaxLength" : 64,
-      "Default" : "",
-      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
-      "ConstraintDescription" : "must be a valid filename, not containing slashes."
-    },
-
     "DataStagingConfigurationObject" : {
       "Description" : "Object within the S3 bucket and folder containing the Engine DataStaging Component configuration",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be a valid filename, not containing slashes."
+    },
+
+    "PublishingConfigurationObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Engine Publishing Component configuration",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
@@ -425,8 +416,17 @@
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
-    "PublishingConfigurationObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine Publishing Component configuration",
+    "MongoDBConfigurationObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Engine MongoDB Component configuration",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be a valid filename, not containing slashes."
+    },
+
+    "RabbitMQConfigurationObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Engine RabbitMQ Component configuration",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
@@ -462,26 +462,17 @@
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
-    "MongoDBApplicationObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine MongoDB Component application",
-      "Type" : "String",
-      "MaxLength" : 64,
-      "Default" : "",
-      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
-      "ConstraintDescription" : "must be a valid filename, not containing slashes."
-    },
-
-    "RabbitMQApplicationObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine RabbitMQ Component application",
-      "Type" : "String",
-      "MaxLength" : 64,
-      "Default" : "",
-      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
-      "ConstraintDescription" : "must be a valid filename, not containing slashes."
-    },
-
     "DataStagingApplicationObject" : {
       "Description" : "Object within the S3 bucket and folder containing the Engine DataStaging Component application",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be a valid filename, not containing slashes."
+    },
+
+    "PublishingApplicationObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Engine Publishing Component application",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
@@ -498,8 +489,17 @@
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
-    "PublishingApplicationObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the Engine Publishing Component application",
+    "MongoDBApplicationObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Engine MongoDB Component application",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be a valid filename, not containing slashes."
+    },
+
+    "RabbitMQApplicationObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Engine RabbitMQ Component application",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
@@ -648,27 +648,27 @@
           "StandardBucketsStackName" : { "Ref" : "StandardBucketsStackName" },
           "ProductFolder" : { "Ref" : "ProductFolder" },
           "CalculationProductObject" : { "Ref" : "CalculationProductObject" },
+          "DataStagingProductObject" : { "Ref" : "DataStagingProductObject" },
+          "PublishingProductObject" : { "Ref" : "PublishingProductObject" },
+          "LoggingProductObject" : { "Ref" : "LoggingProductObject" },
           "MongoDBProductObject" : { "Ref" : "MongoDBProductObject" },
           "RabbitMQProductObject" : { "Ref" : "RabbitMQProductObject" },
-          "DataStagingProductObject" : { "Ref" : "DataStagingProductObject" },
-          "LoggingProductObject" : { "Ref" : "LoggingProductObject" },
-          "PublishingProductObject" : { "Ref" : "PublishingProductObject" },
           "ConfigurationFolder" : { "Ref" : "ConfigurationFolder" },
           "WebConfigurationObject" : { "Ref" : "WebConfigurationObject" },
           "CalculationConfigurationObject" : { "Ref" : "CalculationConfigurationObject" },
+          "DataStagingConfigurationObject" : { "Ref" : "DataStagingConfigurationObject" },
+          "PublishingConfigurationObject" : { "Ref" : "PublishingConfigurationObject" },
+          "LoggingConfigurationObject" : { "Ref" : "LoggingConfigurationObject" },
           "MongoDBConfigurationObject" : { "Ref" : "MongoDBConfigurationObject" },
           "RabbitMQConfigurationObject" : { "Ref" : "RabbitMQConfigurationObject" },
-          "DataStagingConfigurationObject" : { "Ref" : "DataStagingConfigurationObject" },
-          "LoggingConfigurationObject" : { "Ref" : "LoggingConfigurationObject" },
-          "PublishingConfigurationObject" : { "Ref" : "PublishingConfigurationObject" },
           "ApplicationFolder" : { "Ref" : "ApplicationFolder" },
           "WebApplicationObject" : { "Ref" : "WebApplicationObject" },
           "CalculationApplicationObject" : { "Ref" : "CalculationApplicationObject" },
+          "DataStagingApplicationObject" : { "Ref" : "DataStagingApplicationObject" },
+          "PublishingApplicationObject" : { "Ref" : "PublishingApplicationObject" },
+          "LoggingApplicationObject" : { "Ref" : "LoggingApplicationObject" },
           "MongoDBApplicationObject" : { "Ref" : "MongoDBApplicationObject" },
           "RabbitMQApplicationObject" : { "Ref" : "RabbitMQApplicationObject" },
-          "DataStagingApplicationObject" : { "Ref" : "DataStagingApplicationObject" },
-          "LoggingApplicationObject" : { "Ref" : "LoggingApplicationObject" },
-          "PublishingApplicationObject" : { "Ref" : "PublishingApplicationObject" },
           "ApplicationName" : { "Ref" : "ApplicationName" },
           "LogRetention" : { "Ref" : "LogRetention" }
         }
@@ -791,6 +791,109 @@
       }
     },
 
+    "DataStagingInstances" : {
+      "Type" : "AWS::CloudFormation::Stack",
+      "Properties" : {
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-TemplatesBucket" }}, "/", { "Ref" : "TemplateFolder" }, "/Application-Engine-DataStagingInstances.json" ]]},
+        "Parameters" : {
+          "VPCStackName" : { "Ref" : "VPCStackName" },
+          "CustomIdentifierFunctionsStackName" : { "Ref" : "CustomIdentifierFunctionsStackName" },
+          "StandardCIDRFunctionsStackName" : { "Ref" : "StandardCIDRFunctionsStackName" },
+          "StandardAMIFunctionsStackName" : { "Ref" : "StandardAMIFunctionsStackName" },
+          "StandardBucketsStackName" : { "Ref" : "StandardBucketsStackName" },
+          "StandardTopicsStackName" : { "Ref" : "StandardTopicsStackName" },
+          "KeyName" : { "Ref" : "KeyName" },
+          "DataStagingRole" : { "Fn::GetAtt" : [ "Roles", "Outputs.DataStagingRole" ]},
+          "LogGroup" : { "Fn::If" : [ "ConfigureLogs", { "Fn::GetAtt" : [ "Logs", "Outputs.LogGroup" ]}, "" ]},
+          "DataStagingInstanceSecurityGroup" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.DataStagingInstanceSecurityGroup" ]},
+          "CompanyName" : { "Ref" : "CompanyName" },
+          "SystemName" : { "Ref" : "SystemName" },
+          "EnvironmentType" : { "Ref" : "EnvironmentType" },
+          "WindowsOSName" : { "Ref" : "WindowsOSName" },
+          "ProductFolder" : { "Ref" : "ProductFolder" },
+          "DataStagingProductObject" : { "Ref" : "DataStagingProductObject" },
+          "ConfigurationFolder" : { "Ref" : "ConfigurationFolder" },
+          "DataStagingConfigurationObject" : { "Ref" : "DataStagingConfigurationObject" },
+          "ApplicationFolder" : { "Ref" : "ApplicationFolder" },
+          "DataStagingApplicationObject" : { "Ref" : "DataStagingApplicationObject" },
+          "ApplicationName" : { "Ref" : "ApplicationName" },
+          "ApplicationVersion" : { "Ref" : "ApplicationVersion" },
+          "UseStaticAddress" : { "Ref" : "UseStaticAddress" },
+          "LogRetention" : { "Ref" : "LogRetention" },
+          "Schedule" : { "Ref" : "Schedule" }
+        }
+      }
+    },
+
+    "PublishingInstances" : {
+      "Type" : "AWS::CloudFormation::Stack",
+      "Properties" : {
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-TemplatesBucket" }}, "/", { "Ref" : "TemplateFolder" }, "/Application-Engine-PublishingInstances.json" ]]},
+        "Parameters" : {
+          "VPCStackName" : { "Ref" : "VPCStackName" },
+          "CustomIdentifierFunctionsStackName" : { "Ref" : "CustomIdentifierFunctionsStackName" },
+          "StandardCIDRFunctionsStackName" : { "Ref" : "StandardCIDRFunctionsStackName" },
+          "StandardAMIFunctionsStackName" : { "Ref" : "StandardAMIFunctionsStackName" },
+          "StandardBucketsStackName" : { "Ref" : "StandardBucketsStackName" },
+          "StandardTopicsStackName" : { "Ref" : "StandardTopicsStackName" },
+          "KeyName" : { "Ref" : "KeyName" },
+          "PublishingRole" : { "Fn::GetAtt" : [ "Roles", "Outputs.PublishingRole" ]},
+          "LogGroup" : { "Fn::If" : [ "ConfigureLogs", { "Fn::GetAtt" : [ "Logs", "Outputs.LogGroup" ]}, "" ]},
+          "PublishingInstanceSecurityGroup" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.PublishingInstanceSecurityGroup" ]},
+          "CompanyName" : { "Ref" : "CompanyName" },
+          "SystemName" : { "Ref" : "SystemName" },
+          "EnvironmentType" : { "Ref" : "EnvironmentType" },
+          "EnvironmentZones" : { "Ref" : "EnvironmentZones" },
+          "WindowsOSName" : { "Ref" : "WindowsOSName" },
+          "ProductFolder" : { "Ref" : "ProductFolder" },
+          "PublishingProductObject" : { "Ref" : "PublishingProductObject" },
+          "ConfigurationFolder" : { "Ref" : "ConfigurationFolder" },
+          "PublishingConfigurationObject" : { "Ref" : "PublishingConfigurationObject" },
+          "ApplicationFolder" : { "Ref" : "ApplicationFolder" },
+          "PublishingApplicationObject" : { "Ref" : "PublishingApplicationObject" },
+          "ApplicationName" : { "Ref" : "ApplicationName" },
+          "ApplicationVersion" : { "Ref" : "ApplicationVersion" },
+          "UseStaticAddress" : { "Ref" : "UseStaticAddress" },
+          "LogRetention" : { "Ref" : "LogRetention" },
+          "Schedule" : { "Ref" : "Schedule" }
+        }
+      }
+    },
+
+    "LoggingInstances" : {
+      "Type" : "AWS::CloudFormation::Stack",
+      "Properties" : {
+        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-TemplatesBucket" }}, "/", { "Ref" : "TemplateFolder" }, "/Application-Engine-LoggingInstances.json" ]]},
+        "Parameters" : {
+          "VPCStackName" : { "Ref" : "VPCStackName" },
+          "CustomIdentifierFunctionsStackName" : { "Ref" : "CustomIdentifierFunctionsStackName" },
+          "StandardCIDRFunctionsStackName" : { "Ref" : "StandardCIDRFunctionsStackName" },
+          "StandardAMIFunctionsStackName" : { "Ref" : "StandardAMIFunctionsStackName" },
+          "StandardBucketsStackName" : { "Ref" : "StandardBucketsStackName" },
+          "StandardTopicsStackName" : { "Ref" : "StandardTopicsStackName" },
+          "KeyName" : { "Ref" : "KeyName" },
+          "LoggingRole" : { "Fn::GetAtt" : [ "Roles", "Outputs.LoggingRole" ]},
+          "LogGroup" : { "Fn::If" : [ "ConfigureLogs", { "Fn::GetAtt" : [ "Logs", "Outputs.LogGroup" ]}, "" ]},
+          "LoggingInstanceSecurityGroup" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.LoggingInstanceSecurityGroup" ]},
+          "CompanyName" : { "Ref" : "CompanyName" },
+          "SystemName" : { "Ref" : "SystemName" },
+          "EnvironmentType" : { "Ref" : "EnvironmentType" },
+          "WindowsOSName" : { "Ref" : "WindowsOSName" },
+          "ProductFolder" : { "Ref" : "ProductFolder" },
+          "LoggingProductObject" : { "Ref" : "LoggingProductObject" },
+          "ConfigurationFolder" : { "Ref" : "ConfigurationFolder" },
+          "LoggingConfigurationObject" : { "Ref" : "LoggingConfigurationObject" },
+          "ApplicationFolder" : { "Ref" : "ApplicationFolder" },
+          "LoggingApplicationObject" : { "Ref" : "LoggingApplicationObject" },
+          "ApplicationName" : { "Ref" : "ApplicationName" },
+          "ApplicationVersion" : { "Ref" : "ApplicationVersion" },
+          "UseStaticAddress" : { "Ref" : "UseStaticAddress" },
+          "LogRetention" : { "Ref" : "LogRetention" },
+          "Schedule" : { "Ref" : "Schedule" }
+        }
+      }
+    },
+
     "MongoDBInstances" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
@@ -859,109 +962,6 @@
           "Schedule" : { "Ref" : "Schedule" }
         }
       }
-    },
-
-    "DataStagingInstances" : {
-      "Type" : "AWS::CloudFormation::Stack",
-      "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-TemplatesBucket" }}, "/", { "Ref" : "TemplateFolder" }, "/Application-Engine-DataStagingInstances.json" ]]},
-        "Parameters" : {
-          "VPCStackName" : { "Ref" : "VPCStackName" },
-          "CustomIdentifierFunctionsStackName" : { "Ref" : "CustomIdentifierFunctionsStackName" },
-          "StandardCIDRFunctionsStackName" : { "Ref" : "StandardCIDRFunctionsStackName" },
-          "StandardAMIFunctionsStackName" : { "Ref" : "StandardAMIFunctionsStackName" },
-          "StandardBucketsStackName" : { "Ref" : "StandardBucketsStackName" },
-          "StandardTopicsStackName" : { "Ref" : "StandardTopicsStackName" },
-          "KeyName" : { "Ref" : "KeyName" },
-          "DataStagingRole" : { "Fn::GetAtt" : [ "Roles", "Outputs.DataStagingRole" ]},
-          "LogGroup" : { "Fn::If" : [ "ConfigureLogs", { "Fn::GetAtt" : [ "Logs", "Outputs.LogGroup" ]}, "" ]},
-          "DataStagingInstanceSecurityGroup" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.DataStagingInstanceSecurityGroup" ]},
-          "CompanyName" : { "Ref" : "CompanyName" },
-          "SystemName" : { "Ref" : "SystemName" },
-          "EnvironmentType" : { "Ref" : "EnvironmentType" },
-          "WindowsOSName" : { "Ref" : "WindowsOSName" },
-          "ProductFolder" : { "Ref" : "ProductFolder" },
-          "DataStagingProductObject" : { "Ref" : "DataStagingProductObject" },
-          "ConfigurationFolder" : { "Ref" : "ConfigurationFolder" },
-          "DataStagingConfigurationObject" : { "Ref" : "DataStagingConfigurationObject" },
-          "ApplicationFolder" : { "Ref" : "ApplicationFolder" },
-          "DataStagingApplicationObject" : { "Ref" : "DataStagingApplicationObject" },
-          "ApplicationName" : { "Ref" : "ApplicationName" },
-          "ApplicationVersion" : { "Ref" : "ApplicationVersion" },
-          "UseStaticAddress" : { "Ref" : "UseStaticAddress" },
-          "LogRetention" : { "Ref" : "LogRetention" },
-          "Schedule" : { "Ref" : "Schedule" }
-        }
-      }
-    },
-
-    "LoggingInstances" : {
-      "Type" : "AWS::CloudFormation::Stack",
-      "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-TemplatesBucket" }}, "/", { "Ref" : "TemplateFolder" }, "/Application-Engine-LoggingInstances.json" ]]},
-        "Parameters" : {
-          "VPCStackName" : { "Ref" : "VPCStackName" },
-          "CustomIdentifierFunctionsStackName" : { "Ref" : "CustomIdentifierFunctionsStackName" },
-          "StandardCIDRFunctionsStackName" : { "Ref" : "StandardCIDRFunctionsStackName" },
-          "StandardAMIFunctionsStackName" : { "Ref" : "StandardAMIFunctionsStackName" },
-          "StandardBucketsStackName" : { "Ref" : "StandardBucketsStackName" },
-          "StandardTopicsStackName" : { "Ref" : "StandardTopicsStackName" },
-          "KeyName" : { "Ref" : "KeyName" },
-          "LoggingRole" : { "Fn::GetAtt" : [ "Roles", "Outputs.LoggingRole" ]},
-          "LogGroup" : { "Fn::If" : [ "ConfigureLogs", { "Fn::GetAtt" : [ "Logs", "Outputs.LogGroup" ]}, "" ]},
-          "LoggingInstanceSecurityGroup" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.LoggingInstanceSecurityGroup" ]},
-          "CompanyName" : { "Ref" : "CompanyName" },
-          "SystemName" : { "Ref" : "SystemName" },
-          "EnvironmentType" : { "Ref" : "EnvironmentType" },
-          "WindowsOSName" : { "Ref" : "WindowsOSName" },
-          "ProductFolder" : { "Ref" : "ProductFolder" },
-          "LoggingProductObject" : { "Ref" : "LoggingProductObject" },
-          "ConfigurationFolder" : { "Ref" : "ConfigurationFolder" },
-          "LoggingConfigurationObject" : { "Ref" : "LoggingConfigurationObject" },
-          "ApplicationFolder" : { "Ref" : "ApplicationFolder" },
-          "LoggingApplicationObject" : { "Ref" : "LoggingApplicationObject" },
-          "ApplicationName" : { "Ref" : "ApplicationName" },
-          "ApplicationVersion" : { "Ref" : "ApplicationVersion" },
-          "UseStaticAddress" : { "Ref" : "UseStaticAddress" },
-          "LogRetention" : { "Ref" : "LogRetention" },
-          "Schedule" : { "Ref" : "Schedule" }
-        }
-      }
-    },
-
-    "PublishingInstances" : {
-      "Type" : "AWS::CloudFormation::Stack",
-      "Properties" : {
-        "TemplateURL" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-TemplatesBucket" }}, "/", { "Ref" : "TemplateFolder" }, "/Application-Engine-PublishingInstances.json" ]]},
-        "Parameters" : {
-          "VPCStackName" : { "Ref" : "VPCStackName" },
-          "CustomIdentifierFunctionsStackName" : { "Ref" : "CustomIdentifierFunctionsStackName" },
-          "StandardCIDRFunctionsStackName" : { "Ref" : "StandardCIDRFunctionsStackName" },
-          "StandardAMIFunctionsStackName" : { "Ref" : "StandardAMIFunctionsStackName" },
-          "StandardBucketsStackName" : { "Ref" : "StandardBucketsStackName" },
-          "StandardTopicsStackName" : { "Ref" : "StandardTopicsStackName" },
-          "KeyName" : { "Ref" : "KeyName" },
-          "PublishingRole" : { "Fn::GetAtt" : [ "Roles", "Outputs.PublishingRole" ]},
-          "LogGroup" : { "Fn::If" : [ "ConfigureLogs", { "Fn::GetAtt" : [ "Logs", "Outputs.LogGroup" ]}, "" ]},
-          "PublishingInstanceSecurityGroup" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.PublishingInstanceSecurityGroup" ]},
-          "CompanyName" : { "Ref" : "CompanyName" },
-          "SystemName" : { "Ref" : "SystemName" },
-          "EnvironmentType" : { "Ref" : "EnvironmentType" },
-          "EnvironmentZones" : { "Ref" : "EnvironmentZones" },
-          "WindowsOSName" : { "Ref" : "WindowsOSName" },
-          "ProductFolder" : { "Ref" : "ProductFolder" },
-          "PublishingProductObject" : { "Ref" : "PublishingProductObject" },
-          "ConfigurationFolder" : { "Ref" : "ConfigurationFolder" },
-          "PublishingConfigurationObject" : { "Ref" : "PublishingConfigurationObject" },
-          "ApplicationFolder" : { "Ref" : "ApplicationFolder" },
-          "PublishingApplicationObject" : { "Ref" : "PublishingApplicationObject" },
-          "ApplicationName" : { "Ref" : "ApplicationName" },
-          "ApplicationVersion" : { "Ref" : "ApplicationVersion" },
-          "UseStaticAddress" : { "Ref" : "UseStaticAddress" },
-          "LogRetention" : { "Ref" : "LogRetention" },
-          "Schedule" : { "Ref" : "Schedule" }
-        }
-      }
     }
   },
 
@@ -978,6 +978,24 @@
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-CalculationInstanceSecurityGroup" }}
     },
 
+    "DataStagingInstanceSecurityGroup" : {
+      "Description" : "The DataStagingInstance SecurityGroup",
+      "Value" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.DataStagingInstanceSecurityGroup" ]},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-DataStagingInstanceSecurityGroup" }}
+    },
+
+    "PublishingInstanceSecurityGroup" : {
+      "Description" : "The PublishingInstance SecurityGroup",
+      "Value" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.PublishingInstanceSecurityGroup" ]},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-PublishingInstanceSecurityGroup" }}
+    },
+
+    "LoggingInstanceSecurityGroup" : {
+      "Description" : "The LoggingInstance SecurityGroup",
+      "Value" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.LoggingInstanceSecurityGroup" ]},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-LoggingInstanceSecurityGroup" }}
+    },
+
     "MongoDBInstanceSecurityGroup" : {
       "Description" : "The MongoDBInstance SecurityGroup",
       "Value" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.MongoDBInstanceSecurityGroup" ]},
@@ -988,24 +1006,6 @@
       "Description" : "The RabbitMQInstance SecurityGroup",
       "Value" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.RabbitMQInstanceSecurityGroup" ]},
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-RabbitMQInstanceSecurityGroup" }}
-    },
-
-    "DataStagingInstanceSecurityGroup" : {
-      "Description" : "The DataStagingInstance SecurityGroup",
-      "Value" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.DataStagingInstanceSecurityGroup" ]},
-      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-DataStagingInstanceSecurityGroup" }}
-    },
-
-    "LoggingInstanceSecurityGroup" : {
-      "Description" : "The LoggingInstance SecurityGroup",
-      "Value" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.LoggingInstanceSecurityGroup" ]},
-      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-LoggingInstanceSecurityGroup" }}
-    },
-
-    "PublishingInstanceSecurityGroup" : {
-      "Description" : "The PublishingInstance SecurityGroup",
-      "Value" : { "Fn::GetAtt" : [ "SecurityGroups", "Outputs.PublishingInstanceSecurityGroup" ]},
-      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-PublishingInstanceSecurityGroup" }}
-    },
+    }
   }
 }
