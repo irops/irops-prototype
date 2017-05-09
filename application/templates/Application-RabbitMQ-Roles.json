@@ -1,0 +1,219 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Application-RabbitMQ-Roles Template. This is a layer in the RabbitMQ application, which creates the Roles and attached Policies.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "StandardBucketsStackName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Application Dependencies Configuration" },
+          "Parameters" : [
+            "ProductFolder",
+            "ErlangProductObject",
+            "RabbitMQProductObject",
+            "ConfigurationFolder",
+            "ErlangConfigurationObject",
+            "RabbitMQConfigurationObject"
+          ]
+        },
+        {
+          "Label" : { "default" : "Application Configuration" },
+          "Parameters" : [
+            "LogRetention"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "StandardBucketsStackName" : { "default" : "StandardBuckets Stack Name" },
+        "ProductFolder" : { "default" : "Product Folder" },
+        "ErlangProductObject" : { "default" : "Erlang Product Object" },
+        "RabbitMQProductObject" : { "default" : "RabbitMQ Product Object" },
+        "ConfigurationFolder" : { "default" : "Configuration Folder" },
+        "ErlangConfigurationObject" : { "default" : "Erlang Configuration Object" },
+        "RabbitMQConfigurationObject" : { "default" : "RabbitMQ Configuration Object" },
+        "LogRetention" : { "default" : "Log Retention" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "StandardBucketsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Buckets",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardBuckets",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "ProductFolder" : {
+      "Description" : "Folder within the S3 Products bucket containing Products deployed by this Template",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "RabbitMQ",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "ErlangProductObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Erlang installer",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[-~_.a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be a valid filename, not containing slashes."
+    },
+
+    "RabbitMQProductObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the RabbitMQ installer",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be a valid filename, not containing slashes."
+    },
+
+    "ConfigurationFolder" : {
+      "Description" : "Folder within the S3 Configurations bucket containing Configurations deployed by this Template",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "RabbitMQ",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "ErlangConfigurationObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the Erlang configuration",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be a valid filename, not containing slashes."
+    },
+
+    "RabbitMQConfigurationObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the RabbitMQ configuration",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be a valid filename, not containing slashes."
+    },
+
+    "LogRetention" : {
+      "Description" : "Number of days to retain CloudWatch Log Events (0 disables use of CloudWatch Logs)",
+      "Type" : "Number",
+      "Default" : 14,
+      "AllowedValues" : [ 0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653 ],
+      "ConstraintDescription" : "must be: 0 (disabled), 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827 or 3653."
+    }
+  },
+
+  "Conditions" : {
+    "InstallErlangProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ErlangProductObject" }, "" ]}]},
+    "InstallRabbitMQProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "RabbitMQProductObject" }, "" ]}]},
+    "InstallProduct" : { "Fn::Or" : [{ "Condition" : "InstallErlangProduct" },
+                                     { "Condition" : "InstallRabbitMQProduct" }]},
+    "InstallErlangConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ErlangConfigurationObject" }, "" ]}]},
+    "InstallRabbitMQConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "RabbitMQConfigurationObject" }, "" ]}]},
+    "InstallConfiguration" : { "Fn::Or" : [{ "Condition" : "InstallErlangConfiguration" },
+                                           { "Condition" : "InstallRabbitMQConfiguration" }]},
+    "ConfigureLogs" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LogRetention" }, "0" ]}]}
+  },
+
+  "Resources" : {
+    "Role" : {
+      "Type" : "AWS::IAM::Role",
+      "Properties" : {
+        "Path" : "/",
+        "AssumeRolePolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Principal" : { "Service" : [ "ec2.amazonaws.com" ]},
+            "Action" : [ "sts:AssumeRole" ]
+          }]
+        },
+        "ManagedPolicyArns" : [ "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM" ]
+      }
+    },
+
+    "DownloadProductFromS3Policy" : {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "DownloadProductFromS3Policy",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [
+              "s3:GetObject"
+            ],
+            "Resource" : { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }}, "/", { "Ref" : "ProductFolder" }, "/*" ]]}
+          }]
+        },
+        "Roles" : [{ "Ref" : "Role" }]
+      },
+      "Condition" : "InstallProduct"
+    },
+
+    "DownloadConfigurationFromS3Policy" : {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "DownloadConfigurationFromS3Policy",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [
+              "s3:GetObject"
+            ],
+            "Resource" : { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/*" ]]}
+          }]
+        },
+        "Roles" : [{ "Ref" : "Role" }]
+      },
+      "Condition" : "InstallConfiguration"
+    },
+
+    "LogMonitoringPolicy" : {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "LogMonitoringPolicy",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [
+              "logs:CreateLogGroup",
+              "logs:CreateLogStream",
+              "logs:PutLogEvents",
+              "logs:DescribeLogStreams"
+            ],
+            "Resource" : "arn:aws:logs:*:*:*"
+          }]
+        },
+        "Roles" : [{ "Ref" : "Role" }]
+      },
+      "Condition" : "ConfigureLogs"
+    }
+  },
+
+  "Outputs" : {
+    "Role" : {
+      "Description" : "The Role",
+      "Value" : { "Ref" : "Role" }
+    }
+  }
+}
