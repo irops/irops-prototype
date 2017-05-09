@@ -76,6 +76,8 @@ var applicationNameToCode = {
   'OpenVPN'                 : 'vpn',
   'OpenVPNAS'               : 'vpn',
   'WebSphereMQ'             : 'wmq',
+  'RabbitMQ'                : 'rmq',
+  'MongoDB'                 : 'mdb',
   'Engine'                  : 'eng',
   'ActiveDirectory'         : 'ad',
   'DataTransfer'            : 'dt',
