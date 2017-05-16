@@ -39,7 +39,7 @@ export PRIVATE_ADMINISTRATOR_NETWORK1=                 # Tulsa Private IP Range
 export PRIVATE_ADMINISTRATOR_NETWORK2=10.0.0.0/16      # Santa Barbara Private IP Range (Michael Crawford's House)
 
 # Owner
-export OWNER_EMAIL=$USER@hpe.com
+export OWNER_EMAIL=$USER@dxc.com
 
 # Company
 export COMPANY_CODE=tvl
