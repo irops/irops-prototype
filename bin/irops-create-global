@@ -2,7 +2,7 @@
 #
 # Here's a list of the commands which need to be run to create Global (us-east-1 / Virginia)
 # - Global includes all Stacks which must be built first, prior to the creation of the
-#   other multi-environment Regions including Stable, Unstable, Training and Demo. 
+#   other multi-environment Regions including Stable, Unstable, Training and Demo.
 # - Global MUST run in the us-east-1 Region.
 # - Global MUST NOT be run in any other Region.
 # - Stable, Unstable, Testing and Demo MultiEnvironments SHOULD NOT be run in us-east-1.
@@ -139,15 +139,15 @@ run "$identitybindir/identity-create-standardroles-stack -E Identity"
 #      6.2 Create StandardSubscriptions Stack
 #      6.3 Create CustomSubscriptions Stack
 
-run "$corebindir/core-create-standardtopics-stack -E Identity -r us-east-1"
-run "$corebindir/core-create-standardsubscriptions-stack -E Identity -r us-east-1"
-run "$corebindir/core-create-customsubscriptions-stack -E Identity -r us-east-1"
+run "$corebindir/core-create-standardtopics-stack -E Core -r us-east-1"
+run "$corebindir/core-create-standardsubscriptions-stack -E Core -r us-east-1"
+run "$corebindir/core-create-customsubscriptions-stack -E Core -r us-east-1"
 
 
 #  7. Create S3 Buckets
 #      7.1 Create StandardBuckets Stack
 
-run "$corebindir/core-create-standardbuckets-stack -E Identity -r us-east-1"
+run "$corebindir/core-create-standardbuckets-stack -E Core -r us-east-1"
 
 
 #  8. Create Lambda Functions
@@ -156,10 +156,10 @@ run "$corebindir/core-create-standardbuckets-stack -E Identity -r us-east-1"
 #      8.3 Create StandardScheduleFunctions Stack
 #      8.4 Create CustomIdentifierFunctions Stack
 
-run "$corebindir/core-create-standardamifunctions-stack -E Identity -r us-east-1"
-run "$corebindir/core-create-standardcidrfunctions-stack -E Identity -r us-east-1"
-run "$corebindir/core-create-standardschedulefunctions-stack -E Identity -r us-east-1"
-run "$corebindir/core-create-customidentifierfunctions-stack -E Identity -r us-east-1"
+run "$corebindir/core-create-standardamifunctions-stack -E Core -r us-east-1"
+run "$corebindir/core-create-standardcidrfunctions-stack -E Core -r us-east-1"
+run "$corebindir/core-create-standardschedulefunctions-stack -E Core -r us-east-1"
+run "$corebindir/core-create-customidentifierfunctions-stack -E Core -r us-east-1"
 
 
 #  9. Create SNS Billing Topics and Subscriptions
