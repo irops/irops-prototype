@@ -391,7 +391,7 @@ run "$corebindir/core-delete-standardamifunctions-stack"
 # 16. Delete S3 Buckets
 #     16.1 Delete StandardBuckets Stack
 
-run "$corebindir/core-delete-standardbuckets-stack -E Core"
+run "$corebindir/core-delete-standardbuckets-stack"
 
 
 # 17. Delete SNS Topics and Subscriptions
@@ -399,6 +399,6 @@ run "$corebindir/core-delete-standardbuckets-stack -E Core"
 #     17.2 Delete StandardSubscriptions Stack
 #     17.3 Delete StandardTopics Stack
 
-run "$corebindir/core-delete-customsubscriptions-stack -E Core"
-run "$corebindir/core-delete-standardsubscriptions-stack -E Core"
-run "$corebindir/core-delete-standardtopics-stack -E Core"
+run "$corebindir/core-delete-customsubscriptions-stack"
+run "$corebindir/core-delete-standardsubscriptions-stack"
+run "$corebindir/core-delete-standardtopics-stack"
