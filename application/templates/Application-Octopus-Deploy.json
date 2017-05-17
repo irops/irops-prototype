@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
 
-  "Description" : "Application-OctopusDeploy-DeployInstances Template. This is a layer in the OctopusDeploy application, which creates the InstanceProfile, and one DeployInstance.",
+  "Description" : "Application-Octopus-Deploy Template. This template creates the Octopus Application Deploy Tier.",
 
   "Metadata" : {
     "AWS::CloudFormation::Interface" : {
@@ -9,6 +9,7 @@
         {
           "Label" : { "default" : "Stack Dependencies" },
           "Parameters" : [
+            "VPNStackName",
             "VPCStackName",
             "CustomIdentifierFunctionsStackName",
             "StandardCIDRFunctionsStackName",
@@ -20,10 +21,7 @@
         {
           "Label" : { "default" : "Resource Dependencies" },
           "Parameters" : [
-            "KeyName",
-            "Role",
-            "LogGroup",
-            "InstanceSecurityGroup"
+            "KeyName"
           ]
         },
         {
@@ -53,14 +51,27 @@
           "Label" : { "default" : "Application Configuration" },
           "Parameters" : [
             "ApplicationName",
+            "ComponentName",
             "UseStaticAddress",
             "LogRetention",
             "Schedule"
+          ]
+        },
+        {
+          "Label" : { "default" : "Security Configuration" },
+          "Parameters" : [
+            "PrivateUserNetwork",
+            "PrivateUserNetwork1",
+            "PrivateUserNetwork2",
+            "PrivateAdministratorNetwork",
+            "PrivateAdministratorNetwork1",
+            "PrivateAdministratorNetwork2"
           ]
         }
       ],
 
       "ParameterLabels" : {
+        "VPNStackName" : { "default" : "VPN Stack Name" },
         "VPCStackName" : { "default" : "VPC Stack Name" },
         "CustomIdentifierFunctionsStackName" : { "default" : "CustomIdentifierFunctions Stack Name" },
         "StandardCIDRFunctionsStackName" : { "default" : "StandardCIDRFunctions Stack Name" },
@@ -68,26 +79,40 @@
         "StandardBucketsStackName" : { "default" : "StandardBuckets Stack Name" },
         "StandardTopicsStackName" : { "default" : "StandardTopics Stack Name" },
         "KeyName" : { "default" : "Key Name" },
-        "Role" : { "default" : "Role" },
-        "LogGroup" : { "default" : "LogGroup" },
-        "SecurityGroup" : { "default" : "SecurityGroup" },
         "CompanyName" : { "default" : "Company Name" },
         "SystemName" : { "default" : "System Name" },
-        "EnvironmentSize" : { "default" : "Environment Size" },
+        "EnvironmentType" : { "default" : "Environment Type" },
         "OSName" : { "default" : "Operating System Name" },
         "ProductFolder" : { "default" : "Product Folder" },
         "ProductObject" : { "default" : "Product Object" },
         "ConfigurationFolder" : { "default" : "Configuration Folder" },
         "ConfigurationObject" : { "default" : "Configuration Object" },
         "ApplicationName" : { "default" : "Application Name" },
+        "ComponentName" : { "default" : "Component Name" },
         "UseStaticAddress" : { "default" : "Use Static Address" },
         "LogRetention" : { "default" : "Log Retention" },
-        "Schedule" : { "default" : "Schedule" }
+        "Schedule" : { "default" : "Schedule" },
+        "PrivateUserNetwork" : { "default" : "Private User Network" },
+        "PrivateUserNetwork1" : { "default" : "Additional Private User Network 1" },
+        "PrivateUserNetwork2" : { "default" : "Additional Private User Network 2" },
+        "PrivateAdministratorNetwork" : { "default" : "Private Administrator Network" },
+        "PrivateAdministratorNetwork1" : { "default" : "Additional Private Administrator Network 1" },
+        "PrivateAdministratorNetwork2" : { "default" : "Additional Private Administrator Network 2" }
       }
     }
   },
 
   "Parameters" : {
+    "VPNStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing VPN Instances",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "Production-OpenVPN",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
     "VPCStackName" : {
       "Description" : "Name of the CloudFormation Stack containing the VPC",
       "Type" : "String",
@@ -152,30 +177,6 @@
       "Default" : "administrator",
       "AllowedPattern" : "(^$|^[_a-zA-Z0-9]*$)",
       "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
-    },
-
-    "Role" : {
-      "Description" : "Name of an existing Role which provides permissions needed by the Instances",
-      "Type" : "String",
-      "MaxLength" : 128,
-      "AllowedPattern" : "^[-a-zA-Z0-9]*$",
-      "ConstraintDescription" : "must be the name of an existing Role."
-    },
-
-    "LogGroup" : {
-      "Description" : "Name of an existing LogGroup which provides access to CloudWatch Logs",
-      "Type" : "String",
-      "MaxLength" : 128,
-      "AllowedPattern" : "^[-a-zA-Z0-9]*$",
-      "ConstraintDescription" : "must be the name of an existing LogGroup."
-    },
-
-    "SecurityGroup" : {
-      "Description" : "ID of an existing SecurityGroup which controls access to the Instances",
-      "Type" : "AWS::EC2::SecurityGroup::Id",
-      "MaxLength" : 32,
-      "AllowedPattern" : "^sg-[0-9a-f]{8}$",
-      "ConstraintDescription" : "must be the name of an existing SecurityGroup."
     },
 
     "CompanyName" : {
@@ -262,20 +263,20 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
-    "ApplicationVersion" : {
-      "Description" : "Version of the Application",
+    "ComponentName" : {
+      "Description" : "Name of the Application Component associated with the Stack",
       "Type" : "String",
-      "MinLength" : 5,
+      "MinLength" : 2,
       "MaxLength" : 32,
-      "Default" : "1.0.0",
-      "AllowedPattern" : "^[0-9]*.[0-9]*.[0-9]*(-[a-zA-Z0-9][-a-zA-Z0-9]*)?$",
-      "ConstraintDescription" : "must follow semantic versioning conventions."
+      "Default" : "Deploy",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
     "UseStaticAddress" : {
       "Description" : "Create and attach a separate Static Address",
       "Type" : "String",
-      "Default" : "true",
+      "Default" : "false",
       "AllowedValues" : [ "true", "false" ],
       "ConstraintDescription" : "must be either true or false."
     },
@@ -294,6 +295,54 @@
       "Default" : "",
       "AllowedPattern" : "(^$|^([0-9]|1[0-9]|2[0-3]):[0-5][0-9]-([0-9]|1[0-9]|2[0-3]):[0-5][0-9]T?$)",
       "ConstraintDescription" : "See Scheduler Lambda Function description for Tag format."
+    },
+
+    "PrivateUserNetwork" : {
+      "Description" : "Private network that can access the Application",
+      "Type" : "String",
+      "Default" : "10.0.0.0/16",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
+    },
+
+    "PrivateUserNetwork1" : {
+      "Description" : "Additional private network that can access the Application",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
+    },
+
+    "PrivateUserNetwork2" : {
+      "Description" : "Additional private network that can access the Application",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
+    },
+
+    "PrivateAdministratorNetwork" : {
+      "Description" : "Private network that can administer the Application",
+      "Type" : "String",
+      "Default" : "10.0.0.0/16",
+      "AllowedPattern" : "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "PrivateAdministratorNetwork1" : {
+      "Description" : "Additional private network that can administer the Application",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "PrivateAdministratorNetwork2" : {
+      "Description" : "Additional private network that can administer the Application",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
     }
   },
 
@@ -309,10 +358,127 @@
     "InstallConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ConfigurationObject" }, "" ]}]},
     "ConfigureStaticAddress" : { "Fn::Equals" : [{ "Ref" : "UseStaticAddress" }, "true" ]},
     "ConfigureLogs" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LogRetention" }, "0" ]}]},
-    "ConfigureSchedule" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "Schedule" }, "" ]}]}
+    "ConfigureSchedule" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "Schedule" }, "" ]}]},
+    "ConfigurePrivateUserNetwork" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateUserNetwork" }, "" ]}]},
+    "ConfigurePrivateUserNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateUserNetwork1" }, "" ]}]},
+    "ConfigurePrivateUserNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateUserNetwork2" }, "" ]}]},
+    "ConfigurePrivateAdministratorNetwork" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateAdministratorNetwork" }, "" ]}]},
+    "ConfigurePrivateAdministratorNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateAdministratorNetwork1" }, "" ]}]},
+    "ConfigurePrivateAdministratorNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateAdministratorNetwork2" }, "" ]}]}
   },
 
   "Resources" : {
+    "Role" : {
+      "Type" : "AWS::IAM::Role",
+      "Properties" : {
+        "Path" : "/",
+        "AssumeRolePolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Principal" : { "Service" : [ "ec2.amazonaws.com" ]},
+            "Action" : [ "sts:AssumeRole" ]
+          }]
+        },
+        "ManagedPolicyArns" : [ "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM" ]
+      }
+    },
+
+    "DownloadProductFromS3Policy" : {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "DownloadProductFromS3Policy",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [
+              "s3:GetObject"
+            ],
+            "Resource" : { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }}, "/", { "Ref" : "ProductFolder" }, "/*" ]]}
+          }]
+        },
+        "Roles" : [{ "Ref" : "Role" }]
+      },
+      "Condition" : "InstallProduct"
+    },
+
+    "DownloadConfigurationFromS3Policy" : {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "DownloadConfigurationFromS3Policy",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [
+              "s3:GetObject"
+            ],
+            "Resource" : { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/*" ]]}
+          }]
+        },
+        "Roles" : [{ "Ref" : "Role" }]
+      },
+      "Condition" : "InstallConfiguration"
+    },
+
+    "LogMonitoringPolicy" : {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "LogMonitoringPolicy",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [
+              "logs:CreateLogGroup",
+              "logs:CreateLogStream",
+              "logs:PutLogEvents",
+              "logs:DescribeLogStreams"
+            ],
+            "Resource" : "arn:aws:logs:*:*:*"
+          }]
+        },
+        "Roles" : [{ "Ref" : "Role" }]
+      },
+      "Condition" : "ConfigureLogs"
+    },
+
+    "LogGroup" : {
+      "Type" : "AWS::Logs::LogGroup",
+      "Properties" : {
+        "RetentionInDays" : { "Ref" : "LogRetention" }
+      },
+      "Condition" : "ConfigureLogs"
+    },
+
+    "InstanceSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, { "Ref" : "ComponentName" }, "InstanceSecurityGroup" ]]},
+        "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPC" }},
+        "SecurityGroupIngress" : [
+          { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPNStackName}-SecurityGroup" }}},
+          { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPNStackName}-SecurityGroup" }}},
+          { "Fn::If" : [ "ConfigurePrivateUserNetwork",  { "IpProtocol" : "icmp", "FromPort" :    "-1", "ToPort" :    "-1", "CidrIp" : { "Ref" : "PrivateUserNetwork" }},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateUserNetwork",  { "IpProtocol" : "tcp",  "FromPort" : "10933", "ToPort" : "10933", "CidrIp" : { "Ref" : "PrivateUserNetwork" }},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateUserNetwork1", { "IpProtocol" : "icmp", "FromPort" :    "-1", "ToPort" :    "-1", "CidrIp" : { "Ref" : "PrivateUserNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateUserNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "10933", "ToPort" : "10933", "CidrIp" : { "Ref" : "PrivateUserNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateUserNetwork2", { "IpProtocol" : "icmp", "FromPort" :    "-1", "ToPort" :    "-1", "CidrIp" : { "Ref" : "PrivateUserNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateUserNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "10933", "ToPort" : "10933", "CidrIp" : { "Ref" : "PrivateUserNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork",  { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork" }},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork",  { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork" }},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork1", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork2", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]}
+        ],
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, { "Ref" : "ComponentName" }, "InstanceSecurityGroup" ]]}}
+        ]
+      }
+    },
+
     "GetHostName" : {
       "Type" : "Custom::GetHostName",
       "Properties" : {
@@ -321,7 +487,7 @@
         "LocationName" : { "Ref": "AWS::Region" },
         "EnvironmentName" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }},
         "ApplicationName" : { "Ref" : "ApplicationName" },
-        "ComponentName" : "Deploy"
+        "ComponentName" : { "Ref" : "ComponentName" }
       }
     },
 
@@ -351,7 +517,7 @@
       "Condition" : "ConfigureStaticAddress"
     },
 
-    "DeployInstance01" : {
+    "Instance01" : {
       "Type" : "AWS::EC2::Instance",
       "Metadata" : {
         "AWS::CloudFormation::Authentication" : {
@@ -466,7 +632,7 @@
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
                            { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
-                  "        \"LogStream\": \"OctopusDeploy/{instance_id}/ApplicationEventLog\"",
+                  "        \"LogStream\": \"Deploy/{instance_id}/ApplicationEventLog\"",
                   "      }",
                   "    },",
                   "    {",
@@ -477,7 +643,7 @@
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
                            { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
-                  "        \"LogStream\": \"OctopusDeploy/{instance_id}/SystemEventLog\"",
+                  "        \"LogStream\": \"Deploy/{instance_id}/SystemEventLog\"",
                   "      }",
                   "    },",
                   "    {",
@@ -488,7 +654,7 @@
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
                            { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
-                  "        \"LogStream\": \"OctopusDeploy/{instance_id}/SecurityEventLog\"",
+                  "        \"LogStream\": \"Deploy/{instance_id}/SecurityEventLog\"",
                   "      }",
                   "    },",
                   "    {",
@@ -499,7 +665,7 @@
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
                            { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
-                  "        \"LogStream\": \"OctopusDeploy/{instance_id}/EC2ConfigLog\"",
+                  "        \"LogStream\": \"Deploy/{instance_id}/EC2ConfigLog\"",
                   "      }",
                   "    },",
                   "    {",
@@ -510,7 +676,7 @@
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
                            { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
-                  "        \"LogStream\": \"OctopusDeploy/{instance_id}/CfnInitLog\"",
+                  "        \"LogStream\": \"Deploy/{instance_id}/CfnInitLog\"",
                   "      }",
                   "    },",
                   "    {",
@@ -521,7 +687,7 @@
                   "        \"SecretKey\": \"\",",
                            { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
                            { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
-                  "        \"LogStream\": \"Web/{instance_id}/IISLogs\"",
+                  "        \"LogStream\": \"Deploy/{instance_id}/IISLogs\"",
                   "      }",
                   "    },",
                   "    {",
@@ -586,8 +752,8 @@
                 "content": { "Fn::Join" : [ "\n", [
                   "[cfn-auto-reloader-hook]",
                   "triggers=post.update",
-                  "path=Resources.DeployInstance01.Metadata.AWS::CloudFormation::Init",
-                  { "Fn::Sub" : "action=cfn-init.exe --verbose --configsets All --stack ${AWS::StackId} --resource DeployInstance01 --region ${AWS::Region}" }
+                  "path=Resources.Instance01.Metadata.AWS::CloudFormation::Init",
+                  { "Fn::Sub" : "action=cfn-init.exe --verbose --configsets All --stack ${AWS::StackId} --resource Instance01 --region ${AWS::Region}" }
                 ]]}
               }
             },
@@ -647,11 +813,11 @@
         "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
         "KeyName" : { "Ref" : "KeyName" },
         "NetworkInterfaces" : [{
-          "Description"              : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "NetworkInterface01", "eth0" ]]},
+          "Description"              : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, { "Ref" : "ComponentName" }, "NetworkInterface01", "eth0" ]]},
           "DeviceIndex"              : "0",
           "SubnetId"                 : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-BuildSubnetA" }},
           "PrivateIpAddress"         : { "Fn::If" : [ "ConfigureStaticAddress", { "Fn::GetAtt" : [ "AddressCalculatorA", "Address4" ]}, { "Ref" : "AWS::NoValue" }]},
-          "GroupSet"                 : [{ "Ref" :  "SecurityGroup" }],
+          "GroupSet"                 : [{ "Ref" :  "InstanceSecurityGroup" }],
           "AssociatePublicIpAddress" : "false",
           "DeleteOnTermination"      : "true"
         }],
@@ -670,13 +836,13 @@
           }
         }],
         "Tags" : [
-          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "DeployInstance01" ]]}},
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, { "Ref" : "ComponentName" }, "Instance01" ]]}},
           { "Fn::If" : [ "ConfigureSchedule", { "Key" : "Schedule", "Value" : { "Ref" : "Schedule" }}, { "Ref" : "AWS::NoValue" }]}
         ],
         "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "\n", [
           "<script>",
-          { "Fn::Sub" : "cfn-init.exe --verbose --configsets All --stack ${AWS::StackId} --resource DeployInstance01 --region ${AWS::Region}" },
-          { "Fn::Sub" : "cfn-signal.exe --exit-code %ERRORLEVEL% --stack ${AWS::StackName} --resource DeployInstance01 --region ${AWS::Region}" },
+          { "Fn::Sub" : "cfn-init.exe --verbose --configsets All --stack ${AWS::StackId} --resource Instance01 --region ${AWS::Region}" },
+          { "Fn::Sub" : "cfn-signal.exe --exit-code %ERRORLEVEL% --stack ${AWS::StackName} --resource Instance01 --region ${AWS::Region}" },
           "</script>"
         ]]}}
       },
@@ -689,13 +855,19 @@
   },
 
   "Outputs" : {
-    "DeployInstance01" : {
-      "Description" : "The DeployInstance01",
-      "Value" : { "Ref" : "DeployInstance01" }
+    "InstanceSecurityGroup" : {
+      "Description" : "The InstanceSecurityGroup",
+      "Value" : { "Ref" : "InstanceSecurityGroup" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-InstanceSecurityGroup" }}
     },
 
-    "DeployHostName01" : {
-      "Description" : "The DeployHostName01",
+    "Instance01" : {
+      "Description" : "The Instance01",
+      "Value" : { "Ref" : "Instance01" }
+    },
+
+    "HostName01" : {
+      "Description" : "The HostName01",
       "Value" : { "Fn::Join" : [ "", [ { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]}
     }
   }
