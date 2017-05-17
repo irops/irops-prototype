@@ -17,7 +17,9 @@
           "Parameters" : [
             "FunctionFolder",
             "GetHostNameFunctionObject",
-            "GetDomainNameFunctionObject"
+            "GetHostNameFunctionObjectVersion",
+            "GetDomainNameFunctionObject",
+            "GetDomainNameFunctionObjectVersion"
           ]
         }
       ],
@@ -26,7 +28,9 @@
         "StandardBucketsStackName" : { "default" : "StandardBuckets Stack Name" },
         "FunctionFolder" : { "default" : "Function Folder" },
         "GetHostNameFunctionObject" : { "default" : "GetHostName Function Object" },
-        "GetDomainNameFunctionObject" : { "default" : "GetDomainName Function Object" }
+        "GetHostNameFunctionObjectVersion" : { "default" : "GetHostName Function Object Version" },
+        "GetDomainNameFunctionObject" : { "default" : "GetDomainName Function Object" },
+        "GetDomainNameFunctionObjectVersion" : { "default" : "GetDomainName Function Object Version" }
       }
     }
   },
@@ -62,6 +66,14 @@
       "ConstraintDescription" : "must be a valid zipfilename, not containing slashes."
     },
 
+    "GetHostNameFunctionObjectVersion" : {
+      "Description" : "Version of Object within the S3 bucket and folder containing the GetHostName Lambda Function zipfile",
+      "Type" : "String",
+      "MaxLength" : 32,
+      "Default" : "",
+      "ConstraintDescription" : "must be a valid S3 Object Version."
+    },
+
     "GetDomainNameFunctionObject" : {
       "Description" : "Object within the S3 bucket and folder containing the GetDomainName Lambda Function zipfile",
       "Type" : "String",
@@ -70,7 +82,20 @@
       "Default" : "GetDomainName.zip",
       "AllowedPattern" : "^[-_.a-zA-Z0-9]*\\.zip$",
       "ConstraintDescription" : "must be a valid zipfilename, not containing slashes."
+    },
+
+    "GetDomainNameFunctionObjectVersion" : {
+      "Description" : "Version of Object within the S3 bucket and folder containing the GetDomainName Lambda Function zipfile",
+      "Type" : "String",
+      "MaxLength" : 32,
+      "Default" : "",
+      "ConstraintDescription" : "must be a valid S3 Object Version."
     }
+  },
+
+  "Conditions" : {
+    "ConfigureGetHostNameFunctionObjectVersion" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "GetHostNameFunctionObjectVersion" }, "" ]}]},
+    "ConfigureGetDomainNameFunctionObjectVersion" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "GetDomainNameFunctionObjectVersion" }, "" ]}]}
   },
 
   "Resources" : {
@@ -115,7 +140,8 @@
         "Handler" : "GetHostName.handler",
         "Code" : {
           "S3Bucket" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-FunctionsBucket" }},
-          "S3Key" : { "Fn::Sub" : "${FunctionFolder}/${GetHostNameFunctionObject}" }
+          "S3Key" : { "Fn::Sub" : "${FunctionFolder}/${GetHostNameFunctionObject}" },
+          "S3ObjectVersion" : { "Fn::If" : [ "ConfigureGetHostNameFunctionObjectVersion", { "Ref" : "GetHostNameFunctionObjectVersion" }, { "Ref" : "AWS::NoValue" }]}
         }
       }
     },
@@ -131,7 +157,8 @@
         "Handler" : "GetDomainName.handler",
         "Code" : {
           "S3Bucket" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-FunctionsBucket" }},
-          "S3Key" : { "Fn::Sub" : "${FunctionFolder}/${GetDomainNameFunctionObject}" }
+          "S3Key" : { "Fn::Sub" : "${FunctionFolder}/${GetDomainNameFunctionObject}" },
+          "S3ObjectVersion" : { "Fn::If" : [ "ConfigureGetDomainNameFunctionObjectVersion", { "Ref" : "GetDomainNameFunctionObjectVersion" }, { "Ref" : "AWS::NoValue" }]}
         }
       }
     }

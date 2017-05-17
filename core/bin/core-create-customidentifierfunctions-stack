@@ -415,6 +415,51 @@ next 50
 
 
 ((++step))
+read -r -d '' statement << EOS
+gethostname_function_object_version=\$(aws s3api list-object-versions --bucket $functions_bucket \\
+                                                                     --prefix $function_folder/$gethostname_function_object \\
+                                                                     --query 'Versions[0].VersionId' \\
+                                                                     --profile $profile --region $region --output text)
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'}"
+
+read -r -d '' statement2 << EOS
+getdomainname_function_object_version=\$(aws s3api list-object-versions --bucket $functions_bucket \\
+                                                                       --prefix $function_folder/$getdomainname_function_object \\
+                                                                       --query 'Versions[0].VersionId' \\
+                                                                       --profile $profile --region $region --output text)
+EOS
+run_statement2=$(echo "$statement2" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement2="${statement2//\\$'\n'}"
+
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Obtain ZipFile Versions"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
+echo
+echo "$statement2"
+
+next 50
+
+echo
+echo "$run_statement"
+eval "$eval_statement"
+echo
+echo "$run_statement2"
+eval "$eval_statement2"
+
+next 50
+
+
+((++step))
 template_parameter="--template-url https://$s3_domain/$templates_bucket/$template_folder/Core-CustomIdentifierFunctions.json"
 stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$template_folder/Core-CustomIdentifierFunctions-StackPolicy.json"
 read -r -d '' statement << EOS
@@ -424,7 +469,9 @@ aws cloudformation create-stack --stack-name CustomIdentifierFunctions \\
                                 --parameters ParameterKey=StandardBucketsStackName,ParameterValue=StandardBuckets \\
                                              ParameterKey=FunctionFolder,ParameterValue=$function_folder \\
                                              ParameterKey=GetHostNameFunctionObject,ParameterValue=$gethostname_function_object \\
+                                             ParameterKey=GetHostNameFunctionObjectVersion,ParameterValue=$gethostname_function_object_version \\
                                              ParameterKey=GetDomainNameFunctionObject,ParameterValue=$getdomainname_function_object \\
+                                             ParameterKey=GetDomainNameFunctionObjectVersion,ParameterValue=$getdomainname_function_object_version \\
                                 --tags Key=Owner,Value=$owner \\
                                        Key=Company,Value=$company \\
                                        Key=System,Value=$system \\
