@@ -242,17 +242,17 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     exit 58
 fi
 
+if ! aws cloudformation describe-stacks --stack-name StandardBuckets \
+                                        --profile $profile --region $region --output text &> /dev/null; then
+    echo "Unable to update - StandardBuckets Stack does not exist!"
+    exit 80
+fi
+
 templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
 template_folder=core
 
 if ! aws s3api head-bucket --bucket $templates_bucket --profile $profile --region $region 2> /dev/null; then
     unset templates_bucket
-fi
-
-if ! aws cloudformation describe-stacks --stack-name StandardBuckets \
-                                        --profile $profile --region $region --output text &> /dev/null; then
-    echo "Unable to update - StandardBuckets Stack does not exist!"
-    exit 80
 fi
 
 # Prevent certain environment variables from breaking commands

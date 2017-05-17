@@ -1,46 +1,53 @@
 /**
-* A sample Lambda function that looks up the latest AMI ID for a given region and architecture.
+* GetAmazonLinuxImageId: A Lambda function that looks up the latest Amazon Linux AMI ID
+* for a given OS Variant and Region (HVM64 only).
 **/
 
-var archToAMINamePattern = {
-  'PV64':  'amzn-ami-pv*x86_64-ebs',
-  'HVM64': 'amzn-ami-hvm*x86_64-gp2',
-  'HVMG2': 'amzn-ami-graphics-hvm*x86_64-ebs*'
+var osNameToPattern = {
+  'Amazon Linux'           : 'amzn-ami-hvm-????.??.?.????????-x86_64-gp2',
+  'Amazon Linux 2017.03.0' : 'amzn-ami-hvm-2017.03.0.????????-x86_64-gp2',
+  'Amazon Linux 2016.09.1' : 'amzn-ami-hvm-2016.09.1.????????-x86_64-gp2',
+  'Amazon Linux 2016.09.0' : 'amzn-ami-hvm-2016.09.0.????????-x86_64-gp2'
 };
 
 exports.handler = function(event, context) {
-  console.log('Request body:\n' + JSON.stringify(event));
+  console.log('Request body:\\n' + JSON.stringify(event));
 
   if (event.RequestType == 'Delete') {
-      sendResponse(event, context, 'SUCCESS');
-      return;
+    sendResponse(event, context, 'SUCCESS');
+    return;
   }
 
   var responseStatus = 'FAILED';
   var responseData = {};
 
+  var osBaseName = osNameToPattern[event.ResourceProperties.OSName];
+  if (osBaseName === undefined) {
+    osBaseName = 'amzn-ami-hvm-????.??.?.????????-x86_64-gp2';
+  }
+  console.log('OS: ' + event.ResourceProperties.OSName + ' -> ' + osBaseName);
+
   var aws = require('aws-sdk');
 
   var ec2 = new aws.EC2({region: event.ResourceProperties.Region});
   var describeImagesParams = {
-    Filters: [{ Name: 'name', Values: [archToAMINamePattern[event.ResourceProperties.Architecture]]}],
-    Owners: [event.ResourceProperties.Architecture == 'HVMG2' ? '679593333241' : 'amazon']
+    Filters: [{ Name: 'name', Values: [osBaseName]}],
+    Owners: ['amazon']
   };
 
   console.log('Calling DescribeImages...');
   ec2.describeImages(describeImagesParams, function(err, describeImagesResult) {
     if (err) {
       responseData = {Error: 'DescribeImages call failed'};
-      console.error(responseData.Error + ':\n', err);
+      console.error(responseData.Error + ':\\n', err);
     }
     else {
       var images = describeImagesResult.Images;
       console.log('DescribeImages returned ' + images.length + ' images');
       images.sort(function(x, y) { return y.Name.localeCompare(x.Name); });
       for (var i = 0; i < images.length; i++) {
-        if (isBeta(images[i].Name)) continue;
         responseStatus = 'SUCCESS';
-        responseData['ImageId'] = images[j].ImageId;
+        responseData['ImageId'] = images[i].ImageId;
         responseData['Name'] = images[i].Name;
         console.log('Found: ' + images[i].Name + ', ' + images[i].ImageId);
         break;
@@ -50,10 +57,6 @@ exports.handler = function(event, context) {
     sendResponse(event, context, responseStatus, responseData);
   });
 };
-
-function isBeta(imageName) {
-  return imageName.toLowerCase().indexOf('beta') > -1 || imageName.toLowerCase().indexOf('.rc') > -1;
-}
 
 function sendResponse(event, context, responseStatus, responseData) {
   var responseBody = JSON.stringify({
@@ -83,16 +86,14 @@ function sendResponse(event, context, responseStatus, responseData) {
     }
   };
 
-  console.log('Sending response...\n');
-
   var request = https.request(options, function(response) {
-    console.log('STATUS: ' + response.statusCode);
-    console.log('HEADERS: ' + JSON.stringify(response.headers));
+    console.log('Status code: ' + response.statusCode);
+    console.log('Status message: ' + response.statusMessage);
     context.done();
   });
 
   request.on('error', function(error) {
-    console.error('sendResponse Error:' + error);
+    console.log('send(..) failed executing https.request(..): ' + error);
     context.done();
   });
 

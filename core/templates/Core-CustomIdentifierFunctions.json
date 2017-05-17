@@ -55,19 +55,21 @@
     "GetHostNameFunctionObject" : {
       "Description" : "Object within the S3 bucket and folder containing the GetHostName Lambda Function zipfile",
       "Type" : "String",
+      "MinLength" : 2,
       "MaxLength" : 64,
       "Default" : "GetHostName.zip",
-      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
-      "ConstraintDescription" : "must be a valid filename, not containing slashes."
+      "AllowedPattern" : "^[-_.a-zA-Z0-9]*\\.zip$",
+      "ConstraintDescription" : "must be a valid zipfilename, not containing slashes."
     },
 
     "GetDomainNameFunctionObject" : {
       "Description" : "Object within the S3 bucket and folder containing the GetDomainName Lambda Function zipfile",
       "Type" : "String",
+      "MinLength" : 2,
       "MaxLength" : 64,
       "Default" : "GetDomainName.zip",
-      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
-      "ConstraintDescription" : "must be a valid filename, not containing slashes."
+      "AllowedPattern" : "^[-_.a-zA-Z0-9]*\\.zip$",
+      "ConstraintDescription" : "must be a valid zipfilename, not containing slashes."
     }
   },
 
