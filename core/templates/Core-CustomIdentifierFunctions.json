@@ -1,0 +1,151 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Core-CustomIdentifierFunctions Template. This creates Custom Lambda Functions related to Identifiers within the Core Account.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "StandardBucketsStackName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Function Configuration" },
+          "Parameters" : [
+            "FunctionFolder",
+            "GetHostNameFunctionObject",
+            "GetDomainNameFunctionObject"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "StandardBucketsStackName" : { "default" : "StandardBuckets Stack Name" },
+        "FunctionFolder" : { "default" : "Function Folder" },
+        "GetHostNameFunctionObject" : { "default" : "GetHostName Function Object" },
+        "GetDomainNameFunctionObject" : { "default" : "GetDomainName Function Object" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "StandardBucketsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Buckets",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardBuckets",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "FunctionFolder" : {
+      "Description" : "Folder within the S3 bucket containing Functions deployed by this Template",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "identitifier",
+      "AllowedPattern" : "^[-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must contain alphanumeric characters and dashes."
+    },
+
+    "GetHostNameFunctionObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the GetHostName Lambda Function zipfile",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "GetHostName.zip",
+      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be a valid filename, not containing slashes."
+    },
+
+    "GetDomainNameFunctionObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the GetDomainName Lambda Function zipfile",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "GetDomainName.zip",
+      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be a valid filename, not containing slashes."
+    }
+  },
+
+  "Resources" : {
+    "Role" : {
+      "Type" : "AWS::IAM::Role",
+      "Properties" : {
+        "AssumeRolePolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Principal" : { "Service" : [ "lambda.amazonaws.com" ]},
+            "Action" : [ "sts:AssumeRole" ]
+          }]
+        },
+        "Path" : "/",
+        "Policies" : [{
+          "PolicyName" : "PutLambdaLogEventsPolicy",
+          "PolicyDocument" : {
+            "Version" : "2012-10-17",
+            "Statement" : [{
+              "Effect" : "Allow",
+              "Action" : [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+              ],
+              "Resource" : "arn:aws:logs:*:*:*"
+            }]
+          }
+        }]
+      }
+    },
+
+    "GetHostNameFunction" : {
+      "Type" : "AWS::Lambda::Function",
+      "Properties" : {
+        "FunctionName" : "GetHostName",
+        "Description" : "A Lambda function which creates a HostName that conforms to IROPS Naming Conventions for use by Instances in a VPC, based on Company, Location, (optional) System, Application and (optional) Component.",
+        "Role" : { "Fn::GetAtt" : [ "Role", "Arn" ]},
+        "Runtime" : "nodejs4.3",
+        "Timeout" : "30",
+        "Handler" : "GetHostName.handler",
+        "Code" : {
+          "S3Bucket" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-FunctionsBucket" }},
+          "S3Key" : { "Fn::Sub" : "${FunctionFolder}/${GetHostNameFunctionObject}" }
+        }
+      }
+    },
+
+    "GetDomainNameFunction" : {
+      "Type" : "AWS::Lambda::Function",
+      "Properties" : {
+        "FunctionName" : "GetDomainName",
+        "Description" : "A Lambda function which creates a DomainName which conforms to IROPS Naming Conventions for use by HostedZones in a VPC, based on Names or Codes associated with the Environment, Location, Company and Parent DomainName.",
+        "Role" : { "Fn::GetAtt" : [ "Role", "Arn" ]},
+        "Runtime" : "nodejs4.3",
+        "Timeout" : "30",
+        "Handler" : "GetDomainName.handler",
+        "Code" : {
+          "S3Bucket" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-FunctionsBucket" }},
+          "S3Key" : { "Fn::Sub" : "${FunctionFolder}/${GetDomainNameFunctionObject}" }
+        }
+      }
+    }
+  },
+
+  "Outputs" : {
+    "GetHostNameFunctionArn" : {
+      "Description" : "The GetHostName Lambda Function ARN",
+      "Value" :  { "Fn::GetAtt" : [ "GetHostNameFunction", "Arn" ]},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-GetHostNameFunctionArn" }}
+    },
+
+    "GetDomainNameFunctionArn" : {
+      "Description" : "The GetDomainName Lambda Function ARN",
+      "Value" :  { "Fn::GetAtt" : [ "GetDomainNameFunction", "Arn" ]},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-GetDomainNameFunctionArn" }}
+    }
+  }
+}

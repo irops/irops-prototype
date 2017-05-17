@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
 
-  "Description" : "Example-WindowsServer Template. This is an example of a minimal windows server, showing how roles and features can be enabled.",
+  "Description" : "Example-WindowsWebServer Template. This is an example of a Windows Web Server based application, showing installation and configuration via cfn-init.",
 
   "Metadata" : {
     "AWS::CloudFormation::Interface" : {
@@ -9,7 +9,11 @@
         {
           "Label" : { "default" : "Stack Dependencies" },
           "Parameters" : [
-            "VPCStackName"
+            "VPCStackName",
+            "CustomIdentifierFunctionsStackName",
+            "StandardAMIFunctionsStackName",
+            "StandardBucketsStackName",
+            "StandardTopicsStackName"
           ]
         },
         {
@@ -28,61 +32,69 @@
         {
           "Label" : { "default" : "Environment Configuration" },
           "Parameters" : [
-            "EnvironmentSize",
-            "InstanceOS"
+            "EnvironmentType",
+            "OSName"
           ]
         },
         {
           "Label" : { "default" : "Application Configuration" },
           "Parameters" : [
-            "ApplicationsBucket",
+            "ApplicationFolder",
+            "ApplicationObject",
             "ApplicationName",
             "ApplicationDomain",
-            "ApplicationVersion"
+            "ApplicationVersion",
+            "LogRetention"
           ]
         },
         {
           "Label" : { "default" : "Security Configuration" },
           "Parameters" : [
-            "AdministratorNetwork",
-            "AdministratorNetwork1",
-            "AdministratorNetwork2",
-            "AdministratorNetwork3",
-            "PublicNetwork",
-            "PublicNetwork1",
-            "PublicNetwork2",
-            "PublicNetwork3",
-            "PrivateNetwork",
-            "PrivateNetwork1",
-            "PrivateNetwork2",
-            "PrivateNetwork3"
+            "PublicUserNetwork",
+            "PublicUserNetwork1",
+            "PublicUserNetwork2",
+            "PublicAdministratorNetwork",
+            "PublicAdministratorNetwork1",
+            "PublicAdministratorNetwork2",
+            "PrivateUserNetwork",
+            "PrivateUserNetwork1",
+            "PrivateUserNetwork2",
+            "PrivateAdministratorNetwork",
+            "PrivateAdministratorNetwork1",
+            "PrivateAdministratorNetwork2"
           ]
         }
       ],
 
       "ParameterLabels" : {
         "VPCStackName" : { "default" : "VPC Stack Name" },
+        "CustomIdentifierFunctionsStackName" : { "default" : "CustomIdentifierFunctions Stack Name" },
+        "StandardAMIFunctionsStackName" : { "default" : "StandardAMIFunctions Stack Name" },
+        "StandardBucketsStackName" : { "default" : "StandardBuckets Stack Name" },
+        "StandardTopicsStackName" : { "default" : "StandardTopics Stack Name" },
         "KeyName" : { "default" : "Key Name" },
         "CompanyName" : { "default" : "Company Name" },
         "SystemName" : { "default" : "System Name" },
-        "EnvironmentSize" : { "default" : "Environment Size" },
-        "InstanceOS" : { "default" : "Instance Operating System" },
-        "ApplicationsBucket" : { "default" : "Applications Bucket" },
+        "EnvironmentType" : { "default" : "Environment Type" },
+        "OSName" : { "default" : "Operating System Name" },
+        "ApplicationFolder" : { "default" : "Application Folder" },
+        "ApplicationObject" : { "default" : "Application Object" },
         "ApplicationName" : { "default" : "Application Name" },
         "ApplicationDomain" : { "default" : "Application Domain Name" },
         "ApplicationVersion" : { "default" : "Application Version" },
-        "AdministratorNetwork" : { "default" : "Administrator Network" },
-        "AdministratorNetwork1" : { "default" : "Additional Administrator Network 1" },
-        "AdministratorNetwork2" : { "default" : "Additional Administrator Network 2" },
-        "AdministratorNetwork3" : { "default" : "Additional Administrator Network 3" },
-        "PublicNetwork" : { "default" : "Public Network" },
-        "PublicNetwork1" : { "default" : "Additional Public Network 1" },
-        "PublicNetwork2" : { "default" : "Additional Public Network 2" },
-        "PublicNetwork3" : { "default" : "Additional Public Network 3" },
-        "PrivateNetwork" : { "default" : "Private Network" },
-        "PrivateNetwork1" : { "default" : "Additional Private Network 1" },
-        "PrivateNetwork2" : { "default" : "Additional Private Network 2" },
-        "PrivateNetwork3" : { "default" : "Additional Private Network 3" }
+        "LogRetention" : { "default" : "Log Retention" },
+        "PublicUserNetwork" : { "default" : "Public User Network" },
+        "PublicUserNetwork1" : { "default" : "Additional Public User Network 1" },
+        "PublicUserNetwork2" : { "default" : "Additional Public User Network 2" },
+        "PublicAdministratorNetwork" : { "default" : "Public Administrator Network" },
+        "PublicAdministratorNetwork1" : { "default" : "Additional Public Administrator Network 1" },
+        "PublicAdministratorNetwork2" : { "default" : "Additional Public Administrator Network 2" },
+        "PrivateUserNetwork" : { "default" : "Private User Network" },
+        "PrivateUserNetwork1" : { "default" : "Additional Private User Network 1" },
+        "PrivateUserNetwork2" : { "default" : "Additional Private User Network 2" },
+        "PrivateAdministratorNetwork" : { "default" : "Private Administrator Network" },
+        "PrivateAdministratorNetwork1" : { "default" : "Additional Private Administrator Network 1" },
+        "PrivateAdministratorNetwork2" : { "default" : "Additional Private Administrator Network 2" }
       }
     }
   },
@@ -94,6 +106,44 @@
       "MinLength" : 8,
       "MaxLength" : 64,
       "Default" : "Production-VPC",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "CustomIdentifierFunctionsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Custom Identifier Functions",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "CustomIdentifierFunctions",
+      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "StandardAMIFunctionsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Standard AMI Functions",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "StandardAMIFunctions",
+      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "StandardBucketsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Buckets",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardBuckets",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "StandardTopicsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Topics",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardTopics",
       "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
@@ -127,29 +177,39 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
-    "EnvironmentSize" : {
-      "Description" : "Size of the Environment to build. Used to select size-related options in Mappings",
+    "EnvironmentType" : {
+      "Description" : "Type of the Environment to build. Used to select size-related options in Mappings",
       "Type" : "String",
-      "Default" : "micro",
+      "Default" : "small",
       "AllowedValues" : [ "micro", "small", "medium", "large", "xlarge", "mlarge", "mxlarge", "m2xlarge", "clarge", "cxlarge", "c2xlarge" ],
       "ConstraintDescription" : "must be micro, small, medium, large, xlarge, mlarge, mxlarge, m2xlarge, clarge, cxlarge or c2xlarge."
     },
 
-    "InstanceOS" : {
+    "OSName" : {
       "Description" : "The Operating System to use for Instances",
       "Type" : "String",
-      "Default" : "WS2012R2",
-      "AllowedValues" : [ "WS2012R2", "WS2016" ],
-      "ConstraintDescription" : "must be WS2012R2 = \"Windows Server 2012R2\" or WS2016 = \"Windows Server 2016\"."
+      "Default" : "Windows Server 2012 R2",
+      "AllowedValues" : [ "Windows Server 2012 R2", "Windows Server 2016" ],
+      "ConstraintDescription" : "must be \"Windows Server 2012 R2\" or \"Windows Server 2016\"."
     },
 
-    "ApplicationsBucket" : {
-      "Description" : "S3 bucket containing Applications to be deployed",
+    "ApplicationFolder" : {
+      "Description" : "Folder within the S3 Applications bucket containing Applications deployed by this Template",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "WindowsWebServer",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "ApplicationObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the WindowsWebServer Application",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
-      "AllowedPattern" : "(^$|^[a-z][-a-z0-9]*$)",
-      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
+      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be a valid filename, not containing slashes."
     },
 
     "ApplicationName" : {
@@ -157,7 +217,7 @@
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 32,
-      "Default" : "WindowsServer",
+      "Default" : "WindowsWebServer",
       "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
@@ -181,39 +241,15 @@
       "ConstraintDescription" : "must follow semantic versioning conventions."
     },
 
-    "AdministratorNetwork" : {
-      "Description" : "Network that can administer the Application",
-      "Type" : "String",
-      "Default" : "0.0.0.0/0",
-      "AllowedPattern" : "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$",
-      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    "LogRetention" : {
+      "Description" : "Number of days to retain CloudWatch Log Events (0 disables use of CloudWatch Logs)",
+      "Type" : "Number",
+      "Default" : 14,
+      "AllowedValues" : [ 0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653 ],
+      "ConstraintDescription" : "must be: 0 (disabled), 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827 or 3653."
     },
 
-    "AdministratorNetwork1" : {
-      "Description" : "Additional network that can administer the Application",
-      "Type" : "String",
-      "Default" : "",
-      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
-      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
-    },
-
-    "AdministratorNetwork2" : {
-      "Description" : "Additional network that can administer the Application",
-      "Type" : "String",
-      "Default" : "",
-      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
-      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
-    },
-
-    "AdministratorNetwork3" : {
-      "Description" : "Additional network that can administer the Application",
-      "Type" : "String",
-      "Default" : "",
-      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
-      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
-    },
-
-    "PublicNetwork" : {
+    "PublicUserNetwork" : {
       "Description" : "Public network that can access the Application",
       "Type" : "String",
       "Default" : "0.0.0.0/0",
@@ -221,7 +257,7 @@
       "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
     },
 
-    "PublicNetwork1" : {
+    "PublicUserNetwork1" : {
       "Description" : "Additional public network that can access the Application",
       "Type" : "String",
       "Default" : "",
@@ -229,7 +265,7 @@
       "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
     },
 
-    "PublicNetwork2" : {
+    "PublicUserNetwork2" : {
       "Description" : "Additional public network that can access the Application",
       "Type" : "String",
       "Default" : "",
@@ -237,15 +273,31 @@
       "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
     },
 
-    "PublicNetwork3" : {
-      "Description" : "Additional public network that can access the Application",
+    "PublicAdministratorNetwork" : {
+      "Description" : "Public network that can administer the Application",
+      "Type" : "String",
+      "Default" : "0.0.0.0/0",
+      "AllowedPattern" : "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "PublicAdministratorNetwork1" : {
+      "Description" : "Additional public network that can administer the Application",
       "Type" : "String",
       "Default" : "",
       "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
       "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
     },
 
-    "PrivateNetwork" : {
+    "PublicAdministratorNetwork2" : {
+      "Description" : "Additional public network that can administer the Application",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "PrivateUserNetwork" : {
       "Description" : "Private network that can access the Application",
       "Type" : "String",
       "Default" : "10.0.0.0/16",
@@ -253,7 +305,7 @@
       "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
     },
 
-    "PrivateNetwork1" : {
+    "PrivateUserNetwork1" : {
       "Description" : "Additional private network that can access the Application",
       "Type" : "String",
       "Default" : "",
@@ -261,7 +313,7 @@
       "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
     },
 
-    "PrivateNetwork2" : {
+    "PrivateUserNetwork2" : {
       "Description" : "Additional private network that can access the Application",
       "Type" : "String",
       "Default" : "",
@@ -269,60 +321,83 @@
       "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
     },
 
-    "PrivateNetwork3" : {
-      "Description" : "Additional private network that can access the Application",
+    "PrivateAdministratorNetwork" : {
+      "Description" : "Private network that can administer the Application",
+      "Type" : "String",
+      "Default" : "10.0.0.0/16",
+      "AllowedPattern" : "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "PrivateAdministratorNetwork1" : {
+      "Description" : "Additional private network that can administer the Application",
       "Type" : "String",
       "Default" : "",
       "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
-      "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "PrivateAdministratorNetwork2" : {
+      "Description" : "Additional private network that can administer the Application",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
+      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
     }
   },
 
   "Mappings" : {
-    "ImageIdMap" : {
-      "AMI"            : { "WS2012R2" : "Windows Server 2012r2", "WS2016" : "Windows Server 2016" },
-      "us-east-1"      : { "WS2012R2" : "ami-abf616bd", "WS2016" : "ami-188d6e0e" },
-      "us-east-2"      : { "WS2012R2" : "ami-c06d48a5", "WS2016" : "ami-057d5860" },
-      "us-west-1"      : { "WS2012R2" : "ami-76227116", "WS2016" : "ami-179ac977" },
-      "us-west-2"      : { "WS2012R2" : "ami-1562d075", "WS2016" : "ami-6e833e0e" },
-      "ca-central-1"   : { "WS2012R2" : "ami-7805b71c", "WS2016" : "ami-00f84564" },
-      "eu-west-1"      : { "WS2012R2" : "ami-dd9eb6ae", "WS2016" : "ami-29f7dd5a" },
-      "eu-central-1"   : { "WS2012R2" : "ami-6f559800", "WS2016" : "ami-88ec20e7" },
-      "eu-west-2"      : { "WS2012R2" : "ami-738a8017", "WS2016" : "ami-64999300" },
-      "ap-southeast-1" : { "WS2012R2" : "ami-89e74cea", "WS2016" : "ami-49963d2a" },
-      "ap-southeast-2" : { "WS2012R2" : "ami-059d9866", "WS2016" : "ami-b47175d7" },
-      "ap-northeast-2" : { "WS2012R2" : "ami-e979af87", "WS2016" : "ami-819e4fef" },
-      "ap-northeast-1" : { "WS2012R2" : "ami-7accbe1d", "WS2016" : "ami-834e32e4" },
-      "ap-south-1"     : { "WS2012R2" : "ami-31a6d05e", "WS2016" : "ami-2c9aec43" },
-      "sa-east-1"      : { "WS2012R2" : "ami-f4d84298", "WS2016" : "ami-9e79e3f2" }
-    },
-
     "InstanceTypeMap" : {
-      "WindowsServer" : { "micro" : "t2.micro", "small" : "t2.small", "medium" : "t2.medium", "large" : "t2.large", "xlarge" : "t2.xlarge",
-                          "mlarge" : "m4.large", "mxlarge" : "m4.xlarge", "m2xlarge" : "m4.2xlarge",
-                          "clarge" : "c4.large", "cxlarge" : "c4.xlarge", "c2xlarge" : "c4.2xlarge" }
+      "Web" : { "micro" : "t2.micro", "small" : "t2.small", "medium" : "t2.medium", "large" : "t2.large", "xlarge" : "t2.xlarge",
+                "mlarge" : "m4.large", "mxlarge" : "m4.xlarge", "m2xlarge" : "m4.2xlarge",
+                "clarge" : "c4.large", "cxlarge" : "c4.xlarge", "c2xlarge" : "c4.2xlarge" }
     }
   },
 
   "Conditions" : {
-    "DownloadApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationsBucket" }, "" ]}]},
-    "ConfigureDomainNames" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationDomain" }, "" ]}]},
-    "ConfigureAdministratorNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "AdministratorNetwork1" }, "" ]}]},
-    "ConfigureAdministratorNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "AdministratorNetwork2" }, "" ]}]},
-    "ConfigureAdministratorNetwork3" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "AdministratorNetwork3" }, "" ]}]},
-    "ConfigurePublicNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicNetwork1" }, "" ]}]},
-    "ConfigurePublicNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicNetwork2" }, "" ]}]},
-    "ConfigurePublicNetwork3" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicNetwork3" }, "" ]}]},
-    "ConfigurePrivateNetwork" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateNetwork" }, "" ]}]},
-    "ConfigurePrivateNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateNetwork1" }, "" ]}]},
-    "ConfigurePrivateNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateNetwork2" }, "" ]}]},
-    "ConfigurePrivateNetwork3" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateNetwork3" }, "" ]}]}
+    "ConfigureGlobalS3" : { "Fn::Equals" : [{ "Ref" : "AWS::Region" }, "us-east-1" ]},
+    "InstallApplication" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationObject" }, "" ]}]},
+    "ConfigureDomainName" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationDomain" }, "" ]}]},
+    "ConfigureLogs" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LogRetention" }, "0" ]}]},
+    "ConfigurePublicUserNetwork" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicUserNetwork" }, "" ]}]},
+    "ConfigurePublicUserNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicUserNetwork1" }, "" ]}]},
+    "ConfigurePublicUserNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicUserNetwork2" }, "" ]}]},
+    "ConfigurePublicAdministratorNetwork" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicAdministratorNetwork" }, "" ]}]},
+    "ConfigurePublicAdministratorNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicAdministratorNetwork1" }, "" ]}]},
+    "ConfigurePublicAdministratorNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicAdministratorNetwork2" }, "" ]}]},
+    "ConfigurePrivateUserNetwork" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateUserNetwork" }, "" ]}]},
+    "ConfigurePrivateUserNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateUserNetwork1" }, "" ]}]},
+    "ConfigurePrivateUserNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateUserNetwork2" }, "" ]}]},
+    "ConfigurePrivateAdministratorNetwork" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateAdministratorNetwork" }, "" ]}]},
+    "ConfigurePrivateAdministratorNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateAdministratorNetwork1" }, "" ]}]},
+    "ConfigurePrivateAdministratorNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateAdministratorNetwork2" }, "" ]}]}
   },
 
   "Resources" : {
+    "GetHostName" : {
+      "Type" : "Custom::GetHostName",
+      "Properties" : {
+        "ServiceToken" : { "Fn::ImportValue" : { "Fn::Sub" : "${CustomIdentifierFunctionsStackName}-GetHostNameFunctionArn" }},
+        "CompanyName" : { "Ref" : "CompanyName" },
+        "LocationName" : { "Ref": "AWS::Region" },
+        "EnvironmentName" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }},
+        "ApplicationName" : { "Ref" : "ApplicationName" }
+      }
+    },
+
+    "GetWindowsImageId" : {
+      "Type" : "Custom::GetWindowsImageId",
+      "Properties" : {
+        "ServiceToken" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardAMIFunctionsStackName}-GetWindowsImageIdFunctionArn" }},
+        "Region" : { "Ref" : "AWS::Region" },
+        "OSName" : { "Ref" : "OSName" }
+      }
+    },
+
     "Role" : {
       "Type" : "AWS::IAM::Role",
       "Properties" : {
+        "Path" : "/",
         "AssumeRolePolicyDocument" : {
           "Version" : "2012-10-17",
           "Statement" : [{
@@ -331,7 +406,7 @@
             "Action" : [ "sts:AssumeRole" ]
           }]
         },
-        "Path" : "/"
+        "ManagedPolicyArns" : [ "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM" ]
       }
     },
 
@@ -346,12 +421,108 @@
             "Action" : [
               "s3:GetObject"
             ],
-            "Resource" : { "Fn::Sub" : "arn:aws:s3:::${ApplicationsBucket}/${ApplicationName}/*" }
+            "Resource" : { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ExamplesBucket" }}, "/", { "Ref" : "ApplicationFolder" }, "/*" ]]}
           }]
         },
         "Roles" : [{ "Ref" : "Role" }]
       },
-      "Condition" : "DownloadApplication"
+      "Condition" : "InstallApplication"
+    },
+
+    "LogMonitoringPolicy" : {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "LogMonitoringPolicy",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [
+              "logs:CreateLogGroup",
+              "logs:CreateLogStream",
+              "logs:PutLogEvents",
+              "logs:DescribeLogStreams"
+            ],
+            "Resource" : [
+              "arn:aws:logs:*:*:*"
+            ]
+          }]
+        },
+        "Roles" : [{ "Ref" : "Role" }]
+      },
+      "Condition" : "ConfigureLogs"
+    },
+
+    "LogGroup" : {
+      "Type" : "AWS::Logs::LogGroup",
+      "Properties" : {
+        "RetentionInDays" : { "Ref" : "LogRetention" }
+      },
+      "Condition" : "ConfigureLogs"
+    },
+
+    "404MetricFilter" : {
+      "Type" : "AWS::Logs::MetricFilter",
+      "Properties" : {
+        "LogGroupName" : { "Ref" : "LogGroup" },
+        "FilterPattern" : "[ip, identity, user_id, timestamp, request, status_code = 404, size, ...]",
+        "MetricTransformations" : [{
+          "MetricNamespace" : { "Fn::Join" : [ "", [ { "Ref" : "SystemName" }, "/", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }]]},
+          "MetricName" : "404Count",
+          "MetricValue" : "1"
+        }]
+      },
+      "Condition" : "ConfigureLogs"
+    },
+
+    "BytesTransferredMetricFilter" : {
+      "Type" : "AWS::Logs::MetricFilter",
+      "Properties" : {
+        "LogGroupName" : { "Ref" : "LogGroup" },
+        "FilterPattern" : "[ip, identity, user_id, timestamp, request, status_code, size, ...]",
+        "MetricTransformations" : [{
+          "MetricNamespace" : { "Fn::Join" : [ "", [ { "Ref" : "SystemName" }, "/", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }]]},
+          "MetricName" : "BytesTransferred",
+          "MetricValue" : "$size"
+        }]
+      },
+      "Condition" : "ConfigureLogs"
+    },
+
+    "404Alarm" : {
+      "Type" : "AWS::CloudWatch::Alarm",
+      "Properties" : {
+        "AlarmDescription" : "The number of 404s is greater than 5 over 1 minute",
+        "AlarmActions" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-AlarmsTopic" }}
+        ],
+        "Namespace" : { "Fn::Join" : [ "", [ { "Ref" : "SystemName" }, "/", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }]]},
+        "MetricName" : "404Count",
+        "Statistic" : "Sum",
+        "Period" : "60",
+        "EvaluationPeriods" : "1",
+        "Threshold" : "5",
+        "ComparisonOperator" : "GreaterThanThreshold"
+      },
+      "Condition" : "ConfigureLogs"
+    },
+
+    "BandwidthAlarm" : {
+      "Type" : "AWS::CloudWatch::Alarm",
+      "Properties" : {
+        "AlarmDescription" : "The average volume of traffic is greater 1024 KB over 1 minute",
+        "AlarmActions" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-AlarmsTopic" }}
+        ],
+        "Namespace" : { "Fn::Join" : [ "", [ { "Ref" : "SystemName" }, "/", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }]]},
+        "MetricName" : "BytesTransferred",
+        "Statistic" : "Average",
+        "Period" : "60",
+        "EvaluationPeriods" : "1",
+        "Threshold" : "1500000000",
+        "ComparisonOperator" : "GreaterThanThreshold"
+      },
+      "Condition" : "ConfigureLogs"
     },
 
     "SecurityGroup" : {
@@ -360,30 +531,48 @@
         "GroupDescription" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "SecurityGroup" ]]},
         "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPC" }},
         "SecurityGroupIngress" : [
-          { "IpProtocol" : "icmp", "FromPort" : "-1",   "ToPort" : "-1",   "CidrIp" : { "Ref" : "AdministratorNetwork" }},
-          { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Ref" : "AdministratorNetwork" }},
-          { "Fn::If" : [ "ConfigureAdministratorNetwork1", { "IpProtocol" : "icmp", "FromPort" : "-1",   "ToPort" : "-1",   "CidrIp" : { "Ref" : "AdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigureAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Ref" : "AdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigureAdministratorNetwork2", { "IpProtocol" : "icmp", "FromPort" : "-1",   "ToPort" : "-1",   "CidrIp" : { "Ref" : "AdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigureAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Ref" : "AdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigureAdministratorNetwork3", { "IpProtocol" : "icmp", "FromPort" : "-1",   "ToPort" : "-1",   "CidrIp" : { "Ref" : "AdministratorNetwork3" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigureAdministratorNetwork3", { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Ref" : "AdministratorNetwork3" }}, { "Ref" : "AWS::NoValue" }]},
-          { "IpProtocol" : "icmp", "FromPort" :  "-1", "ToPort" :  "-1", "CidrIp" : { "Ref" : "PublicNetwork" }},
-          { "IpProtocol" : "tcp",  "FromPort" :  "80", "ToPort" :  "80", "CidrIp" : { "Ref" : "PublicNetwork" }},
-          { "Fn::If" : [ "ConfigurePublicNetwork1", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PublicNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "80", "ToPort" : "80", "CidrIp" : { "Ref" : "PublicNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicNetwork2", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PublicNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "80", "ToPort" : "80", "CidrIp" : { "Ref" : "PublicNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicNetwork3", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PublicNetwork3" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicNetwork3", { "IpProtocol" : "tcp",  "FromPort" : "80", "ToPort" : "80", "CidrIp" : { "Ref" : "PublicNetwork3" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateNetwork", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PrivateNetwork" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateNetwork", { "IpProtocol" : "tcp",  "FromPort" : "80", "ToPort" : "80", "CidrIp" : { "Ref" : "PrivateNetwork" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateNetwork1", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PrivateNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "80", "ToPort" : "80", "CidrIp" : { "Ref" : "PrivateNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateNetwork2", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PrivateNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "80", "ToPort" : "80", "CidrIp" : { "Ref" : "PrivateNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateNetwork3", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PrivateNetwork3" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateNetwork3", { "IpProtocol" : "tcp",  "FromPort" : "80", "ToPort" : "80", "CidrIp" : { "Ref" : "PrivateNetwork3" }}, { "Ref" : "AWS::NoValue" }]}
+          { "Fn::If" : [ "ConfigurePublicUserNetwork",  { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PublicUserNetwork" }},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicUserNetwork",  { "IpProtocol" : "tcp",  "FromPort" :   "80", "ToPort" :   "80", "CidrIp" : { "Ref" : "PublicUserNetwork" }},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicUserNetwork",  { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Ref" : "PublicUserNetwork" }},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicUserNetwork1", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PublicUserNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicUserNetwork1", { "IpProtocol" : "tcp",  "FromPort" :   "80", "ToPort" :   "80", "CidrIp" : { "Ref" : "PublicUserNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicUserNetwork1", { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Ref" : "PublicUserNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicUserNetwork2", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PublicUserNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicUserNetwork2", { "IpProtocol" : "tcp",  "FromPort" :   "80", "ToPort" :   "80", "CidrIp" : { "Ref" : "PublicUserNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicUserNetwork2", { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Ref" : "PublicUserNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork",  { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PublicAdministratorNetwork" }},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork",  { "IpProtocol" : "tcp",  "FromPort" :   "80", "ToPort" :   "80", "CidrIp" : { "Ref" : "PublicAdministratorNetwork" }},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork",  { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Ref" : "PublicAdministratorNetwork" }},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork",  { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Ref" : "PublicAdministratorNetwork" }},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork1", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PublicAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" :   "80", "ToPort" :   "80", "CidrIp" : { "Ref" : "PublicAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Ref" : "PublicAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Ref" : "PublicAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork2", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PublicAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" :   "80", "ToPort" :   "80", "CidrIp" : { "Ref" : "PublicAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Ref" : "PublicAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Ref" : "PublicAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateUserNetwork",  { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateUserNetwork" }},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateUserNetwork",  { "IpProtocol" : "tcp",  "FromPort" :   "80", "ToPort" :   "80", "CidrIp" : { "Ref" : "PrivateUserNetwork" }},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateUserNetwork",  { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Ref" : "PrivateUserNetwork" }},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateUserNetwork1", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateUserNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateUserNetwork1", { "IpProtocol" : "tcp",  "FromPort" :   "80", "ToPort" :   "80", "CidrIp" : { "Ref" : "PrivateUserNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateUserNetwork1", { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Ref" : "PrivateUserNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateUserNetwork2", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateUserNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateUserNetwork2", { "IpProtocol" : "tcp",  "FromPort" :   "80", "ToPort" :   "80", "CidrIp" : { "Ref" : "PrivateUserNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateUserNetwork2", { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Ref" : "PrivateUserNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork",  { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork" }},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork",  { "IpProtocol" : "tcp",  "FromPort" :   "80", "ToPort" :   "80", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork" }},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork",  { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork" }},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork",  { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork" }},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork1", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" :   "80", "ToPort" :   "80", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork2", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" :   "80", "ToPort" :   "80", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]}
         ],
         "Tags" : [
           { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "SecurityGroup" ]]}}
@@ -399,65 +588,242 @@
       }
     },
 
-    "Instance": {
+    "Instance" : {
       "Type" : "AWS::EC2::Instance",
       "Metadata" : {
         "AWS::CloudFormation::Authentication" : {
           "S3Credentials" : {
             "type" : "S3",
             "roleName" : { "Ref" : "Role" },
-            "buckets" : [{ "Ref" : "ApplicationsBucket" }]
+            "buckets" : [
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ExamplesBucket" }}
+            ]
           }
         },
         "AWS::CloudFormation::Init" : {
           "configSets" : {
             "All" : [
+              { "Fn::If" : [ "ConfigureLogs", "ConfigureLogs", { "Ref": "AWS::NoValue" }]},
               "ConfigureOS",
-              "ConfigureHostname",
               "ConfigureCFN",
               "InstallWebServer",
-              { "Fn::If" : [ "DownloadApplication", "DownloadApplication", "ConfigureApplication" ]}
+              "InstallAwsCli",
+              "InstallAtomEditor",
+              { "Fn::If" : [ "InstallApplication", "InstallApplication", "ConfigureApplication" ]}
             ]
           },
-          "ConfigureOS" : {
+          "ConfigureLogs" : {
+            "files" : {
+              "C:\\Program Files\\Amazon\\SSM\\Plugins\\awsCloudWatch\\AWS.EC2.Windows.CloudWatch.json" : {
+                "content" : { "Fn::Join" : [ "", [
+                  "{",
+                  "  \"IsEnabled\" : true,",
+                  "  \"EngineConfiguration\" : {",
+                  "    \"PollInterval\" : \"00:00:10\",",
+                  "    \"Components\" : [{",
+                  "      \"Id\" : \"ApplicationEventLog\",",
+                  "      \"FullName\" : \"AWS.EC2.Windows.CloudWatch.EventLog.EventLogInputComponent,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\" : {",
+                  "        \"LogName\" : \"Application\",",
+                  "        \"Levels\" : \"7\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\" : \"SystemEventLog\",",
+                  "      \"FullName\" : \"AWS.EC2.Windows.CloudWatch.EventLog.EventLogInputComponent,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\" : {",
+                  "        \"LogName\" : \"System\",",
+                  "        \"Levels\" : \"7\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\" : \"SecurityEventLog\",",
+                  "      \"FullName\" : \"AWS.EC2.Windows.CloudWatch.EventLog.EventLogInputComponent,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\" : {",
+                  "        \"LogName\" : \"Security\",",
+                  "        \"Levels\" : \"7\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\" : \"EC2ConfigLog\",",
+                  "      \"FullName\": \"AWS.EC2.Windows.CloudWatch.CustomLog.CustomLogInputComponent,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\": {",
+                  "        \"LogDirectoryPath\": \"C:\\\\Program Files\\\\Amazon\\\\Ec2ConfigService\\\\Logs\",",
+                  "        \"TimestampFormat\": \"yyyy-MM-ddTHH:mm:ss.fffZ:\",",
+                  "        \"Encoding\": \"ASCII\",",
+                  "        \"Filter\": \"EC2ConfigLog.txt\",",
+                  "        \"CultureName\": \"en-US\",",
+                  "        \"TimeZoneKind\": \"UTC\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\": \"CfnInitLog\",",
+                  "      \"FullName\": \"AWS.EC2.Windows.CloudWatch.CustomLog.CustomLogInputComponent,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\": {",
+                  "        \"LogDirectoryPath\": \"C:\\\\cfn\\\\log\",",
+                  "        \"TimestampFormat\": \"yyyy-MM-dd HH:mm:ss,fff\",",
+                  "        \"Encoding\": \"ASCII\",",
+                  "        \"Filter\": \"cfn-init.log\",",
+                  "        \"CultureName\": \"en-US\",",
+                  "        \"TimeZoneKind\": \"Local\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\" : \"IISLogs\",",
+                  "      \"FullName\" : \"AWS.EC2.Windows.CloudWatch.CustomLog.CustomLogInputComponent,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\" : {",
+                  "        \"LogDirectoryPath\" : \"C:\\\\inetpub\\\\logs\\\\LogFiles\\\\W3SVC1\",",
+                  "        \"TimestampFormat\" : \"yyyy-MM-dd HH:mm:ss\",",
+                  "        \"Encoding\" : \"UTF-8\",",
+                  "        \"Filter\" : \"\",",
+                  "        \"CultureName\" : \"en-US\",",
+                  "        \"TimeZoneKind\" : \"UTC\",",
+                  "        \"LineCount\" : \"3\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\" : \"MemoryPerformanceCounter\",",
+                  "      \"FullName\" : \"AWS.EC2.Windows.CloudWatch.PerformanceCounterComponent.PerformanceCounterInputComponent,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\" : {",
+                  "        \"CategoryName\" : \"Memory\",",
+                  "        \"CounterName\" : \"Available MBytes\",",
+                  "        \"InstanceName\" : \"\",",
+                  "        \"MetricName\" : \"Memory\",",
+                  "        \"Unit\" : \"Megabytes\",",
+                  "        \"DimensionName\" : \"\",",
+                  "        \"DimensionValue\" : \"\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\": \"CloudWatchApplicationEventLog\",",
+                  "      \"FullName\": \"AWS.EC2.Windows.CloudWatch.CloudWatchLogsOutput,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\": {",
+                  "        \"AccessKey\": \"\",",
+                  "        \"SecretKey\": \"\",",
+                           { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
+                           { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
+                  "        \"LogStream\": \"Web/{instance_id}/ApplicationEventLog\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\": \"CloudWatchSystemEventLog\",",
+                  "      \"FullName\": \"AWS.EC2.Windows.CloudWatch.CloudWatchLogsOutput,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\": {",
+                  "        \"AccessKey\": \"\",",
+                  "        \"SecretKey\": \"\",",
+                           { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
+                           { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
+                  "        \"LogStream\": \"Web/{instance_id}/SystemEventLog\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\": \"CloudWatchSecurityEventLog\",",
+                  "      \"FullName\": \"AWS.EC2.Windows.CloudWatch.CloudWatchLogsOutput,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\": {",
+                  "        \"AccessKey\": \"\",",
+                  "        \"SecretKey\": \"\",",
+                           { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
+                           { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
+                  "        \"LogStream\": \"Web/{instance_id}/SecurityEventLog\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\": \"CloudWatchEC2ConfigLog\",",
+                  "      \"FullName\": \"AWS.EC2.Windows.CloudWatch.CloudWatchLogsOutput,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\": {",
+                  "        \"AccessKey\": \"\",",
+                  "        \"SecretKey\": \"\",",
+                           { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
+                           { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
+                  "        \"LogStream\": \"Web/{instance_id}/EC2ConfigLog\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\": \"CloudWatchCfnInitLog\",",
+                  "      \"FullName\": \"AWS.EC2.Windows.CloudWatch.CloudWatchLogsOutput,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\": {",
+                  "        \"AccessKey\": \"\",",
+                  "        \"SecretKey\": \"\",",
+                           { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
+                           { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
+                  "        \"LogStream\": \"Web/{instance_id}/CfnInitLog\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\": \"CloudWatchIISLogs\",",
+                  "      \"FullName\": \"AWS.EC2.Windows.CloudWatch.CloudWatchLogsOutput,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\": {",
+                  "        \"AccessKey\": \"\",",
+                  "        \"SecretKey\": \"\",",
+                           { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
+                           { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
+                  "        \"LogStream\": \"Web/{instance_id}/IISLogs\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\" : \"CloudWatch\",",
+                  "      \"FullName\" : \"AWS.EC2.Windows.CloudWatch.CloudWatch.CloudWatchOutputComponent,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\" : {",
+                  "        \"AccessKey\" : \"\",",
+                  "        \"SecretKey\" : \"\",",
+                           { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
+                  "        \"NameSpace\" : \"Windows/Default\"",
+                  "      }",
+                  "    }],",
+                  "    \"Flows\": {",
+                  "      \"Flows\": [",
+                  "        \"ApplicationEventLog,CloudWatchApplicationEventLog\",",
+                  "        \"SystemEventLog,CloudWatchSystemEventLog\",",
+                  "        \"SecurityEventLog,CloudWatchSecurityEventLog\",",
+                  "        \"EC2ConfigLog,CloudWatchEC2ConfigLog\",",
+                  "        \"CfnInitLog,CloudWatchCfnInitLog\",",
+                  "        \"IISLogs,CloudWatchIISLogs\",",
+                  "        \"MemoryPerformanceCounter,CloudWatch\"",
+                  "      ]",
+                  "    }",
+                  "  }",
+                  "}"
+                ]]}
+              }
+            },
             "commands" : {
-              "01_disable_windows_firewall" : {
-                "command" : "powershell.exe -Command \"Get-NetFirewallProfile | Set-NetFirewallProfile -Enabled False\"",
+              "01-enable-SSM" : {
+                "command" : "powershell.exe -Command \"Set-Service -Name AmazonSSMAgent -StartupType Automatic\"",
                 "waitAfterCompletion" : "0"
               },
-              "02_set_execution_policy" : {
-                "command" : "powershell.exe -Command \"Set-ExecutionPolicy RemoteSigned -Force\"",
-                "waitAfterCompletion" : "0"
+              "02-restart-SSM" : {
+                "command" : "powershell.exe -Command \"Restart-Service AmazonSSMAgent\"",
+                "waitAfterCompletion" : "30"
               }
             }
           },
-          "ConfigureHostname" : {
+          "ConfigureOS" : {
             "commands" : {
-              "01_sethostname" : {
-                "command" : { "Fn::Sub" : "powershell.exe Rename-Computer -NewName ${ApplicationDomain} -Restart" },
-                "waitAfterCompletion" : "forever"
+              "01-disable-windows-firewall" : {
+                "command" : "powershell.exe -Command \"Get-NetFirewallProfile | Set-NetFirewallProfile -Enabled False\"",
+                "waitAfterCompletion" : "0"
+              },
+              "02-set-execution-policy" : {
+                "command" : "powershell.exe -Command \"Set-ExecutionPolicy RemoteSigned -Force\"",
+                "waitAfterCompletion" : "0"
               }
             }
           },
           "ConfigureCFN" : {
             "files" : {
               "c:\\cfn\\cfn-hup.conf" : {
-                "content" : { "Fn::Join" : [ "", [
-                  "[main]\n",
-                  "stack=", { "Ref" : "AWS::StackId" }, "\n",
-                  "region=", { "Ref" : "AWS::Region" }, "\n"
+                "content" : { "Fn::Join" : [ "\n", [
+                  "[main]",
+                  { "Fn::Sub" : "stack=${AWS::StackId}" },
+                  { "Fn::Sub" : "region=${AWS::Region}" }
                   ]]}
               },
               "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf" : {
-                "content": { "Fn::Join" : [ "", [
-                  "[cfn-auto-reloader-hook]\n",
-                  "triggers=post.update\n",
-                  "path=Resources.Instance.Metadata.AWS::CloudFormation::Init\n",
-                  "action=cfn-init.exe --verbose",
-                  " --configsets All",
-                  " --stack ", { "Ref" : "AWS::StackId" },
-                  " --resource Instance",
-                  " --region ", { "Ref" : "AWS::Region" }, "\n"
+                "content": { "Fn::Join" : [ "\n", [
+                  "[cfn-auto-reloader-hook]",
+                  "triggers=post.update",
+                  "path=Resources.Instance.Metadata.AWS::CloudFormation::Init",
+                  { "Fn::Sub" : "action=cfn-init.exe --verbose --configsets All --stack ${AWS::StackId} --resource Instance --region ${AWS::Region}" }
                 ]]}
               }
             },
@@ -482,79 +848,119 @@
               }
             }
           },
-          "DownloadApplication" : {
+          "InstallAwsCli" : {
+            "packages" : {
+              "msi" : {
+                "awscli" : "https://s3.amazonaws.com/aws-cli/AWSCLI64.msi"
+              }
+            }
+          },
+          "InstallAtomEditor" : {
+            "packages" : {
+              "msi" : {
+                "atom" : "https://github.com/atom/atom/releases/download/v1.16.0/AtomSetup-x64.msi"
+              }
+            }
+          },
+          "InstallApplication" : {
             "sources" : {
-              "c:\\Inetpub\\wwwroot" : { "Fn::Sub" : "https://s3-${AWS::Region}.amazonaws.com/${ApplicationsBucket}/${ApplicationName}/${ApplicationName}-${ApplicationVersion}.zip" }
+              "C:\\Inetpub\\wwwroot" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ExamplesBucket" }}, "/", { "Ref" : "ApplicationFolder" }, "/", { "Ref" : "ApplicationObject" }]]}
             }
           },
           "ConfigureApplication" : {
             "files" : {
               "c:\\Inetpub\\wwwroot\\index.htm" : {
-                "content" : { "Fn::Join" : [ "", [
-                  "<html>\n",
-                  "<head>\n",
-                  "<title>", { "Ref" : "ApplicationName" }, " Test Application</title>\n",
-                  "</head>\n",
-                  "<body>\n",
-                  "<h1>", { "Ref" : "ApplicationName" }, " (", { "Ref" : "ApplicationVersion" }, ")</h1>\n",
-                  "</body>\n",
-                  "</html>\n"
+                "content" : { "Fn::Join" : [ "\n", [
+                  "<html>",
+                  "<head>",
+                  { "Fn::Sub" : "<title>${ApplicationName} Test Application</title>" },
+                  "</head>",
+                  "<body>",
+                  { "Fn::Sub" : "<h1>${ApplicationName} (${ApplicationVersion})</h1>" },
+                  "</body>",
+                  "</html>"
                 ]]}
+              }
+            }
+          },
+          "ConfigureHostname" : {
+            "commands" : {
+              "01-set-hostname" : {
+                "command" : { "Fn::Join" : [ "", [ "powershell.exe Rename-Computer -NewName ", { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01a", " -Restart" ]]},
+                "waitAfterCompletion" : "forever"
               }
             }
           }
         }
       },
       "Properties" : {
-        "ImageId" : { "Fn::FindInMap" : [ "ImageIdMap", { "Ref" : "AWS::Region" }, { "Ref" : "InstanceOS" }]},
-        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "WindowsServer", { "Ref" : "EnvironmentSize" }]},
+        "ImageId" : { "Fn::GetAtt" : [ "GetWindowsImageId", "ImageId" ]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Web", { "Ref" : "EnvironmentType" }]},
         "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
         "KeyName" : { "Ref" : "KeyName" },
         "NetworkInterfaces" : [{
-          "Description"              : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "NetworkInterface0" ]]},
+          "Description"              : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "NetworkInterface", "eth0" ]]},
           "DeviceIndex"              : "0",
           "SubnetId"                 : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-WebSubnetA" }},
           "GroupSet"                 : [{ "Ref" :  "SecurityGroup" }],
           "AssociatePublicIpAddress" : "true",
           "DeleteOnTermination"      : "true"
         }],
+        "BlockDeviceMappings" : [{
+          "DeviceName" : "/dev/sda1",
+          "Ebs" : {
+            "VolumeSize" : "50"
+          }
+        },
+        {
+          "DeviceName" : "/dev/xvdb",
+          "Ebs" : {
+            "VolumeSize" : "50",
+            "VolumeType" : "io1",
+            "Iops" : "500",
+            "DeleteOnTermination" : "false"
+          }
+        }],
         "Tags" : [
           { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "Instance" ]]}}
         ],
-        "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "", [
-          "<script>\n",
-          "\n",
-          "cfn-init.exe --verbose",
-          " --configsets All",
-          " --stack ", { "Ref" : "AWS::StackId" },
-          " --resource Instance",
-          " --region ", { "Ref" : "AWS::Region" }, "\n",
-          "\n",
-          "cfn-signal.exe --exit-code %ERRORLEVEL%",
-          " --stack ", { "Ref" : "AWS::StackName" },
-          " --resource Instance",
-          " --region ", { "Ref" : "AWS::Region" }, "\n",
+        "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "\n", [
+          "<script>",
+          { "Fn::Sub" : "cfn-init.exe --verbose --configsets All --stack ${AWS::StackId} --resource Instance --region ${AWS::Region}" },
+          { "Fn::Sub" : "cfn-signal.exe --exit-code %ERRORLEVEL% --stack ${AWS::StackName} --resource Instance --region ${AWS::Region}" },
           "</script>"
         ]]}}
       },
       "CreationPolicy" : {
         "ResourceSignal" : {
-          "Timeout" : "PT30M"
+          "Timeout" : "PT20M"
         }
       }
     },
 
-    "RecordSet" : {
+    "HostNameRecordSet" : {
       "Type" : "AWS::Route53::RecordSet",
       "Properties" : {
         "HostedZoneId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicHostedZone" }},
-        "Comment" : { "Fn::Sub" : "Public DNS name for ${ApplicationName} Instance." },
-        "Name" : { "Fn::Join" : [ "", [ { "Ref" : "ApplicationDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "." ]]},
+        "Comment" : { "Fn::Sub" : "Public DNS HostName for ${ApplicationName} Instance." },
+        "Name" : { "Fn::Join" : [ "", [ { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "." ]]},
         "Type" : "A",
         "TTL" : "900",
         "ResourceRecords" : [{ "Fn::GetAtt" : [ "Instance", "PublicIp" ]}]
+      }
+    },
+
+    "ServiceNameRecordSet" : {
+      "Type" : "AWS::Route53::RecordSet",
+      "Properties" : {
+        "HostedZoneId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicHostedZone" }},
+        "Comment" : { "Fn::Sub" : "Public DNS ServiceName for ${ApplicationName}." },
+        "Name" : { "Fn::Join" : [ "", [ { "Ref" : "ApplicationDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "." ]]},
+        "Type" : "CNAME",
+        "TTL" : "900",
+        "ResourceRecords" : [{ "Fn::Join" : [ "", [ { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }} ]]}]
       },
-      "Condition" : "ConfigureDomainNames"
+      "Condition" : "ConfigureDomainName"
     }
   },
 
@@ -565,10 +971,15 @@
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-SecurityGroup" }}
     },
 
+    "HostName" : {
+      "Description" : "The HostName",
+      "Value" : { "Fn::Join" : [ "", [ { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]}
+    },
+
     "URL" : {
       "Description" : "The Sample Website URL",
       "Value" :  { "Fn::Join" : [ "", [ "http://", { "Ref" : "ApplicationDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "/" ]]},
-      "Condition" : "ConfigureDomainNames"
+      "Condition" : "ConfigureDomainName"
     }
   }
 }

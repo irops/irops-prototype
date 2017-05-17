@@ -1,0 +1,404 @@
+#!/bin/bash
+#
+# Here's a list of the commands which need to be run to create the Unstable MultiEnvironment (us-east-2 / Ohio)
+# - Unstable is a MultiEnvironment which consists of the Unstable set of Environments used for
+#   developing and running the CloudFormation Templates and Build infrastructure used in the
+#   live IROPS systems.
+# - The Unstable MultiEnvironment is - by definition - UNSTABLE!
+#   It's purpose is to be changed and deleted often to test modifications to CloudFormation Templates
+#   driver scripts, and automated build pipelines.
+#
+# We can break down the creation of a region into this order:
+#  1. Initialize Environment Variables
+#
+#  2. Create SNS Topics and Subscriptions
+#      2.1 Create StandardTopics Stack
+#      2.2 Create StandardSubscriptions Stack
+#      2.3 Create CustomSubscriptions Stack
+#
+#  3. Create S3 Buckets
+#      3.1 Create StandardBuckets Stack
+#
+#  4. Create Lambda Functions
+#      4.1 Create StandardAMIFunctions Stack
+#      4.2 Create StandardCIDRFunctions Stack
+#      4.3 Create StandardScheduleFunctions Stack
+#      4.4 Create CustomIdentifierFunctions Stack
+#
+#  5. Create Hosted Zones
+#      5.1. Create Build-HostedZone Stack (Public DNS Zone)
+#      5.2. Create Core-HostedZone Stack (Public DNS Zone)
+#      5.3. Create Development-HostedZone Stack (Public DNS Zone)
+#      5.4. Create Testing-HostedZone Stack (Public DNS Zone)
+#      5.5. Create Staging-HostedZone Stack (Public DNS Zone)
+#      5.6. Create Production-HostedZone Stack (Public DNS Zone)
+#
+#  6. Create VPCs
+#      6.1. Create Build-VPC Stack
+#      6.2. Create Core-VPC Stack
+#      6.3. Create Development-VPC Stack
+#      6.4. Create Testing-VPC Stack
+#      6.5. Create Staging-VPC Stack
+#      6.6. Create Production-VPC Stack
+#
+#  7. Create NetworkACLs
+#      7.1. Create Build-NetworkAcls Stack
+#      7.2. Create Core-NetworkAcls Stack
+#      7.3. Create Development-NetworkAcls Stack
+#      7.4. Create Testing-NetworkAcls Stack
+#      7.5. Create Staging-NetworkAcls Stack
+#      7.6. Create Production-NetworkAcls Stack
+#
+#  8. Create CustomerGateways
+#      8.1. Create CharlotteCustomerGateway Stack
+#      8.2. Create SantaBarbaraCustomerGateway Stack
+#
+#  9. Create VPNConnections
+#      9.1. Create Build-CharlotteVPNConnection Stack
+#      9.2. Create Build-SantaBarbaraVPNConnection Stack
+#      9.3. Create Core-CharlotteVPNConnection Stack
+#      9.4. Create Core-SantaBarbaraVPNConnection Stack
+#      9.5. Create Development-CharlotteVPNConnection Stack
+#      9.6. Create Development-SantaBarbaraVPNConnection Stack
+#      9.7. Create Testing-CharlotteVPNConnection Stack
+#      9.8. Create Testing-SantaBarbaraVPNConnection Stack
+#      9.9. Create Staging-CharlotteVPNConnection Stack
+#      9.10. Create Staging-SantaBarbaraVPNConnection Stack
+#      9.11. Create Production-CharlotteVPNConnection Stack
+#      9.12. Create Production-SantaBarbaraVPNConnection Stack
+#
+# 10. Create VPCPeeringConnections
+#     10.1. Create Core-VPCPeeringConnections Stack
+#     10.4. Create Testing-DevelopmentVPCPeeringConnection Stack
+#     10.3. Create Staging-TestingVPCPeeringConnection Stack
+#     10.2. Create Production-StagingVPCPeeringConnection Stack
+#
+# 11. Create OpenVPNAS Instances
+#     11.6. Create Build-OpenVPNAS Stack
+#     11.5. Create Core-OpenVPNAS Stack
+#     11.4. Create Development-OpenVPNAS Stack
+#     11.3. Create Testing-OpenVPNAS Stack
+#     11.2. Create Staging-OpenVPNAS Stack
+#     11.1. Create Production-OpenVPNAS Stack
+#
+# 12. Create WebSphereMQ Instances
+#     12.1. Create Production-WebSphereMQ Stack
+#     12.2. Create Core-WebSphereMQ Stack
+#
+# 13. Create RabbitMQ Instances
+#     13.1. Create Production-RabbitMQ Stack
+#     13.2. Create Staging-RabbitMQ Stack
+#     13.3. Create Testing-RabbitMQ Stack
+#     13.4. Create Development-RabbitMQ Stack
+#
+# 14. Create MongoDB Instances
+#     14.1. Create Production-MongoDB Stack
+#     14.2. Create Staging-MongoDB Stack
+#     14.3. Create Testing-MongoDB Stack
+#     14.4. Create Development-MongoDB Stack
+#
+# 15. Create Octopus Instances
+#     15.1. Create Core-Octopus-Deploy Stack
+#     15.2. Create Staging-Octopus-Deploy Stack
+#     15.3. Create Production-Octopus-Deploy Stack
+#
+# 16. Create Engine Instances
+#     16.1. Create Development-Engine-Web Stack
+#     16.2. Create Development-Engine-Calculation Stack
+#     16.3. Create Development-Engine-DataStaging Stack
+#     16.4. Create Development-Engine-Publishing Stack
+#     16.5. Create Development-Engine-Monitoring Stack
+#     16.6. Create Testing-Engine-Web Stack
+#     16.7. Create Testing-Engine-Calculation Stack
+#     16.8. Create Testing-Engine-DataStaging Stack
+#     16.9. Create Testing-Engine-Publishing Stack
+#     16.10. Create Testing-Engine-Monitoring Stack
+#     16.11. Create Staging-Engine-Web Stack
+#     16.12. Create Staging-Engine-Calculation Stack
+#     16.13. Create Staging-Engine-DataStaging Stack
+#     16.14. Create Staging-Engine-Publishing Stack
+#     16.15. Create Staging-Engine-Monitoring Stack
+#     16.16. Create Production-Engine-Web Stack
+#     16.17. Create Production-Engine-Calculation Stack
+#     16.18. Create Production-Engine-DataStaging Stack
+#     16.19. Create Production-Engine-Publishing Stack
+#     16.20. Create Production-Engine-Monitoring Stack
+#
+# 17. Create Integration Applications
+#     17.1. Create Development-Integration Stack
+#     17.2. Create Testing-Integration Stack
+#     17.3. Create Staging-Integration Stack
+#     17.4. Create Production-Integration Stack
+#
+
+run() {
+    echo
+    echo -n "Run: \"${1##*/bin/}\"? [Y/n/q]"
+    read choice
+    case "$choice" in
+      "" | "y" | "Y" | "yes" | "Yes")
+        eval $1;;
+      "n" | "N" | "no" | "No")
+        ;;
+       *) echo "cancelled"
+          exit 2;;
+    esac
+}
+
+#  1. Initalize Environment Variables
+#     - This will initialze the environment variables to the Unstable-Production Environment
+#     - We will be explicit on certain options below, even when the value does not need to be set due to defaults
+
+bindir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+applicationbindir=${bindir%/*}/application/bin
+billingbindir=${bindir%/*}/billing/bin
+commonbindir=${bindir%/*}/common/bin
+corebindir=${bindir%/*}/core/bin
+environmentbindir=${bindir%/*}/environment/bin
+examplebindir=${bindir%/*}/example/bin
+identitybindir=${bindir%/*}/identity/bin
+utilitybindir=${bindir%/*}/utility/bin
+
+source $bindir/irops-define-unstable-production
+
+
+#  2. Create SNS Topics and Subscriptions
+#      2.1 Create StandardTopics Stack
+#      2.2 Create StandardSubscriptions Stack
+#      2.3 Create CustomSubscriptions Stack
+
+run "$corebindir/core-create-standardtopics-stack -E Core"
+run "$corebindir/core-create-standardsubscriptions-stack -E Core"
+run "$corebindir/core-create-customsubscriptions-stack -E Core"
+
+
+#  3. Create S3 Buckets
+#      3.1 Create StandardBuckets Stack
+
+run "$corebindir/core-create-standardbuckets-stack -E Core"
+
+
+#  4. Create Lambda Functions
+#      4.1 Create StandardAMIFunctions Stack
+#      4.2 Create StandardCIDRFunctions Stack
+#      4.3 Create StandardScheduleFunctions Stack
+#      4.4 Create CustomIdentifierFunctions Stack
+
+run "$corebindir/core-create-standardamifunctions-stack -E Core"
+run "$corebindir/core-create-standardcidrfunctions-stack -E Core"
+run "$corebindir/core-create-standardschedulefunctions-stack -E Core"
+run "$corebindir/core-create-customidentifierfunctions-stack -E Core"
+
+
+#  5. Create Hosted Zones
+#      5.1. Create Build-HostedZone Stack (Public DNS Zone)
+#      5.2. Create Core-HostedZone Stack (Public DNS Zone)
+#      5.3. Create Development-HostedZone Stack (Public DNS Zone)
+#      5.4. Create Testing-HostedZone Stack (Public DNS Zone)
+#      5.5. Create Staging-HostedZone Stack (Public DNS Zone)
+#      5.6. Create Production-HostedZone Stack (Public DNS Zone)
+
+run "$commonbindir/common-create-hostedzone-stack -E Build -D b.us-east-2.tvl.iropshub.com"
+run "$commonbindir/common-create-hostedzone-stack -E Core -D c.us-east-2.tvl.iropshub.com"
+run "$commonbindir/common-create-hostedzone-stack -E Development -D d.us-east-2.tvl.iropshub.com"
+run "$commonbindir/common-create-hostedzone-stack -E Testing -D t.us-east-2.tvl.iropshub.com"
+run "$commonbindir/common-create-hostedzone-stack -E Staging -D s.us-east-2.tvl.iropshub.com"
+run "$commonbindir/common-create-hostedzone-stack -E Production -D us-east-2.tvl.iropshub.com"
+
+echo
+echo "Note: Currently, you must manually create the NS records which are needed in each"
+echo "      parent DNS Zone to delegate to the sub-domain Zone. This should be done now."
+echo
+
+
+#  6. Create VPCs
+#      6.1. Create Build-VPC Stack
+#      6.2. Create Core-VPC Stack
+#      6.3. Create Development-VPC Stack
+#      6.4. Create Testing-VPC Stack
+#      6.5. Create Staging-VPC Stack
+#      6.6. Create Production-VPC Stack
+
+run "$corebindir/build-create-vpc-stack -E Build -N 172.21.124.0/23"
+run "$corebindir/core-create-vpc-stack -E Core -N 172.21.120.0/22"
+run "$environmentbindir/environment-create-vpc-stack -E Development -N 172.21.88.0/21"
+run "$environmentbindir/environment-create-vpc-stack -E Testing -N 172.21.80.0/21"
+run "$environmentbindir/environment-create-vpc-stack -E Staging -N 172.21.72.0/21"
+run "$environmentbindir/environment-create-vpc-stack -E Production -N 172.21.64.0/21"
+
+
+#  7. Create NetworkACLs
+#      7.1. Create Build-NetworkAcls Stack
+#      7.2. Create Core-NetworkAcls Stack
+#      7.3. Create Development-NetworkAcls Stack
+#      7.4. Create Testing-NetworkAcls Stack
+#      7.5. Create Staging-NetworkAcls Stack
+#      7.6. Create Production-NetworkAcls Stack
+
+run "$corebindir/build-create-networkacls-stack -E Build"
+run "$corebindir/core-create-networkacls-stack -E Core"
+run "$environmentbindir/environment-create-networkacls-stack -E Development"
+run "$environmentbindir/environment-create-networkacls-stack -E Testing"
+run "$environmentbindir/environment-create-networkacls-stack -E Staging"
+run "$environmentbindir/environment-create-networkacls-stack -E Production"
+
+
+#  8. Create CustomerGateways
+#      8.1. Create CharlotteCustomerGateway Stack
+#      8.2. Create SantaBarbaraCustomerGateway Stack
+
+#run "$commonbindir/common-create-customergateway-stack -E Core -G Charlotte -i 204.26.253.5"
+run "$commonbindir/common-create-customergateway-stack -E Core -G SantaBarbara -i 72.215.187.179"
+
+
+#  9. Create VPNConnections
+#      9.1. Create Build-CharlotteVPNConnection Stack
+#      9.2. Create Build-SantaBarbaraVPNConnection Stack
+#      9.3. Create Core-CharlotteVPNConnection Stack
+#      9.4. Create Core-SantaBarbaraVPNConnection Stack
+#      9.5. Create Development-CharlotteVPNConnection Stack
+#      9.6. Create Development-SantaBarbaraVPNConnection Stack
+#      9.7. Create Testing-CharlotteVPNConnection Stack
+#      9.8. Create Testing-SantaBarbaraVPNConnection Stack
+#      9.9. Create Staging-CharlotteVPNConnection Stack
+#      9.10. Create Staging-SantaBarbaraVPNConnection Stack
+#      9.11. Create Production-CharlotteVPNConnection Stack
+#      9.12. Create Production-SantaBarbaraVPNConnection Stack
+
+#run "$commonbindir/common-create-vpnconnection-stack -E Build -G Charlotte -N 204.26.128.0/17"
+run "$commonbindir/common-create-vpnconnection-stack -E Build -G SantaBarbara -N 10.0.0.0/16"
+#run "$commonbindir/common-create-vpnconnection-stack -E Core -G Charlotte -N 204.26.128.0/17"
+run "$commonbindir/common-create-vpnconnection-stack -E Core -G SantaBarbara -N 10.0.0.0/16"
+#run "$commonbindir/common-create-vpnconnection-stack -E Development -G Charlotte -N 204.26.128.0/17"
+run "$commonbindir/common-create-vpnconnection-stack -E Development -G SantaBarbara -N 10.0.0.0/16"
+#run "$commonbindir/common-create-vpnconnection-stack -E Testing -G Charlotte -N 204.26.128.0/17"
+run "$commonbindir/common-create-vpnconnection-stack -E Testing -G SantaBarbara -N 10.0.0.0/16"
+#run "$commonbindir/common-create-vpnconnection-stack -E Staging -G Charlotte -N 204.26.128.0/17"
+run "$commonbindir/common-create-vpnconnection-stack -E Staging -G SantaBarbara -N 10.0.0.0/16"
+#run "$commonbindir/common-create-vpnconnection-stack -E Production -G Charlotte -N 204.26.128.0/17"
+run "$commonbindir/common-create-vpnconnection-stack -E Production -G SantaBarbara -N 10.0.0.0/16"
+
+
+# 10. Create VPCPeeringConnections
+#     10.1. Create Core-VPCPeeringConnections Stack
+#     10.4. Create Testing-DevelopmentVPCPeeringConnection Stack
+#     10.3. Create Staging-TestingVPCPeeringConnection Stack
+#     10.2. Create Production-StagingVPCPeeringConnection Stack
+
+run "$corebindir/core-create-vpcpeeringconnections-stack"
+run "$environmentbindir/environment-create-vpcpeeringconnection-stack -E Testing -P Development"
+run "$environmentbindir/environment-create-vpcpeeringconnection-stack -E Staging -P Testing"
+run "$environmentbindir/environment-create-vpcpeeringconnection-stack -E Production -P Staging"
+
+
+# 11. Create OpenVPNAS Instances
+#     11.6. Create Build-OpenVPNAS Stack
+#     11.5. Create Core-OpenVPNAS Stack
+#     11.4. Create Development-OpenVPNAS Stack
+#     11.3. Create Testing-OpenVPNAS Stack
+#     11.2. Create Staging-OpenVPNAS Stack
+#     11.1. Create Production-OpenVPNAS Stack
+
+run "$utilitybindir/utility-create-openvpnas-stack -E Build -U OpenVPNAS -Z micro"
+run "$utilitybindir/utility-create-openvpnas-stack -E Core -U OpenVPNAS -Z micro"
+run "$utilitybindir/utility-create-openvpnas-stack -E Development -U OpenVPNAS -Z micro"
+run "$utilitybindir/utility-create-openvpnas-stack -E Testing -U OpenVPNAS -Z micro"
+run "$utilitybindir/utility-create-openvpnas-stack -E Staging -U OpenVPNAS -Z micro"
+run "$utilitybindir/utility-create-openvpnas-stack -E Production -U OpenVPNAS -Z micro"
+
+
+# 12. Create WebSphereMQ Instances
+#     12.1. Create Core-WebSphereMQ Stack
+#     12.2. Create Production-WebSphereMQ Stack
+
+run "$applicationbindir/application-create-webspheremq-stack -E Core -T small"
+run "$applicationbindir/application-create-webspheremq-stack -E Production -T small"
+
+
+# 13. Create RabbitMQ Instances
+#     13.1. Create Development-RabbitMQ Stack
+#     13.2. Create Testing-RabbitMQ Stack
+#     13.3. Create Staging-RabbitMQ Stack
+#     13.4. Create Production-RabbitMQ Stack
+
+run "$applicationbindir/application-create-rabbitmq-stack -E Development -T small -Z 2"
+run "$applicationbindir/application-create-rabbitmq-stack -E Testing -T small -Z 1"
+run "$applicationbindir/application-create-rabbitmq-stack -E Staging -T small -Z 2"
+run "$applicationbindir/application-create-rabbitmq-stack -E Production -T small -Z 2"
+
+
+# 14. Create MongoDB Instances
+#     14.1. Create Development-MongoDB Stack
+#     14.2. Create Testing-MongoDB Stack
+#     14.3. Create Staging-MongoDB Stack
+#     14.4. Create Production-MongoDB Stack
+
+run "$applicationbindir/application-create-mongodb-stack -E Development -T small -Z 2"
+run "$applicationbindir/application-create-mongodb-stack -E Testing -T small -Z 1"
+run "$applicationbindir/application-create-mongodb-stack -E Staging -T small -Z 2"
+run "$applicationbindir/application-create-mongodb-stack -E Production -T small -Z 2"
+
+
+# 15. Create Octopus Instances
+#     15.1. Create Core-Octopus-Deploy Stack
+#     15.2. Create Staging-Octopus-Deploy Stack
+#     15.3. Create Production-Octopus-Deploy Stack
+
+run "$applicationbindir/application-create-octopus-deploy-stack -E Core -T small"
+run "$applicationbindir/application-create-octopus-deploy-stack -E Staging -T small"
+run "$applicationbindir/application-create-octopus-deploy-stack -E Production -T small"
+
+# 16. Create Engine Instances
+#     16.1. Create Development-Engine-Web Stack
+#     16.2. Create Development-Engine-Calculation Stack
+#     16.3. Create Development-Engine-DataStaging Stack
+#     16.4. Create Development-Engine-Publishing Stack
+#     16.5. Create Development-Engine-Monitoring Stack
+#     16.6. Create Testing-Engine-Web Stack
+#     16.7. Create Testing-Engine-Calculation Stack
+#     16.8. Create Testing-Engine-DataStaging Stack
+#     16.9. Create Testing-Engine-Publishing Stack
+#     16.10. Create Testing-Engine-Monitoring Stack
+#     16.11. Create Staging-Engine-Web Stack
+#     16.12. Create Staging-Engine-Calculation Stack
+#     16.13. Create Staging-Engine-DataStaging Stack
+#     16.14. Create Staging-Engine-Publishing Stack
+#     16.15. Create Staging-Engine-Monitoring Stack
+#     16.16. Create Production-Engine-Web Stack
+#     16.17. Create Production-Engine-Calculation Stack
+#     16.18. Create Production-Engine-DataStaging Stack
+#     16.19. Create Production-Engine-Publishing Stack
+#     16.20. Create Production-Engine-Monitoring Stack
+
+run "$applicationbindir/application-create-engine-web-stack -E Development -T small -Z 1"
+run "$applicationbindir/application-create-engine-calculation-stack -E Development -T small -Z 1"
+run "$applicationbindir/application-create-engine-datastaging-stack -E Development -T small -Z 2"
+run "$applicationbindir/application-create-engine-publishing-stack -E Development -T small -Z 1"
+run "$applicationbindir/application-create-engine-monitoring-stack -E Development -T small"
+run "$applicationbindir/application-create-engine-web-stack -E Testing -T small -Z 2"
+run "$applicationbindir/application-create-engine-calculation-stack -E Testing -T small -Z 1"
+run "$applicationbindir/application-create-engine-datastaging-stack -E Testing -T small -Z 1"
+run "$applicationbindir/application-create-engine-publishing-stack -E Testing -T small -Z 1"
+run "$applicationbindir/application-create-engine-monitoring-stack -E Testing -T small"
+run "$applicationbindir/application-create-engine-web-stack -E Staging -T small -Z 2"
+run "$applicationbindir/application-create-engine-calculation-stack -E Staging -T small -Z 2"
+run "$applicationbindir/application-create-engine-datastaging-stack -E Staging -T small -Z 2"
+run "$applicationbindir/application-create-engine-publishing-stack -E Staging -T small -Z 2"
+run "$applicationbindir/application-create-engine-monitoring-stack -E Staging -T small"
+run "$applicationbindir/application-create-engine-web-stack -E Production -T small -Z 2"
+run "$applicationbindir/application-create-engine-calculation-stack -E Production -T small -Z 2"
+run "$applicationbindir/application-create-engine-datastaging-stack -E Production -T small -Z 2"
+run "$applicationbindir/application-create-engine-publishing-stack -E Production -T small -Z 2"
+run "$applicationbindir/application-create-engine-monitoring-stack -E Production -T small"
+
+
+# 17. Create Integration Applications
+#     17.1. Create Development-Integration Stack
+#     17.2. Create Testing-Integration Stack
+#     17.3. Create Staging-Integration Stack
+#     17.4. Create Production-Integration Stack
+
+run "$applicationbindir/application-create-integration-stack -E Development"
+run "$applicationbindir/application-create-integration-stack -E Testing"
+run "$applicationbindir/application-create-integration-stack -E Staging"
+run "$applicationbindir/application-create-integration-stack -E Production"

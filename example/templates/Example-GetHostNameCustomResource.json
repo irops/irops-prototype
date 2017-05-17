@@ -1,0 +1,125 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Example-GetHostNameCustomResource Template. This demonstrates how to use the GetHostName Lambda Function to create a HostName for Instances from other Template Identifiers.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "System Configuration" },
+          "Parameters" : [
+            "CompanyName",
+            "SystemName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Environment Configuration" },
+          "Parameters" : [
+            "EnvironmentName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Application Configuration" },
+          "Parameters" : [
+            "ApplicationName",
+            "ComponentName"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "CompanyName" : { "default" : "Company Name" },
+        "SystemName" : { "default" : "System Name" },
+        "EnvironmentName" : { "default" : "Environment Name" },
+        "ApplicationName" : { "default" : "Application Name" },
+        "ComponentName" : { "default" : "Component Name" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "CompanyName" : {
+      "Description" : "Name of the Company",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "Travel",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "SystemName" : {
+      "Description" : "Name of the System (optional: leave blank to exclude from identifier)",
+      "Type" : "String",
+      "MaxLength" : 32,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[A-Z][a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "EnvironmentName" : {
+      "Description" : "Name of the Environment",
+      "Type" : "String",
+      "Default" : "Production",
+      "AllowedValues" : [ "Production", "Staging", "Testing", "Development", "Core", "Build", "QA", "Recovery" ],
+      "ConstraintDescription" : "must be one of the following: Production, Staging, Testing, Development, Core, Build, QA, Recovery."
+    },
+
+    "ApplicationName" : {
+      "Description" : "Name of the Application",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "Engine",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "ComponentName" : {
+      "Description" : "Name of the Component (optional: leave blank to exclude from identifier)",
+      "Type" : "String",
+      "MaxLength" : 32,
+      "Default" : "MongoDB",
+      "AllowedPattern" : "(^$|^[A-Z][a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    }
+  },
+
+  "Resources" : {
+    "GetLongerHostName" : {
+      "Type" : "Custom::GetHostName",
+      "Properties" : {
+        "ServiceToken" : { "Fn::Sub" : "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GetHostName" },
+        "CompanyName" : { "Ref" : "CompanyName" },
+        "LocationName" : { "Ref": "AWS::Region" },
+        "SystemName" : { "Ref" : "SystemName" },
+        "EnvironmentName" : { "Ref" : "EnvironmentName" },
+        "ApplicationName" : { "Ref" : "ApplicationName" },
+        "ComponentName" : { "Ref" : "ComponentName" }
+      }
+    },
+    "GetShorterHostName" : {
+      "Type" : "Custom::GetHostName",
+      "Properties" : {
+        "ServiceToken" : { "Fn::Sub" : "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GetHostName" },
+        "CompanyName" : { "Ref" : "CompanyName" },
+        "LocationName" : { "Ref": "AWS::Region" },
+        "EnvironmentName" : { "Ref" : "EnvironmentName" },
+        "ApplicationName" : { "Ref" : "ApplicationName" }
+      }
+    }
+  },
+
+  "Outputs" : {
+    "LongerHostName" : {
+      "Description" : "The Longer HostName",
+      "Value" : { "Fn::GetAtt" : [ "GetLongerHostName", "HostName" ]}
+    },
+
+    "ShorterHostName" : {
+      "Description" : "The Shorter HostName",
+      "Value" : { "Fn::GetAtt" : [ "GetShorterHostName", "HostName" ]}
+    }
+  }
+}

@@ -29,26 +29,26 @@ owner=${OWNER_EMAIL:-$USER@hpe.com}
 company=${COMPANY_NAME:-Travel}
 system=${SYSTEM_NAME:-IROPS}
 environment=${ENVIRONMENT_NAME:-Production}
-environment_size=${ENVIRONMENT_SIZE:-small}
+environment_type=${ENVIRONMENT_TYPE:-small}
 application=${APPLICATION_NAME:-WindowsWebServer}
 application_domain=${APPLICATION_DOMAIN:-wws}
 application_version=${APPLICATION_VERSION:-3.0.0}
-key=${AWS_KEY_NAME:-example}
-network=${ADMINISTRATOR_NETWORK:-0.0.0.0/0}
-network1=${ADMINISTRATOR_NETWORK1:-}
-network2=${ADMINISTRATOR_NETWORK2:-}
-network3=${ADMINISTRATOR_NETWORK3:-}
-public_network=${PUBLIC_NETWORK:-0.0.0.0/0}
-public_network1=${PUBLIC_NETWORK1:-}
-public_network2=${PUBLIC_NETWORK2:-}
-public_network3=${PUBLIC_NETWORK3:-}
-private_network=${PRIVATE_NETWORK:-10.0.0.0/16}
-private_network1=${PRIVATE_NETWORK1:-}
-private_network2=${PRIVATE_NETWORK2:-}
-private_network3=${PRIVATE_NETWORK3:-}
+public_user_network=${PUBLIC_USER_NETWORK:-0.0.0.0/0}
+public_user_network1=${PUBLIC_USER_NETWORK1:-}
+public_user_network2=${PUBLIC_USER_NETWORK2:-}
+public_administrator_network=${PUBLIC_ADMINISTRATOR_NETWORK:-0.0.0.0/0}
+public_administrator_network1=${PUBLIC_ADMINISTRATOR_NETWORK1:-}
+public_administrator_network2=${PUBLIC_ADMINISTRATOR_NETWORK2:-}
+private_user_network=${PRIVATE_USER_NETWORK:-10.0.0.0/16}
+private_user_network1=${PRIVATE_USER_NETWORK1:-}
+private_user_network2=${PRIVATE_USER_NETWORK2:-}
+private_administrator_network=${PRIVATE_ADMINISTRATOR_NETWORK:-10.0.0.0/16}
+private_administrator_network1=${PRIVATE_ADMINISTRATOR_NETWORK1:-}
+private_administrator_network2=${PRIVATE_ADMINISTRATOR_NETWORK2:-}
 region=${AWS_DEFAULT_REGION:-us-west-2}
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-administrator}
+key=${AWS_KEY_NAME:-example}
 
 
 #  2. Define functions
@@ -56,11 +56,11 @@ user=${AWS_USER_NAME:-administrator}
 usage () {
     echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v] [-o] [-d]"
     echo "                  [-O owner] [-C company ] [-S system]"
-    echo "                  [-E environment] [-Z size]"
+    echo "                  [-E environment] [-T type]"
     echo "                  [-A application ] [-D domain] [-V version]"
-    echo "                  [-k key] [-n network ]"
     echo "                  [-p network] [-P network ]"
-    echo "                  [-r region ] [-a account] [-u user]"
+    echo "                  [-n network] [-N network ]"
+    echo "                  [-r region ] [-a account] [-u user] [-k key]"
     echo "  -I              non-interactive"
     echo "  -s              slower: increase pauses by 25%"
     echo "  -f              faster: reduce pauses by 25%"
@@ -71,17 +71,18 @@ usage () {
     echo "  -C company      Company Name (default: $company)"
     echo "  -S system       System Name (default: $system)"
     echo "  -E environment  Environment Name (default: $environment)"
-    echo "  -Z size         Environment Size (default: $environment_size)"
+    echo "  -T type         Environment Type (default: $environment_type)"
     echo "  -A application  Application Name (default: $application)"
     echo "  -D domain       Application Domain (default: $application_domain)"
     echo "  -V version      Application Version (default: $application_version)"
-    echo "  -k key          Key (default: $key)"
-    echo "  -n network      Administrator Network (default: $network)"
-    echo "  -p network      Public Network (default: $public_network)"
-    echo "  -P network      Private Network (default: $private_network)"
+    echo "  -p network      Public User Network (default: $public_user_network)"
+    echo "  -P network      Public Administrator Network (default: $public_administrator_network)"
+    echo "  -n network      Private User Network (default: $private_user_network)"
+    echo "  -N network      Private Administrator Network (default: $private_administrator_network)"
     echo "  -r region       Region (default: $region)"
     echo "  -a account      Account (default: $account)"
     echo "  -u user         User (default: $user)"
+    echo "  -k key          Key (default: $key)"
 }
 
 run() {
@@ -163,40 +164,39 @@ next() {
 
 
 #  3. Parse command line options
-#     - Note, using options 1-9 as hidden options to set additional network ranges
+#     - Note, using options 1-8 as hidden options to set additional network ranges
 
-while getopts IsfvodO:C:S:E:Z:A:D:V:k:n:1:2:3:p:4:5:6:P:7:8:9:r:a:u:? arg; do
+while getopts IsfvodO:C:S:E:T:A:D:V:p:1:2:P:3:4:n:5:6:N:7:8:r:a:u:k:? arg; do
     case $arg in
     I)  interactive=0;;
     s)  ((speed < speed_max)) && ((speed=speed+25));;
     f)  ((speed > 0)) && ((speed=speed-25));;
     v)  verbose=1;;
-    o)  override=1;;
     d)  dummy=1;;
     O)  owner="$OPTARG";;
     C)  company="$OPTARG";;
     S)  system="$OPTARG";;
     E)  environment="$OPTARG";;
-    Z)  environment_size="$OPTARG";;
+    T)  environment_type="$OPTARG";;
     A)  application="$OPTARG";;
     D)  application_domain="$OPTARG";;
     V)  application_version="$OPTARG";;
-    k)  key="$OPTARG";;
-    n)  network="$OPTARG";;
-    1)  network1="$OPTARG";;
-    2)  network2="$OPTARG";;
-    3)  network3="$OPTARG";;
-    p)  public_network="$OPTARG";;
-    4)  public_network1="$OPTARG";;
-    5)  public_network2="$OPTARG";;
-    6)  public_network3="$OPTARG";;
-    P)  private_network="$OPTARG";;
-    7)  private_network1="$OPTARG";;
-    8)  private_network2="$OPTARG";;
-    9)  private_network3="$OPTARG";;
+    p)  public_user_network="$OPTARG";;
+    1)  public_user_network1="$OPTARG";;
+    2)  public_user_network2="$OPTARG";;
+    P)  public_administrator_network="$OPTARG";;
+    3)  public_administrator_network1="$OPTARG";;
+    4)  public_administrator_network2="$OPTARG";;
+    n)  private_user_network="$OPTARG";;
+    5)  private_user_network1="$OPTARG";;
+    6)  private_user_network2="$OPTARG";;
+    N)  private_administrator_network="$OPTARG";;
+    7)  private_administrator_network1="$OPTARG";;
+    8)  private_administrator_network2="$OPTARG";;
     r)  region="$OPTARG";;
     a)  account="$OPTARG";;
     u)  user="$OPTARG";;
+    k)  key="$OPTARG";;
     ?)  usage
         exit 1;;
     esac
@@ -217,66 +217,122 @@ if [ -z $company ]; then
     echo "-C company missing!"
     echo "Could not automatically determine company, and it was not specified as a parameter"
     exit 12
+else
+    case $company in
+      Travel)
+        ;;
+      *)
+        echo "-C $company invalid! Must be Travel"
+        exit 13;;
+    esac
 fi
 
 if [ -z $system ]; then
     echo "-S system missing!"
     echo "Could not automatically determine system, and it was not specified as a parameter"
     exit 14
+else
+    case $system in
+      IROPS)
+        ;;
+      *)
+        echo "-S $system invalid! Must be IROPS"
+        exit 15;;
+    esac
 fi
 
 if [ -z $environment ]; then
     echo "-E environment missing!"
     echo "Could not automatically determine environment, and it was not specified as a parameter"
-    exit 16
+    exit 20
+else
+    case $environment in
+      Production)
+        os_name="Windows Server 2016"
+        log_retention=30;;
+      Staging)
+        os_name="Windows Server 2012 R2"
+        log_retention=7;;
+      Testing)
+        os_name="Windows Server 2012 R2"
+        log_retention=0;;
+      Development)
+        os_name="Windows Server 2012 R2"
+        log_retention=0;;
+      Core)
+        os_name="Windows Server 2012 R2"
+        log_retention=14;;
+      Build)
+        os_name="Windows Server 2012 R2"
+        log_retention=0;;
+      *)
+        os_name="Windows Server 2012 R2"
+        log_retention=0;;
+    esac
 fi
 
-if [ -z $environment_size ]; then
-    echo "-Z size missing!"
-    echo "Could not automatically determine size, and it was not specified as a parameter"
-    exit 18
+if [ -z $environment_type ]; then
+    echo "-T type missing!"
+    echo "Could not automatically determine environment type, and it was not specified as a parameter"
+    exit 22
+else
+    case $environment_type in
+      small|medium|large|xlarge)
+        ;;
+      *)
+        echo "-T $environment_type invalid! Must be small, medium, large or xlarge"
+        exit 23;;
+    esac
 fi
 
 if [ -z $application ]; then
     echo "-A application missing!"
     echo "Could not automatically determine application, and it was not specified as a parameter"
-    exit 20
+    exit 30
+else
+    case $application in
+      WindowsWebServer)
+        ;;
+      *)
+        echo "-A $application invalid! Must be LinuxWebServer"
+        exit 31;;
+    esac
 fi
 
 if [ -z $application_domain ]; then
     echo "-D domain missing!"
     echo "Could not automatically determine domain, and it was not specified as a parameter"
-    exit 22
+    exit 32
 fi
 
 if [ -z $application_version ]; then
     echo "-V version missing!"
     echo "Could not automatically determine version, and it was not specified as a parameter"
-    exit 24
-fi
-
-if [ -z $key ]; then
-    echo "-k key missing!"
-    echo "Could not automatically determine key, and it was not specified as a parameter"
-    exit 30
-fi
-
-if [ -z $network ]; then
-    echo "-n network missing!"
-    echo "Could not automatically determine network, and it was not specified as a parameter"
-    exit 32
-fi
-
-if [ -z $public_network ]; then
-    echo "-p network missing!"
-    echo "Could not automatically determine public network, and it was not specified as a parameter"
     exit 34
 fi
 
-if [ -z $private_network ]; then
+if [ -z $public_user_network ]; then
+    echo "-p network missing!"
+    echo "Could not automatically determine public user network, and it was not specified as a parameter"
+    exit 40
+fi
+
+if [ -z $public_administrator_network ]; then
     echo "-P network missing!"
-    echo "Could not automatically determine private network, and it was not specified as a parameter"
-    exit 36
+    echo "Could not automatically determine public administrator network, and it was not specified as a parameter"
+    exit 42
+fi
+
+if [ -z $private_user_network ]; then
+    echo "-n network missing!"
+    echo "Could not automatically determine private user network, and it was not specified as a parameter"
+    exit 44
+fi
+
+if [ -z $private_administrator_network ]; then
+    echo "-N network missing!"
+    echo "Could not automatically determine private administrator network, and it was not specified as a parameter"
+    exit 46
 fi
 
 if [ -z $region ]; then
@@ -287,9 +343,9 @@ else
     case $region in
       us-east-1)
         s3_domain=s3.amazonaws.com;;
-      us-east-2|us-west-1|us-west-2|ca-central-1|sa-east-1|eu-west-1|eu-west-2|eu-central-1|ap-northeast-1|ap-northeast-2|ap-south-1|ap-southeast-1|ap-southeast-2)
+      us-east-2|us-west-1|us-west-2|ca-central-1|eu-west-1|eu-central-1|eu-west-2|ap-southeast-1|ap-southeast-2|ap-northeast-2|ap-northeast-1|ap-south-1|sa-east-1)
         s3_domain=s3-$region.amazonaws.com;;
-    *)
+      *)
         echo "-r $region invalid: Please specify a valid region"
         exit 51;;
     esac
@@ -307,34 +363,32 @@ if [ -z $user ]; then
     exit 54
 fi
 
+if [ -z $key ]; then
+    echo "-k key missing!"
+    echo "Could not automatically determine key, and it was not specified as a parameter"
+    exit 56
+fi
+
 profile=$account-$user
 
 if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     echo "Could not find ($account) Account ($user) User AWSCLI profile!"
     echo "Expected to find: [profile $profile] in ~/.aws/config"
-    exit 60
-fi
-
-templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
-templates_folder=example
-
-if ! aws s3api head-bucket --bucket $templates_bucket --profile $profile --region $region 2> /dev/null; then
-    unset templates_bucket
-fi
-
-examples_bucket=${AWS_EXAMPLES_BUCKET:-examples-$region-$account}
-examples_folder=$application
-
-if ! aws s3api head-bucket --bucket $examples_bucket --profile $profile --region $region 2> /dev/null; then
-    echo "$examples_bucket S3 bucket does not exist!"
-    exit 68
+    exit 58
 fi
 
 if ! aws cloudformation describe-stacks --stack-name $environment-$application \
                                         --profile $profile --region $region --output text &> /dev/null; then
     echo "Unable to update - $environment-$application Stack does not exist!"
-    exit 70
+    exit 80
 fi
+
+templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
+template_folder=example
+
+examples_bucket=${AWS_EXAMPLES_BUCKET:-examples-$region-$account}
+example_folder=WindowsWebServer
+example_object=WindowsWebServer-$application_version.zip
 
 # Prevent certain environment variables from breaking commands
 unset AWS_DEFAULT_PROFILE
@@ -383,49 +437,41 @@ fi
 ((++step))
 read -r -d '' statement << EOS
 aws s3 sync $templatesdir \\
-            s3://$templates_bucket/$templates_folder \\
+            s3://$templates_bucket/$template_folder \\
             --exclude '*' --include 'Example-WindowsWebServer.json' --include 'Example-WindowsWebServer-StackPolicy.json' \\
             --profile $profile --region $region --output table
 EOS
 run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
 eval_statement="${statement//\\$'\n'}"
 
-if [ ! -z $templates_bucket ]; then
-    clear
-    echo
-    echo "============================================================"
-    echo
-    echo "$(printf '%2d' $step). Sync Template and Policy to ($templates_bucket) Bucket"
-    echo
-    echo "============================================================"
-    echo
-    echo "Commands:"
-    echo
-    echo "$statement"
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Sync Template and Policy to ($templates_bucket) Bucket"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
 
-    next 50
+next 50
 
-    echo
-    echo "$run_statement"
-    eval "$eval_statement"
+echo
+echo "$run_statement"
+eval "$eval_statement"
 
-    next 50
-fi
+next 50
 
 
 ((++step))
 if [ $dummy = 1 ]; then
-    # unset download location, which triggers creation of dummy application page within the template
-    unset examples_bucket
+    unset example_object
 fi
 
-if [ ! -z $templates_bucket ]; then
-    template_parameter="--template-url https://$s3_domain/$templates_bucket/$templates_folder/Example-WindowsWebServer.json"
-    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$templates_folder/Example-WindowsWebServer-StackPolicy.json"
-else
-    template_parameter="--template-body file://$templatesdir/Example-WindowsWebServer.json"
-    stack_policy_parameter="--stack-policy-body file://$templatesdir/Example-WindowsWebServer-StackPolicy.json"
-fi
+template_parameter="--template-url https://$s3_domain/$templates_bucket/$template_folder/Example-WindowsWebServer.json"
+stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$template_folder/Example-WindowsWebServer-StackPolicy.json"
 if [ $override = 1 ]; then
     stack_policy_parameter="$stack_policy_parameter \\"$'\n'"                                --stack-policy-during-update-body file://$templatesdir/Override-StackPolicy.json"
 fi
@@ -434,26 +480,33 @@ aws cloudformation update-stack --stack-name $environment-$application \\
                                 $template_parameter \\
                                 $stack_policy_parameter \\
                                 --parameters ParameterKey=VPCStackName,ParameterValue=$environment-VPC \\
+                                             ParameterKey=CustomIdentifierFunctionsStackName,ParameterValue=CustomIdentifierFunctions \\
+                                             ParameterKey=StandardAMIFunctionsStackName,ParameterValue=StandardAMIFunctions \\
+                                             ParameterKey=StandardBucketsStackName,ParameterValue=StandardBuckets \\
+                                             ParameterKey=StandardTopicsStackName,ParameterValue=StandardTopics \\
                                              ParameterKey=KeyName,ParameterValue=$key \\
                                              ParameterKey=CompanyName,ParameterValue=$company \\
                                              ParameterKey=SystemName,ParameterValue=$system \\
-                                             ParameterKey=EnvironmentSize,ParameterValue=$environment_size \\
-                                             ParameterKey=ApplicationsBucket,ParameterValue=$examples_bucket \\
+                                             ParameterKey=EnvironmentType,ParameterValue=$environment_type \\
+                                             ParameterKey=OSName,ParameterValue="$os_name" \\
+                                             ParameterKey=ApplicationFolder,ParameterValue=$example_folder \\
+                                             ParameterKey=ApplicationObject,ParameterValue=$example_object \\
                                              ParameterKey=ApplicationName,ParameterValue=$application \\
                                              ParameterKey=ApplicationDomain,ParameterValue=$application_domain \\
                                              ParameterKey=ApplicationVersion,ParameterValue=$application_version \\
-                                             ParameterKey=AdministratorNetwork,ParameterValue=$network \\
-                                             ParameterKey=AdministratorNetwork1,ParameterValue=$network1 \\
-                                             ParameterKey=AdministratorNetwork2,ParameterValue=$network2 \\
-                                             ParameterKey=AdministratorNetwork3,ParameterValue=$network3 \\
-                                             ParameterKey=PublicNetwork,ParameterValue=$public_network \\
-                                             ParameterKey=PublicNetwork1,ParameterValue=$public_network1 \\
-                                             ParameterKey=PublicNetwork2,ParameterValue=$public_network2 \\
-                                             ParameterKey=PublicNetwork3,ParameterValue=$public_network3 \\
-                                             ParameterKey=PrivateNetwork,ParameterValue=$private_network \\
-                                             ParameterKey=PrivateNetwork1,ParameterValue=$private_network1 \\
-                                             ParameterKey=PrivateNetwork2,ParameterValue=$private_network2 \\
-                                             ParameterKey=PrivateNetwork3,ParameterValue=$private_network3 \\
+                                             ParameterKey=LogRetention,ParameterValue=$log_retention \\
+                                             ParameterKey=PublicUserNetwork,ParameterValue=$public_user_network \\
+                                             ParameterKey=PublicUserNetwork1,ParameterValue=$public_user_network1 \\
+                                             ParameterKey=PublicUserNetwork2,ParameterValue=$public_user_network2 \\
+                                             ParameterKey=PublicAdministratorNetwork,ParameterValue=$public_administrator_network \\
+                                             ParameterKey=PublicAdministratorNetwork1,ParameterValue=$public_administrator_network1 \\
+                                             ParameterKey=PublicAdministratorNetwork2,ParameterValue=$public_administrator_network2 \\
+                                             ParameterKey=PrivateUserNetwork,ParameterValue=$private_user_network \\
+                                             ParameterKey=PrivateUserNetwork1,ParameterValue=$private_user_network1 \\
+                                             ParameterKey=PrivateUserNetwork2,ParameterValue=$private_user_network2 \\
+                                             ParameterKey=PrivateAdministratorNetwork,ParameterValue=$private_administrator_network \\
+                                             ParameterKey=PrivateAdministratorNetwork1,ParameterValue=$private_administrator_network1 \\
+                                             ParameterKey=PrivateAdministratorNetwork2,ParameterValue=$private_administrator_network2 \\
                                 --tags Key=Owner,Value=$owner \\
                                        Key=Company,Value=$company \\
                                        Key=System,Value=$system \\

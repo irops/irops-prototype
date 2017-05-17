@@ -1,0 +1,404 @@
+#!/bin/bash
+#
+# Here's a list of the commands which need to be run to delete the Training MultiEnvironment (eu-west-1 / Ireland)
+# - It's very likely some of these will fail due to manual changes, requiring
+#   this script to be run until a failure, stopped with manual steps to clear
+#   out what's blocking the deletion, then a restart, until done.
+#
+# We can break down the deletion of a region into this order:
+#
+#  1. Initialize Environment Variables
+#
+#  2. Delete Integration Applications
+#      2.1. Delete Production-Integration Stack
+#      2.2. Delete Staging-Integration Stack
+#      2.3. Delete Testing-Integration Stack
+#      2.4. Delete Development-Integration Stack
+#
+#  3. Delete Engine Instances
+#      3.1. Delete Production-Engine-Web Stack
+#      3.2. Delete Production-Engine-Calculation Stack
+#      3.3. Delete Production-Engine-DataStaging Stack
+#      3.4. Delete Production-Engine-Publishing Stack
+#      3.5. Delete Production-Engine-Monitoring Stack
+#      3.6. Delete Staging-Engine-Web Stack
+#      3.7. Delete Staging-Engine-Calculation Stack
+#      3.8. Delete Staging-Engine-DataStaging Stack
+#      3.9. Delete Staging-Engine-Publishing Stack
+#      3.10. Delete Staging-Engine-Monitoring Stack
+#      3.11. Delete Testing-Engine-Web Stack
+#      3.12. Delete Testing-Engine-Calculation Stack
+#      3.13. Delete Testing-Engine-DataStaging Stack
+#      3.14. Delete Testing-Engine-Publishing Stack
+#      3.15. Delete Testing-Engine-Monitoring Stack
+#      3.16. Delete Development-Engine-Web Stack
+#      3.17. Delete Development-Engine-Calculation Stack
+#      3.18. Delete Development-Engine-DataStaging Stack
+#      3.19. Delete Development-Engine-Publishing Stack
+#      3.20. Delete Development-Engine-Monitoring Stack
+#
+#  4. Delete Octopus Instances
+#      4.1. Delete Production-Octopus-Deploy Stack
+#      4.2. Delete Staging-Octopus-Deploy Stack
+#      4.3. Delete Core-Octopus-Deploy Stack
+#
+#  5. Delete MongoDB Instances
+#      5.1. Delete Production-MongoDB Stack
+#      5.2. Delete Staging-MongoDB Stack
+#      5.3. Delete Testing-MongoDB Stack
+#      5.4. Delete Development-MongoDB Stack
+#
+#  6. Delete RabbitMQ Instances
+#      6.1. Delete Production-RabbitMQ Stack
+#      6.2. Delete Staging-RabbitMQ Stack
+#      6.3. Delete Testing-RabbitMQ Stack
+#      6.4. Delete Development-RabbitMQ Stack
+#
+#  7. Delete WebSphereMQ Instances
+#      7.1. Delete Production-WebSphereMQ Stack
+#      7.2. Delete Core-WebSphereMQ Stack
+#
+#  8. Delete OpenVPNAS Instances
+#      8.1. Delete Production-OpenVPNAS Stack
+#      8.2. Delete Staging-OpenVPNAS Stack
+#      8.3. Delete Testing-OpenVPNAS Stack
+#      8.4. Delete Development-OpenVPNAS Stack
+#      8.5. Delete Core-OpenVPNAS Stack
+#      8.6. Delete Build-OpenVPNAS Stack
+#
+#  9. Delete VPCPeeringConnections
+#      9.1. Delete Production-StagingVPCPeeringConnection Stack
+#      9.2. Delete Staging-TestingVPCPeeringConnection Stack
+#      9.3. Delete Testing-DevelopmentVPCPeeringConnection Stack
+#      9.4. Delete Core-VPCPeeringConnections Stack
+#
+# 10. Delete VPNConnections
+#     10.1. Delete Production-SantaBarbaraVPNConnection Stack
+#     10.2. Delete Production-CharlotteVPNConnection Stack
+#     10.3. Delete Staging-SantaBarbaraVPNConnection Stack
+#     10.4. Delete Staging-CharlotteVPNConnection Stack
+#     10.5. Delete Testing-SantaBarbaraVPNConnection Stack
+#     10.6. Delete Testing-CharlotteVPNConnection Stack
+#     10.7. Delete Development-SantaBarbaraVPNConnection Stack
+#     10.8. Delete Development-CharlotteVPNConnection Stack
+#     10.9. Delete Core-SantaBarbaraVPNConnection Stack
+#     10.10. Delete Core-CharlotteVPNConnection Stack
+#     10.11. Delete Build-SantaBarbaraVPNConnection Stack
+#     10.12. Delete Build-CharlotteVPNConnection Stack
+#
+# 11. Delete CustomerGateways
+#     11.1. Delete SantaBarbaraCustomerGateway Stack
+#     11.2. Delete CharlotteCustomerGateway Stack
+#
+# 12. Delete NetworkACLs
+#     12.1. Delete Production-NetworkAcls Stack
+#     12.2. Delete Staging-NetworkAcls Stack
+#     12.3. Delete Testing-NetworkAcls Stack
+#     12.4. Delete Development-NetworkAcls Stack
+#     12.5. Delete Core-NetworkAcls Stack
+#     12.6. Delete Build-NetworkAcls Stack
+#
+# 13. Delete VPCs
+#     13.1. Delete Production-VPC Stack
+#     13.2. Delete Staging-VPC Stack
+#     13.3. Delete Testing-VPC Stack
+#     13.4. Delete Development-VPC Stack
+#     13.5. Delete Core-VPC Stack
+#     13.6. Delete Build-VPC Stack
+#
+# 14. Delete Hosted Zones
+#     14.1. Delete Build-HostedZone Stack (Public DNS Zone)
+#     14.2. Delete Core-HostedZone Stack (Public DNS Zone)
+#     14.3. Delete Development-HostedZone Stack (Public DNS Zone)
+#     14.4. Delete Testing-HostedZone Stack (Public DNS Zone)
+#     14.5. Delete Staging-HostedZone Stack (Public DNS Zone)
+#     14.6. Delete Production-HostedZone Stack (Public DNS Zone)
+#
+# 15. Delete Lambda Functions
+#     15.1 Delete CustomIdentifierFunctions Stack
+#     15.2 Delete StandardScheduleFunctions Stack
+#     15.3 Delete StandardCIDRFunctions Stack
+#     15.4 Delete StandardAMIFunctions Stack
+#
+# 16. Delete S3 Buckets
+#     16.1 Delete StandardBuckets Stack
+#
+# 17. Delete SNS Topics and Subscriptions
+#     17.1 Delete CustomSubscriptions Stack
+#     17.2 Delete StandardSubscriptions Stack
+#     17.3 Delete StandardTopics Stack
+#
+
+run() {
+    echo
+    echo -n "Run: \"${1##*/bin/}\"? [Y/n/q]"
+    read choice
+    case "$choice" in
+      "" | "y" | "Y" | "yes" | "Yes")
+        eval $1;;
+      "n" | "N" | "no" | "No")
+        ;;
+       *) echo "cancelled"
+          exit 2;;
+    esac
+}
+
+#  1. Initalize Environment Variables
+#     - This will initialze the environment variables to the Training-Production Environment
+#     - We will be explicit on certain options below, even when the value does not need to be set due to defaults
+
+bindir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+applicationbindir=${bindir%/*}/application/bin
+billingbindir=${bindir%/*}/billing/bin
+commonbindir=${bindir%/*}/common/bin
+corebindir=${bindir%/*}/core/bin
+environmentbindir=${bindir%/*}/environment/bin
+examplebindir=${bindir%/*}/example/bin
+identitybindir=${bindir%/*}/identity/bin
+utilitybindir=${bindir%/*}/utility/bin
+
+source $bindir/irops-define-training-production
+
+
+#  2. Delete Integration Applications
+#      2.1. Delete Production-Integration Stack
+#      2.2. Delete Staging-Integration Stack
+#      2.3. Delete Testing-Integration Stack
+#      2.4. Delete Development-Integration Stack
+
+run "$applicationbindir/application-delete-integration-stack -E Production"
+run "$applicationbindir/application-delete-integration-stack -E Staging"
+run "$applicationbindir/application-delete-integration-stack -E Testing"
+run "$applicationbindir/application-delete-integration-stack -E Development"
+
+#  3. Delete Engine Instances
+#      3.1. Delete Production-Engine-Web Stack
+#      3.2. Delete Production-Engine-Calculation Stack
+#      3.3. Delete Production-Engine-DataStaging Stack
+#      3.4. Delete Production-Engine-Publishing Stack
+#      3.5. Delete Production-Engine-Monitoring Stack
+#      3.6. Delete Staging-Engine-Web Stack
+#      3.7. Delete Staging-Engine-Calculation Stack
+#      3.8. Delete Staging-Engine-DataStaging Stack
+#      3.9. Delete Staging-Engine-Publishing Stack
+#      3.10. Delete Staging-Engine-Monitoring Stack
+#      3.11. Delete Testing-Engine-Web Stack
+#      3.12. Delete Testing-Engine-Calculation Stack
+#      3.13. Delete Testing-Engine-DataStaging Stack
+#      3.14. Delete Testing-Engine-Publishing Stack
+#      3.15. Delete Testing-Engine-Monitoring Stack
+#      3.16. Delete Development-Engine-Web Stack
+#      3.17. Delete Development-Engine-Calculation Stack
+#      3.18. Delete Development-Engine-DataStaging Stack
+#      3.19. Delete Development-Engine-Publishing Stack
+#      3.20. Delete Development-Engine-Monitoring Stack
+
+run "$applicationbindir/application-delete-engine-web-stack -E Production"
+run "$applicationbindir/application-delete-engine-calculation-stack -E Production"
+run "$applicationbindir/application-delete-engine-datastaging-stack -E Production"
+run "$applicationbindir/application-delete-engine-publishing-stack -E Production"
+run "$applicationbindir/application-delete-engine-monitoring-stack -E Production"
+run "$applicationbindir/application-delete-engine-web-stack -E Staging"
+run "$applicationbindir/application-delete-engine-calculation-stack -E Staging"
+run "$applicationbindir/application-delete-engine-datastaging-stack -E Staging"
+run "$applicationbindir/application-delete-engine-publishing-stack -E Staging"
+run "$applicationbindir/application-delete-engine-monitoring-stack -E Staging"
+run "$applicationbindir/application-delete-engine-web-stack -E Testing"
+run "$applicationbindir/application-delete-engine-calculation-stack -E Testing"
+run "$applicationbindir/application-delete-engine-datastaging-stack -E Testing"
+run "$applicationbindir/application-delete-engine-publishing-stack -E Testing"
+run "$applicationbindir/application-delete-engine-monitoring-stack -E Testing"
+run "$applicationbindir/application-delete-engine-web-stack -E Development"
+run "$applicationbindir/application-delete-engine-calculation-stack -E Development"
+run "$applicationbindir/application-delete-engine-datastaging-stack -E Development"
+run "$applicationbindir/application-delete-engine-publishing-stack -E Development"
+run "$applicationbindir/application-delete-engine-monitoring-stack -E Development"
+
+
+#  4. Delete Octopus Instances
+#      4.1. Delete Production-Octopus-Deploy Stack
+#      4.2. Delete Staging-Octopus-Deploy Stack
+#      4.3. Delete Core-Octopus-Deploy Stack
+
+run "$applicationbindir/application-delete-octopus-deploy-stack -E Production"
+run "$applicationbindir/application-delete-octopus-deploy-stack -E Staging"
+run "$applicationbindir/application-delete-octopus-deploy-stack -E Core"
+
+
+#  5. Delete MongoDB Instances
+#      5.1. Delete Production-MongoDB Stack
+#      5.2. Delete Staging-MongoDB Stack
+#      5.3. Delete Testing-MongoDB Stack
+#      5.4. Delete Development-MongoDB Stack
+
+run "$applicationbindir/application-delete-mongodb-stack -E Production"
+run "$applicationbindir/application-delete-mongodb-stack -E Staging"
+run "$applicationbindir/application-delete-mongodb-stack -E Testing"
+run "$applicationbindir/application-delete-mongodb-stack -E Development"
+
+
+#  6. Delete RabbitMQ Instances
+#      6.1. Delete Production-RabbitMQ Stack
+#      6.2. Delete Staging-RabbitMQ Stack
+#      6.3. Delete Testing-RabbitMQ Stack
+#      6.4. Delete Development-RabbitMQ Stack
+
+run "$applicationbindir/application-delete-rabbitmq-stack -E Production"
+run "$applicationbindir/application-delete-rabbitmq-stack -E Staging"
+run "$applicationbindir/application-delete-rabbitmq-stack -E Testing"
+run "$applicationbindir/application-delete-rabbitmq-stack -E Development"
+
+
+#  7. Delete WebSphereMQ Instances
+#      7.1. Delete Production-WebSphereMQ Stack
+#      7.2. Delete Core-WebSphereMQ Stack
+
+run "$applicationbindir/application-delete-webspheremq-stack -E Production"
+run "$applicationbindir/application-delete-webspheremq-stack -E Core"
+
+
+#  8. Delete OpenVPNAS Instances
+#      8.1. Delete Production-OpenVPNAS Stack
+#      8.2. Delete Staging-OpenVPNAS Stack
+#      8.3. Delete Testing-OpenVPNAS Stack
+#      8.4. Delete Development-OpenVPNAS Stack
+#      8.5. Delete Core-OpenVPNAS Stack
+#      8.6. Delete Build-OpenVPNAS Stack
+
+run "$utilitybindir/utility-delete-openvpnas-stack -E Production -U OpenVPNAS"
+run "$utilitybindir/utility-delete-openvpnas-stack -E Staging -U OpenVPNAS"
+run "$utilitybindir/utility-delete-openvpnas-stack -E Testing -U OpenVPNAS"
+run "$utilitybindir/utility-delete-openvpnas-stack -E Development -U OpenVPNAS"
+run "$utilitybindir/utility-delete-openvpnas-stack -E Core -U OpenVPNAS"
+run "$utilitybindir/utility-delete-openvpnas-stack -E Build -U OpenVPNAS"
+
+
+#  9. Delete VPCPeeringConnections
+#      9.1. Delete Production-StagingVPCPeeringConnection Stack
+#      9.2. Delete Staging-TestingVPCPeeringConnection Stack
+#      9.3. Delete Testing-DevelopmentVPCPeeringConnection Stack
+#      9.4. Delete Core-VPCPeeringConnections Stack
+
+run "$environmentbindir/environment-delete-vpcpeeringconnection-stack -E Production -P Staging"
+run "$environmentbindir/environment-delete-vpcpeeringconnection-stack -E Staging -P Testing"
+run "$environmentbindir/environment-delete-vpcpeeringconnection-stack -E Testing -P Development"
+run "$corebindir/core-delete-vpcpeeringconnections-stack"
+
+
+# 10. Delete VPNConnections
+#     10.1. Delete Production-SantaBarbaraVPNConnection Stack
+#     10.2. Delete Production-CharlotteVPNConnection Stack
+#     10.3. Delete Staging-SantaBarbaraVPNConnection Stack
+#     10.4. Delete Staging-CharlotteVPNConnection Stack
+#     10.5. Delete Testing-SantaBarbaraVPNConnection Stack
+#     10.6. Delete Testing-CharlotteVPNConnection Stack
+#     10.7. Delete Development-SantaBarbaraVPNConnection Stack
+#     10.8. Delete Development-CharlotteVPNConnection Stack
+#     10.9. Delete Core-SantaBarbaraVPNConnection Stack
+#     10.10. Delete Core-CharlotteVPNConnection Stack
+#     10.11. Delete Build-SantaBarbaraVPNConnection Stack
+#     10.12. Delete Build-CharlotteVPNConnection Stack
+
+run "$commonbindir/common-delete-vpnconnection-stack -E Production -G SantaBarbara"
+run "$commonbindir/common-delete-vpnconnection-stack -E Production -G Charlotte"
+run "$commonbindir/common-delete-vpnconnection-stack -E Staging -G SantaBarbara"
+run "$commonbindir/common-delete-vpnconnection-stack -E Staging -G Charlotte"
+run "$commonbindir/common-delete-vpnconnection-stack -E Testing -G SantaBarbara"
+run "$commonbindir/common-delete-vpnconnection-stack -E Testing -G Charlotte"
+run "$commonbindir/common-delete-vpnconnection-stack -E Development -G SantaBarbara"
+run "$commonbindir/common-delete-vpnconnection-stack -E Development -G Charlotte"
+run "$commonbindir/common-delete-vpnconnection-stack -E Core -G SantaBarbara"
+run "$commonbindir/common-delete-vpnconnection-stack -E Core -G Charlotte"
+run "$commonbindir/common-delete-vpnconnection-stack -E Build -G SantaBarbara"
+run "$commonbindir/common-delete-vpnconnection-stack -E Build -G Charlotte"
+
+
+# 11. Delete CustomerGateways
+#     11.1. Delete SantaBarbaraCustomerGateway Stack
+#     11.2. Delete CharlotteCustomerGateway Stack
+
+run "$commonbindir/common-delete-customergateway-stack -G SantaBarbara"
+run "$commonbindir/common-delete-customergateway-stack -G Charlotte"
+
+
+# 12. Delete NetworkACLs
+#     12.1. Delete Production-NetworkAcls Stack
+#     12.2. Delete Staging-NetworkAcls Stack
+#     12.3. Delete Testing-NetworkAcls Stack
+#     12.4. Delete Development-NetworkAcls Stack
+#     12.5. Delete Core-NetworkAcls Stack
+#     12.6. Delete Build-NetworkAcls Stack
+
+run "$environmentbindir/environment-delete-networkacls-stack -E Production"
+run "$environmentbindir/environment-delete-networkacls-stack -E Staging"
+run "$environmentbindir/environment-delete-networkacls-stack -E Testing"
+run "$environmentbindir/environment-delete-networkacls-stack -E Development"
+run "$corebindir/core-delete-networkacls-stack -E Core"
+run "$corebindir/build-delete-networkacls-stack -E Build"
+
+
+# 13. Delete VPCs
+#     13.1. Delete Production-VPC Stack
+#     13.2. Delete Staging-VPC Stack
+#     13.3. Delete Testing-VPC Stack
+#     13.4. Delete Development-VPC Stack
+#     13.5. Delete Core-VPC Stack
+#     13.6. Delete Build-VPC Stack
+
+run "$environmentbindir/environment-delete-vpc-stack -E Production"
+run "$environmentbindir/environment-delete-vpc-stack -E Staging"
+run "$environmentbindir/environment-delete-vpc-stack -E Testing"
+run "$environmentbindir/environment-delete-vpc-stack -E Development"
+run "$corebindir/core-delete-vpc-stack -E Core"
+run "$corebindir/build-delete-vpc-stack -E Build"
+
+
+# 14. Delete Hosted Zones
+#     14.1. Delete Build-HostedZone Stack (Public DNS Zone)
+#     14.2. Delete Core-HostedZone Stack (Public DNS Zone)
+#     14.3. Delete Development-HostedZone Stack (Public DNS Zone)
+#     14.4. Delete Testing-HostedZone Stack (Public DNS Zone)
+#     14.5. Delete Staging-HostedZone Stack (Public DNS Zone)
+#     14.6. Delete Production-HostedZone Stack (Public DNS Zone)
+
+echo "Stop! Currently, you must manually check each zone to confirm there are no records"
+echo "      remaining other than the SOA and the zone's own NS records. We are currently"
+echo "      creating sub-domain NS records to glue sub-domains togther - these must still"
+echo "      be manually deleted prior to deleting the Production Hosted Zone."
+echo
+sleep 5
+
+run "$commonbindir/common-delete-hostedzone-stack -E Build"
+run "$commonbindir/common-delete-hostedzone-stack -E Core"
+run "$commonbindir/common-delete-hostedzone-stack -E Development"
+run "$commonbindir/common-delete-hostedzone-stack -E Testing"
+run "$commonbindir/common-delete-hostedzone-stack -E Staging"
+run "$commonbindir/common-delete-hostedzone-stack -E Production"
+
+
+# 15. Delete Lambda Functions
+#     15.1 Delete CustomIdentifierFunctions Stack
+#     15.2 Delete StandardScheduleFunctions Stack
+#     15.3 Delete StandardCIDRFunctions Stack
+#     15.4 Delete StandardAMIFunctions Stack
+
+run "$corebindir/core-delete-customidentifierfunctions-stack"
+run "$corebindir/core-delete-standardschedulefunctions-stack"
+run "$corebindir/core-delete-standardcidrfunctions-stack"
+run "$corebindir/core-delete-standardamifunctions-stack"
+
+
+# 16. Delete S3 Buckets
+#     16.1 Delete StandardBuckets Stack
+
+run "$corebindir/core-delete-standardbuckets-stack -E Core"
+
+
+# 17. Delete SNS Topics and Subscriptions
+#     17.1 Delete CustomSubscriptions Stack
+#     17.2 Delete StandardSubscriptions Stack
+#     17.3 Delete StandardTopics Stack
+
+run "$corebindir/core-delete-customsubscriptions-stack -E Core"
+run "$corebindir/core-delete-standardsubscriptions-stack -E Core"
+run "$corebindir/core-delete-standardtopics-stack -E Core"

@@ -1,0 +1,126 @@
+#!/bin/bash
+#
+# Defines the IROPS Environment Variables for the Staging Environment in Ireland
+
+# Account
+export AWS_ACCOUNT_ALIAS=irops
+export AWS_ACCOUNT_NUMBER=624812452220
+
+# User
+export AWS_USER_NAME=$USER
+
+# Profile
+export AWS_DEFAULT_PROFILE=$AWS_ACCOUNT_ALIAS-$AWS_USER_NAME
+
+# Region
+export AWS_DEFAULT_REGION=eu-west-1
+
+# Keys (let user override, but by default, use key that's defined in shell scripts)
+#export AWS_KEY_NAME=administrator
+#export AWS_KEY_FILE=${HOME}/.ssh/irops_${AWS_KEY_NAME}_id_rsa
+
+# Notification
+export SNS_ADMINISTRATOR_TOPIC="arn:aws:sns:${AWS_DEFAULT_REGION}:${AWS_ACCOUNT_NUMBER}:Administrators"
+export SNS_EVENTS_TOPIC="arn:aws:sns:${AWS_DEFAULT_REGION}:${AWS_ACCOUNT_NUMBER}:Events"
+export SNS_ALARMS_TOPIC="arn:aws:sns:${AWS_DEFAULT_REGION}:${AWS_ACCOUNT_NUMBER}:Alarms"
+
+# Network
+export PUBLIC_USER_NETWORK=204.26.128.0/17             # Charlotte Public/Private IP Range
+export PUBLIC_USER_NETWORK1=                           # Tulsa Pulic IP Range
+export PUBLIC_USER_NETWORK2=72.215.187.176/28          # Santa Barbara Public IP Range (Michael Crawford's House)
+export PUBLIC_ADMINISTRATOR_NETWORK=204.26.128.0/17    # Charlotte Public/Private IP Range
+export PUBLIC_ADMINISTRATOR_NETWORK1=                  # Tulsa Pulic IP Range
+export PUBLIC_ADMINISTRATOR_NETWORK2=72.215.187.176/28 # Santa Barbara Public IP Range (Michael Crawford's House)
+export PRIVATE_USER_NETWORK=204.26.128.0/17            # Charlotte Public/Private IP Range
+export PRIVATE_USER_NETWORK1=                          # Tulsa Private IP Range
+export PRIVATE_USER_NETWORK2=10.0.0.0/16               # Santa Barbara Private IP Range (Michael Crawford's House)
+export PRIVATE_ADMINISTRATOR_NETWORK=204.26.128.0/17   # Charlotte Public/Private IP Range
+export PRIVATE_ADMINISTRATOR_NETWORK1=                 # Tulsa Private IP Range
+export PRIVATE_ADMINISTRATOR_NETWORK2=10.0.0.0/16      # Santa Barbara Private IP Range (Michael Crawford's House)
+
+# Owner
+export OWNER_EMAIL=$USER@dxc.com
+
+# Company
+export COMPANY_CODE=tvl
+export COMPANY_NAME="Travel"
+
+# Location
+case $AWS_DEFAULT_REGION in
+  us-east-1)
+    export LOCATION_CODE=ue1
+    export LOCATION_NAME="US-East-1";;
+  us-east-2)
+    export LOCATION_CODE=ue2
+    export LOCATION_NAME="US-East-2";;
+  us-west-1)
+    export LOCATION_CODE=uw1
+    export LOCATION_NAME="US-West-1";;
+  us-west-2)
+    export LOCATION_CODE=uw2
+    export LOCATION_NAME="US-West-2";;
+  eu-west-1)
+    export LOCATION_CODE=ew1
+    export LOCATION_NAME="EU-West-1";;
+  eu-west-2)
+    export LOCATION_CODE=ew2
+    export LOCATION_NAME="EU-West-2";;
+  *)
+    echo "UNSUPPORTED REGION!"
+    exit 1;;
+esac
+
+# System
+export SYSTEM_CODE=irops
+export SYSTEM_NAME="IROPS"
+
+# Environment
+export ENVIRONMENT_CODE=s
+export ENVIRONMENT_NAME="Staging"
+export ENVIRONMENT_DOMAIN=$ENVIRONMENT_CODE.$AWS_DEFAULT_REGION.$COMPANY_CODE.iropshub.com
+export ENVIRONMENT_NETWORK=172.21.136.0/21
+export ENVIRONMENT_TYPE=small
+export ENVIRONMENT_ZONES=2
+
+# Core
+export CORE_CODE=c
+export CORE_NAME="Core"
+export CORE_DOMAIN=$CORE_CODE.$AWS_DEFAULT_REGION.$COMPANY_CODE.iropshub.com
+export CORE_NETWORK=172.21.184.0/22
+export CORE_TYPE=small
+export CORE_ZONES=2
+
+# Build
+export BUILD_CODE=b
+export BUILD_NAME="Build"
+export BUILD_DOMAIN=$BUILD_CODE.$AWS_DEFAULT_REGION.$COMPANY_CODE.iropshub.com
+export BUILD_NETWORK=172.21.188.0/23
+export BUILD_TYPE=small
+export BUILD_ZONES=2
+
+# Identity
+export IDENTITY_CODE=i
+export IDENTITY_NAME="Identity"
+export IDENTITY_DOMAIN=$IDENTITY_CODE.us-east-1.$COMPANY_CODE.iropshub.com
+export IDENTITY_NETWORK=172.21.62.0/23
+export IDENTITY_TYPE=small
+export IDENTITY_ZONES=2
+
+# Gateway
+export GATEWAY_CODE=clt
+export GATEWAY_NAME="Charlotte"
+export GATEWAY_ASN=65000
+export GATEWAY_ADDRESS=204.26.253.5
+export GATEWAY_NETWORK=204.26.128.0/17
+
+export GATEWAY_CODE1=tul
+export GATEWAY_NAME1="Tulsa"
+export GATEWAY_ASN1=65000
+export GATEWAY_ADDRESS1=
+export GATEWAY_NETWORK1=
+
+export GATEWAY_CODE2=sba
+export GATEWAY_NAME2="SantaBarbara"
+export GATEWAY_ASN2=65000
+export GATEWAY_ADDRESS2=72.215.187.179
+export GATEWAY_NETWORK2=10.0.0.0/16

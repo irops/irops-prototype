@@ -1,0 +1,119 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Example-NestedLinuxWebServer-DomainNames Template. This is an example of a layer in the NestedLinuxWebServer application, which creates the Domain Names.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "VPCStackName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Resource Dependencies" },
+          "Parameters" : [
+            "InstanceHostName",
+            "InstancePublicIp"
+          ]
+        },
+        {
+          "Label" : { "default" : "Application Configuration" },
+          "Parameters" : [
+            "ApplicationName",
+            "ApplicationDomain"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "VPCStackName" : { "default" : "VPC Stack Name" },
+        "InstanceHostName" : { "default" : "Instance HostName" },
+        "InstancePublicIp" : { "default" : "Instance Public IP" },
+        "ApplicationName" : { "default" : "Application Name" },
+        "ApplicationDomain" : { "default" : "Application Domain Name" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "VPCStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the VPC",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-VPC",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "InstanceHostName" : {
+      "Description" : "HostName of an existing Instance needed by the RecordSet",
+      "Type" : "String",
+      "MinLength" : "2",
+      "MaxLength" : "64",
+      "ConstraintDescription" : "must be a valid HostName."
+    },
+
+    "InstancePublicIp" : {
+      "Description" : "PublicIp of an existing Instance needed by the RecordSet",
+      "Type" : "String",
+      "MinLength" : "9",
+      "MaxLength" : "18",
+      "AllowedPattern" : "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})",
+      "ConstraintDescription" : "must be a valid IP of the form x.x.x.x."
+    },
+
+    "ApplicationName" : {
+      "Description" : "Name of the Application associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "NestedWebServer",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "ApplicationDomain" : {
+      "Description" : "DNS Name of the Application associated with the Stack",
+      "Type" : "String",
+      "MaxLength" : 16,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[a-z][-a-z0-9]*$)",
+      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
+    }
+  },
+
+  "Conditions" : {
+    "ConfigureDomainName" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationDomain" }, "" ]}]}
+  },
+
+  "Resources" : {
+    "HostNameRecordSet" : {
+      "Type" : "AWS::Route53::RecordSet",
+      "Properties" : {
+        "HostedZoneId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicHostedZone" }},
+        "Comment" : { "Fn::Sub" : "Public DNS HostName for ${ApplicationName} Instance." },
+        "Name" : { "Fn::Sub" : "${InstanceHostName}." },
+        "Type" : "A",
+        "TTL" : "900",
+        "ResourceRecords" : [{ "Ref" : "InstancePublicIp" }]
+      }
+    },
+
+    "ServiceNameRecordSet" : {
+      "Type" : "AWS::Route53::RecordSet",
+      "Properties" : {
+        "HostedZoneId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicHostedZone" }},
+        "Comment" : { "Fn::Sub" : "Public DNS ServiceName for ${ApplicationName}." },
+        "Name" : { "Fn::Join" : [ "", [ { "Ref" : "ApplicationDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "." ]]},
+        "Type" : "CNAME",
+        "TTL" : "900",
+        "ResourceRecords" : [{ "Ref" : "InstanceHostName" }]
+      },
+      "Condition" : "ConfigureDomainName"
+    }
+  }
+}

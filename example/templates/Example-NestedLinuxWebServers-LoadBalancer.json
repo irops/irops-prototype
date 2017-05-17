@@ -1,0 +1,117 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Example-NestedLinuxWebServers-LoadBalancer Template. This is an example of a layer in the NestedLinuxWebServers application, which creates a LoadBalancer.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "VPCStackName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Resource Dependencies" },
+          "Parameters" : [
+            "LoadBalancerSecurityGroup"
+          ]
+        },
+        {
+          "Label" : { "default" : "Application Configuration" },
+          "Parameters" : [
+            "ApplicationName"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "VPCStackName" : { "default" : "VPC Stack Name" },
+        "LoadBalancerSecurityGroup" : { "default" : "LoadBalancerSecurityGroup" },
+        "ApplicationName" : { "default" : "Application Name" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "VPCStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the VPC",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-VPC",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "LoadBalancerSecurityGroup" : {
+      "Description" : "ID of an existing SecurityGroup which controls access to the LoadBalancer",
+      "Type" : "AWS::EC2::SecurityGroup::Id",
+      "MaxLength" : 32,
+      "AllowedPattern" : "^sg-[0-9a-f]{8}$",
+      "ConstraintDescription" : "must be the name of an existing SecurityGroup."
+    },
+
+    "ApplicationName" : {
+      "Description" : "Name of the Application associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "NestedLinuxWebServers",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    }
+  },
+
+  "Resources" : {
+    "LoadBalancer" : {
+      "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties" : {
+        "Subnets" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicSubnetA" }},
+          { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicSubnetB" }}
+        ],
+        "SecurityGroups" : [{ "Ref" : "LoadBalancerSecurityGroup" }],
+        "CrossZone" : "true",
+        "LBCookieStickinessPolicy" : [{
+          "PolicyName" : "CookieBasedPolicy",
+          "CookieExpirationPeriod" : "30"
+        }],
+        "Listeners" : [{
+          "LoadBalancerPort" : "80",
+          "InstancePort" : "80",
+          "Protocol" : "HTTP",
+          "PolicyNames" : [ "CookieBasedPolicy" ]
+        }],
+        "HealthCheck" : {
+          "Target" : "HTTP:80/index.html",
+          "HealthyThreshold" : "2",
+          "UnhealthyThreshold" : "2",
+          "Interval" : "15",
+          "Timeout" : "5"
+        },
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "LoadBalancer" ]]}}
+        ]
+      }
+    }
+  },
+
+  "Outputs" : {
+    "LoadBalancer" : {
+      "Description" : "The LoadBalancer",
+      "Value" : { "Ref" : "LoadBalancer" }
+    },
+
+    "LoadBalancerHostedZoneId" : {
+      "Description" : "The LoadBalancer HostedZoneId",
+      "Value" : { "Fn::GetAtt" : [ "LoadBalancer", "CanonicalHostedZoneNameID" ]}
+    },
+
+    "LoadBalancerDNSName" : {
+      "Description" : "The LoadBalancer DNSName",
+      "Value" : { "Fn::GetAtt" : [ "LoadBalancer", "DNSName" ]}
+    }
+  }
+}

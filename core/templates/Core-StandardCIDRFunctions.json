@@ -17,19 +17,6 @@
         },
         "Path" : "/",
         "Policies" : [{
-          "PolicyName" : "DescribeSubnetsPolicy",
-          "PolicyDocument" : {
-            "Version" : "2012-10-17",
-            "Statement" : [{
-              "Effect" : "Allow",
-              "Action" : [
-                "ec2:DescribeSubnets"
-              ],
-              "Resource" : "*"
-            }]
-          }
-        },
-        {
           "PolicyName" : "PutLambdaLogEventsPolicy",
           "PolicyDocument" : {
             "Version" : "2012-10-17",
@@ -41,6 +28,19 @@
                 "logs:PutLogEvents"
               ],
               "Resource" : "arn:aws:logs:*:*:*"
+            }]
+          }
+        },
+        {
+          "PolicyName" : "DescribeSubnetsPolicy",
+          "PolicyDocument" : {
+            "Version" : "2012-10-17",
+            "Statement" : [{
+              "Effect" : "Allow",
+              "Action" : [
+                "ec2:DescribeSubnets"
+              ],
+              "Resource" : "*"
             }]
           }
         }]

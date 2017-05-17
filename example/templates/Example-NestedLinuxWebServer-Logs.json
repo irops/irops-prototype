@@ -1,0 +1,166 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Example-NestedLinuxWebServer-Logs Template. This is an example of a layer in the NestedLinuxWebServer application, which creates CloudWatch LogGroups, MetricFilters and Alarms.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "VPCStackName",
+            "StandardTopicsStackName"
+          ]
+        },
+        {
+          "Label" : { "default" : "System Configuration" },
+          "Parameters" : [
+            "SystemName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Application Configuration" },
+          "Parameters" : [
+            "ApplicationName",
+            "LogRetention"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "VPCStackName" : { "default" : "VPC Stack Name" },
+        "StandardTopicsStackName" : { "default" : "StandardTopics Stack Name" },
+        "SystemName" : { "default" : "System Name" },
+        "ApplicationName" : { "default" : "Application Name" },
+        "LogRetention" : { "default" : "Log Retention" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "VPCStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the VPC",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-VPC",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "StandardTopicsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Topics",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardTopics",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "SystemName" : {
+      "Description" : "Name of the System associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "IROPS",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "ApplicationName" : {
+      "Description" : "Name of the Application associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "NestedLinuxWebServer",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "LogRetention" : {
+      "Description" : "Number of days to retain CloudWatch Log Events (0 disables use of CloudWatch Logs)",
+      "Type" : "Number",
+      "Default" : 14,
+      "AllowedValues" : [ 0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653 ],
+      "ConstraintDescription" : "must be: 0 (disabled), 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827 or 3653."
+    }
+  },
+
+  "Resources" : {
+    "LogGroup" : {
+      "Type" : "AWS::Logs::LogGroup",
+      "Properties" : {
+        "RetentionInDays" : { "Ref" : "LogRetention" }
+      }
+    },
+
+    "404MetricFilter" : {
+      "Type" : "AWS::Logs::MetricFilter",
+      "Properties" : {
+        "LogGroupName" : { "Ref" : "LogGroup" },
+        "FilterPattern" : "[ip, identity, user_id, timestamp, request, status_code = 404, size, ...]",
+        "MetricTransformations" : [{
+          "MetricNamespace" : { "Fn::Join" : [ "", [ { "Ref" : "SystemName" }, "/", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }]]},
+          "MetricName" : "404Count",
+          "MetricValue" : "1"
+        }]
+      }
+    },
+
+    "BytesTransferredMetricFilter" : {
+      "Type" : "AWS::Logs::MetricFilter",
+      "Properties" : {
+        "LogGroupName" : { "Ref" : "LogGroup" },
+        "FilterPattern" : "[ip, identity, user_id, timestamp, request, status_code, size, ...]",
+        "MetricTransformations" : [{
+          "MetricNamespace" : { "Fn::Join" : [ "", [ { "Ref" : "SystemName" }, "/", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }]]},
+          "MetricName" : "BytesTransferred",
+          "MetricValue" : "$size"
+        }]
+      }
+    },
+
+    "404Alarm" : {
+      "Type" : "AWS::CloudWatch::Alarm",
+      "Properties" : {
+        "AlarmDescription" : "The number of 404s is greater than 5 over 2 minutes",
+        "AlarmActions" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-AlarmsTopic" }}
+        ],
+        "Namespace" : { "Fn::Join" : [ "", [ { "Ref" : "SystemName" }, "/", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }]]},
+        "MetricName" : "404Count",
+        "Statistic" : "Sum",
+        "Period" : "60",
+        "EvaluationPeriods" : "2",
+        "Threshold" : "5",
+        "ComparisonOperator" : "GreaterThanThreshold"
+      }
+    },
+
+    "BandwidthAlarm" : {
+      "Type" : "AWS::CloudWatch::Alarm",
+      "Properties" : {
+        "AlarmDescription" : "The average volume of traffic is greater 1024 KB over 2 minutes",
+        "AlarmActions" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-AlarmsTopic" }}
+        ],
+        "Namespace" : { "Fn::Join" : [ "", [ { "Ref" : "SystemName" }, "/", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }]]},
+        "MetricName" : "BytesTransferred",
+        "Statistic" : "Average",
+        "Period" : "60",
+        "EvaluationPeriods" : "2",
+        "Threshold" : "1500000000",
+        "ComparisonOperator" : "GreaterThanThreshold"
+      }
+    }
+  },
+
+  "Outputs" : {
+    "LogGroup" : {
+      "Description" : "The LogGroup",
+      "Value" : { "Ref" : "LogGroup" }
+    }
+  }
+}

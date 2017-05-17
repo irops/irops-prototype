@@ -1,0 +1,227 @@
+#!/bin/bash
+#
+# Here's a list of the commands which need to be run to create Global (us-east-1 / Virginia)
+# - Global includes all Stacks which must be built first, prior to the creation of the
+#   other multi-environment Regions including Stable, Unstable, Training and Demo. 
+# - Global MUST run in the us-east-1 Region.
+# - Global MUST NOT be run in any other Region.
+# - Stable, Unstable, Testing and Demo MultiEnvironments SHOULD NOT be run in us-east-1.
+#   There's not a technical reason for this, just an organizational convention.
+#   Also, that combination has not been tested. It's assumed only Global will run in us-east-1.
+#
+# We can break down the creation of a region into this order:
+#  1. Initialize Environment Variables
+#
+#  2. Create IAM ManagedPolicies
+#      2.1 Create StandardManagedPolicies Stack
+#      2.2 Create CustomManagedPolicies Stack
+#
+#  3. Create IAM Groups
+#      3.1 Create StandardGroups Stack
+#      3.2 Create CustomGroups Stack
+#
+#  4. Create IAM Users
+#      4.1 Create StandardUsers Stack
+#      4.2 Create CustomUsers Stack
+#      4.3 Create ReviewUsers Stack
+#
+#  5. Create IAM Roles
+#      5.1 Create StandardRoles Stack
+#
+#  6. Create SNS Topics and Subscriptions
+#      6.1 Create StandardTopics Stack
+#      6.2 Create StandardSubscriptions Stack
+#      6.3 Create CustomSubscriptions Stack
+#
+#  7. Create S3 Buckets
+#      7.1 Create StandardBuckets Stack
+#
+#  8. Create Lambda Functions
+#      8.1 Create StandardAMIFunctions Stack
+#      8.2 Create StandardCIDRFunctions Stack
+#      8.3 Create StandardScheduleFunctions Stack
+#      8.4 Create CustomIdentifierFunctions Stack
+#
+#  9. Create SNS Billing Topics and Subscriptions
+#      9.1 Create BillingTopics Stack
+#      9.2 Create BillingSubscriptions Stack
+#
+# 10. Create CloudWatch Billing Alarms
+#     10.1 Create BillingAlarms Stack
+#
+###### OPTIONAL #########################################################
+#
+# 11. Create Hosted Zones
+#     11.1. Create Identity-HostedZone Stack (Public DNS Zone)
+#
+# 12. Create VPC
+#     12.1. Create Identity-VPC Stack
+#
+# 13. Create NetworkACLs
+#     13.1. Create Identity-NetworkAcls Stack
+#
+# 14. Create OpenVPNAS Instances
+#     14.1. Create Identity-OpenVPNAS Stack
+#
+# 15. Create Bastions
+#     15.1. Create Identity-LinuxBastions Stack
+#     15.1. Create Identity-WindowsBastions Stack (future)
+#
+# 16. Create Example Applications
+#     16.1. Create Identity-WindowsDomainControllers Stack (future)
+#
+
+run() {
+    echo
+    echo -n "Run: \"${1##*/bin/}\"? [Y/n/q]"
+    read choice
+    case "$choice" in
+      "" | "y" | "Y" | "yes" | "Yes")
+        eval $1;;
+      "n" | "N" | "no" | "No")
+        ;;
+       *) echo "cancelled"
+          exit 2;;
+    esac
+}
+
+#  1. Initalize Environment Variables
+#     - This will initialze the environment variables to the Stable-Production Environment
+#     - We will be explicit on certain options below, even when the value does not need to be set due to defaults
+
+bindir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+applicationbindir=${bindir%/*}/application/bin
+billingbindir=${bindir%/*}/billing/bin
+commonbindir=${bindir%/*}/common/bin
+corebindir=${bindir%/*}/core/bin
+environmentbindir=${bindir%/*}/environment/bin
+examplebindir=${bindir%/*}/example/bin
+identitybindir=${bindir%/*}/identity/bin
+utilitybindir=${bindir%/*}/utility/bin
+
+source $bindir/irops-define-stable-production
+
+
+#  2. Create IAM ManagedPolicies
+#      2.1 Create StandardManagedPolicies Stack
+#      2.2 Create CustomManagedPolicies Stack
+
+run "$identitybindir/identity-create-standardmanagedpolicies-stack -E Identity"
+run "$identitybindir/identity-create-custommanagedpolicies-stack -E Identity"
+
+
+#  3. Create IAM Groups
+#      3.1 Create StandardGroups Stack
+#      3.2 Create CustomGroups Stack
+
+run "$identitybindir/identity-create-standardgroups-stack -E Identity"
+run "$identitybindir/identity-create-customgroups-stack -E Identity"
+
+
+#  4. Create IAM Users
+#      4.1 Create StandardUsers Stack
+#      4.2 Create CustomUsers Stack
+#      4.3 Create ReviewUsers Stack
+
+run "$identitybindir/identity-create-standardusers-stack -E Identity"
+run "$identitybindir/identity-create-customusers-stack -E Identity"
+run "$identitybindir/identity-create-reviewusers-stack -E Identity"
+
+
+#  5. Create IAM Roles
+#      5.1 Create StandardRoles Stack
+
+run "$identitybindir/identity-create-standardroles-stack -E Identity"
+
+
+#  6. Create SNS Topics and Subscriptions
+#      6.1 Create StandardTopics Stack
+#      6.2 Create StandardSubscriptions Stack
+#      6.3 Create CustomSubscriptions Stack
+
+run "$corebindir/core-create-standardtopics-stack -E Identity -r us-east-1"
+run "$corebindir/core-create-standardsubscriptions-stack -E Identity -r us-east-1"
+run "$corebindir/core-create-customsubscriptions-stack -E Identity -r us-east-1"
+
+
+#  7. Create S3 Buckets
+#      7.1 Create StandardBuckets Stack
+
+run "$corebindir/core-create-standardbuckets-stack -E Identity -r us-east-1"
+
+
+#  8. Create Lambda Functions
+#      8.1 Create StandardAMIFunctions Stack
+#      8.2 Create StandardCIDRFunctions Stack
+#      8.3 Create StandardScheduleFunctions Stack
+#      8.4 Create CustomIdentifierFunctions Stack
+
+run "$corebindir/core-create-standardamifunctions-stack -E Identity -r us-east-1"
+run "$corebindir/core-create-standardcidrfunctions-stack -E Identity -r us-east-1"
+run "$corebindir/core-create-standardschedulefunctions-stack -E Identity -r us-east-1"
+run "$corebindir/core-create-customidentifierfunctions-stack -E Identity -r us-east-1"
+
+
+#  9. Create SNS Billing Topics and Subscriptions
+#      9.1 Create BillingTopics Stack
+#      9.2 Create BillingSubscriptions Stack
+
+run "$billingbindir/billing-create-billingtopics-stack"
+run "$billingbindir/billing-create-billingsubscriptions-stack"
+
+
+# 10. Create CloudWatch Billing Alarms
+#     10.1 Create BillingAlarms Stack
+
+run "$billingbindir/billing-create-billingalarms-stack"
+
+echo
+echo "Stop! Currently, you should not go any further in this script, so this script"
+echo "      will now exit. The remainder of this script can be enabled to build out"
+echo "      the Identity-VPC, which will not be needed until we implement multiple"
+echo "      accounts with federated identity management."
+exit
+
+###### OPTIONAL #########################################################
+
+# 11. Create Hosted Zones
+#     11.1. Create Identity-HostedZone Stack (Public DNS Zone)
+
+run "$commonbindir/common-create-hostedzone-stack -E Identity -D i.us-east-1.tvl.iropshub.com"
+
+echo
+echo "Note: Currently, you must manually create the NS records which are needed in each"
+echo "      parent DNS Zone to delegate to the sub-domain Zone. This should be done now."
+echo
+
+
+# 12. Create VPC
+#     12.1. Create Identity-VPC Stack
+
+run "$identitybindir/identity-create-vpc-stack -E Identity -N 172.21.62.0/23 -r us-east-1"
+
+
+# 13. Create NetworkACLs
+#     13.1. Create Identity-NetworkAcls Stack
+
+run "$identitybindir/identity-create-networkacls-stack -E Identity -r us-east-1"
+
+
+# 14. Create OpenVPNAS Instances
+#     14.1. Create Identity-OpenVPNAS Stack
+
+run "$utilitybindir/utility-create-openvpnas-stack -E Identity -U OpenVPNAS -Z micro -r us-east-1"
+
+
+# 15. Create Bastions
+#     15.1. Create Identity-LinuxBastions Stack
+#     15.1. Create Identity-WindowsBastions Stack (future)
+
+run "$utilitybindir/utility-create-linuxbastions-stack -E Identity -U LinuxBastions -Z standby -r us-east-1"
+#run "$utilitybindir/utility-create-windowsbastions-stack -E Identity -U WindowsBastions -r us-east-1"
+
+
+# 16. Create Example Applications
+#     16.1. Create Identity-WindowsDomainControllers Stack (future)
+
+#run "$examplebindir/example-create-windowsdomaincontrollers-stack -E Identity -A WindowsDomainControllers -D dc -r us-east-1"
