@@ -1,0 +1,452 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Application-Integration Template. This template integrates Applications which inter-connect via Security Group Ingress rules.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "EngineWebStackName",
+            "EngineCalculationStackName",
+            "EngineDataStagingStackName",
+            "EnginePublishingStackName",
+            "EngineMonitoringStackName",
+            "OctopusDeployStackName",
+            "MongoDBStackName",
+            "RabbitMQStackName",
+            "WebSphereMQStackName",
+            "VPCStackName"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "EngineWebStackName" : { "default" : "Engine-Web Stack Name" },
+        "EngineCalculationStackName" : { "default" : "Engine-Calculation Stack Name" },
+        "EngineDataStagingStackName" : { "default" : "Engine-DataStaging Stack Name" },
+        "EnginePublishingStackName" : { "default" : "Engine-Publishing Stack Name" },
+        "EngineMonitoringStackName" : { "default" : "Engine-Monitoring Stack Name" },
+        "OctopusDeployStackName" : { "default" : "Octopus-Deploy Stack Name" },
+        "MongoDBStackName" : { "default" : "MongoDB Stack Name" },
+        "RabbitMQStackName" : { "default" : "RabbitMQ Stack Name" },
+        "WebSphereMQStackName" : { "default" : "WebSphereMQ Stack Name" },
+        "VPCStackName" : { "default" : "VPC Stack Name" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "EngineWebStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Engine-Web Application",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-Engine-Web",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "EngineCalculationStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Engine-Calculate Application",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-Engine-Calculation",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "EngineDataStagingStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Engine-DataStaging Application",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-Engine-DataStaging",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "EnginePublishingStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Engine-Publishing Application",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-Engine-Publishing",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "EngineMonitoringStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Engine-Monitoring Application",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-Engine-Web",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "OctopusDeployStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Octopus-Deploy Application",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-Octopus-Deploy",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "MongoDBStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the MongoDB Application",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-MongoDB",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "RabbitMQStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the RabbitMQ Application",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-RabbitMQ",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "WebSphereMQStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the WebSphereMQ Application",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-WebSphereMQ",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "VPCStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the VPC",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-VPC",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    }
+  },
+
+  "Resources" : {
+    "EngineWebToEngineMonitoringSecurityGroupIngressICMP" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineMonitoringStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort": "-1", "SourceSecurityGroupId": { "Fn::ImportValue" : { "Fn::Sub" : "${EngineWebStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EngineWebToEngineMonitoringSecurityGroupIngress8080" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineMonitoringStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "tcp", "FromPort" : "8080", "ToPort": "8080", "SourceSecurityGroupId": { "Fn::ImportValue" : { "Fn::Sub" : "${EngineWebStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EngineCalculateToEngineMonitoringSecurityGroupIngressICMP" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineMonitoringStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort": "-1", "SourceSecurityGroupId": { "Fn::ImportValue" : { "Fn::Sub" : "${EngineCalculationStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EngineCalculateToEngineMonitoringSecurityGroupIngress8080" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineMonitoringStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "tcp", "FromPort" : "8080", "ToPort": "8080", "SourceSecurityGroupId": { "Fn::ImportValue" : { "Fn::Sub" : "${EngineCalculationStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EngineDataStagingToEngineMonitoringSecurityGroupIngressICMP" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineMonitoringStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort": "-1", "SourceSecurityGroupId": { "Fn::ImportValue" : { "Fn::Sub" : "${EngineDataStagingStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EngineDataStagingToEngineMonitoringSecurityGroupIngress8080" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineMonitoringStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "tcp", "FromPort" : "8080", "ToPort": "8080", "SourceSecurityGroupId": { "Fn::ImportValue" : { "Fn::Sub" : "${EngineDataStagingStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EnginePublishingToEngineMonitoringSecurityGroupIngressICMP" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineMonitoringStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort": "-1", "SourceSecurityGroupId": { "Fn::ImportValue" : { "Fn::Sub" : "${EnginePublishingStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EnginePublishingToEngineMonitoringSecurityGroupIngress8080" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineMonitoringStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "tcp", "FromPort" : "8080", "ToPort": "8080", "SourceSecurityGroupId": { "Fn::ImportValue" : { "Fn::Sub" : "${EnginePublishingStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EngineDataStagingToWebSphereMQSecurityGroupIngressICMP" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${WebSphereMQStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort": "-1", "SourceSecurityGroupId": { "Fn::ImportValue" : { "Fn::Sub" : "${EngineDataStagingStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EngineDataStagingToWebSphereMQSecurityGroupIngress1414" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${WebSphereMQStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "tcp", "FromPort" : "1414", "ToPort": "1430", "SourceSecurityGroupId": { "Fn::ImportValue" : { "Fn::Sub" : "${EngineDataStagingStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EnginePublishingToWebSphereMQSecurityGroupIngressICMP" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${WebSphereMQStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort": "-1", "SourceSecurityGroupId": { "Fn::ImportValue" : { "Fn::Sub" : "${EnginePublishingStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EnginePublishingToWebSphereMQSecurityGroupIngress1414" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${WebSphereMQStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "tcp", "FromPort" : "1414", "ToPort": "1430", "SourceSecurityGroupId": { "Fn::ImportValue" : { "Fn::Sub" : "${EnginePublishingStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EngineWebToRabbitMQSecurityGroupIngressICMP" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${RabbitMQStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "icmp",  "FromPort" : "-1", "ToPort" : "-1", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineWebStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EngineWebToRabbitMQSecurityGroupIngress5672" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${RabbitMQStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "tcp",  "FromPort" : "5672", "ToPort" : "5672", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineWebStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EngineWebToRabbitMQSecurityGroupIngress15672" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${RabbitMQStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "tcp",  "FromPort" : "15672", "ToPort" : "15672", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineWebStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EngineCalculateToRabbitMQSecurityGroupIngressICMP" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${RabbitMQStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "icmp",  "FromPort" : "-1", "ToPort" : "-1", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineCalculationStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EngineCalculateToRabbitMQSecurityGroupIngress5672" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${RabbitMQStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "tcp",  "FromPort" : "5672", "ToPort" : "5672", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineCalculationStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EngineCalculateToRabbitMQSecurityGroupIngress15672" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${RabbitMQStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "tcp",  "FromPort" : "15672", "ToPort" : "15672", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineCalculationStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EngineDataStagingToRabbitMQSecurityGroupIngressICMP" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${RabbitMQStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "icmp",  "FromPort" : "-1", "ToPort" : "-1", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineDataStagingStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EngineDataStagingToRabbitMQSecurityGroupIngress5672" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${RabbitMQStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "tcp",  "FromPort" : "5672", "ToPort" : "5672", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineDataStagingStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EngineDataStagingToRabbitMQSecurityGroupIngress15672" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${RabbitMQStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "tcp",  "FromPort" : "15672", "ToPort" : "15672", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineDataStagingStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EnginePublishingToRabbitMQSecurityGroupIngressICMP" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${RabbitMQStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "icmp",  "FromPort" : "-1", "ToPort" : "-1", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EnginePublishingStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EnginePublishingToRabbitMQSecurityGroupIngress5672" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${RabbitMQStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "tcp",  "FromPort" : "5672", "ToPort" : "5672", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EnginePublishingStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EnginePublishingToRabbitMQSecurityGroupIngress15672" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${RabbitMQStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "tcp",  "FromPort" : "15672", "ToPort" : "15672", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EnginePublishingStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EngineMonitoringToRabbitMQSecurityGroupIngressICMP" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${RabbitMQStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "icmp",  "FromPort" : "-1", "ToPort" : "-1", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineMonitoringStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EngineMonitoringToRabbitMQSecurityGroupIngress15672" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${RabbitMQStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "tcp",  "FromPort" : "15672", "ToPort" : "15672", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineMonitoringStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EngineWebToMongoDBSecurityGroupIngressICMP" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${MongoDBStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "icmp",  "FromPort" : "-1", "ToPort" : "-1", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineWebStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EngineWebToMongoDBSecurityGroupIngress27017" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${MongoDBStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "tcp",  "FromPort" :  "27017", "ToPort" :  "27017", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineWebStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EngineCalculationToMongoDBSecurityGroupIngressICMP" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${MongoDBStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "icmp",  "FromPort" : "-1", "ToPort" : "-1", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineCalculationStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EngineCalculationToMongoDBSecurityGroupIngress27017" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${MongoDBStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "tcp",  "FromPort" :  "27017", "ToPort" :  "27017", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineCalculationStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EngineDataStagingToMongoDBSecurityGroupIngressICMP" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${MongoDBStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "icmp",  "FromPort" : "-1", "ToPort" : "-1", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineDataStagingStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EngineDataStagingToMongoDBSecurityGroupIngress27017" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${MongoDBStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "tcp",  "FromPort" :  "27017", "ToPort" :  "27017", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineDataStagingStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EnginePublishingToMongoDBSecurityGroupIngressICMP" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${MongoDBStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "icmp",  "FromPort" : "-1", "ToPort" : "-1", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EnginePublishingStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "EnginePublishingToMongoDBSecurityGroupIngress27017" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${MongoDBStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "tcp",  "FromPort" :  "27017", "ToPort" :  "27017", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EnginePublishingStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "OctopusDeployToEngineWebSecurityGroupIngressICMP" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineWebStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "icmp",  "FromPort" : "-1", "ToPort" : "-1", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${OctopusDeployStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "OctopusDeployToEngineWebSecurityGroupIngress10933" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineWebStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "tcp",  "FromPort" : "10933", "ToPort" : "10933", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${OctopusDeployStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "OctopusDeployToEngineCalculateSecurityGroupIngressICMP" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineCalculationStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "icmp",  "FromPort" : "-1", "ToPort" : "-1", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${OctopusDeployStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "OctopusDeployToEngineCalculateSecurityGroupIngress10933" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineCalculationStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "tcp",  "FromPort" : "10933", "ToPort" : "10933", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${OctopusDeployStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "OctopusDeployToEngineDataStagingSecurityGroupIngressICMP" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineDataStagingStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "icmp",  "FromPort" : "-1", "ToPort" : "-1", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${OctopusDeployStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "OctopusDeployToEngineDataStagingSecurityGroupIngress10933" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineDataStagingStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "tcp",  "FromPort" : "10933", "ToPort" : "10933", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${OctopusDeployStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "OctopusDeployToEnginePublishingSecurityGroupIngressICMP" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EnginePublishingStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "icmp",  "FromPort" : "-1", "ToPort" : "-1", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${OctopusDeployStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "OctopusDeployToEnginePublishingSecurityGroupIngress10933" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EnginePublishingStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "tcp",  "FromPort" : "10933", "ToPort" : "10933", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${OctopusDeployStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "OctopusDeployToEngineMonitoringSecurityGroupIngressICMP" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineMonitoringStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "icmp",  "FromPort" : "-1", "ToPort" : "-1", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${OctopusDeployStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
+    "OctopusDeployToEngineMonitoringSecurityGroupIngress10933" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineMonitoringStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "tcp",  "FromPort" : "10933", "ToPort" : "10933", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${OctopusDeployStackName}-InstanceSecurityGroup" }}
+      }
+    }
+  }
+}
