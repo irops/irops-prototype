@@ -174,7 +174,7 @@
       "Properties" : {
         "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-EventsSMSTopic" }},
         "Protocol" : { "Fn::If" : [ "UseSMS", "sms", "email" ]},
-        "Endpoint" : { "Fn::If" : [ "UseSMS", "+11112223333", "vijay.prabhakar@dxc.com" ]}
+        "Endpoint" : { "Fn::If" : [ "UseSMS", "+16149400944", "vijay.prabhakar@dxc.com" ]}
       }
     },
 
@@ -264,7 +264,7 @@
       "Properties" : {
         "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-AlarmsSMSTopic" }},
         "Protocol" : { "Fn::If" : [ "UseSMS", "sms", "email" ]},
-        "Endpoint" : { "Fn::If" : [ "UseSMS", "+11112223333", "vijay.prabhakar@dxc.com" ]}
+        "Endpoint" : { "Fn::If" : [ "UseSMS", "+16149400944", "vijay.prabhakar@dxc.com" ]}
       }
     }
   }
