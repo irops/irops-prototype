@@ -58,13 +58,19 @@
 #      7.1. Delete Production-WebSphereMQ Stack
 #      7.2. Delete Core-WebSphereMQ Stack
 #
-#  8. Delete OpenVPNAS Instances
-#      8.1. Delete Production-OpenVPNAS Stack
-#      8.2. Delete Staging-OpenVPNAS Stack
-#      8.3. Delete Testing-OpenVPNAS Stack
-#      8.4. Delete Development-OpenVPNAS Stack
-#      8.5. Delete Core-OpenVPNAS Stack
-#      8.6. Delete Build-OpenVPNAS Stack
+#  8. Delete OpenVPNAS Instances (Plus only here, LinuxBastions)
+#      8.1. Delete Production-LinuxBastions Stack
+#      8.2. Delete Staging-LinuxBastions Stack
+#      8.3. Delete Testing-LinuxBastions Stack
+#      8.4. Delete Development-LinuxBastions Stack
+#      8.5. Delete Core-LinuxBastions Stack
+#      8.6. Delete Build-LinuxBastions Stack
+#      8.7. Delete Production-OpenVPNAS Stack
+#      8.8. Delete Staging-OpenVPNAS Stack
+#      8.9. Delete Testing-OpenVPNAS Stack
+#      8.10. Delete Development-OpenVPNAS Stack
+#      8.11. Delete Core-OpenVPNAS Stack
+#      8.12. Delete Build-OpenVPNAS Stack
 #
 #  9. Delete VPCPeeringConnections
 #      9.1. Delete Production-StagingVPCPeeringConnection Stack
@@ -257,13 +263,26 @@ run "$applicationbindir/application-delete-webspheremq-stack -E Production"
 run "$applicationbindir/application-delete-webspheremq-stack -E Core"
 
 
-#  8. Delete OpenVPNAS Instances
-#      8.1. Delete Production-OpenVPNAS Stack
-#      8.2. Delete Staging-OpenVPNAS Stack
-#      8.3. Delete Testing-OpenVPNAS Stack
-#      8.4. Delete Development-OpenVPNAS Stack
-#      8.5. Delete Core-OpenVPNAS Stack
-#      8.6. Delete Build-OpenVPNAS Stack
+#  8. Delete OpenVPNAS Instances (Plus only here, LinuxBastions)
+#      8.1. Delete Production-LinuxBastions Stack
+#      8.2. Delete Staging-LinuxBastions Stack
+#      8.3. Delete Testing-LinuxBastions Stack
+#      8.4. Delete Development-LinuxBastions Stack
+#      8.5. Delete Core-LinuxBastions Stack
+#      8.6. Delete Build-LinuxBastions Stack
+#      8.7. Delete Production-OpenVPNAS Stack
+#      8.8. Delete Staging-OpenVPNAS Stack
+#      8.9. Delete Testing-OpenVPNAS Stack
+#      8.10. Delete Development-OpenVPNAS Stack
+#      8.11. Delete Core-OpenVPNAS Stack
+#      8.12. Delete Build-OpenVPNAS Stack
+
+run "$utilitybindir/utility-delete-linuxbastions-stack -E Production -U LinuxBastions"
+run "$utilitybindir/utility-delete-linuxbastions-stack -E Staging -U LinuxBastions"
+run "$utilitybindir/utility-delete-linuxbastions-stack -E Testing -U LinuxBastions"
+run "$utilitybindir/utility-delete-linuxbastions-stack -E Development -U LinuxBastions"
+run "$utilitybindir/utility-delete-linuxbastions-stack -E Core -U LinuxBastions"
+run "$utilitybindir/utility-delete-linuxbastions-stack -E Build -U LinuxBastions"
 
 run "$utilitybindir/utility-delete-openvpnas-stack -E Production -U OpenVPNAS"
 run "$utilitybindir/utility-delete-openvpnas-stack -E Staging -U OpenVPNAS"
@@ -271,7 +290,6 @@ run "$utilitybindir/utility-delete-openvpnas-stack -E Testing -U OpenVPNAS"
 run "$utilitybindir/utility-delete-openvpnas-stack -E Development -U OpenVPNAS"
 run "$utilitybindir/utility-delete-openvpnas-stack -E Core -U OpenVPNAS"
 run "$utilitybindir/utility-delete-openvpnas-stack -E Build -U OpenVPNAS"
-
 
 #  9. Delete VPCPeeringConnections
 #      9.1. Delete Production-StagingVPCPeeringConnection Stack

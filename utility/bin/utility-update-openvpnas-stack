@@ -23,55 +23,55 @@ update_attempts=40
 interactive=1
 speed=100
 verbose=0
+monitor=0
 override=0
-owner=${OWNER_EMAIL:-$USER@hpe.com}
+owner=${OWNER_EMAIL:-$USER@dxc.com}
 company=${COMPANY_NAME:-Travel}
 system=${SYSTEM_NAME:-IROPS}
 environment=${ENVIRONMENT_NAME:-Production}
-environment_size=small  # By default, these should use small
+environment_type=small  # By default, these should use small
 utility=${UTILITY_NAME:-OpenVPNAS}
 utility_domain=${UTILITY_DOMAIN:-vpn}
 utility_license=${UTILITY_LICENSE:-2}
-key=${AWS_KEY_NAME:-administrator}
+public_user_network=0.0.0.0/0  # This should be global for the VPN to work
 public_administrator_network=${PUBLIC_ADMINISTRATOR_NETWORK:-0.0.0.0/0}
 public_administrator_network1=${PUBLIC_ADMINISTRATOR_NETWORK1:-}
 public_administrator_network2=${PUBLIC_ADMINISTRATOR_NETWORK2:-}
-public_administrator_network3=${PUBLIC_ADMINISTRATOR_NETWORK3:-}
-public_user_network=0.0.0.0/0  # This should be global for the VPN to work
 region=${AWS_DEFAULT_REGION:-us-west-2}
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-administrator}
+key=${AWS_KEY_NAME:-administrator}
 
 
 #  2. Define functions
 
 usage () {
-    echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v] [-o]"
-    echo "                  [-O owner] [-C company ] [-S system]"
-    echo "                  [-E environment] [-Z size] [-L license]"
-    echo "                  [-U utility] [-D domain]"
-    echo "                  [-k key]"
-    echo "                  [-n network] [-p network ]"
-    echo "                  [-r region ] [-a account] [-u user]"
+    echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v] [-m] [-o]"
+    echo "                  [-O owner] [-C company] [-S system]"
+    echo "                  [-E environment] [-T type]"
+    echo "                  [-U utility] [-D domain] [-L license]"
+    echo "                  [-p network] [-P network]"
+    echo "                  [-r region] [-a account] [-u user] [-k key]"
     echo "  -I              non-interactive"
     echo "  -s              slower: increase pauses by 25%"
     echo "  -f              faster: reduce pauses by 25%"
     echo "  -v              verbose"
+    echo "  -m              monitor stack update"
     echo "  -o              override StackPolicy"
     echo "  -O owner        Owner Email (default: $owner)"
     echo "  -C company      Company Name (default: $company)"
     echo "  -S system       System Name (default: $system)"
     echo "  -E environment  Environment Name (default: $environment)"
-    echo "  -Z size         Environment Size (default: $environment_size)"
+    echo "  -T type         Environment Type (default: $environment_type)"
     echo "  -U utility      Utility Name (default: $utility)"
     echo "  -D domain       Utility Domain (default: $utility_domain)"
     echo "  -L license      Utility License (default: $utility_license)"
-    echo "  -k key          Key (default: $key)"
-    echo "  -n network      Public Administrator Network (default: $public_administrator_network)"
     echo "  -p network      Public User Network (default: $public_user_network)"
+    echo "  -P network      Public Administrator Network (default: $public_administrator_network)"
     echo "  -r region       Region (default: $region)"
     echo "  -a account      Account (default: $account)"
     echo "  -u user         User (default: $user)"
+    echo "  -k key          Key (default: $key)"
 }
 
 run() {
@@ -153,38 +153,39 @@ next() {
 
 
 #  3. Parse command line options
-#     - Note, using options 1-9 as hidden options to set additional network ranges
+#     - Note, using options 1-8 as hidden options to set additional network ranges
 
-while getopts IsfvoO:C:S:E:Z:U:D:L:k:n:1:2:3:p:r:a:u:? arg; do
+while getopts IsfvmoO:C:S:E:T:U:D:L:p:P:3:4:r:a:u:k:? arg; do
     case $arg in
     I)  interactive=0;;
     s)  ((speed < speed_max)) && ((speed=speed+25));;
     f)  ((speed > 0)) && ((speed=speed-25));;
     v)  verbose=1;;
+    m)  monitor=1;;
     o)  override=1;;
     O)  owner="$OPTARG";;
     C)  company="$OPTARG";;
     S)  system="$OPTARG";;
     E)  environment="$OPTARG";;
-    Z)  environment_size="$OPTARG";;
+    T)  environment_type="$OPTARG";;
     U)  utility="$OPTARG";;
     D)  utility_domain="$OPTARG";;
     L)  utility_license="$OPTARG";;
-    k)  key="$OPTARG";;
-    n)  public_administrator_network="$OPTARG";;
-    1)  public_administrator_network1="$OPTARG";;
-    2)  public_administrator_network2="$OPTARG";;
-    3)  public_administrator_network3="$OPTARG";;
     p)  public_user_network="$OPTARG";;
+    P)  public_administrator_network="$OPTARG";;
+    3)  public_administrator_network1="$OPTARG";;
+    4)  public_administrator_network2="$OPTARG";;
     r)  region="$OPTARG";;
     a)  account="$OPTARG";;
     u)  user="$OPTARG";;
+    k)  key="$OPTARG";;
     ?)  usage
         exit 1;;
     esac
 done
 
 shift $(($OPTIND - 1))
+[ $monitor = 0 ] && verbose=0
 
 
 #  4. Validate environment
@@ -199,68 +200,112 @@ if [ -z $company ]; then
     echo "-C company missing!"
     echo "Could not automatically determine company, and it was not specified as a parameter"
     exit 12
+else
+    case $company in
+      Travel)
+        ;;
+      *)
+        echo "-C $company invalid! Must be Travel"
+        exit 13;;
+    esac
 fi
 
 if [ -z $system ]; then
     echo "-S system missing!"
     echo "Could not automatically determine system, and it was not specified as a parameter"
     exit 14
+else
+    case $system in
+      IROPS)
+        ;;
+      *)
+        echo "-S $system invalid! Must be IROPS"
+        exit 15;;
+    esac
 fi
 
 if [ -z $environment ]; then
     echo "-E environment missing!"
     echo "Could not automatically determine environment, and it was not specified as a parameter"
-    exit 16
+    exit 20
+else
+    case $environment in
+      Production)
+        ;;
+      Staging)
+        ;;
+      Testing)
+        ;;
+      Development)
+        ;;
+      Core)
+        ;;
+      Build)
+        ;;
+      *)
+        echo "-E $environment invalid! Must be Production, Staging, Testing, Development, Core or Build"
+        exit 21;;
+    esac
 fi
 
-if [ -z $environment_size ]; then
-    echo "-Z size missing!"
-    echo "Could not automatically determine size, and it was not specified as a parameter"
-    exit 18
+if [ -z $environment_type ]; then
+    echo "-T type missing!"
+    echo "Could not automatically determine environment type, and it was not specified as a parameter"
+    exit 22
+else
+    case $environment_type in
+      micro|small|medium|large|xlarge)
+        ;;
+      *)
+        echo "-T $environment_type invalid! Must be micro, small, medium, large or xlarge"
+        exit 23;;
+    esac
 fi
 
 if [ -z $utility ]; then
     echo "-U utility missing!"
     echo "Could not automatically determine utility, and it was not specified as a parameter"
-    exit 20
+    exit 30
+else
+    case $utility in
+      OpenVPNAS)
+        ;;
+      *)
+        echo "-U $utility invalid! Must be OpenVPNAS"
+        exit 31;;
+    esac
 fi
 
 if [ -z $utility_domain ]; then
     echo "-D domain missing!"
     echo "Could not automatically determine domain, and it was not specified as a parameter"
-    exit 22
+    exit 32
 fi
 
 if [ -z $utility_license ]; then
     echo "-L license missing!"
     echo "Could not automatically determine license, and it was not specified as a parameter"
-    exit 24
+    exit 34
 else
     case $utility_license in
       2|10|25|50)
         openvpnas_license=OpenVPNAS$utility_license;;
       *)
         echo "-L $utility_license invalid! Must be 2, 10, 25 or 50."
-        exit 25;;
+        exit 35;;
     esac
-fi
-
-if [ -z $key ]; then
-    echo "-K key missing!"
-    echo "Could not automatically determine key, and it was not specified as a parameter"
-    exit 30
-fi
-
-if [ -z $public_administrator_network ]; then
-    echo "-n network missing!"
-    echo "Could not automatically determine public administrator network, and it was not specified as a parameter"
-    exit 32
 fi
 
 if [ -z $public_user_network ]; then
     echo "-p network missing!"
     echo "Could not automatically determine public user network, and it was not specified as a parameter"
-    exit 34
+    exit 40
+fi
+
+if [ -z $public_administrator_network ]; then
+    echo "-P network missing!"
+    echo "Could not automatically determine public administrator network, and it was not specified as a parameter"
+    exit 42
 fi
 
 if [ -z $region ]; then
@@ -271,9 +316,9 @@ else
     case $region in
       us-east-1)
         s3_domain=s3.amazonaws.com;;
-      us-east-2|us-west-1|us-west-2|ca-central-1|sa-east-1|eu-west-1|eu-west-2|eu-central-1|ap-northeast-1|ap-northeast-2|ap-south-1|ap-southeast-1|ap-southeast-2)
+      us-east-2|us-west-1|us-west-2|ca-central-1|eu-west-1|eu-central-1|eu-west-2|ap-southeast-1|ap-southeast-2|ap-northeast-2|ap-northeast-1|ap-south-1|sa-east-1)
         s3_domain=s3-$region.amazonaws.com;;
-    *)
+      *)
         echo "-r $region invalid: Please specify a valid region"
         exit 51;;
     esac
@@ -291,35 +336,32 @@ if [ -z $user ]; then
     exit 54
 fi
 
+if [ -z $key ]; then
+    echo "-k key missing!"
+    echo "Could not automatically determine key, and it was not specified as a parameter"
+    exit 56
+fi
+
 profile=$account-$user
 
 if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     echo "Could not find ($account) Account ($user) User AWSCLI profile!"
     echo "Expected to find: [profile $profile] in ~/.aws/config"
-    exit 60
-fi
-
-templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
-templates_folder=utility
-
-if ! aws s3api head-bucket --bucket $templates_bucket --profile $profile --region $region 2> /dev/null; then
-    unset templates_bucket
-fi
-
-configurations_bucket=${AWS_CONFIGURATIONS_BUCKET:-configurations-$region-$account}
-configurations_folder=$utility
-configurations_object=$environment-$utility-etc-openvpn
-
-if ! aws s3api head-bucket --bucket $configurations_bucket --profile $profile --region $region 2> /dev/null; then
-    echo "$configurations_bucket S3 bucket does not exist!"
-    exit 66
+    exit 58
 fi
 
 if ! aws cloudformation describe-stacks --stack-name $environment-$utility \
                                         --profile $profile --region $region --output text &> /dev/null; then
     echo "Unable to update - $environment-$utility Stack does not exist!"
-    exit 70
+    exit 80
 fi
+
+templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
+template_folder=utility
+
+configurations_bucket=${AWS_CONFIGURATIONS_BUCKET:-configurations-$region-$account}
+configurations_folder=$utility
+configurations_object=$environment-$utility-etc-openvpn
 
 # Prevent certain environment variables from breaking commands
 unset AWS_DEFAULT_PROFILE
@@ -368,44 +410,37 @@ fi
 ((++step))
 read -r -d '' statement << EOS
 aws s3 sync $templatesdir \\
-            s3://$templates_bucket/$templates_folder \\
+            s3://$templates_bucket/$template_folder \\
             --exclude '*' --include 'Utility-OpenVPNAS.json' --include 'Utility-OpenVPNAS-StackPolicy.json' \\
             --profile $profile --region $region --output table
 EOS
 run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
 eval_statement="${statement//\\$'\n'}"
 
-if [ ! -z $templates_bucket ]; then
-    clear
-    echo
-    echo "============================================================"
-    echo
-    echo "$(printf '%2d' $step). Sync Template and Policy to ($templates_bucket) Bucket"
-    echo
-    echo "============================================================"
-    echo
-    echo "Commands:"
-    echo
-    echo "$statement"
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Sync Template and Policy to ($templates_bucket) Bucket"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
 
-    next 50
+next 50
 
-    echo
-    echo "$run_statement"
-    eval "$eval_statement"
+echo
+echo "$run_statement"
+eval "$eval_statement"
 
-    next 50
-fi
+next 50
 
 
 ((++step))
-if [ ! -z $templates_bucket ]; then
-    template_parameter="--template-url https://$s3_domain/$templates_bucket/$templates_folder/Utility-OpenVPNAS.json"
-    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$templates_folder/Utility-OpenVPNAS-StackPolicy.json"
-else
-    template_parameter="--template-body file://$templatesdir/Utility-OpenVPNAS.json"
-    stack_policy_parameter="--stack-policy-body file://$templatesdir/Utility-OpenVPNAS-StackPolicy.json"
-fi
+template_parameter="--template-url https://$s3_domain/$templates_bucket/$template_folder/Utility-OpenVPNAS.json"
+stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$template_folder/Utility-OpenVPNAS-StackPolicy.json"
 if [ $override = 1 ]; then
     stack_policy_parameter="$stack_policy_parameter \\"$'\n'"                                --stack-policy-during-update-body file://$templatesdir/Override-StackPolicy.json"
 fi
@@ -419,15 +454,14 @@ aws cloudformation update-stack --stack-name $environment-$utility \\
                                              ParameterKey=KeyName,ParameterValue=$key \\
                                              ParameterKey=CompanyName,ParameterValue=$company \\
                                              ParameterKey=SystemName,ParameterValue=$system \\
-                                             ParameterKey=EnvironmentSize,ParameterValue=$environment_size \\
+                                             ParameterKey=EnvironmentType,ParameterValue=$environment_type \\
                                              ParameterKey=UtilityName,ParameterValue=$utility \\
                                              ParameterKey=UtilityDomain,ParameterValue=$utility_domain \\
                                              ParameterKey=UtilityLicense,ParameterValue=$openvpnas_license \\
+                                             ParameterKey=PublicUserNetwork,ParameterValue=$public_user_network \\
                                              ParameterKey=PublicAdministratorNetwork,ParameterValue=$public_administrator_network \\
                                              ParameterKey=PublicAdministratorNetwork1,ParameterValue=$public_administrator_network1 \\
                                              ParameterKey=PublicAdministratorNetwork2,ParameterValue=$public_administrator_network2 \\
-                                             ParameterKey=PublicAdministratorNetwork3,ParameterValue=$public_administrator_network3 \\
-                                             ParameterKey=PublicUserNetwork,ParameterValue=$public_user_network \\
                                 --tags Key=Owner,Value=$owner \\
                                        Key=Company,Value=$company \\
                                        Key=System,Value=$system \\
@@ -479,59 +513,61 @@ EOS
 run_statement2=$(echo "$statement2" | sed -e '1s/^/# /;2,$ s/^/> /')
 eval_statement2="${statement2//\\$'\n'} 2> /dev/null"
 
-clear
-echo
-echo "============================================================"
-echo
-echo "$(printf '%2d' $step). Monitor Stack update"
-echo
-echo "============================================================"
-echo
-echo "Commands:"
-echo
-echo "$statement"
-echo
-echo "$statement2"
-
-if [ "$(aws cloudformation describe-stacks --stack-name $environment-$utility \
-                                           --query 'Stacks[].StackStatus' \
-                                           --profile $profile --region $region --output text 2> /dev/null)" = "UPDATE_COMPLETE" ]; then
+if [ $monitor = 1 ]; then
+    clear
     echo
-    tput rev
-    echo "Already Complete!"
-    tput sgr0
+    echo "============================================================"
+    echo
+    echo "$(printf '%2d' $step). Monitor Stack update"
+    echo
+    echo "============================================================"
+    echo
+    echo "Commands:"
+    echo
+    echo "$statement"
+    echo
+    echo "$statement2"
 
-    next 50
-
-else
-    run 50
-
-    if [ $choice = y ]; then
+    if [ "$(aws cloudformation describe-stacks --stack-name $environment-$utility \
+                                               --query 'Stacks[].StackStatus' \
+                                               --profile $profile --region $region --output text 2> /dev/null)" = "UPDATE_COMPLETE" ]; then
         echo
-        echo "$run_statement"
-        eval "$eval_statement"
+        tput rev
+        echo "Already Complete!"
+        tput sgr0
 
-        attempt=0
-        seconds=$update_default
-        while ((attempt++ <= update_attempts)); do
+        next 50
+
+    else
+        run 50
+
+        if [ $choice = y ]; then
             echo
-            echo "$run_statement2"
-            eval "$eval_statement2"
+            echo "$run_statement"
+            eval "$eval_statement"
 
-            status=$(aws cloudformation describe-stacks --stack-name $environment-$utility \
-                                                        --query 'Stacks[].StackStatus' \
-                                                        --profile $profile --region $region --output text 2> /dev/null)
-            if [ -z "$status" -o "$status" = "UPDATE_COMPLETE" -o "$status" = "UPDATE_FAILED" -o "$status" = "ROLLBACK_COMPLETE" ]; then
-                break
-            else
+            attempt=0
+            seconds=$update_default
+            while ((attempt++ <= update_attempts)); do
                 echo
-                echo -n "Not finished ($status). Waiting $seconds seconds..."
-                sleep $seconds
-                echo " Done"
-            fi
-        done
+                echo "$run_statement2"
+                eval "$eval_statement2"
 
-        next
+                status=$(aws cloudformation describe-stacks --stack-name $environment-$utility \
+                                                            --query 'Stacks[].StackStatus' \
+                                                            --profile $profile --region $region --output text 2> /dev/null)
+                if [ -z "$status" -o "$status" = "UPDATE_COMPLETE" -o "$status" = "UPDATE_FAILED" -o "$status" = "ROLLBACK_COMPLETE" ]; then
+                    break
+                else
+                    echo
+                    echo -n "Not finished ($status). Waiting $seconds seconds..."
+                    sleep $seconds
+                    echo " Done"
+                fi
+            done
+
+            next
+        fi
     fi
 fi
 

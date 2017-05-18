@@ -23,54 +23,56 @@ create_attempts=40
 interactive=1
 speed=100
 verbose=0
-owner=${OWNER_EMAIL:-$USER@hpe.com}
+monitor=0
+owner=${OWNER_EMAIL:-$USER@dxc.com}
 company=${COMPANY_NAME:-Travel}
 system=${SYSTEM_NAME:-IROPS}
 environment=${ENVIRONMENT_NAME:-Production}
-environment_size=standby  # By default, these run in standby mode
+environment_type=standby  # By default, these run in standby mode
+environment_zones=${ENVIRONMENT_ZONES:-1}
 utility=${UTILITY_NAME:-LinuxBastions}
 utility_domain=${UTILITY_DOMAIN:-lbastion}
-key=${AWS_KEY_NAME:-administrator}
 public_user_network=${PUBLIC_USER_NETWORK:-0.0.0.0/0}
 public_user_network1=${PUBLIC_USER_NETWORK1:-}
 public_user_network2=${PUBLIC_USER_NETWORK2:-}
-public_user_network3=${PUBLIC_USER_NETWORK3:-}
 private_user_network=${PRIVATE_USER_NETWORK:-10.0.0.0/16}
 private_user_network1=${PRIVATE_USER_NETWORK1:-}
 private_user_network2=${PRIVATE_USER_NETWORK2:-}
-private_user_network3=${PRIVATE_USER_NETWORK3:-}
 region=${AWS_DEFAULT_REGION:-us-west-2}
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-administrator}
+key=${AWS_KEY_NAME:-administrator}
 
 
 #  2. Define functions
 
 usage () {
-    echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v]"
-    echo "                  [-O owner] [-C company ] [-S system]"
-    echo "                  [-E environment] [-Z size]"
+    echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v] [-m]"
+    echo "                  [-O owner] [-C company] [-S system]"
+    echo "                  [-E environment] [-T type] [-Z zones]"
     echo "                  [-U utility] [-D domain]"
-    echo "                  [-k key]"
-    echo "                  [-p network] [-P network ]"
-    echo "                  [-r region ] [-a account] [-u user]"
+    echo "                  [-p network]"
+    echo "                  [-n network]"
+    echo "                  [-r region] [-a account] [-u user] [-k key]"
     echo "  -I              non-interactive"
     echo "  -s              slower: increase pauses by 25%"
     echo "  -f              faster: reduce pauses by 25%"
     echo "  -v              verbose"
+    echo "  -m              monitor stack creation"
     echo "  -O owner        Owner Email (default: $owner)"
     echo "  -C company      Company Name (default: $company)"
     echo "  -S system       System Name (default: $system)"
     echo "  -E environment  Environment Name (default: $environment)"
-    echo "  -Z size         Environment Size (default: $environment_size)"
+    echo "  -T type         Environment Type (default: $environment_type)"
+    echo "  -Z zones        Environment Zones (default: $environment_zones)"
     echo "  -U utility      Utility Name (default: $utility)"
     echo "  -D domain       Utility Domain (default: $utility_domain)"
-    echo "  -k key          Key (default: $key)"
     echo "  -p network      Public User Network (default: $public_user_network)"
-    echo "  -P network      Private User Network (default: $private_user_network)"
+    echo "  -n network      Private User Network (default: $private_user_network)"
     echo "  -r region       Region (default: $region)"
     echo "  -a account      Account (default: $account)"
     echo "  -u user         User (default: $user)"
+    echo "  -k key          Key (default: $key)"
 }
 
 run() {
@@ -152,39 +154,40 @@ next() {
 
 
 #  3. Parse command line options
-#     - Note, using options 1-9 as hidden options to set additional network ranges
+#     - Note, using options 1-8 as hidden options to set additional network ranges
 
-while getopts IsfvO:C:S:E:Z:U:D:k:p:4:5:6:P:7:8:9:r:a:u:? arg; do
+while getopts IsfvmO:C:S:E:T:Z:U:D:p:1:2:n:5:6:r:a:u:k:? arg; do
     case $arg in
     I)  interactive=0;;
     s)  ((speed < speed_max)) && ((speed=speed+25));;
     f)  ((speed > 0)) && ((speed=speed-25));;
     v)  verbose=1;;
+    m)  monitor=1;;
     O)  owner="$OPTARG";;
     C)  company="$OPTARG";;
     S)  system="$OPTARG";;
     E)  environment="$OPTARG";;
-    Z)  environment_size="$OPTARG";;
+    T)  environment_type="$OPTARG";;
+    Z)  environment_zones="$OPTARG";;
     U)  utility="$OPTARG";;
     D)  utility_domain="$OPTARG";;
-    k)  key="$OPTARG";;
     p)  public_user_network="$OPTARG";;
-    4)  public_user_network1="$OPTARG";;
-    5)  public_user_network2="$OPTARG";;
-    6)  public_user_network3="$OPTARG";;
-    P)  private_user_network="$OPTARG";;
-    7)  private_user_network1="$OPTARG";;
-    8)  private_user_network2="$OPTARG";;
-    9)  private_user_network3="$OPTARG";;
+    1)  public_user_network1="$OPTARG";;
+    2)  public_user_network2="$OPTARG";;
+    n)  private_user_network="$OPTARG";;
+    5)  private_user_network1="$OPTARG";;
+    6)  private_user_network2="$OPTARG";;
     r)  region="$OPTARG";;
     a)  account="$OPTARG";;
     u)  user="$OPTARG";;
+    k)  key="$OPTARG";;
     ?)  usage
         exit 1;;
     esac
 done
 
 shift $(($OPTIND - 1))
+[ $monitor = 0 ] && verbose=0
 
 
 #  4. Validate environment
@@ -199,120 +202,148 @@ if [ -z $company ]; then
     echo "-C company missing!"
     echo "Could not automatically determine company, and it was not specified as a parameter"
     exit 12
+else
+    case $company in
+      Travel)
+        ;;
+      *)
+        echo "-C $company invalid! Must be Travel"
+        exit 13;;
+    esac
 fi
 
 if [ -z $system ]; then
     echo "-S system missing!"
     echo "Could not automatically determine system, and it was not specified as a parameter"
     exit 14
+else
+    case $system in
+      IROPS)
+        ;;
+      *)
+        echo "-S $system invalid! Must be IROPS"
+        exit 15;;
+    esac
 fi
 
 if [ -z $environment ]; then
     echo "-E environment missing!"
     echo "Could not automatically determine environment, and it was not specified as a parameter"
-    exit 16
+    exit 20
 else
     case $environment in
       Production)
-        use_multizone=false
+        os_name="Amazon Linux"
         use_static_public_address=true
         use_static_private_address=false
-        use_log_monitoring=true
         use_local_users=true
-        use_schedule=true
+        log_retention=30
         on_schedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
         off_schedule="0 4 * * *";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
       Staging)
-        use_multizone=false
+        os_name="Amazon Linux"
         use_static_public_address=true
         use_static_private_address=false
-        use_log_monitoring=true
         use_local_users=true
-        use_schedule=true
+        log_retention=7
         on_schedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
         off_schedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
       Testing)
-        use_multizone=false
+        os_name="Amazon Linux"
         use_static_public_address=true
         use_static_private_address=false
-        use_log_monitoring=true
         use_local_users=true
-        use_schedule=true
+        log_retention=0
         on_schedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
         off_schedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
       Development)
-        use_multizone=false
+        os_name="Amazon Linux"
         use_static_public_address=true
         use_static_private_address=false
-        use_log_monitoring=true
         use_local_users=true
-        use_schedule=true
+        log_retention=14
         on_schedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
         off_schedule="0 4 * * *";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
       Core)
-        use_multizone=false
+        os_name="Amazon Linux"
         use_static_public_address=true
         use_static_private_address=false
-        use_log_monitoring=true
         use_local_users=true
-        use_schedule=false
-        on_schedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
-        off_schedule="0 4 * * *";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
+        log_retention=7
+        on_schedule="" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
+        off_schedule="";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
       Build)
-        use_multizone=false
+        os_name="Amazon Linux"
         use_static_public_address=true
         use_static_private_address=false
-        use_log_monitoring=true
         use_local_users=true
-        use_schedule=true
+        log_retention=0
         on_schedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
         off_schedule="0 4 * * *";; # 4:00 UTC = 8:00 PM PST = 11:00 PM EST, Mon-Fri
       *)
-        use_multizone=false
-        use_static_public_address=true
-        use_static_private_address=false
-        use_log_monitoring=true
-        use_local_users=true
-        use_schedule=true
-        on_schedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
-        off_schedule="0 2 * * *";; # 2:00 UTC = 6:00 PM PST = 9:00 PM EST, Mon-Fri
+        echo "-E $environment invalid! Must be Production, Staging, Testing, Development, Core or Build"
+        exit 21;;
     esac
 fi
 
-if [ -z $environment_size ]; then
-    echo "-Z size missing!"
-    echo "Could not automatically determine size, and it was not specified as a parameter"
-    exit 18
+if [ -z $environment_type ]; then
+    echo "-T type missing!"
+    echo "Could not automatically determine environment type, and it was not specified as a parameter"
+    exit 22
+else
+    case $environment_type in
+      standby|micro|small|medium|large|xlarge)
+        ;;
+      *)
+        echo "-T $environment_type invalid! Must be standby, micro, small, medium, large or xlarge"
+        exit 23;;
+    esac
+fi
+
+if [ -z $environment_zones ]; then
+    echo "-Z zones missing!"
+    echo "Could not automatically determine environment zones, and it was not specified as a parameter"
+    exit 24
+else
+    case $environment_zones in
+      1|2)
+        ;;
+      *)
+        echo "-Z $environment_zones invalid! Must be 1 or 2"
+        exit 25;;
+    esac
 fi
 
 if [ -z $utility ]; then
     echo "-U utility missing!"
     echo "Could not automatically determine utility, and it was not specified as a parameter"
-    exit 20
+    exit 30
+else
+    case $utility in
+      LinuxBastions)
+        ;;
+      *)
+        echo "-U $utility invalid! Must be LinuxBastions"
+        exit 31;;
+    esac
 fi
 
 if [ -z $utility_domain ]; then
     echo "-D domain missing!"
     echo "Could not automatically determine domain, and it was not specified as a parameter"
-    exit 22
-fi
-
-if [ -z $key ]; then
-    echo "-K key missing!"
-    echo "Could not automatically determine key, and it was not specified as a parameter"
-    exit 30
+    exit 32
 fi
 
 if [ -z $public_user_network ]; then
     echo "-p network missing!"
-    echo "Could not automatically determine public network, and it was not specified as a parameter"
-    exit 34
+    echo "Could not automatically determine public user network, and it was not specified as a parameter"
+    exit 40
 fi
 
 if [ -z $private_user_network ]; then
-    echo "-P network missing!"
-    echo "Could not automatically determine private network, and it was not specified as a parameter"
-    exit 36
+    echo "-n network missing!"
+    echo "Could not automatically determine private user network, and it was not specified as a parameter"
+    exit 44
 fi
 
 if [ -z $region ]; then
@@ -323,9 +354,9 @@ else
     case $region in
       us-east-1)
         s3_domain=s3.amazonaws.com;;
-      us-east-2|us-west-1|us-west-2|ca-central-1|sa-east-1|eu-west-1|eu-west-2|eu-central-1|ap-northeast-1|ap-northeast-2|ap-south-1|ap-southeast-1|ap-southeast-2)
+      us-east-2|us-west-1|us-west-2|ca-central-1|eu-west-1|eu-central-1|eu-west-2|ap-southeast-1|ap-southeast-2|ap-northeast-2|ap-northeast-1|ap-south-1|sa-east-1)
         s3_domain=s3-$region.amazonaws.com;;
-    *)
+      *)
         echo "-r $region invalid: Please specify a valid region"
         exit 51;;
     esac
@@ -343,35 +374,56 @@ if [ -z $user ]; then
     exit 54
 fi
 
+if [ -z $key ]; then
+    echo "-k key missing!"
+    echo "Could not automatically determine key, and it was not specified as a parameter"
+    exit 56
+fi
+
 profile=$account-$user
 
 if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     echo "Could not find ($account) Account ($user) User AWSCLI profile!"
     echo "Expected to find: [profile $profile] in ~/.aws/config"
+    exit 58
+fi
+
+if ! aws cloudformation describe-stacks --stack-name StandardTopics \
+                                        --profile $profile --region $region --output text &> /dev/null; then
+    echo "Stack dependency missing - StandardTopics Stack does not exist!"
     exit 60
 fi
 
-templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
-templates_folder=utility
-
-if ! aws s3api head-bucket --bucket $templates_bucket --profile $profile --region $region 2> /dev/null; then
-    unset templates_bucket
+if ! aws cloudformation describe-stacks --stack-name StandardBuckets \
+                                        --profile $profile --region $region --output text &> /dev/null; then
+    echo "Stack dependency missing - StandardBuckets Stack does not exist!"
+    exit 61
 fi
 
-configurations_bucket=${AWS_CONFIGURATIONS_BUCKET:-configurations-$region-$account}
-configurations_folder=$utility
-configurations_object=$environment-$utility-etc-hosts
+if ! aws cloudformation describe-stacks --stack-name StandardAMIFunctions \
+                                        --profile $profile --region $region --output text &> /dev/null; then
+    echo "Stack dependency missing - StandardAMIFunctions Stack does not exist!"
+    exit 62
+fi
 
-if ! aws s3api head-bucket --bucket $configurations_bucket --profile $profile --region $region 2> /dev/null; then
-    echo "$configurations_bucket S3 bucket does not exist!"
-    exit 66
+if ! aws cloudformation describe-stacks --stack-name StandardCIDRFunctions \
+                                        --profile $profile --region $region --output text &> /dev/null; then
+    echo "Stack dependency missing - StandardCIDRFunctions Stack does not exist!"
+    exit 63
 fi
 
 if ! aws cloudformation describe-stacks --stack-name $environment-VPC \
                                         --profile $profile --region $region --output text &> /dev/null; then
-    echo "$environment-VPC Stack does not exist!"
+    echo "Stack dependency missing - $environment-VPC Stack does not exist!"
     exit 70
 fi
+
+templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
+template_folder=utility
+
+configurations_bucket=${AWS_CONFIGURATIONS_BUCKET:-configurations-$region-$account}
+configuration_folder=$utility
+configuration_object=$environment-$utility-etc-hosts
 
 # Prevent certain environment variables from breaking commands
 unset AWS_DEFAULT_PROFILE
@@ -420,44 +472,37 @@ fi
 ((++step))
 read -r -d '' statement << EOS
 aws s3 sync $templatesdir \\
-            s3://$templates_bucket/$templates_folder \\
+            s3://$templates_bucket/$template_folder \\
             --exclude '*' --include 'Utility-LinuxBastions.json' --include 'Utility-LinuxBastions-StackPolicy.json' \\
             --profile $profile --region $region --output table
 EOS
 run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
 eval_statement="${statement//\\$'\n'}"
 
-if [ ! -z $templates_bucket ]; then
-    clear
-    echo
-    echo "============================================================"
-    echo
-    echo "$(printf '%2d' $step). Sync Template and Policy to ($templates_bucket) Bucket"
-    echo
-    echo "============================================================"
-    echo
-    echo "Commands:"
-    echo
-    echo "$statement"
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Sync Template and Policy to ($templates_bucket) Bucket"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
 
-    next 50
+next 50
 
-    echo
-    echo "$run_statement"
-    eval "$eval_statement"
+echo
+echo "$run_statement"
+eval "$eval_statement"
 
-    next 50
-fi
+next 50
 
 
 ((++step))
-if [ ! -z $templates_bucket ]; then
-    template_parameter="--template-url https://$s3_domain/$templates_bucket/$templates_folder/Utility-LinuxBastions.json"
-    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$templates_folder/Utility-LinuxBastions-StackPolicy.json"
-else
-    template_parameter="--template-body file://$templatesdir/Utility-LinuxBastions.json"
-    stack_policy_parameter="--stack-policy-body file://$templatesdir/Utility-LinuxBastions-StackPolicy.json"
-fi
+template_parameter="--template-url https://$s3_domain/$templates_bucket/$template_folder/Utility-LinuxBastions.json"
+stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$template_folder/Utility-LinuxBastions-StackPolicy.json"
 read -r -d '' statement << EOS
 aws cloudformation create-stack --stack-name $environment-$utility \\
                                 $template_parameter \\
@@ -465,32 +510,30 @@ aws cloudformation create-stack --stack-name $environment-$utility \\
                                 --parameters ParameterKey=VPCStackName,ParameterValue=$environment-VPC \\
                                              ParameterKey=StandardCIDRFunctionsStackName,ParameterValue=StandardCIDRFunctions \\
                                              ParameterKey=StandardAMIFunctionsStackName,ParameterValue=StandardAMIFunctions \\
+                                             ParameterKey=StandardBucketsStackName,ParameterValue=StandardBuckets \\
                                              ParameterKey=StandardTopicsStackName,ParameterValue=StandardTopics \\
                                              ParameterKey=KeyName,ParameterValue=$key \\
                                              ParameterKey=CompanyName,ParameterValue=$company \\
                                              ParameterKey=SystemName,ParameterValue=$system \\
-                                             ParameterKey=EnvironmentSize,ParameterValue=$environment_size \\
-                                             ParameterKey=ConfigurationsBucket,ParameterValue=$configurations_bucket \\
-                                             ParameterKey=ConfigurationLinuxBastionsFolder,ParameterValue=$configurations_folder \\
-                                             ParameterKey=ConfigurationLinuxBastionsObject,ParameterValue=$configurations_object \\
+                                             ParameterKey=EnvironmentType,ParameterValue=$environment_type \\
+                                             ParameterKey=EnvironmentZones,ParameterValue=$environment_zones \\
+                                             ParameterKey=OSName,ParameterValue="$os_name" \\
+                                             ParameterKey=ConfigurationFolder,ParameterValue=$configuration_folder \\
+                                             ParameterKey=ConfigurationObject,ParameterValue=$configuration_object \\
                                              ParameterKey=UtilityName,ParameterValue=$utility \\
                                              ParameterKey=UtilityDomain,ParameterValue=$utility_domain \\
-                                             ParameterKey=UseMultiZone,ParameterValue=$use_multizone \\
                                              ParameterKey=UseStaticPublicAddress,ParameterValue=$use_static_public_address \\
                                              ParameterKey=UseStaticPrivateAddress,ParameterValue=$use_static_private_address \\
-                                             ParameterKey=UseLogMonitoring,ParameterValue=$use_log_monitoring \\
                                              ParameterKey=UseLocalUsers,ParameterValue=$use_local_users \\
-                                             ParameterKey=UseSchedule,ParameterValue=$use_schedule \\
+                                             ParameterKey=LogRetention,ParameterValue=$log_retention \\
                                              ParameterKey=OnSchedule,ParameterValue="$on_schedule" \\
                                              ParameterKey=OffSchedule,ParameterValue="$off_schedule" \\
                                              ParameterKey=PublicUserNetwork,ParameterValue=$public_user_network \\
                                              ParameterKey=PublicUserNetwork1,ParameterValue=$public_user_network1 \\
                                              ParameterKey=PublicUserNetwork2,ParameterValue=$public_user_network2 \\
-                                             ParameterKey=PublicUserNetwork3,ParameterValue=$public_user_network3 \\
                                              ParameterKey=PrivateUserNetwork,ParameterValue=$private_user_network \\
                                              ParameterKey=PrivateUserNetwork1,ParameterValue=$private_user_network1 \\
                                              ParameterKey=PrivateUserNetwork2,ParameterValue=$private_user_network2 \\
-                                             ParameterKey=PrivateUserNetwork3,ParameterValue=$private_user_network3 \\
                                 --tags Key=Owner,Value=$owner \\
                                        Key=Company,Value=$company \\
                                        Key=System,Value=$system \\
@@ -553,59 +596,61 @@ EOS
 run_statement2=$(echo "$statement2" | sed -e '1s/^/# /;2,$ s/^/> /')
 eval_statement2="${statement2//\\$'\n'} 2> /dev/null"
 
-clear
-echo
-echo "============================================================"
-echo
-echo "$(printf '%2d' $step). Monitor Stack creation"
-echo
-echo "============================================================"
-echo
-echo "Commands:"
-echo
-echo "$statement"
-echo
-echo "$statement2"
-
-if [ "$(aws cloudformation describe-stacks --stack-name $environment-$utility \
-                                           --query 'Stacks[].StackStatus' \
-                                           --profile $profile --region $region --output text 2> /dev/null)" = "CREATE_COMPLETE" ]; then
+if [ $monitor = 1 ]; then
+    clear
     echo
-    tput rev
-    echo "Already Complete!"
-    tput sgr0
+    echo "============================================================"
+    echo
+    echo "$(printf '%2d' $step). Monitor Stack creation"
+    echo
+    echo "============================================================"
+    echo
+    echo "Commands:"
+    echo
+    echo "$statement"
+    echo
+    echo "$statement2"
 
-    next 50
-
-else
-    run 50
-
-    if [ $choice = y ]; then
+    if [ "$(aws cloudformation describe-stacks --stack-name $environment-$utility \
+                                               --query 'Stacks[].StackStatus' \
+                                               --profile $profile --region $region --output text 2> /dev/null)" = "CREATE_COMPLETE" ]; then
         echo
-        echo "$run_statement"
-        eval "$eval_statement"
+        tput rev
+        echo "Already Complete!"
+        tput sgr0
 
-        attempt=0
-        seconds=$create_default
-        while ((attempt++ <= create_attempts)); do
+        next 50
+
+    else
+        run 50
+
+        if [ $choice = y ]; then
             echo
-            echo "$run_statement2"
-            eval "$eval_statement2"
+            echo "$run_statement"
+            eval "$eval_statement"
 
-            status=$(aws cloudformation describe-stacks --stack-name $environment-$utility \
-                                                        --query 'Stacks[].StackStatus' \
-                                                        --profile $profile --region $region --output text 2> /dev/null)
-            if [ -z "$status" -o "$status" = "CREATE_COMPLETE" -o "$status" = "CREATE_FAILED" -o "$status" = "ROLLBACK_COMPLETE" ]; then
-                break
-            else
+            attempt=0
+            seconds=$create_default
+            while ((attempt++ <= create_attempts)); do
                 echo
-                echo -n "Not finished ($status). Waiting $seconds seconds..."
-                sleep $seconds
-                echo " Done"
-            fi
-        done
+                echo "$run_statement2"
+                eval "$eval_statement2"
 
-        next
+                status=$(aws cloudformation describe-stacks --stack-name $environment-$utility \
+                                                            --query 'Stacks[].StackStatus' \
+                                                            --profile $profile --region $region --output text 2> /dev/null)
+                if [ -z "$status" -o "$status" = "CREATE_COMPLETE" -o "$status" = "CREATE_FAILED" -o "$status" = "ROLLBACK_COMPLETE" ]; then
+                    break
+                else
+                    echo
+                    echo -n "Not finished ($status). Waiting $seconds seconds..."
+                    sleep $seconds
+                    echo " Done"
+                fi
+            done
+
+            next
+        fi
     fi
 fi
 

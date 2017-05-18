@@ -73,13 +73,19 @@
 #     10.3. Create Staging-TestingVPCPeeringConnection Stack
 #     10.2. Create Production-StagingVPCPeeringConnection Stack
 #
-# 11. Create OpenVPNAS Instances
-#     11.6. Create Build-OpenVPNAS Stack
-#     11.5. Create Core-OpenVPNAS Stack
-#     11.4. Create Development-OpenVPNAS Stack
-#     11.3. Create Testing-OpenVPNAS Stack
-#     11.2. Create Staging-OpenVPNAS Stack
-#     11.1. Create Production-OpenVPNAS Stack
+# 11. Create OpenVPNAS Instances (Plus only here, LinuxBastions)
+#     11.1. Create Build-OpenVPNAS Stack
+#     11.2. Create Core-OpenVPNAS Stack
+#     11.3. Create Development-OpenVPNAS Stack
+#     11.4. Create Testing-OpenVPNAS Stack
+#     11.5. Create Staging-OpenVPNAS Stack
+#     11.6. Create Production-OpenVPNAS Stack
+#     11.7. Create Build-LinuxBastions Stack
+#     11.8. Create Core-LinuxBastions Stack
+#     11.9. Create Development-LinuxBastions Stack
+#     11.10. Create Testing-LinuxBastions Stack
+#     11.11. Create Staging-LinuxBastions Stack
+#     11.12. Create Production-LinuxBastions Stack
 #
 # 12. Create WebSphereMQ Instances
 #     12.1. Create Production-WebSphereMQ Stack
@@ -291,20 +297,33 @@ run "$environmentbindir/environment-create-vpcpeeringconnection-stack -E Staging
 run "$environmentbindir/environment-create-vpcpeeringconnection-stack -E Production -P Staging"
 
 
-# 11. Create OpenVPNAS Instances
-#     11.6. Create Build-OpenVPNAS Stack
-#     11.5. Create Core-OpenVPNAS Stack
-#     11.4. Create Development-OpenVPNAS Stack
-#     11.3. Create Testing-OpenVPNAS Stack
-#     11.2. Create Staging-OpenVPNAS Stack
-#     11.1. Create Production-OpenVPNAS Stack
+# 11. Create OpenVPNAS Instances (Plus only here, LinuxBastions)
+#     11.1. Create Build-OpenVPNAS Stack
+#     11.2. Create Core-OpenVPNAS Stack
+#     11.3. Create Development-OpenVPNAS Stack
+#     11.4. Create Testing-OpenVPNAS Stack
+#     11.5. Create Staging-OpenVPNAS Stack
+#     11.6. Create Production-OpenVPNAS Stack
+#     11.7. Create Build-LinuxBastions Stack
+#     11.8. Create Core-LinuxBastions Stack
+#     11.9. Create Development-LinuxBastions Stack
+#     11.10. Create Testing-LinuxBastions Stack
+#     11.11. Create Staging-LinuxBastions Stack
+#     11.12. Create Production-LinuxBastions Stack
 
-run "$utilitybindir/utility-create-openvpnas-stack -E Build -U OpenVPNAS -Z micro"
-run "$utilitybindir/utility-create-openvpnas-stack -E Core -U OpenVPNAS -Z micro"
-run "$utilitybindir/utility-create-openvpnas-stack -E Development -U OpenVPNAS -Z micro"
-run "$utilitybindir/utility-create-openvpnas-stack -E Testing -U OpenVPNAS -Z micro"
-run "$utilitybindir/utility-create-openvpnas-stack -E Staging -U OpenVPNAS -Z micro"
-run "$utilitybindir/utility-create-openvpnas-stack -E Production -U OpenVPNAS -Z micro"
+run "$utilitybindir/utility-create-openvpnas-stack -E Build -U OpenVPNAS -T micro"
+run "$utilitybindir/utility-create-openvpnas-stack -E Core -U OpenVPNAS -T micro"
+run "$utilitybindir/utility-create-openvpnas-stack -E Development -U OpenVPNAS -T micro"
+run "$utilitybindir/utility-create-openvpnas-stack -E Testing -U OpenVPNAS -T micro"
+run "$utilitybindir/utility-create-openvpnas-stack -E Staging -U OpenVPNAS -T micro"
+run "$utilitybindir/utility-create-openvpnas-stack -E Production -U OpenVPNAS -T micro -m"
+
+run "$utilitybindir/utility-create-linuxbastions-stack -E Build -U LinuxBastions -T standby -Z 1"
+run "$utilitybindir/utility-create-linuxbastions-stack -E Core -U LinuxBastions -T small -Z 1"
+run "$utilitybindir/utility-create-linuxbastions-stack -E Development -U LinuxBastions -T micro -Z 1"
+run "$utilitybindir/utility-create-linuxbastions-stack -E Testing -U LinuxBastions -T standby -Z 1"
+run "$utilitybindir/utility-create-linuxbastions-stack -E Staging -U LinuxBastions -T standby -Z 1"
+run "$utilitybindir/utility-create-linuxbastions-stack -E Production -U LinuxBastions -T medium -Z 2 -m"
 
 
 # 12. Create WebSphereMQ Instances

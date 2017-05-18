@@ -72,12 +72,12 @@
 #     10.2. Create Production-StagingVPCPeeringConnection Stack
 #
 # 11. Create OpenVPNAS Instances
-#     11.6. Create Build-OpenVPNAS Stack
-#     11.5. Create Core-OpenVPNAS Stack
-#     11.4. Create Development-OpenVPNAS Stack
-#     11.3. Create Testing-OpenVPNAS Stack
-#     11.2. Create Staging-OpenVPNAS Stack
-#     11.1. Create Production-OpenVPNAS Stack
+#     11.1. Create Build-OpenVPNAS Stack
+#     11.2. Create Core-OpenVPNAS Stack
+#     11.3. Create Development-OpenVPNAS Stack
+#     11.4. Create Testing-OpenVPNAS Stack
+#     11.5. Create Staging-OpenVPNAS Stack
+#     11.6. Create Production-OpenVPNAS Stack
 #
 # 12. Create WebSphereMQ Instances
 #     12.1. Create Production-WebSphereMQ Stack
@@ -290,19 +290,19 @@ run "$environmentbindir/environment-create-vpcpeeringconnection-stack -E Product
 
 
 # 11. Create OpenVPNAS Instances
-#     11.6. Create Build-OpenVPNAS Stack
-#     11.5. Create Core-OpenVPNAS Stack
-#     11.4. Create Development-OpenVPNAS Stack
-#     11.3. Create Testing-OpenVPNAS Stack
-#     11.2. Create Staging-OpenVPNAS Stack
-#     11.1. Create Production-OpenVPNAS Stack
+#     11.1. Create Build-OpenVPNAS Stack
+#     11.2. Create Core-OpenVPNAS Stack
+#     11.3. Create Development-OpenVPNAS Stack
+#     11.4. Create Testing-OpenVPNAS Stack
+#     11.5. Create Staging-OpenVPNAS Stack
+#     11.6. Create Production-OpenVPNAS Stack
 
-run "$utilitybindir/utility-create-openvpnas-stack -E Build -U OpenVPNAS -Z micro"
-run "$utilitybindir/utility-create-openvpnas-stack -E Core -U OpenVPNAS -Z micro"
-run "$utilitybindir/utility-create-openvpnas-stack -E Development -U OpenVPNAS -Z micro"
-run "$utilitybindir/utility-create-openvpnas-stack -E Testing -U OpenVPNAS -Z micro"
-run "$utilitybindir/utility-create-openvpnas-stack -E Staging -U OpenVPNAS -Z micro"
-run "$utilitybindir/utility-create-openvpnas-stack -E Production -U OpenVPNAS -Z micro"
+run "$utilitybindir/utility-create-openvpnas-stack -E Build -U OpenVPNAS -T micro"
+run "$utilitybindir/utility-create-openvpnas-stack -E Core -U OpenVPNAS -T micro"
+run "$utilitybindir/utility-create-openvpnas-stack -E Development -U OpenVPNAS -T micro"
+run "$utilitybindir/utility-create-openvpnas-stack -E Testing -U OpenVPNAS -T micro"
+run "$utilitybindir/utility-create-openvpnas-stack -E Staging -U OpenVPNAS -T micro"
+run "$utilitybindir/utility-create-openvpnas-stack -E Production -U OpenVPNAS -T micro -m"
 
 
 # 12. Create WebSphereMQ Instances
