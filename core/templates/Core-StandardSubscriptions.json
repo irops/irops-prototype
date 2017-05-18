@@ -38,7 +38,7 @@
       "Properties" : {
         "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-ManagersTopic" }},
         "Protocol" : "email",
-        "Endpoint" : "irops-aws-team@hpe.com"
+        "Endpoint" : "irops-aws-team@dxc.com"
       }
     },
 
@@ -47,7 +47,7 @@
       "Properties" : {
         "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-DevelopersTopic" }},
         "Protocol" : "email",
-        "Endpoint" : "irops-aws-team@hpe.com"
+        "Endpoint" : "irops-aws-team@dxc.com"
       }
     },
 
@@ -56,7 +56,7 @@
       "Properties" : {
         "TopicArn" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-UsersTopic" }},
         "Protocol" : "email",
-        "Endpoint" : "irops-aws-team@hpe.com"
+        "Endpoint" : "irops-aws-team@dxc.com"
       }
     }
   }

@@ -10,6 +10,7 @@
 
 bindir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 templatesdir=${bindir%/*}/templates
+functionsdir=${bindir%/*}/functions
 tmpdir=/var/tmp
 
 step=0
@@ -18,12 +19,12 @@ run_default=10
 pause_default=2
 next_default=5
 create_default=15
-create_attempts=20
+create_attempts=40
 
 interactive=1
 speed=100
 verbose=0
-owner=${OWNER_EMAIL:-$USER@hpe.com}
+owner=${OWNER_EMAIL:-$USER@dxc.com}
 company=${COMPANY_NAME:-Travel}
 system=${SYSTEM_NAME:-IROPS}
 environment=${CORE_NAME:-Core}
@@ -38,7 +39,7 @@ usage () {
     echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v]"
     echo "                  [-O owner] [-C company ] [-S system]"
     echo "                  [-E environment]"
-    echo "                  [-r region ] [-a account] [-u user]"
+    echo "                  [-r region] [-a account] [-u user]"
     echo "  -I              non-interactive"
     echo "  -s              slower: increase pauses by 25%"
     echo "  -f              faster: reduce pauses by 25%"
@@ -165,18 +166,42 @@ if [ -z $company ]; then
     echo "-C company missing!"
     echo "Could not automatically determine company, and it was not specified as a parameter"
     exit 12
+else
+    case $company in
+      Travel)
+        ;;
+      *)
+        echo "-C $company invalid! Must be Travel"
+        exit 13;;
+    esac
 fi
 
 if [ -z $system ]; then
     echo "-S system missing!"
     echo "Could not automatically determine system, and it was not specified as a parameter"
     exit 14
+else
+    case $system in
+      IROPS)
+        ;;
+      *)
+        echo "-S $system invalid! Must be IROPS"
+        exit 15;;
+    esac
 fi
 
 if [ -z $environment ]; then
     echo "-E environment missing!"
     echo "Could not automatically determine environment, and it was not specified as a parameter"
-    exit 16
+    exit 20
+else
+    case $environment in
+      Core)
+        ;;
+      *)
+        echo "-E $environment invalid! Must be Core"
+        exit 21;;
+    esac
 fi
 
 if [ -z $region ]; then
@@ -187,9 +212,9 @@ else
     case $region in
       us-east-1)
         s3_domain=s3.amazonaws.com;;
-      us-east-2|us-west-1|us-west-2|ca-central-1|sa-east-1|eu-west-1|eu-west-2|eu-central-1|ap-northeast-1|ap-northeast-2|ap-south-1|ap-southeast-1|ap-southeast-2)
+      us-east-2|us-west-1|us-west-2|ca-central-1|eu-west-1|eu-central-1|eu-west-2|ap-southeast-1|ap-southeast-2|ap-northeast-2|ap-northeast-1|ap-south-1|sa-east-1)
         s3_domain=s3-$region.amazonaws.com;;
-    *)
+      *)
         echo "-r $region invalid: Please specify a valid region"
         exit 51;;
     esac
@@ -212,15 +237,23 @@ profile=$account-$user
 if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     echo "Could not find ($account) Account ($user) User AWSCLI profile!"
     echo "Expected to find: [profile $profile] in ~/.aws/config"
+    exit 58
+fi
+
+if ! aws cloudformation describe-stacks --stack-name StandardTopics \
+                                        --profile $profile --region $region --output text &> /dev/null; then
+    echo "Stack dependency missing - StandardTopics Stack does not exist!"
     exit 60
 fi
 
-templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
-templates_folder=core
-
-if ! aws s3api head-bucket --bucket $templates_bucket --profile $profile --region $region 2> /dev/null; then
-    unset templates_bucket
+if ! aws cloudformation describe-stacks --stack-name StandardBuckets \
+                                        --profile $profile --region $region --output text &> /dev/null; then
+    echo "Stack dependency missing - StandardBuckets Stack does not exist!"
+    exit 61
 fi
+
+templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
+template_folder=core
 
 # Prevent certain environment variables from breaking commands
 unset AWS_DEFAULT_PROFILE
@@ -269,44 +302,37 @@ fi
 ((++step))
 read -r -d '' statement << EOS
 aws s3 sync $templatesdir \\
-            s3://$templates_bucket/$templates_folder \\
+            s3://$templates_bucket/$template_folder \\
             --exclude '*' --include 'Core-StandardCIDRFunctions.json' --include 'Core-StandardCIDRFunctions-StackPolicy.json' \\
             --profile $profile --region $region --output table
 EOS
 run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
 eval_statement="${statement//\\$'\n'}"
 
-if [ ! -z $templates_bucket ]; then
-    clear
-    echo
-    echo "============================================================"
-    echo
-    echo "$(printf '%2d' $step). Sync Template and Policy to ($templates_bucket) Bucket"
-    echo
-    echo "============================================================"
-    echo
-    echo "Commands:"
-    echo
-    echo "$statement"
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Sync Template and Policy to ($templates_bucket) Bucket"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
 
-    next 50
+next 50
 
-    echo
-    echo "$run_statement"
-    eval "$eval_statement"
+echo
+echo "$run_statement"
+eval "$eval_statement"
 
-    next 50
-fi
+next 50
 
 
 ((++step))
-if [ ! -z $templates_bucket ]; then
-    template_parameter="--template-url https://$s3_domain/$templates_bucket/$templates_folder/Core-StandardCIDRFunctions.json"
-    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$templates_folder/Core-StandardCIDRFunctions-StackPolicy.json"
-else
-    template_parameter="--template-body file://$templatesdir/Core-StandardCIDRFunctions.json"
-    stack_policy_parameter="--stack-policy-body file://$templatesdir/Core-StandardCIDRFunctions-StackPolicy.json"
-fi
+template_parameter="--template-url https://$s3_domain/$templates_bucket/$template_folder/Core-StandardCIDRFunctions.json"
+stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$template_folder/Core-StandardCIDRFunctions-StackPolicy.json"
 read -r -d '' statement << EOS
 aws cloudformation create-stack --stack-name StandardCIDRFunctions \\
                                 $template_parameter \\

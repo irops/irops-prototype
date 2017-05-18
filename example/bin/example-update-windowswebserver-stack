@@ -25,7 +25,7 @@ speed=100
 verbose=0
 override=0
 dummy=0
-owner=${OWNER_EMAIL:-$USER@hpe.com}
+owner=${OWNER_EMAIL:-$USER@dxc.com}
 company=${COMPANY_NAME:-Travel}
 system=${SYSTEM_NAME:-IROPS}
 environment=${ENVIRONMENT_NAME:-Production}
@@ -55,12 +55,12 @@ key=${AWS_KEY_NAME:-example}
 
 usage () {
     echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v] [-o] [-d]"
-    echo "                  [-O owner] [-C company ] [-S system]"
+    echo "                  [-O owner] [-C company] [-S system]"
     echo "                  [-E environment] [-T type]"
-    echo "                  [-A application ] [-D domain] [-V version]"
-    echo "                  [-p network] [-P network ]"
-    echo "                  [-n network] [-N network ]"
-    echo "                  [-r region ] [-a account] [-u user] [-k key]"
+    echo "                  [-A application] [-D domain] [-V version]"
+    echo "                  [-p network] [-P network]"
+    echo "                  [-n network] [-N network]"
+    echo "                  [-r region] [-a account] [-u user] [-k key]"
     echo "  -I              non-interactive"
     echo "  -s              slower: increase pauses by 25%"
     echo "  -f              faster: reduce pauses by 25%"
@@ -266,8 +266,8 @@ else
         os_name="Windows Server 2012 R2"
         log_retention=0;;
       *)
-        os_name="Windows Server 2012 R2"
-        log_retention=0;;
+        echo "-E $environment invalid! Must be Production, Staging, Testing, Development, Core or Build"
+        exit 21;;
     esac
 fi
 
@@ -294,7 +294,7 @@ else
       WindowsWebServer)
         ;;
       *)
-        echo "-A $application invalid! Must be LinuxWebServer"
+        echo "-A $application invalid! Must be WindowsWebServer"
         exit 31;;
     esac
 fi

@@ -22,7 +22,7 @@
         {
           "Label" : { "default" : "Environment Configuration" },
           "Parameters" : [
-            "EnvironmentSize"
+            "EnvironmentType"
           ]
         },
         {
@@ -32,11 +32,9 @@
             "UseStaticPublicAddress",
             "UseStaticHomeVolume",
             "HomeSnapshot",
-            "UseLogMonitoring",
+            "UseLocalUsers",
             "LogRetention",
             "LogAlarmEmail",
-            "UseLocalUsers",
-            "UseSchedule",
             "OnSchedule",
             "OffSchedule"
           ]
@@ -44,10 +42,9 @@
         {
           "Label" : { "default" : "Security Configuration" },
           "Parameters" : [
-            "PublicNetwork",
-            "PublicNetwork1",
-            "PublicNetwork2",
-            "PublicNetwork3",
+            "PublicUserNetwork",
+            "PublicUserNetwork1",
+            "PublicUserNetwork2"
           ]
         }
       ],
@@ -56,22 +53,19 @@
         "KeyName" : { "default" : "Key Name" },
         "CompanyName" : { "default" : "Company Name" },
         "SystemName" : { "default" : "System Name" },
-        "EnvironmentSize" : { "default" : "Environment Size" },
+        "EnvironmentType" : { "default" : "Environment Type" },
         "UtilityName" : { "default" : "Utility Name" },
         "UseStaticPublicAddress" : { "default" : "Use Static Public Address" },
         "UseStaticHomeVolume" : { "default" : "Use Static Home Volume" },
         "HomeSnapshot" : { "default" : "Home Snapshot" },
-        "UseLogMonitoring" : { "default" : "Use Log Monitoring" },
+        "UseLocalUsers" : { "default" : "Use Local Users" },
         "LogRetention" : { "default" : "Log Retention" },
         "LogAlarmEmail" : { "default" : "Log Alarm Email" },
-        "UseLocalUsers" : { "default" : "Use Local Users" },
-        "UseSchedule" : { "default" : "Use Schedule" },
         "OnSchedule" : { "default" : "On Schedule" },
         "OffSchedule" : { "default" : "Off Schedule" },
-        "PublicNetwork" : { "default" : "Public Network" },
-        "PublicNetwork1" : { "default" : "Additional Public Network 1" },
-        "PublicNetwork2" : { "default" : "Additional Public Network 2" },
-        "PublicNetwork3" : { "default" : "Additional Public Network 3" }
+        "PublicUserNetwork" : { "default" : "Public User Network" },
+        "PublicUserNetwork1" : { "default" : "Additional Public User Network 1" },
+        "PublicUserNetwork2" : { "default" : "Additional Public User Network 2" }
       }
     }
   },
@@ -106,8 +100,8 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
-    "EnvironmentSize" : {
-      "Description" : "Size of the Environment to build. Used to select size-related options in Mappings",
+    "EnvironmentType" : {
+      "Description" : "Type of the Environment to build. Used to select size-related options in Mappings",
       "Type" : "String",
       "Default" : "micro",
       "AllowedValues" : [ "micro", "small", "medium", "large", "xlarge" ],
@@ -148,30 +142,6 @@
       "ConstraintDescription" : "must be a valid Snapshot ID."
     },
 
-    "UseLogMonitoring" : {
-      "Description" : "Send Logs to CloudWatch Logs",
-      "Type" : "String",
-      "Default" : "true",
-      "AllowedValues" : [ "true", "false" ],
-      "ConstraintDescription" : "must be either true or false."
-    },
-
-    "LogRetention" : {
-      "Description" : "Number of days to retain log events",
-      "Type" : "Number",
-      "Default" : 14,
-      "AllowedValues" : [ 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653 ],
-      "ConstraintDescription" : "must be: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827 or 3653."
-    },
-
-    "LogAlarmEmail" : {
-      "Description" : "Email Address to use for Subscription to Log-related Alarm Topic",
-      "Type" : "String",
-      "Default" : "mcrawford@hpe.com",
-      "AllowedPattern" : "^[a-z0-9._]+@[a-z0-9.-]+\\.[a-z]{2,6}$",
-      "ConstraintDescription" : "must be a valid email address."
-    },
-
     "UseLocalUsers" : {
       "Description" : "Synchronize Members of BootstrapAdministrators IAM Group (with SSH Keys) to Local Unix Users",
       "Type" : "String",
@@ -180,12 +150,20 @@
       "ConstraintDescription" : "must be either true or false."
     },
 
-    "UseSchedule" : {
-      "Description" : "Use a Schedule to start and stop the Bastions",
+    "LogRetention" : {
+      "Description" : "Number of days to retain CloudWatch Log Events (0 disables use of CloudWatch Logs)",
+      "Type" : "Number",
+      "Default" : 14,
+      "AllowedValues" : [ 0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653 ],
+      "ConstraintDescription" : "must be: 0 (disabled), 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827 or 3653."
+    },
+
+    "LogAlarmEmail" : {
+      "Description" : "Email Address to use for Subscription to Log-related Alarm Topic",
       "Type" : "String",
-      "Default" : "true",
-      "AllowedValues" : [ "true", "false" ],
-      "ConstraintDescription" : "must be either true or false."
+      "Default" : "mcrawford@dxc.com",
+      "AllowedPattern" : "^[a-z0-9._]+@[a-z0-9.-]+\\.[a-z]{2,6}$",
+      "ConstraintDescription" : "must be a valid email address."
     },
 
     "OnSchedule" : {
@@ -204,32 +182,24 @@
       "ConstraintDescription" : "must follow constrained cron syntax: \"0 H * * *\", where H = 0-7."
     },
 
-    "PublicNetwork" : {
-      "Description" : "Public network that can access the Utility",
+    "PublicUserNetwork" : {
+      "Description" : "Public network that can access the Application",
       "Type" : "String",
       "Default" : "0.0.0.0/0",
       "AllowedPattern" : "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$",
       "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
     },
 
-    "PublicNetwork1" : {
-      "Description" : "Additional public network that can access the Utility",
+    "PublicUserNetwork1" : {
+      "Description" : "Additional public network that can access the Application",
       "Type" : "String",
       "Default" : "",
       "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
       "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
     },
 
-    "PublicNetwork2" : {
-      "Description" : "Additional public network that can access the Utility",
-      "Type" : "String",
-      "Default" : "",
-      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
-      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
-    },
-
-    "PublicNetwork3" : {
-      "Description" : "Additional public network that can access the Utility",
+    "PublicUserNetwork2" : {
+      "Description" : "Additional public network that can access the Application",
       "Type" : "String",
       "Default" : "",
       "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
@@ -266,12 +236,13 @@
     "ConfigureStaticPublicAddress" : { "Fn::Equals" : [{ "Ref" : "UseStaticPublicAddress" }, "true" ]},
     "ConfigureStaticHomeVolume" : { "Fn::Equals" : [{ "Ref" : "UseStaticHomeVolume" }, "true" ]},
     "ConfigureStaticHomeSnapshot" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "HomeSnapshot" }, "" ] }]},
-    "ConfigureLogs" : { "Fn::Equals" : [{ "Ref" : "UseLogMonitoring" }, "true" ]},
     "ConfigureUsers" : { "Fn::Equals" : [{ "Ref" : "UseLocalUsers" }, "true" ]},
-    "ConfigureSchedule" : { "Fn::Equals" : [{ "Ref" : "UseSchedule" }, "true" ]},
-    "ConfigurePublicNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicNetwork1" }, "" ]}]},
-    "ConfigurePublicNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicNetwork2" }, "" ]}]},
-    "ConfigurePublicNetwork3" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicNetwork3" }, "" ]}]}
+    "ConfigureLogs" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LogRetention" }, "0" ]}]},
+    "ConfigureOnSchedule" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "OnSchedule" }, "" ]}]},
+    "ConfigureOffSchedule" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "OffSchedule" }, "" ]}]},
+    "ConfigurePublicUserNetwork" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicUserNetwork" }, "" ]}]},
+    "ConfigurePublicUserNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicUserNetwork1" }, "" ]}]},
+    "ConfigurePublicUserNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicUserNetwork2" }, "" ]}]}
   },
 
   "Resources" : {
@@ -392,14 +363,12 @@
       "Properties" : {
         "GroupDescription" : { "Fn::Join" : [ "-", [ "Bootstrap", { "Ref" : "UtilityName" }, "SecurityGroup" ]]},
         "SecurityGroupIngress" : [
-          { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PublicNetwork" }},
-          { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "PublicNetwork" }},
-          { "Fn::If" : [ "ConfigurePublicNetwork1", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PublicNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "PublicNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicNetwork2", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PublicNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "PublicNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicNetwork3", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PublicNetwork3" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicNetwork3", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "PublicNetwork3" }}, { "Ref" : "AWS::NoValue" }]}
+          { "Fn::If" : [ "ConfigurePublicUserNetwork",  { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PublicUserNetwork" }},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicUserNetwork",  { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "PublicUserNetwork" }},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicUserNetwork1", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PublicUserNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicUserNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "PublicUserNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicUserNetwork2", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PublicUserNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigurePublicUserNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "PublicUserNetwork2" }}, { "Ref" : "AWS::NoValue" }]}
         ],
         "Tags" : [
           { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ "Bootstrap", { "Ref" : "UtilityName" }, "SecurityGroup" ]]}}
@@ -493,17 +462,18 @@
         "AWS::CloudFormation::Init" : {
           "configSets" : {
             "All" : [
-              "UpgradeOS",
-              "ConfigureOS",
-              "ConfigureHostname",
+              "UpdateOS",
+              "ConfigureOSUpdates",
+              { "Fn::If" : [ "ConfigureLogs", "ConfigureLogs", { "Ref": "AWS::NoValue" }]},
               "ConfigureCFN",
+              "ConfigureHostname",
+              "ConfigureOS",
               { "Fn::If" : [ "ConfigureStaticPublicAddress", "ConfigureStaticPublicAddress", { "Ref": "AWS::NoValue" }]},
               { "Fn::If" : [ "ConfigureStaticHomeVolume", "ConfigureStaticHomeVolume", { "Ref": "AWS::NoValue" }]},
-              { "Fn::If" : [ "ConfigureLogs", "ConfigureLogs", { "Ref": "AWS::NoValue" }]},
               { "Fn::If" : [ "ConfigureUsers", "ConfigureUsers", { "Ref": "AWS::NoValue" }]}
             ]
           },
-          "UpgradeOS" : {
+          "UpdateOS" : {
             "commands" : {
               "01_yum_update" : {
                 "command" : "yum update -y",
@@ -511,42 +481,21 @@
               }
             }
           },
-          "ConfigureOS" : {
+          "ConfigureOSUpdates" : {
             "packages" : {
               "yum" : {
-                "yum-cron" : [],
-                "git" : []
+                "yum-cron" : []
               }
             },
             "files" : {
               "/etc/yum/yum-cron.conf" : {
-                "content" : { "Fn::Join" : [ "", [
-                  "[commands]\n",
-                  "update_cmd = security\n",
-                  "update_messages = yes\n",
-                  "download_updates = yes\n",
-                  "apply_updates = yes\n",
-                  "random_sleep = 10\n"
-                ]]},
-                "mode"  : "000644",
-                "owner" : "root",
-                "group" : "root"
-              },
-              "/etc/profile.d/local.sh" : {
-                "content" : { "Fn::Join" : [ "", [
-                  "alias lsa='ls -lAF'\n"
-                ]]},
-                "mode"  : "000644",
-                "owner" : "root",
-                "group" : "root"
-              },
-              "/etc/motd" : {
-                "content" : { "Fn::Join" : [ "", [
-                  "+-------------------------------------+\n",
-                  "|                                     |\n",
-                  "| Welcome to IROPS Bootstrap Bastion! |\n",
-                  "|                                     |\n",
-                  "+-------------------------------------+\n"
+                "content" : { "Fn::Join" : [ "\n", [
+                  "[commands]",
+                  "update_cmd = security",
+                  "update_messages = yes",
+                  "download_updates = yes",
+                  "apply_updates = yes",
+                  "random_sleep = 10"
                 ]]},
                 "mode"  : "000644",
                 "owner" : "root",
@@ -554,52 +503,109 @@
               }
             }
           },
-          "ConfigureHostname" : {
+          "ConfigureLogs" : {
+            "packages" : {
+              "yum" : {
+                "awslogs" : []
+              }
+            },
             "files" : {
-              "/root/bin/sethostname" : {
-                "content" : { "Fn::Join" : [ "", [
-                  "#!/bin/bash\n",
-                  "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)\n",
-                  "region=${zone::-1}\n",
-                  "hostname=bootstrap.iropshub.com\n",
-                  "address=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)\n",
-                  "sed -i -e \"/^$address/d\" -e \"$ a$address $hostname\" /etc/hosts\n",
-                  "hostname $hostname\n"
+              "/etc/awslogs/awscli.conf" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "[default]",
+                  { "Fn::Sub" : "region = ${AWS::Region}" },
+                  "[plugins]",
+                  "cwlogs = cwlogs"
                 ]]},
-                "mode"  : "000700",
+                "mode"  : "000644",
+                "owner" : "root",
+                "group" : "root"
+              },
+              "/etc/awslogs/awslogs.conf" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "[general]",
+                  "state_file = /var/lib/awslogs/agent-state",
+                  "[/var/log/messages]",
+                  "datetime_format = %b %d %H:%M:%S",
+                  "file = /var/log/messages",
+                  "log_stream_name = {instance_id}/var/log/messages",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]},
+                  "[/var/log/secure]",
+                  "datetime_format = %b %d %H:%M:%S",
+                  "file = /var/log/secure",
+                  "log_stream_name = {instance_id}/var/log/secure",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]},
+                  "[/var/log/cron]",
+                  "datetime_format = %b %d %H:%M:%S",
+                  "file = /var/log/cron",
+                  "log_stream_name = {instance_id}/var/log/cron",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]},
+                  "[/var/log/cloud-init.log]",
+                  "datetime_format = %b %d %H:%M:%S",
+                  "file = /var/log/cloud-init.log",
+                  "log_stream_name = {instance_id}/var/log/cloud-init.log",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]},
+                  "[/var/log/cfn-init.log]",
+                  "datetime_format = %Y-%m-%d %H:%M:%S",
+                  "file = /var/log/cfn-init.log",
+                  "log_stream_name = {instance_id}/var/log/cfn-init.log",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]},
+                  "[/var/log/cfn-hup.log]",
+                  "datetime_format = %Y-%m-%d %H:%M:%S",
+                  "file = /var/log/cfn-hup.log",
+                  "log_stream_name = {instance_id}/var/log/cfn-hup.log",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]},
+                  "[/var/log/cfn-init-cmd.log]",
+                  "datetime_format = %Y-%m-%d %H:%M:%S",
+                  "file = /var/log/cfn-init-cmd.log",
+                  "log_stream_name = {instance_id}/var/log/cfn-init-cmd.log",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]},
+                  "[/var/log/cloud-init-output.log]",
+                  "file = /var/log/cloud-init-output.log",
+                  "log_stream_name = {instance_id}/var/log/cloud-init-output.log",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]},
+                  "[/var/log/dmesg]",
+                  "file = /var/log/dmesg",
+                  "log_stream_name = {instance_id}/var/log/dmesg",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]}
+                ]]},
+                "mode"  : "000644",
                 "owner" : "root",
                 "group" : "root"
               }
             },
-            "commands" : {
-              "01_sethostname" : {
-                "command" : "/root/bin/sethostname",
-                "ignoreErrors" : "false"
+            "services" : {
+              "sysvinit" : {
+                "awslogs" : {
+                  "enabled" : "true",
+                  "ensureRunning" : "true",
+                  "packages" : { "yum" : [ "awslogs" ]},
+                  "files" : [
+                    "/etc/awslogs/awslogs.conf",
+                    "/etc/awslogs/awscli.conf"
+                  ]
+                }
               }
             }
           },
           "ConfigureCFN" : {
             "files" : {
               "/etc/cfn/cfn-hup.conf" : {
-                "content" : { "Fn::Join" : [ "", [
-                  "[main]\n",
-                  "stack=", { "Ref" : "AWS::StackId" }, "\n",
-                  "region=", { "Ref" : "AWS::Region" }, "\n"
+                "content" : { "Fn::Join" : [ "\n", [
+                  "[main]",
+                  { "Fn::Sub" : "stack=${AWS::StackId}" },
+                  { "Fn::Sub" : "region=${AWS::Region}" }
                 ]]},
                 "mode"  : "000400",
                 "owner" : "root",
                 "group" : "root"
               },
               "/etc/cfn/hooks.d/cfn-auto-reloader.conf" : {
-                "content" : { "Fn::Join" : [ "", [
-                  "[cfn-auto-reloader-hook]\n",
-                  "triggers=post.update\n",
-                  "path=Resources.LaunchConfiguration.Metadata.AWS::CloudFormation::Init\n",
-                  "action=/opt/aws/bin/cfn-init --verbose",
-                  " --configsets All",
-                  " --stack ", { "Ref" : "AWS::StackName" },
-                  " --resource LaunchConfiguration",
-                  " --region ", { "Ref" : "AWS::Region" }, "\n"
+                "content" : { "Fn::Join" : [ "\n", [
+                  "[cfn-auto-reloader-hook]",
+                  "triggers=post.update",
+                  "path=Resources.LaunchConfiguration.Metadata.AWS::CloudFormation::Init",
+                  { "Fn::Sub" : "action=/opt/aws/bin/cfn-init --verbose --configsets All --stack ${AWS::StackName} --resource LaunchConfiguration --region ${AWS::Region}" }
                 ]]},
                 "mode"  : "000400",
                 "owner" : "root",
@@ -619,16 +625,71 @@
               }
             }
           },
+          "ConfigureHostname" : {
+            "files" : {
+              "/root/bin/sethostname" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "#!/bin/bash",
+                  "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)",
+                  "region=${zone::-1}",
+                  "hostname=bootstrap.iropshub.com",
+                  "address=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)",
+                  "sed -i -e \"/^$address/d\" -e \"$ a$address $hostname\" /etc/hosts",
+                  "hostname $hostname"
+                ]]},
+                "mode"  : "000700",
+                "owner" : "root",
+                "group" : "root"
+              }
+            },
+            "commands" : {
+              "01_sethostname" : {
+                "command" : "/root/bin/sethostname",
+                "ignoreErrors" : "false"
+              }
+            }
+          },
+          "ConfigureOS" : {
+            "packages" : {
+              "yum" : {
+                "git" : []
+              }
+            },
+            "files" : {
+              "/etc/profile.d/local.sh" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "alias lsa='ls -lAF'",
+                  "alias ip4='ip addr | grep \" inet \"'"
+                ]]},
+                "mode"  : "000644",
+                "owner" : "root",
+                "group" : "root"
+              },
+              "/etc/motd" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "+-------------------------------------+",
+                  "|                                     |",
+                  "| Welcome to IROPS Bootstrap Bastion! |",
+                  "|                                     |",
+                  "+-------------------------------------+"
+                ]]},
+                "mode"  : "000644",
+                "owner" : "root",
+                "group" : "root"
+              }
+            }
+          },
           "ConfigureStaticPublicAddress" : {
             "files" : {
               "/root/bin/associateaddress" : {
-                "content" : { "Fn::Join" : [ "", [
-                  "#!/bin/bash\n",
-                  "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)\n",
-                  "region=${zone::-1}\n",
-                  "instance=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/instance-id)\n",
-                  "eipalloc=", { "Fn::If" : [ "ConfigureStaticPublicAddress", { "Fn::GetAtt" : [ "EIP", "AllocationId" ]}, { "Ref" : "AWS::NoValue" }]}, "\n",
-                  "aws ec2 associate-address --instance-id $instance --allocation-id $eipalloc --region $region --output text\n"
+                "content" : { "Fn::Join" : [ "\n", [
+                  "#!/bin/bash",
+                  "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)",
+                  "region=${zone::-1}",
+                  "instance=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/instance-id)",
+                  { "Fn::If" : [ "ConfigureStaticPublicAddress", { "Fn::Sub" : "eipalloc=${EIP.AllocationId}" }, "eipalloc=" ]},
+                  "aws ec2 associate-address --instance-id $instance --allocation-id $eipalloc --region $region --output text"
+
                 ]]},
                 "mode"  : "000700",
                 "owner" : "root",
@@ -651,58 +712,58 @@
             },
             "files" : {
               "/root/bin/attachvolume" : {
-                "content" : { "Fn::Join" : [ "", [
-                  "#!/bin/bash\n",
-                  "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)\n",
-                  "region=${zone::-1}\n",
-                  "instance=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/instance-id)\n",
-                  "volume=", { "Fn::If" : [ "ConfigureStaticHomeVolume", { "Ref" : "HomeVolume" }, { "Ref" : "AWS::NoValue" }]}, "\n",
-                  "aws ec2 attach-volume --instance-id $instance --volume-id $volume --device /dev/sdf --region $region --output text\n",
-                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Wait for Instance to recognize Volume\"\n",
-                  "attempt=0\n",
-                  "attempts=30\n",
-                  "delay=5\n",
-                  "while ((attempt++ <= attempts)); do\n",
-                  "    if fdisk -l /dev/xvdf &> /dev/null; then\n",
-                  "        break\n",
-                  "    else\n",
-                  "        echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume not yet attached, pausing $delay seconds...\"\n",
-                  "        sleep $delay\n",
-                  "    fi\n",
-                  "done\n",
-                  "filesystem_type=$(file -sL /dev/xvdf)\n",
-                  "if [[ $filesystem_type == *\"XFS\"* ]]; then\n",
-                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume formatted with XFS Filesystem\"\n",
-                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Existing Volume: using Snapshot, or mapping Volume to replacement Instance\"\n",
-                  "    rsync -avzP /home/ /home-save 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"\n",
-                  "    mount /home 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"\n",
-                  "    rsync -avzP /home-save/ec2-user/.ssh/authorized_keys /home/ec2-user/.ssh 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"\n",
-                  "    # rm -Rf /home-save 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"\n",
-                  "else\n",
-                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume not formatted\"\n",
-                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] New Volume: mounted to initial Instance\"\n",
-                  "    mkfs -t xfs /dev/xvdf 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"\n",
-                  "    xfs_admin -L /home /dev/xvdf 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"\n",
-                  "    mv /home /home-save 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"\n",
-                  "    mkdir /home 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"\n",
-                  "    mount /home 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"\n",
-                  "    rsync -avzP /home-save/ /home 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"\n",
-                  "    rm -Rf /home-save 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"\n",
-                  "fi\n"
+                "content" : { "Fn::Join" : [ "\n", [
+                  "#!/bin/bash",
+                  "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)",
+                  "region=${zone::-1}",
+                  "instance=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/instance-id)",
+                  { "Fn::If" : [ "ConfigureStaticHomeVolume", { "Fn::Sub" : "volume=${HomeVolume}" }, "volume=" ]},
+                  "aws ec2 attach-volume --instance-id $instance --volume-id $volume --device /dev/sdf --region $region --output text",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Wait for Instance to recognize Volume\"",
+                  "attempt=0",
+                  "attempts=30",
+                  "delay=5",
+                  "while ((attempt++ <= attempts)); do",
+                  "    if fdisk -l /dev/xvdf &> /dev/null; then",
+                  "        break",
+                  "    else",
+                  "        echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume not yet attached, pausing $delay seconds...\"",
+                  "        sleep $delay",
+                  "    fi",
+                  "done",
+                  "filesystem_type=$(file -sL /dev/xvdf)",
+                  "if [[ $filesystem_type == *\"XFS\"* ]]; then",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume formatted with XFS Filesystem\"",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Existing Volume: using Snapshot, or mapping Volume to replacement Instance\"",
+                  "    rsync -avzP /home/ /home-save 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "    mount /home 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "    rsync -avzP /home-save/ec2-user/.ssh/authorized_keys /home/ec2-user/.ssh 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "    # rm -Rf /home-save 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "else",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume not formatted\"",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] New Volume: mounted to initial Instance\"",
+                  "    mkfs -t xfs /dev/xvdf 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "    xfs_admin -L /home /dev/xvdf 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "    mv /home /home-save 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "    mkdir /home 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "    mount /home 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "    rsync -avzP /home-save/ /home 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "    rm -Rf /home-save 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "fi"
                 ]]},
                 "mode"  : "000700",
                 "owner" : "root",
                 "group" : "root"
               },
               "/etc/fstab" : {
-                "content" : { "Fn::Join" : [ "", [
-                  "#\n",
-                  "LABEL=/     /           ext4    defaults,noatime  1   1\n",
-                  "LABEL=/home /home       xfs     defaults,noatime  1   1\n",
-                  "tmpfs       /dev/shm    tmpfs   defaults        0   0\n",
-                  "devpts      /dev/pts    devpts  gid=5,mode=620  0   0\n",
-                  "sysfs       /sys        sysfs   defaults        0   0\n",
-                  "proc        /proc       proc    defaults        0   0\n"
+                "content" : { "Fn::Join" : [ "\n", [
+                  "#",
+                  "LABEL=/     /           ext4    defaults,noatime  1   1",
+                  "LABEL=/home /home       xfs     defaults,noatime  1   1",
+                  "tmpfs       /dev/shm    tmpfs   defaults        0   0",
+                  "devpts      /dev/pts    devpts  gid=5,mode=620  0   0",
+                  "sysfs       /sys        sysfs   defaults        0   0",
+                  "proc        /proc       proc    defaults        0   0"
                 ]]},
                 "mode"  : "000644",
                 "owner" : "root",
@@ -716,158 +777,73 @@
               }
             }
           },
-          "ConfigureLogs" : {
-            "packages" : {
-              "yum" : {
-                "awslogs" : []
-              }
-            },
-            "files" : {
-              "/etc/awslogs/awscli.conf" : {
-                "content" : { "Fn::Join" : [ "", [
-                  "[default]\n",
-                  "region = ", { "Ref" : "AWS::Region" }, "\n",
-                  "[plugins]\n",
-                  "cwlogs = cwlogs\n"
-                ]]},
-                "mode"  : "000644",
-                "owner" : "root",
-                "group" : "root"
-              },
-              "/etc/awslogs/awslogs.conf" : {
-                "content" : { "Fn::Join" : [ "", [
-                  "[general]\n",
-                  "state_file = /var/lib/awslogs/agent-state\n",
-                  "[/var/log/messages]\n",
-                  "datetime_format = %b %d %H:%M:%S\n",
-                  "file = /var/log/messages\n",
-                  "log_stream_name = {instance_id}/var/log/messages\n",
-                  "log_group_name = ", { "Fn::If" : [ "ConfigureLogs", { "Ref" : "LogGroup" }, { "Ref" : "AWS::NoValue" }]}, "\n",
-                  "[/var/log/secure]\n",
-                  "datetime_format = %b %d %H:%M:%S\n",
-                  "file = /var/log/secure\n",
-                  "log_stream_name = {instance_id}/var/log/secure\n",
-                  "log_group_name = ", { "Fn::If" : [ "ConfigureLogs", { "Ref" : "LogGroup" }, { "Ref" : "AWS::NoValue" }]}, "\n",
-                  "[/var/log/cron]\n",
-                  "datetime_format = %b %d %H:%M:%S\n",
-                  "file = /var/log/cron\n",
-                  "log_stream_name = {instance_id}/var/log/cron\n",
-                  "log_group_name = ", { "Fn::If" : [ "ConfigureLogs", { "Ref" : "LogGroup" }, { "Ref" : "AWS::NoValue" }]}, "\n",
-                  "[/var/log/cloud-init.log]\n",
-                  "datetime_format = %b %d %H:%M:%S\n",
-                  "file = /var/log/cloud-init.log\n",
-                  "log_stream_name = {instance_id}/var/log/cloud-init.log\n",
-                  "log_group_name = ", { "Fn::If" : [ "ConfigureLogs", { "Ref" : "LogGroup" }, { "Ref" : "AWS::NoValue" }]}, "\n",
-                  "[/var/log/cfn-init.log]\n",
-                  "datetime_format = %Y-%m-%d %H:%M:%S\n",
-                  "file = /var/log/cfn-init.log\n",
-                  "log_stream_name = {instance_id}/var/log/cfn-init.log\n",
-                  "log_group_name = ", { "Fn::If" : [ "ConfigureLogs", { "Ref" : "LogGroup" }, { "Ref" : "AWS::NoValue" }]}, "\n",
-                  "[/var/log/cfn-hup.log]\n",
-                  "datetime_format = %Y-%m-%d %H:%M:%S\n",
-                  "file = /var/log/cfn-hup.log\n",
-                  "log_stream_name = {instance_id}/var/log/cfn-hup.log\n",
-                  "log_group_name = ", { "Fn::If" : [ "ConfigureLogs", { "Ref" : "LogGroup" }, { "Ref" : "AWS::NoValue" }]}, "\n",
-                  "[/var/log/cfn-init-cmd.log]\n",
-                  "datetime_format = %Y-%m-%d %H:%M:%S\n",
-                  "file = /var/log/cfn-init-cmd.log\n",
-                  "log_stream_name = {instance_id}/var/log/cfn-init-cmd.log\n",
-                  "log_group_name = ", { "Fn::If" : [ "ConfigureLogs", { "Ref" : "LogGroup" }, { "Ref" : "AWS::NoValue" }]}, "\n",
-                  "[/var/log/cloud-init-output.log]\n",
-                  "file = /var/log/cloud-init-output.log\n",
-                  "log_stream_name = {instance_id}/var/log/cloud-init-output.log\n",
-                  "log_group_name = ", { "Fn::If" : [ "ConfigureLogs", { "Ref" : "LogGroup" }, { "Ref" : "AWS::NoValue" }]}, "\n",
-                  "[/var/log/dmesg]\n",
-                  "file = /var/log/dmesg\n",
-                  "log_stream_name = {instance_id}/var/log/dmesg\n",
-                  "log_group_name = ", { "Fn::If" : [ "ConfigureLogs", { "Ref" : "LogGroup" }, { "Ref" : "AWS::NoValue" }]}, "\n"
-                ]]},
-                "mode"  : "000644",
-                "owner" : "root",
-                "group" : "root"
-              }
-            },
-            "services" : {
-              "sysvinit" : {
-                "awslogs" : {
-                  "enabled" : "true",
-                  "ensureRunning" : "true",
-                  "packages" : { "yum" : [ "awslogs" ]},
-                  "files" : [
-                    "/etc/awslogs/awslogs.conf",
-                    "/etc/awslogs/awscli.conf"
-                  ]
-                }
-              }
-            }
-          },
           "ConfigureUsers" : {
             "files" : {
               "/root/bin/createusers" : {
-                "content" : { "Fn::Join" : [ "", [
-                  "#!/bin/bash\n",
-                  "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)\n",
-                  "region=${zone::-1}\n",
-                  "echo\n",
-                  "echo $(date +\"%Y-%m-%d %H:%M:%S,%3N\") [DEBUG] Obtaining members of BootstrapAdministrators IAM Group:\n",
-                  "administrators=$(aws iam get-group --group-name BootstrapAdministrators --query 'Users[].UserName' --region $region --output text)\n",
-                  "echo $(date +\"%Y-%m-%d %H:%M:%S,%3N\") [DEBUG] Adding local administrators based on membership in BootstrapAdministrators IAM Group:\n",
-                  "for administrator in $administrators; do\n",
-                  "    echo -n \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] - $administrator\"\n",
-                  "    keys=$(aws iam list-ssh-public-keys --user-name $administrator --query 'SSHPublicKeys[].SSHPublicKeyId' --region $region --output text)\n",
-                  "    if [ ! \"$keys\" = \"\" ]; then\n",
-                  "        if [ -d /home/$administrator ]; then\n",
-                  "            /usr/sbin/useradd -M $administrator\n",
-                  "        else\n",
-                  "            /usr/sbin/useradd $administrator\n",
-                  "        fi\n",
-                  "        echo \"$administrator ALL=(ALL) NOPASSWD:ALL\" > /etc/sudoers.d/$administrator\n",
-                  "        chmod 0400 /etc/sudoers.d/$administrator\n",
-                  "        mkdir -p /home/$administrator/.ssh\n",
-                  "        chmod 0700 /home/$administrator/.ssh\n",
-                  "        rm -f /home/$administrator/.ssh/authorized_keys\n",
-                  "        for key in $keys; do\n",
-                  "            echo -n \" - $key\"\n",
-                  "            echo $(aws iam get-ssh-public-key --user-name $administrator --ssh-public-key-id $key --encoding SSH --query 'SSHPublicKey.SSHPublicKeyBody' --region $region --output text) >> /home/$administrator/.ssh/authorized_keys\n",
-                  "        done\n",
-                  "        chmod 0600 /home/$administrator/.ssh/authorized_keys\n",
-                  "        chown -R $administrator:$administrator /home/$administrator\n",
-                  "        echo\n",
-                  "    else\n",
-                  "        echo \" - skipped (no SSH Key)\"\n",
-                  "    fi\n",
-                  "done\n",
-                  "\n",
-                  "echo $(date +\"%Y-%m-%d %H:%M:%S,%3N\") [DEBUG] Obtaining members of BootstrapUsers IAM Group:\n",
-                  "users=$(aws iam get-group --group-name BootstrapUsers --query 'Users[].UserName' --region $region --output text)\n",
-                  "echo $(date +\"%Y-%m-%d %H:%M:%S,%3N\") [DEBUG] Adding local users based on membership in BootstrapUsers IAM Group:\n",
-                  "for user in $users; do\n",
-                  "    echo -n \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] - $user\"\n",
-                  "    if ! id $user &> /dev/null; then\n",
-                  "        keys=$(aws iam list-ssh-public-keys --user-name $user --query 'SSHPublicKeys[].SSHPublicKeyId' --region $region --output text)\n",
-                  "        if [ ! \"$keys\" = \"\" ]; then\n",
-                  "            if [ -d /home/$user ]; then\n",
-                  "                /usr/sbin/useradd -M $user\n",
-                  "            else\n",
-                  "                /usr/sbin/useradd $user\n",
-                  "            fi\n",
-                  "            mkdir -p /home/$user/.ssh\n",
-                  "            chmod 0700 /home/$user/.ssh\n",
-                  "            rm -f /home/$user/.ssh/authorized_keys\n",
-                  "            for key in $keys; do\n",
-                  "                echo -n \" - $key\"\n",
-                  "                echo $(aws iam get-ssh-public-key --user-name $user --ssh-public-key-id $key --encoding SSH --query 'SSHPublicKey.SSHPublicKeyBody' --region $region --output text) >> /home/$user/.ssh/authorized_keys\n",
-                  "            done\n",
-                  "            chmod 0600 /home/$user/.ssh/authorized_keys\n",
-                  "            chown -R $user:$user /home/$user\n",
-                  "            echo\n",
-                  "        else\n",
-                  "            echo \" - skipped (no SSH Key)\"\n",
-                  "        fi\n",
-                  "    else\n",
-                  "        echo \" - skipped (user created as administrator)\"\n",
-                  "    fi\n",
-                  "done\n"
+                "content" : { "Fn::Join" : [ "\n", [
+                  "#!/bin/bash",
+                  "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)",
+                  "region=${zone::-1}",
+                  "echo",
+                  "echo $(date +\"%Y-%m-%d %H:%M:%S,%3N\") [DEBUG] Obtaining members of BootstrapAdministrators IAM Group:",
+                  "administrators=$(aws iam get-group --group-name BootstrapAdministrators --query 'Users[].UserName' --region $region --output text)",
+                  "echo $(date +\"%Y-%m-%d %H:%M:%S,%3N\") [DEBUG] Adding local administrators based on membership in BootstrapAdministrators IAM Group:",
+                  "for administrator in $administrators; do",
+                  "    echo -n \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] - $administrator\"",
+                  "    keys=$(aws iam list-ssh-public-keys --user-name $administrator --query 'SSHPublicKeys[].SSHPublicKeyId' --region $region --output text)",
+                  "    if [ ! \"$keys\" = \"\" ]; then",
+                  "        if [ -d /home/$administrator ]; then",
+                  "            /usr/sbin/useradd -M $administrator",
+                  "        else",
+                  "            /usr/sbin/useradd $administrator",
+                  "        fi",
+                  "        echo \"$administrator ALL=(ALL) NOPASSWD:ALL\" > /etc/sudoers.d/$administrator",
+                  "        chmod 0400 /etc/sudoers.d/$administrator",
+                  "        mkdir -p /home/$administrator/.ssh",
+                  "        chmod 0700 /home/$administrator/.ssh",
+                  "        rm -f /home/$administrator/.ssh/authorized_keys",
+                  "        for key in $keys; do",
+                  "            echo -n \" - $key\"",
+                  "            echo $(aws iam get-ssh-public-key --user-name $administrator --ssh-public-key-id $key --encoding SSH --query 'SSHPublicKey.SSHPublicKeyBody' --region $region --output text) >> /home/$administrator/.ssh/authorized_keys",
+                  "        done",
+                  "        chmod 0600 /home/$administrator/.ssh/authorized_keys",
+                  "        chown -R $administrator:$administrator /home/$administrator",
+                  "        echo",
+                  "    else",
+                  "        echo \" - skipped (no SSH Key)\"",
+                  "    fi",
+                  "done",
+                  "",
+                  "echo $(date +\"%Y-%m-%d %H:%M:%S,%3N\") [DEBUG] Obtaining members of BootstrapUsers IAM Group:",
+                  "users=$(aws iam get-group --group-name BootstrapUsers --query 'Users[].UserName' --region $region --output text)",
+                  "echo $(date +\"%Y-%m-%d %H:%M:%S,%3N\") [DEBUG] Adding local users based on membership in BootstrapUsers IAM Group:",
+                  "for user in $users; do",
+                  "    echo -n \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] - $user\"",
+                  "    if ! id $user &> /dev/null; then",
+                  "        keys=$(aws iam list-ssh-public-keys --user-name $user --query 'SSHPublicKeys[].SSHPublicKeyId' --region $region --output text)",
+                  "        if [ ! \"$keys\" = \"\" ]; then",
+                  "            if [ -d /home/$user ]; then",
+                  "                /usr/sbin/useradd -M $user",
+                  "            else",
+                  "                /usr/sbin/useradd $user",
+                  "            fi",
+                  "            mkdir -p /home/$user/.ssh",
+                  "            chmod 0700 /home/$user/.ssh",
+                  "            rm -f /home/$user/.ssh/authorized_keys",
+                  "            for key in $keys; do",
+                  "                echo -n \" - $key\"",
+                  "                echo $(aws iam get-ssh-public-key --user-name $user --ssh-public-key-id $key --encoding SSH --query 'SSHPublicKey.SSHPublicKeyBody' --region $region --output text) >> /home/$user/.ssh/authorized_keys",
+                  "            done",
+                  "            chmod 0600 /home/$user/.ssh/authorized_keys",
+                  "            chown -R $user:$user /home/$user",
+                  "            echo",
+                  "        else",
+                  "            echo \" - skipped (no SSH Key)\"",
+                  "        fi",
+                  "    else",
+                  "        echo \" - skipped (user created as administrator)\"",
+                  "    fi",
+                  "done"
               ]]},
                 "mode"  : "000700",
                 "owner" : "root",
@@ -885,26 +861,16 @@
       },
       "Properties" : {
         "ImageId" : { "Fn::FindInMap" : [ "ImageIdMap", { "Ref" : "AWS::Region" } , "AMZN" ]},
-        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Bastion", { "Ref" : "EnvironmentSize" }]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Bastion", { "Ref" : "EnvironmentType" }]},
         "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
         "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
         "SecurityGroups" : [{ "Ref" : "SecurityGroup" }],
-        "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "", [
-          "#!/bin/bash -xe\n",
-          "yum update -y aws-cfn-bootstrap\n",
-          "\n",
-          "# Install the files and packages from the metadata\n",
-          "/opt/aws/bin/cfn-init --verbose",
-          " --configsets All",
-          " --stack ", { "Ref" : "AWS::StackName" },
-          " --resource LaunchConfiguration",
-          " --region ", { "Ref" : "AWS::Region" }, "\n",
-          "\n",
-          "# Signal the status from cfn-init\n",
-          "/opt/aws/bin/cfn-signal --exit-code $?",
-          " --stack ", { "Ref" : "AWS::StackName" },
-          " --resource AutoScalingGroup",
-          " --region ", { "Ref" : "AWS::Region" }, "\n"
+        "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "\n", [
+          "#!/bin/bash -xe",
+          "yum update -y aws-cfn-bootstrap",
+          "",
+          { "Fn::Sub" : "/opt/aws/bin/cfn-init --verbose --configsets All --stack ${AWS::StackName} --resource LaunchConfiguration --region ${AWS::Region}" },
+          { "Fn::Sub" : "/opt/aws/bin/cfn-signal --exit-code $? --stack ${AWS::StackName} --resource AutoScalingGroup --region ${AWS::Region}" }
         ]]}}
       }
     },
@@ -946,7 +912,7 @@
         "DesiredCapacity" : 1,
         "Recurrence" : { "Ref" : "OnSchedule" }
       },
-      "Condition" : "ConfigureSchedule"
+      "Condition" : "ConfigureOnSchedule"
     },
 
     "OffScheduledAction" : {
@@ -958,7 +924,7 @@
         "DesiredCapacity" : 0,
         "Recurrence" : { "Ref" : "OffSchedule" }
       },
-      "Condition" : "ConfigureSchedule"
+      "Condition" : "ConfigureOffSchedule"
     }
   },
 

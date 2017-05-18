@@ -18,12 +18,12 @@ run_default=10
 pause_default=2
 next_default=5
 create_default=15
-create_attempts=20
+create_attempts=40
 
 interactive=1
 speed=100
 verbose=0
-owner=${OWNER_EMAIL:-$USER@hpe.com}
+owner=${OWNER_EMAIL:-$USER@dxc.com}
 company=${COMPANY_NAME:-Travel}
 system=${SYSTEM_NAME:-IROPS}
 environment=${ENVIRONMENT_NAME:-Production}
@@ -41,7 +41,7 @@ usage () {
     echo "                  [-O owner] [-C company ] [-S system]"
     echo "                  [-E environment]"
     echo "                  [-G gateway] [-N network]"
-    echo "                  [-r region ] [-a account] [-u user]"
+    echo "                  [-r region] [-a account] [-u user]"
     echo "  -I              non-interactive"
     echo "  -s              slower: increase pauses by 25%"
     echo "  -f              faster: reduce pauses by 25%"
@@ -172,30 +172,64 @@ if [ -z $company ]; then
     echo "-C company missing!"
     echo "Could not automatically determine company, and it was not specified as a parameter"
     exit 12
+else
+    case $company in
+      Travel)
+        ;;
+      *)
+        echo "-C $company invalid! Must be Travel"
+        exit 13;;
+    esac
 fi
 
 if [ -z $system ]; then
     echo "-S system missing!"
     echo "Could not automatically determine system, and it was not specified as a parameter"
     exit 14
+else
+    case $system in
+      IROPS)
+        ;;
+      *)
+        echo "-S $system invalid! Must be IROPS"
+        exit 15;;
+    esac
 fi
 
 if [ -z $environment ]; then
     echo "-E environment missing!"
     echo "Could not automatically determine environment, and it was not specified as a parameter"
-    exit 16
+    exit 20
+else
+    case $environment in
+      Production)
+        ;;
+      Staging)
+        ;;
+      Testing)
+        ;;
+      Development)
+        ;;
+      Core)
+        ;;
+      Build)
+        ;;
+      *)
+        echo "-E $environment invalid! Must be Production, Staging, Testing, Development, Core or Build"
+        exit 21;;
+    esac
 fi
 
 if [ -z $gateway ]; then
     echo "-G gateway missing!"
     echo "Could not automatically determine gateway, and it was not specified as a parameter"
-    exit 18
+    exit 30
 fi
 
 if [ -z $gateway_network ]; then
     echo "-N network missing!"
     echo "Could not automatically determine gateway network, and it was not specified as a parameter"
-    exit 20
+    exit 32
 fi
 
 if [ -z $region ]; then
@@ -206,9 +240,9 @@ else
     case $region in
       us-east-1)
         s3_domain=s3.amazonaws.com;;
-      us-east-2|us-west-1|us-west-2|ca-central-1|sa-east-1|eu-west-1|eu-west-2|eu-central-1|ap-northeast-1|ap-northeast-2|ap-south-1|ap-southeast-1|ap-southeast-2)
+      us-east-2|us-west-1|us-west-2|ca-central-1|eu-west-1|eu-central-1|eu-west-2|ap-southeast-1|ap-southeast-2|ap-northeast-2|ap-northeast-1|ap-south-1|sa-east-1)
         s3_domain=s3-$region.amazonaws.com;;
-    *)
+      *)
         echo "-r $region invalid: Please specify a valid region"
         exit 51;;
     esac
@@ -231,14 +265,7 @@ profile=$account-$user
 if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     echo "Could not find ($account) Account ($user) User AWSCLI profile!"
     echo "Expected to find: [profile $profile] in ~/.aws/config"
-    exit 60
-fi
-
-templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
-templates_folder=common
-
-if ! aws s3api head-bucket --bucket $templates_bucket --profile $profile --region $region 2> /dev/null; then
-    unset templates_bucket
+    exit 58
 fi
 
 if ! aws cloudformation describe-stacks --stack-name $environment-VPC \
@@ -250,7 +277,14 @@ fi
 if ! aws cloudformation describe-stacks --stack-name ${gateway}CustomerGateway \
                                         --profile $profile --region $region --output text &> /dev/null; then
     echo "Stack dependency missing - ${gateway}CustomerGateway Stack does not exist!"
-    exit 71
+    exit 80
+fi
+
+templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
+template_folder=common
+
+if ! aws s3api head-bucket --bucket $templates_bucket --profile $profile --region $region 2> /dev/null; then
+    unset templates_bucket
 fi
 
 # Prevent certain environment variables from breaking commands
@@ -263,7 +297,6 @@ unset EC2_CERT
 #  5. Run
 
 start=$(date +%s)
-
 
 ((++step))
 read -r -d '' statement << EOS
@@ -301,7 +334,7 @@ fi
 ((++step))
 read -r -d '' statement << EOS
 aws s3 sync $templatesdir \\
-            s3://$templates_bucket/$templates_folder \\
+            s3://$templates_bucket/$template_folder \\
             --exclude '*' --include 'Common-VPNConnection.json' --include 'Common-VPNConnection-StackPolicy.json' \\
             --profile $profile --region $region --output table
 EOS
@@ -333,8 +366,8 @@ fi
 
 ((++step))
 if [ ! -z $templates_bucket ]; then
-    template_parameter="--template-url https://$s3_domain/$templates_bucket/$templates_folder/Common-VPNConnection.json"
-    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$templates_folder/Common-VPNConnection-StackPolicy.json"
+    template_parameter="--template-url https://$s3_domain/$templates_bucket/$template_folder/Common-VPNConnection.json"
+    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$template_folder/Common-VPNConnection-StackPolicy.json"
 else
     template_parameter="--template-body file://$templatesdir/Common-VPNConnection.json"
     stack_policy_parameter="--stack-policy-body file://$templatesdir/Common-VPNConnection-StackPolicy.json"

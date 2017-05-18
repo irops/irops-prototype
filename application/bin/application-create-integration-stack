@@ -278,61 +278,61 @@ fi
 
 if ! aws cloudformation describe-stacks --stack-name $environment-VPC \
                                         --profile $profile --region $region --output text &> /dev/null; then
-    echo "$environment-VPC Stack does not exist!"
+    echo "Stack dependency missing - $environment-VPC Stack does not exist!"
     exit 70
 fi
 
 if ! aws cloudformation describe-stacks --stack-name $webspheremq_environment-WebSphereMQ \
                                         --profile $profile --region $region --output text &> /dev/null; then
-    echo "$webspheremq_environment-WebSphereMQ Stack does not exist!"
+    echo "Stack dependency missing - $webspheremq_environment-WebSphereMQ Stack does not exist!"
     exit 80
 fi
 
 if ! aws cloudformation describe-stacks --stack-name $rabbitmq_environment-RabbitMQ \
                                         --profile $profile --region $region --output text &> /dev/null; then
-    echo "$rabbitmq_environment-RabbitMQ Stack does not exist!"
+    echo "Stack dependency missing - $rabbitmq_environment-RabbitMQ Stack does not exist!"
     exit 81
 fi
 
 if ! aws cloudformation describe-stacks --stack-name $mongodb_environment-MongoDB \
                                         --profile $profile --region $region --output text &> /dev/null; then
-    echo "$mongodb_environment-MongoDB Stack does not exist!"
+    echo "Stack dependency missing - $mongodb_environment-MongoDB Stack does not exist!"
     exit 82
 fi
 
 if ! aws cloudformation describe-stacks --stack-name $octopus_deploy_environment-Octopus-Deploy \
                                         --profile $profile --region $region --output text &> /dev/null; then
-    echo "$octopus_deploy_environment-Octopus-Deploy Stack does not exist!"
+    echo "Stack dependency missing - $octopus_deploy_environment-Octopus-Deploy Stack does not exist!"
     exit 83
 fi
 
 if ! aws cloudformation describe-stacks --stack-name $environment-Engine-Web \
                                         --profile $profile --region $region --output text &> /dev/null; then
-    echo "$environment-Engine-Web Stack does not exist!"
+    echo "Stack dependency missing - $environment-Engine-Web Stack does not exist!"
     exit 84
 fi
 
 if ! aws cloudformation describe-stacks --stack-name $environment-Engine-Calculation \
                                         --profile $profile --region $region --output text &> /dev/null; then
-    echo "$environment-Engine-Calculation Stack does not exist!"
+    echo "Stack dependency missing - $environment-Engine-Calculation Stack does not exist!"
     exit 85
 fi
 
 if ! aws cloudformation describe-stacks --stack-name $environment-Engine-DataStaging \
                                         --profile $profile --region $region --output text &> /dev/null; then
-    echo "$environment-Engine-DataStaging Stack does not exist!"
+    echo "Stack dependency missing - $environment-Engine-DataStaging Stack does not exist!"
     exit 86
 fi
 
 if ! aws cloudformation describe-stacks --stack-name $environment-Engine-Publishing \
                                         --profile $profile --region $region --output text &> /dev/null; then
-    echo "$environment-Engine-Publishing Stack does not exist!"
+    echo "Stack dependency missing - $environment-Engine-Publishing Stack does not exist!"
     exit 87
 fi
 
 if ! aws cloudformation describe-stacks --stack-name $environment-Engine-Monitoring \
                                         --profile $profile --region $region --output text &> /dev/null; then
-    echo "$environment-Engine-Monitoring Stack does not exist!"
+    echo "Stack dependency missing - $environment-Engine-Monitoring Stack does not exist!"
     exit 88
 fi
 
