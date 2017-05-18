@@ -401,8 +401,7 @@
           }]
         },
         "Roles" : [{ "Ref" : "Role" }]
-      },
-      "Condition" : "InstallProduct"
+      }
     },
 
     "DownloadConfigurationFromS3Policy" : {
@@ -420,8 +419,7 @@
           }]
         },
         "Roles" : [{ "Ref" : "Role" }]
-      },
-      "Condition" : "InstallConfiguration"
+      }
     },
 
     "FileSystemMonitoringPolicy" : {
