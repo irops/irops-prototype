@@ -248,6 +248,7 @@ if ! aws cloudformation describe-stacks --stack-name StandardCIDRFunctions \
     echo "Unable to update - StandardCIDRFunctions Stack does not exist!"
     exit 80
 fi
+
 templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
 template_folder=core
 
