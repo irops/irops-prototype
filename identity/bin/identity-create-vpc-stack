@@ -18,12 +18,12 @@ run_default=10
 pause_default=2
 next_default=5
 create_default=15
-create_attempts=20
+create_attempts=40
 
 interactive=1
 speed=100
 verbose=0
-owner=${OWNER_EMAIL:-$USER@hpe.com}
+owner=${OWNER_EMAIL:-$USER@dxc.com}
 company=${COMPANY_NAME:-Travel}
 system=${SYSTEM_NAME:-IROPS}
 environment=${IDENTITY_NAME:-Identity}
@@ -37,8 +37,9 @@ user=${AWS_USER_NAME:-administrator}
 
 usage () {
     echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v]"
-    echo "                  [-O owner] [-C company ] [-S system]"
-    echo "                  [-E environment] [-N network ]"
+    echo "                  [-O owner] [-C company] [-S system]"
+    echo "                  [-E environment]"
+    echo "                  [-N network]"
     echo "                  [-a account] [-u user]"
     echo "  -I              non-interactive"
     echo "  -s              slower: increase pauses by 25%"
@@ -166,27 +167,49 @@ if [ -z $company ]; then
     echo "-C company missing!"
     echo "Could not automatically determine company, and it was not specified as a parameter"
     exit 12
+else
+    case $company in
+      Travel)
+        ;;
+      *)
+        echo "-C $company invalid! Must be Travel"
+        exit 13;;
+    esac
 fi
 
 if [ -z $system ]; then
     echo "-S system missing!"
     echo "Could not automatically determine system, and it was not specified as a parameter"
     exit 14
+else
+    case $system in
+      IROPS)
+        ;;
+      *)
+        echo "-S $system invalid! Must be IROPS"
+        exit 15;;
+    esac
 fi
 
 if [ -z $environment ]; then
     echo "-E environment missing!"
     echo "Could not automatically determine environment, and it was not specified as a parameter"
-    exit 16
+    exit 20
 else
-    use_multi_zone_nat_gateways=false
-    use_vpn_gateway=false
+    case $environment in
+      Identity)
+        use_multi_zone_nat_gateways=false
+        use_vpn_gateway=false;;
+      *)
+        echo "-E $environment invalid! Must be Identity"
+        exit 21;;
+    esac
 fi
 
 if [ -z $environment_network ]; then
     echo "-N network missing!"
     echo "Could not automatically determine environment network, and it was not specified as a parameter"
-    exit 20
+    exit 22
 fi
 
 s3_domain=s3.amazonaws.com
@@ -208,20 +231,20 @@ profile=$account-$user
 if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     echo "Could not find ($account) Account ($user) User AWSCLI profile!"
     echo "Expected to find: [profile $profile] in ~/.aws/config"
+    exit 58
+fi
+
+if ! aws cloudformation describe-stacks --stack-name $environment-HostedZone \
+                                        --profile $profile --region $region --output text &> /dev/null; then
+    echo "Stack dependency missing - $environment-HostedZone Stack does not exist!"
     exit 60
 fi
 
 templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
-templates_folder=identity
+template_folder=identity
 
 if ! aws s3api head-bucket --bucket $templates_bucket --profile $profile --region $region 2> /dev/null; then
     unset templates_bucket
-fi
-
-if ! aws cloudformation describe-stacks --stack-name Production-HostedZone \
-                                        --profile $profile --region $region --output text &> /dev/null; then
-    echo "Unable to update - Production-HostedZone Stack does not exist!"
-    exit 70
 fi
 
 # Prevent certain environment variables from breaking commands
@@ -271,7 +294,7 @@ fi
 ((++step))
 read -r -d '' statement << EOS
 aws s3 sync $templatesdir \\
-            s3://$templates_bucket/$templates_folder \\
+            s3://$templates_bucket/$template_folder \\
             --exclude '*' --include 'Identity-VPC.json' --include 'Identity-VPC-StackPolicy.json' \\
             --profile $profile --region $region --output table
 EOS
@@ -303,8 +326,8 @@ fi
 
 ((++step))
 if [ ! -z $templates_bucket ]; then
-    template_parameter="--template-url https://$s3_domain/$templates_bucket/$templates_folder/Identity-VPC.json"
-    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$templates_folder/Identity-VPC-StackPolicy.json"
+    template_parameter="--template-url https://$s3_domain/$templates_bucket/$template_folder/Identity-VPC.json"
+    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$template_folder/Identity-VPC-StackPolicy.json"
 else
     template_parameter="--template-body file://$templatesdir/Identity-VPC.json"
     stack_policy_parameter="--stack-policy-body file://$templatesdir/Identity-VPC-StackPolicy.json"

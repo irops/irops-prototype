@@ -18,7 +18,7 @@ run_default=10
 pause_default=2
 next_default=5
 delete_default=15
-delete_attempts=20
+delete_attempts=40
 
 interactive=1
 speed=100
@@ -146,7 +146,15 @@ shift $(($OPTIND - 1))
 if [ -z $environment ]; then
     echo "-E environment missing!"
     echo "Could not automatically determine environment, and it was not specified as a parameter"
-    exit 16
+    exit 20
+else
+    case $environment in
+      Identity)
+        ;;
+      *)
+        echo "-E $environment invalid! Must be Identity"
+        exit 21;;
+    esac
 fi
 
 s3_domain=s3.amazonaws.com
@@ -168,13 +176,13 @@ profile=$account-$user
 if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     echo "Could not find ($account) Account ($user) User AWSCLI profile!"
     echo "Expected to find: [profile $profile] in ~/.aws/config"
-    exit 60
+    exit 58
 fi
 
 if ! aws cloudformation describe-stacks --stack-name StandardGroups \
                                         --profile $profile --region $region --output text &> /dev/null; then
     echo "Unable to delete - StandardGroups Stack does not exist!"
-    exit 70
+    exit 80
 fi
 
 # Prevent certain environment variables from breaking commands
