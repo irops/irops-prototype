@@ -198,7 +198,7 @@ else
       Core)
         ;;
       *)
-        echo "-E $environment invalid! Must be Build"
+        echo "-E $environment invalid! Must be Core"
         exit 21;;
     esac
 fi
