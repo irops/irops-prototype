@@ -47,11 +47,11 @@ key=${AWS_KEY_NAME:-user}
 
 usage () {
     echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v]"
-    echo "                  [-O owner] [-C company ] [-S system]"
+    echo "                  [-O owner] [-C company] [-S system]"
     echo "                  [-E environment] [-T type]"
     echo "                  [-A application] [-V version]"
     echo "                  [-c component]"
-    echo "                  [-n network] [-N network ]"
+    echo "                  [-n network] [-N network]"
     echo "                  [-r region] [-a account] [-u user] [-k key]"
     echo "  -I              non-interactive"
     echo "  -s              slower: increase pauses by 25%"
