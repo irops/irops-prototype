@@ -38,7 +38,7 @@ user=${AWS_USER_NAME:-administrator}
 
 usage () {
     echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v] [-o]"
-    echo "                  [-O owner] [-C company ] [-S system]"
+    echo "                  [-O owner] [-C company] [-S system]"
     echo "                  [-E environment]"
     echo "                  [-r region] [-a account] [-u user]"
     echo "  -I              non-interactive"

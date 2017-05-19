@@ -42,7 +42,7 @@ development_vpc_stack_name=Development-VPC
 
 usage () {
     echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v]"
-    echo "                  [-O owner] [-C company ] [-S system]"
+    echo "                  [-O owner] [-C company] [-S system]"
     echo "                  [-r region] [-a account] [-u user]"
     echo "  -I              non-interactive"
     echo "  -s              slower: increase pauses by 25%"
