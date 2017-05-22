@@ -7,14 +7,13 @@ var osNameToPattern = {
   'RHEL 7'    : 'RHEL-7.*_HVM_GA-*',
   'RHEL 7.4'  : 'RHEL-7.4_HVM_GA-*',
   'RHEL 7.3'  : 'RHEL-7.3_HVM_GA-*',
-  'RHEL 7.2'  : 'RHEL-7.2_HVM_GA-*',
-  'RHEL 7.1'  : 'RHEL-7.1_HVM_GA-*',
-  'RHEL 7.0'  : 'RHEL-7.0_HVM_GA-*',
+  'RHEL 7.2'  : 'RHEL-7.2_HVM-*',
+  'RHEL 7.1'  : 'RHEL-7.1_HVM-*',
   'RHEL 6'    : 'RHEL-6.*_HVM_GA-*',
   'RHEL 6.10' : 'RHEL-6.10_HVM_GA-*',
   'RHEL 6.9'  : 'RHEL-6.9_HVM_GA-*',
   'RHEL 6.8'  : 'RHEL-6.8_HVM_GA-*',
-  'RHEL 6.7'  : 'RHEL-6.7_HVM_GA-*',
+  'RHEL 6.7'  : 'RHEL-6.7_HVM-*',
   'RHEL 6.6'  : 'RHEL-6.6_HVM_GA-*'
 };
 
