@@ -52,6 +52,7 @@
           "Parameters" : [
             "ApplicationName",
             "UseStaticAddress",
+            "EFSPerformanceMode",
             "UseFileSystemMonitoring",
             "LogRetention",
             "Schedule"
@@ -89,6 +90,7 @@
         "ConfigurationObject" : { "default" : "Configuration Object" },
         "ApplicationName" : { "default" : "Application Name" },
         "UseStaticAddress" : { "default" : "Use Static Address" },
+        "EFSPerformanceMode" : { "default" : "EFS Performance Mode" },
         "UseFileSystemMonitoring" : { "default" : "Use FileSystem Monitoring" },
         "LogRetention" : { "default" : "Log Retention" },
         "Schedule" : { "default" : "Schedule" },
@@ -269,6 +271,14 @@
       "Default" : "true",
       "AllowedValues" : [ "true", "false" ],
       "ConstraintDescription" : "must be either true or false."
+    },
+
+    "EFSPerformanceMode" : {
+      "Description" : "EFS Performance Mode",
+      "Type" : "String",
+      "Default" : "maxIO",
+      "AllowedValues" : [ "generalPurpose", "maxIO" ],
+      "ConstraintDescription" : "must be either generalPurpose or maxIO."
     },
 
     "UseFileSystemMonitoring" : {
@@ -516,7 +526,7 @@
     "FileSystem" : {
       "Type" : "AWS::EFS::FileSystem",
       "Properties" : {
-        "PerformanceMode" : "generalPurpose",
+        "PerformanceMode" : { "Ref" : "EFSPerformanceMode" },
         "FileSystemTags" : [
           { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "Volume" ]]}}
         ]
