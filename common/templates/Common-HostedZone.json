@@ -64,8 +64,8 @@
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-HostedZone" }}
     },
 
-    "Domain" : { 
-      "Description" : "The Domain", 
+    "Domain" : {
+      "Description" : "The Domain",
       "Value" :  { "Ref" : "Domain" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-Domain" }}
     }
