@@ -316,6 +316,13 @@
       }
     },
 
+    "EngineMonitoringToMongoDBSecurityGroupIngress27017" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${MongoDBStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "tcp",  "FromPort" :  "27017", "ToPort" :  "27017", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${EngineMonitoringStackName}-InstanceSecurityGroup" }}
+      }
+    },
+
     "OctopusDeployToEngineWebSecurityGroupIngress10933" : {
       "Type" : "AWS::EC2::SecurityGroupIngress",
       "Properties" : {
