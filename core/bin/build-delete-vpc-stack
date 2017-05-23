@@ -127,7 +127,7 @@ next() {
 
 #  3. Parse command line options
 
-while getopts IsfvmE:a:u:? arg; do
+while getopts IsfvmE:r:a:u:? arg; do
     case $arg in
     I)  interactive=0;;
     s)  ((speed < speed_max)) && ((speed=speed+25));;
