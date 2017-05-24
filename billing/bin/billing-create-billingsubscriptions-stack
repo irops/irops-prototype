@@ -200,7 +200,7 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
 fi
 
 templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
-templates_folder=billing
+template_folder=billing
 
 if ! aws s3api head-bucket --bucket $templates_bucket --profile $profile --region $region 2> /dev/null; then
     unset templates_bucket
@@ -259,7 +259,7 @@ fi
 ((++step))
 read -r -d '' statement << EOS
 aws s3 sync $templatesdir \\
-            s3://$templates_bucket/$templates_folder \\
+            s3://$templates_bucket/$template_folder \\
             --exclude '*' --include 'Billing-BillingSubscriptions.json' --include 'Billing-BillingSubscriptions-StackPolicy.json' \\
             --profile $profile --region $region --output table
 EOS
@@ -291,8 +291,8 @@ fi
 
 ((++step))
 if [ ! -z $templates_bucket ]; then
-    template_parameter="--template-url https://$s3_domain/$templates_bucket/$templates_folder/Billing-BillingSubscriptions.json"
-    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$templates_folder/Billing-BillingSubscriptions-StackPolicy.json"
+    template_parameter="--template-url https://$s3_domain/$templates_bucket/$template_folder/Billing-BillingSubscriptions.json"
+    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$template_folder/Billing-BillingSubscriptions-StackPolicy.json"
 else
     template_parameter="--template-body file://$templatesdir/Billing-BillingSubscriptions.json"
     stack_policy_parameter="--stack-policy-body file://$templatesdir/Billing-BillingSubscriptions-StackPolicy.json"

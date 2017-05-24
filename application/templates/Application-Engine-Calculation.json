@@ -447,8 +447,7 @@
           }]
         },
         "Roles" : [{ "Ref" : "Role" }]
-      },
-      "Condition" : "InstallProduct"
+      }
     },
 
     "DownloadConfigurationFromS3Policy" : {
@@ -466,8 +465,7 @@
           }]
         },
         "Roles" : [{ "Ref" : "Role" }]
-      },
-      "Condition" : "InstallConfiguration"
+      }
     },
 
     "DownloadApplicationFromS3Policy" : {
@@ -485,8 +483,7 @@
           }]
         },
         "Roles" : [{ "Ref" : "Role" }]
-      },
-      "Condition" : "InstallApplication"
+      }
     },
 
     "LogMonitoringPolicy" : {
@@ -525,19 +522,19 @@
         "GroupDescription" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, { "Ref" : "ComponentName" }, "InstanceSecurityGroup" ]]},
         "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPC" }},
         "SecurityGroupIngress" : [
-          { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPNStackName}-SecurityGroup" }}},
+          { "IpProtocol" : "icmp", "FromPort" :    "0", "ToPort" :    "0", "CidrIp" : "0.0.0.0/0" },
+          { "IpProtocol" : "icmp", "FromPort" :    "3", "ToPort" :    "3", "CidrIp" : "0.0.0.0/0" },
+          { "IpProtocol" : "icmp", "FromPort" :    "8", "ToPort" :    "8", "CidrIp" : "0.0.0.0/0" },
+          { "IpProtocol" : "icmp", "FromPort" :   "11", "ToPort" :   "11", "CidrIp" : "0.0.0.0/0" },
           { "IpProtocol" : "tcp",  "FromPort" :   "80", "ToPort" :   "80", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPNStackName}-SecurityGroup" }}},
           { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPNStackName}-SecurityGroup" }}},
           { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPNStackName}-SecurityGroup" }}},
-          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork",  { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork" }},  { "Ref" : "AWS::NoValue" }]},
           { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork",  { "IpProtocol" : "tcp",  "FromPort" :   "80", "ToPort" :   "80", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork" }},  { "Ref" : "AWS::NoValue" }]},
           { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork",  { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork" }},  { "Ref" : "AWS::NoValue" }]},
           { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork",  { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork" }},  { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork1", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
           { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" :   "80", "ToPort" :   "80", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
           { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
           { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork2", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
           { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" :   "80", "ToPort" :   "80", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
           { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
           { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]}

@@ -52,6 +52,7 @@
           "Parameters" : [
             "ApplicationName",
             "UseStaticAddress",
+            "EFSPerformanceMode",
             "UseFileSystemMonitoring",
             "LogRetention",
             "Schedule"
@@ -89,6 +90,7 @@
         "ConfigurationObject" : { "default" : "Configuration Object" },
         "ApplicationName" : { "default" : "Application Name" },
         "UseStaticAddress" : { "default" : "Use Static Address" },
+        "EFSPerformanceMode" : { "default" : "EFS Performance Mode" },
         "UseFileSystemMonitoring" : { "default" : "Use FileSystem Monitoring" },
         "LogRetention" : { "default" : "Log Retention" },
         "Schedule" : { "default" : "Schedule" },
@@ -271,6 +273,14 @@
       "ConstraintDescription" : "must be either true or false."
     },
 
+    "EFSPerformanceMode" : {
+      "Description" : "EFS Performance Mode",
+      "Type" : "String",
+      "Default" : "maxIO",
+      "AllowedValues" : [ "generalPurpose", "maxIO" ],
+      "ConstraintDescription" : "must be either generalPurpose or maxIO."
+    },
+
     "UseFileSystemMonitoring" : {
       "Description" : "Send EFS NFS Statistics to CloudWatch as Custom Metrics",
       "Type" : "String",
@@ -401,8 +411,7 @@
           }]
         },
         "Roles" : [{ "Ref" : "Role" }]
-      },
-      "Condition" : "InstallProduct"
+      }
     },
 
     "DownloadConfigurationFromS3Policy" : {
@@ -420,8 +429,7 @@
           }]
         },
         "Roles" : [{ "Ref" : "Role" }]
-      },
-      "Condition" : "InstallConfiguration"
+      }
     },
 
     "FileSystemMonitoringPolicy" : {
@@ -479,19 +487,16 @@
         "GroupDescription" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "InstanceSecurityGroup" ]]},
         "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPC" }},
         "SecurityGroupIngress" : [
-          { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPNStackName}-SecurityGroup" }}},
+          { "IpProtocol" : "icmp", "FromPort" :    "0", "ToPort" :    "0", "CidrIp" : "0.0.0.0/0" },
+          { "IpProtocol" : "icmp", "FromPort" :    "3", "ToPort" :    "3", "CidrIp" : "0.0.0.0/0" },
+          { "IpProtocol" : "icmp", "FromPort" :    "8", "ToPort" :    "8", "CidrIp" : "0.0.0.0/0" },
+          { "IpProtocol" : "icmp", "FromPort" :   "11", "ToPort" :   "11", "CidrIp" : "0.0.0.0/0" },
           { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPNStackName}-SecurityGroup" }}},
-          { "Fn::If" : [ "ConfigurePrivateUserNetwork",  { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateUserNetwork" }},  { "Ref" : "AWS::NoValue" }]},
           { "Fn::If" : [ "ConfigurePrivateUserNetwork",  { "IpProtocol" : "tcp",  "FromPort" : "1415", "ToPort" : "1418", "CidrIp" : { "Ref" : "PrivateUserNetwork" }},  { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateUserNetwork1", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateUserNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
           { "Fn::If" : [ "ConfigurePrivateUserNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "1415", "ToPort" : "1418", "CidrIp" : { "Ref" : "PrivateUserNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateUserNetwork2", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateUserNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
           { "Fn::If" : [ "ConfigurePrivateUserNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "1415", "ToPort" : "1418", "CidrIp" : { "Ref" : "PrivateUserNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork",  { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork" }},  { "Ref" : "AWS::NoValue" }]},
           { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork",  { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork" }},  { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork1", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
           { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork2", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
           { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]}
         ],
         "Tags" : [
@@ -506,6 +511,10 @@
         "GroupDescription" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "MountTargetSecurityGroup" ]]},
         "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPC" }},
         "SecurityGroupIngress" : [
+          { "IpProtocol" : "icmp", "FromPort" :    "0", "ToPort" :    "0", "CidrIp" : "0.0.0.0/0" },
+          { "IpProtocol" : "icmp", "FromPort" :    "3", "ToPort" :    "3", "CidrIp" : "0.0.0.0/0" },
+          { "IpProtocol" : "icmp", "FromPort" :    "8", "ToPort" :    "8", "CidrIp" : "0.0.0.0/0" },
+          { "IpProtocol" : "icmp", "FromPort" :   "11", "ToPort" :   "11", "CidrIp" : "0.0.0.0/0" },
           { "IpProtocol" : "tcp",  "FromPort" : "2049", "ToPort" : "2049", "SourceSecurityGroupId" : { "Ref" : "InstanceSecurityGroup" }}
         ],
         "Tags" : [
@@ -517,7 +526,7 @@
     "FileSystem" : {
       "Type" : "AWS::EFS::FileSystem",
       "Properties" : {
-        "PerformanceMode" : "generalPurpose",
+        "PerformanceMode" : { "Ref" : "EFSPerformanceMode" },
         "FileSystemTags" : [
           { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "Volume" ]]}}
         ]

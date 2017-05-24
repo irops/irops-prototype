@@ -18,12 +18,13 @@ run_default=10
 pause_default=2
 next_default=5
 create_default=15
-create_attempts=20
+create_attempts=40
 
 interactive=1
 speed=100
 verbose=0
-owner=${OWNER_EMAIL:-$USER@hpe.com}
+monitor=0
+owner=${OWNER_EMAIL:-$USER@dxc.com}
 company=${COMPANY_NAME:-Travel}
 system=${SYSTEM_NAME:-IROPS}
 environment=${IDENTITY_NAME:-Identity}
@@ -35,14 +36,15 @@ user=${AWS_USER_NAME:-administrator}
 #  2. Define functions
 
 usage () {
-    echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v]"
-    echo "                  [-O owner] [-C company ] [-S system]"
+    echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v] [-m]"
+    echo "                  [-O owner] [-C company] [-S system]"
     echo "                  [-E environment]"
     echo "                  [-a account] [-u user]"
     echo "  -I              non-interactive"
     echo "  -s              slower: increase pauses by 25%"
     echo "  -f              faster: reduce pauses by 25%"
     echo "  -v              verbose"
+    echo "  -m              monitor"
     echo "  -O owner        Owner Email (default: $owner)"
     echo "  -C company      Company Name (default: $company)"
     echo "  -S system       System Name (default: $system)"
@@ -131,12 +133,13 @@ next() {
 
 #  3. Parse command line options
 
-while getopts IsfvO:C:S:E:a:u:? arg; do
+while getopts IsfvmO:C:S:E:a:u:? arg; do
     case $arg in
     I)  interactive=0;;
     s)  ((speed < speed_max)) && ((speed=speed+25));;
     f)  ((speed > 0)) && ((speed=speed-25));;
     v)  verbose=1;;
+    m)  monitor=1;;
     O)  owner="$OPTARG";;
     C)  company="$OPTARG";;
     S)  system="$OPTARG";;
@@ -149,6 +152,7 @@ while getopts IsfvO:C:S:E:a:u:? arg; do
 done
 
 shift $(($OPTIND - 1))
+[ $monitor = 0 ] && verbose=0
 
 
 #  4. Validate environment
@@ -163,18 +167,42 @@ if [ -z $company ]; then
     echo "-C company missing!"
     echo "Could not automatically determine company, and it was not specified as a parameter"
     exit 12
+else
+    case $company in
+      Travel)
+        ;;
+      *)
+        echo "-C $company invalid! Must be Travel"
+        exit 13;;
+    esac
 fi
 
 if [ -z $system ]; then
     echo "-S system missing!"
     echo "Could not automatically determine system, and it was not specified as a parameter"
     exit 14
+else
+    case $system in
+      IROPS)
+        ;;
+      *)
+        echo "-S $system invalid! Must be IROPS"
+        exit 15;;
+    esac
 fi
 
 if [ -z $environment ]; then
     echo "-E environment missing!"
     echo "Could not automatically determine environment, and it was not specified as a parameter"
-    exit 16
+    exit 20
+else
+    case $environment in
+      Identity)
+        ;;
+      *)
+        echo "-E $environment invalid! Must be Identity"
+        exit 21;;
+    esac
 fi
 
 s3_domain=s3.amazonaws.com
@@ -196,20 +224,20 @@ profile=$account-$user
 if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     echo "Could not find ($account) Account ($user) User AWSCLI profile!"
     echo "Expected to find: [profile $profile] in ~/.aws/config"
-    exit 60
-fi
-
-templatesbucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
-templatespath=/identity
-
-if ! aws s3api head-bucket --bucket $templatesbucket --profile $profile --region $region 2> /dev/null; then
-    unset templatesbucket
+    exit 58
 fi
 
 if ! aws cloudformation describe-stacks --stack-name StandardManagedPolicies \
                                         --profile $profile --region $region --output text &> /dev/null; then
     echo "Stack dependency missing - StandardManagedPolicies Stack does not exist!"
-    exit 70
+    exit 60
+fi
+
+templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
+template_folder=identity
+
+if ! aws s3api head-bucket --bucket $templates_bucket --profile $profile --region $region 2> /dev/null; then
+    unset templates_bucket
 fi
 
 # Prevent certain environment variables from breaking commands
@@ -259,19 +287,19 @@ fi
 ((++step))
 read -r -d '' statement << EOS
 aws s3 sync $templatesdir \\
-            s3://$templatesbucket$templatespath \\
+            s3://$templates_bucket/$template_folder \\
             --exclude '*' --include 'Identity-StandardGroups.json' --include 'Identity-StandardGroups-StackPolicy.json' \\
             --profile $profile --region $region --output table
 EOS
 run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
 eval_statement="${statement//\\$'\n'}"
 
-if [ ! -z $templatesbucket ]; then
+if [ ! -z $templates_bucket ]; then
     clear
     echo
     echo "============================================================"
     echo
-    echo "$(printf '%2d' $step). Sync Template and Policy to ($templatesbucket) Bucket"
+    echo "$(printf '%2d' $step). Sync Template and Policy to ($templates_bucket) Bucket"
     echo
     echo "============================================================"
     echo
@@ -290,9 +318,9 @@ fi
 
 
 ((++step))
-if [ ! -z $templatesbucket ]; then
-    template_parameter="--template-url https://$s3_domain/$templatesbucket$templatespath/Identity-StandardGroups.json"
-    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templatesbucket$templatespath/Identity-StandardGroups-StackPolicy.json"
+if [ ! -z $templates_bucket ]; then
+    template_parameter="--template-url https://$s3_domain/$templates_bucket/$template_folder/Identity-StandardGroups.json"
+    stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$template_folder/Identity-StandardGroups-StackPolicy.json"
 else
     template_parameter="--template-body file://$templatesdir/Identity-StandardGroups.json"
     stack_policy_parameter="--stack-policy-body file://$templatesdir/Identity-StandardGroups-StackPolicy.json"
@@ -363,59 +391,61 @@ EOS
 run_statement2=$(echo "$statement2" | sed -e '1s/^/# /;2,$ s/^/> /')
 eval_statement2="${statement2//\\$'\n'} 2> /dev/null"
 
-clear
-echo
-echo "============================================================"
-echo
-echo "$(printf '%2d' $step). Monitor Stack creation"
-echo
-echo "============================================================"
-echo
-echo "Commands:"
-echo
-echo "$statement"
-echo
-echo "$statement2"
-
-if [ "$(aws cloudformation describe-stacks --stack-name StandardGroups \
-                                           --query 'Stacks[].StackStatus' \
-                                           --profile $profile --region $region --output text 2> /dev/null)" = "CREATE_COMPLETE" ]; then
+if [ $monitor = 1 ]; then
+    clear
     echo
-    tput rev
-    echo "Already Complete!"
-    tput sgr0
+    echo "============================================================"
+    echo
+    echo "$(printf '%2d' $step). Monitor Stack creation"
+    echo
+    echo "============================================================"
+    echo
+    echo "Commands:"
+    echo
+    echo "$statement"
+    echo
+    echo "$statement2"
 
-    next 50
-
-else
-    run 50
-
-    if [ $choice = y ]; then
+    if [ "$(aws cloudformation describe-stacks --stack-name StandardGroups \
+                                               --query 'Stacks[].StackStatus' \
+                                               --profile $profile --region $region --output text 2> /dev/null)" = "CREATE_COMPLETE" ]; then
         echo
-        echo "$run_statement"
-        eval "$eval_statement"
+        tput rev
+        echo "Already Complete!"
+        tput sgr0
 
-        attempt=0
-        seconds=$create_default
-        while ((attempt++ <= create_attempts)); do
+        next 50
+
+    else
+        run 50
+
+        if [ $choice = y ]; then
             echo
-            echo "$run_statement2"
-            eval "$eval_statement2"
+            echo "$run_statement"
+            eval "$eval_statement"
 
-            status=$(aws cloudformation describe-stacks --stack-name StandardGroups \
-                                                        --query 'Stacks[].StackStatus' \
-                                                        --profile $profile --region $region --output text 2> /dev/null)
-            if [ -z "$status" -o "$status" = "CREATE_COMPLETE" -o "$status" = "CREATE_FAILED" -o "$status" = "ROLLBACK_COMPLETE" ]; then
-                break
-            else
+            attempt=0
+            seconds=$create_default
+            while ((attempt++ <= create_attempts)); do
                 echo
-                echo -n "Not finished ($status). Waiting $seconds seconds..."
-                sleep $seconds
-                echo " Done"
-            fi
-        done
+                echo "$run_statement2"
+                eval "$eval_statement2"
 
-        next
+                status=$(aws cloudformation describe-stacks --stack-name StandardGroups \
+                                                            --query 'Stacks[].StackStatus' \
+                                                            --profile $profile --region $region --output text 2> /dev/null)
+                if [ -z "$status" -o "$status" = "CREATE_COMPLETE" -o "$status" = "CREATE_FAILED" -o "$status" = "ROLLBACK_COMPLETE" ]; then
+                    break
+                else
+                    echo
+                    echo -n "Not finished ($status). Waiting $seconds seconds..."
+                    sleep $seconds
+                    echo " Done"
+                fi
+            done
+
+            next
+        fi
     fi
 fi
 
