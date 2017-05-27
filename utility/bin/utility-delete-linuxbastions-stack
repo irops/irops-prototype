@@ -132,7 +132,7 @@ next() {
 
 while getopts isfvmE:U:r:a:u:? arg; do
     case $arg in
-    I)  interactive=1;;
+    i)  interactive=1;;
     s)  ((speed < speed_max)) && ((speed=speed+25));;
     f)  ((speed > 0)) && ((speed=speed-25));;
     v)  verbose=1;;
