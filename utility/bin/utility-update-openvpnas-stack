@@ -1,4 +1,4 @@
-#!/bin/bash
+  #!/bin/bash
 #
 # This script updates the Utility OpenVPNAS Stack in an Environment, Core or Build VPC.
 #
@@ -20,7 +20,7 @@ next_default=5
 update_default=15
 update_attempts=40
 
-interactive=1
+interactive=0
 speed=100
 verbose=0
 monitor=0
@@ -33,10 +33,8 @@ environment_type=small  # By default, these should use small
 utility=${UTILITY_NAME:-OpenVPNAS}
 utility_domain=${UTILITY_DOMAIN:-vpn}
 utility_license=${UTILITY_LICENSE:-2}
-public_user_network=0.0.0.0/0  # This should be global for the VPN to work
-public_administrator_network=${PUBLIC_ADMINISTRATOR_NETWORK:-0.0.0.0/0}
-public_administrator_network1=${PUBLIC_ADMINISTRATOR_NETWORK1:-}
-public_administrator_network2=${PUBLIC_ADMINISTRATOR_NETWORK2:-}
+user_networks=${OPENVPN_USER_NETWORKS:-0.0.0.0/0,NONE,NONE,NONE,NONE,NONE,NONE,NONE}  # This should be global for the VPN to work
+administrator_networks=${OPENVPN_ADMINISTRATOR_NETWORKS:-NONE,NONE,NONE,NONE,NONE,NONE,NONE,NONE}
 region=${AWS_DEFAULT_REGION:-us-west-2}
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-administrator}
@@ -46,13 +44,13 @@ key=${AWS_KEY_NAME:-administrator}
 #  2. Define functions
 
 usage () {
-    echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v] [-m] [-o]"
+    echo "Usage: ${BASH_SOURCE##*/} [[-i] | [-s | -f]] [-v] [-m] [-o]"
     echo "                  [-O owner] [-C company] [-S system]"
     echo "                  [-E environment] [-T type]"
     echo "                  [-U utility] [-D domain] [-L license]"
-    echo "                  [-p network] [-P network]"
+    echo "                  [-n networks] [-N networks]"
     echo "                  [-r region] [-a account] [-u user] [-k key]"
-    echo "  -I              non-interactive"
+    echo "  -i              interactive"
     echo "  -s              slower: increase pauses by 25%"
     echo "  -f              faster: reduce pauses by 25%"
     echo "  -v              verbose"
@@ -66,8 +64,8 @@ usage () {
     echo "  -U utility      Utility Name (default: $utility)"
     echo "  -D domain       Utility Domain (default: $utility_domain)"
     echo "  -L license      Utility License (default: $utility_license)"
-    echo "  -p network      Public User Network (default: $public_user_network)"
-    echo "  -P network      Public Administrator Network (default: $public_administrator_network)"
+    echo "  -n networks     User Networks (default: $user_networks)"
+    echo "  -N networks     Administrator Networks (default: $administrator_networks)"
     echo "  -r region       Region (default: $region)"
     echo "  -a account      Account (default: $account)"
     echo "  -u user         User (default: $user)"
@@ -153,11 +151,10 @@ next() {
 
 
 #  3. Parse command line options
-#     - Note, using options 1-8 as hidden options to set additional network ranges
 
-while getopts IsfvmoO:C:S:E:T:U:D:L:p:P:3:4:r:a:u:k:? arg; do
+while getopts isfvmoO:C:S:E:T:U:D:L:n:N:r:a:u:k:? arg; do
     case $arg in
-    I)  interactive=0;;
+    i)  interactive=1;;
     s)  ((speed < speed_max)) && ((speed=speed+25));;
     f)  ((speed > 0)) && ((speed=speed-25));;
     v)  verbose=1;;
@@ -171,10 +168,8 @@ while getopts IsfvmoO:C:S:E:T:U:D:L:p:P:3:4:r:a:u:k:? arg; do
     U)  utility="$OPTARG";;
     D)  utility_domain="$OPTARG";;
     L)  utility_license="$OPTARG";;
-    p)  public_user_network="$OPTARG";;
-    P)  public_administrator_network="$OPTARG";;
-    3)  public_administrator_network1="$OPTARG";;
-    4)  public_administrator_network2="$OPTARG";;
+    n)  user_networks="$OPTARG";;
+    N)  administrator_networks="$OPTARG";;
     r)  region="$OPTARG";;
     a)  account="$OPTARG";;
     u)  user="$OPTARG";;
@@ -296,15 +291,15 @@ else
     esac
 fi
 
-if [ -z $public_user_network ]; then
-    echo "-p network missing!"
-    echo "Could not automatically determine public user network, and it was not specified as a parameter"
+if [ -z $user_networks ]; then
+    echo "-n networks missing!"
+    echo "Could not automatically determine user networks, and it was not specified as a parameter"
     exit 40
 fi
 
-if [ -z $public_administrator_network ]; then
-    echo "-P network missing!"
-    echo "Could not automatically determine public administrator network, and it was not specified as a parameter"
+if [ -z $administrator_networks ]; then
+    echo "-N networks missing!"
+    echo "Could not automatically determine administrator networks, and it was not specified as a parameter"
     exit 42
 fi
 
@@ -458,10 +453,8 @@ aws cloudformation update-stack --stack-name $environment-$utility \\
                                              ParameterKey=UtilityName,ParameterValue=$utility \\
                                              ParameterKey=UtilityDomain,ParameterValue=$utility_domain \\
                                              ParameterKey=UtilityLicense,ParameterValue=$openvpnas_license \\
-                                             ParameterKey=PublicUserNetwork,ParameterValue=$public_user_network \\
-                                             ParameterKey=PublicAdministratorNetwork,ParameterValue=$public_administrator_network \\
-                                             ParameterKey=PublicAdministratorNetwork1,ParameterValue=$public_administrator_network1 \\
-                                             ParameterKey=PublicAdministratorNetwork2,ParameterValue=$public_administrator_network2 \\
+                                             ParameterKey=UserNetworks,ParameterValue=\"$user_networks\" \\
+                                             ParameterKey=AdministratorNetworks,ParameterValue=\"$administrator_networks\" \\
                                 --tags Key=Owner,Value=$owner \\
                                        Key=Company,Value=$company \\
                                        Key=System,Value=$system \\
