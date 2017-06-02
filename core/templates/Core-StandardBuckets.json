@@ -96,6 +96,36 @@
       "DeletionPolicy" : "Retain"
     },
 
+    "ScriptsBucket" : {
+      "Type" : "AWS::S3::Bucket",
+      "Properties" : {
+        "BucketName" : { "Fn::Join" : [ "-", [ "scripts", { "Ref" : "AWS::Region"}, { "Fn::If" : [ "AppendAccountId", { "Ref" : "AWS::AccountId" }, { "Ref" : "AccountAlias" }]}]]},
+        "AccessControl" : "PublicRead",
+        "VersioningConfiguration" : { "Status" : "Enabled" },
+        "LifecycleConfiguration" : {
+          "Rules" : [{
+            "Id" : "ReduceStorageCostsThenDeletePriorVersions",
+            "Status" : "Enabled",
+            "Prefix" : "",
+            "Transitions" : [{
+              "StorageClass" : "STANDARD_IA",
+              "TransitionInDays" : 30
+            }],
+            "ExpirationInDays" : 425,
+            "NoncurrentVersionTransitions" : [{
+              "StorageClass" : "STANDARD_IA",
+              "TransitionInDays" : 30
+            }],
+            "NoncurrentVersionExpirationInDays" : 395
+          }]
+        },
+        "Tags" : [
+          { "Key" : "Name", "Value" : "Core-ScriptsBucket" }
+        ]
+      },
+      "DeletionPolicy" : "Retain"
+    },
+
     "ProductsBucket" : {
       "Type" : "AWS::S3::Bucket",
       "Properties" : {
@@ -288,6 +318,12 @@
       "Description" : "The Functions Bucket Name",
       "Value" :  { "Ref" : "FunctionsBucket" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-FunctionsBucket" }}
+    },
+
+    "ScriptsBucket" : {
+      "Description" : "The Scripts Bucket Name",
+      "Value" :  { "Ref" : "ScriptsBucket" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-ScriptsBucket" }}
     },
 
     "ProductsBucket" : {
