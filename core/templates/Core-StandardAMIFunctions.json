@@ -197,6 +197,91 @@
       }
     },
 
+    "GetSpecificWindowsImageIdFunction" : {
+      "Type" : "AWS::Lambda::Function",
+      "Properties" : {
+        "FunctionName" : "GetSpecificWindowsImageId",
+        "Description" : "A Lambda function that looks up the specific Windows AMI ID for a given OS Variant, OS Date and Region.",
+        "Role" : { "Fn::GetAtt" : [ "Role", "Arn" ]},
+        "Runtime" : "nodejs4.3",
+        "Timeout" : "30",
+        "Handler" : "index.handler",
+        "Code" : {
+          "ZipFile" :  { "Fn::Join" : [ "\n", [
+            "var osNameToPattern = {",
+            "  'Windows Server 2016'                                  : 'Windows_Server-2016-English-Full-Base-',",
+            "  'Windows Server 2016 with Containers'                  : 'Windows_Server-2016-English-Full-Containers-',",
+            "  'Windows Server 2016 Nano'                             : 'Windows_Server-2016-English-Nano-Base-',",
+            "  'Windows Server 2016 with SQL Server 2016 Express'     : 'Windows_Server-2016-English-Full-SQL_2016_SP1_Express-',",
+            "  'Windows Server 2016 with SQL Server 2016 Web'         : 'Windows_Server-2016-English-Full-SQL_2016_SP1_Web-',",
+            "  'Windows Server 2016 with SQL Server Standard'         : 'Windows_Server-2016-English-Full-SQL_2016_SP1_Standard-',",
+            "  'Windows Server 2012 R2'                               : 'Windows_Server-2012-R2_RTM-English-64Bit-Base-',",
+            "  'Windows Server 2012 R2 with SQL Server 2016 Express'  : 'Windows_Server-2012-R2_RTM-English-64Bit-SQL_2016_SP1_Express-',",
+            "  'Windows Server 2012 R2 with SQL Server 2016 Web'      : 'Windows_Server-2012-R2_RTM-English-64Bit-SQL_2016_SP1_Web-',",
+            "  'Windows Server 2012 R2 with SQL Server 2016 Standard' : 'Windows_Server-2012-R2_RTM-English-64Bit-SQL_2016_SP1_Standard-',",
+            "  'Windows Server 2012 R2 with SQL Server 2014 Express'  : 'Windows_Server-2012-R2_RTM-English-64Bit-SQL_2014_SP2_Express-',",
+            "  'Windows Server 2012 R2 with SQL Server 2014 Web'      : 'Windows_Server-2012-R2_RTM-English-64Bit-SQL_2014_SP2_Web-',",
+            "  'Windows Server 2012 R2 with SQL Server 2014 Standard' : 'Windows_Server-2012-R2_RTM-English-64Bit-SQL_2014_SP2_Standard-'",
+            "};",
+            "",
+            "var response = require('cfn-response');",
+            "",
+            "exports.handler = function(event, context) {",
+            "  console.log('Request body:\\n' + JSON.stringify(event));",
+            "",
+            "  if (event.RequestType == 'Delete') {",
+            "    response.send(event, context, response.SUCCESS);",
+            "    return;",
+            "  }",
+            "",
+            "  var responseStatus = response.FAILED;",
+            "  var responseData = {};",
+            "",
+            "  var osBaseName = osNameToPattern[event.ResourceProperties.OSName];",
+            "  if (event.ResourceProperties.OSDate) {",
+            "    osBaseName += event.ResourceProperties.OSDate;",
+            "    console.log('OS: ' + event.ResourceProperties.OSName + '[' + event.ResourceProperties.OSDate + '] -> ' + osBaseName);",
+            "  }",
+            "  else {",
+            "    osBaseName +='*';",
+            "    console.log('OS: ' + event.ResourceProperties.OSName + ' -> ' + osBaseName);",
+            "  }",
+            "",
+            "  var aws = require('aws-sdk');",
+            "",
+            "  var ec2 = new aws.EC2({region: event.ResourceProperties.Region});",
+            "  var describeImagesParams = {",
+            "    Filters: [{ Name: 'name', Values: [osBaseName]}],",
+            "    Owners: ['amazon']",
+            "  };",
+            "",
+            "  console.log('Calling DescribeImages...');",
+            "  ec2.describeImages(describeImagesParams, function(err, describeImagesResult) {",
+            "    if (err) {",
+            "      responseData = {Error: 'DescribeImages call failed'};",
+            "      console.error(responseData.Error + ':\\n', err);",
+            "    }",
+            "    else {",
+            "      var images = describeImagesResult.Images;",
+            "      console.log('DescribeImages returned ' + images.length + ' images');",
+            "      images.sort(function(x, y) { return x.CreationDate < y.CreationDate; });",
+            "      for (var i = 0; i < images.length; i++) {",
+            "        responseStatus = response.SUCCESS;",
+            "        responseData['ImageId'] = images[i].ImageId;",
+            "        responseData['Name'] = images[i].Name;",
+            "        console.log('Found: ' + images[i].Name + ', ' + images[i].ImageId);",
+            "        break;",
+            "      }",
+            "    }",
+            "",
+            "    response.send(event, context, responseStatus, responseData);",
+            "  });",
+            "};"
+          ]]}
+        }
+      }
+    },
+
     "GetRHELImageIdFunction" : {
       "Type" : "AWS::Lambda::Function",
       "Properties" : {
@@ -353,6 +438,12 @@
       "Description" : "The GetWindowsImageId Lambda Function ARN",
       "Value" :  { "Fn::GetAtt" : [ "GetWindowsImageIdFunction", "Arn" ]},
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-GetWindowsImageIdFunctionArn" }}
+    },
+
+    "GetSpecificWindowsImageIdFunctionArn" : {
+      "Description" : "The GetSpecificWindowsImageId Lambda Function ARN",
+      "Value" :  { "Fn::GetAtt" : [ "GetSpecificWindowsImageIdFunction", "Arn" ]},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-GetSpecificWindowsImageIdFunctionArn" }}
     },
 
     "GetRHELImageIdFunctionArn" : {

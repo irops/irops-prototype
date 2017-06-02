@@ -4,14 +4,6 @@
   "Description" : "Example-GetWindowsImageIdCustomResource Template. This demonstrates how to dynamically get the most recent Windows ImageId, given the Windows OS Variant and Region. This template provisions an EC2 instance with an AMI ID that is based on the selected InstanceType, Windows OS Variant and Region.",
 
   "Parameters" : {
-    "InstanceType" : {
-      "Description" : "EC2 instance type",
-      "Type" : "String",
-      "Default" : "t2.medium",
-      "AllowedValues" : [ "t2.micro", "t2.small", "t2.medium" ],
-      "ConstraintDescription" : "Must be a valid EC2 instance type."
-    },
-
     "WindowsVersion" : {
       "Description" : "Windows Version",
       "Type" : "String",
@@ -32,6 +24,14 @@
         "Windows Server 2012 R2 with SQL Server 2014 Standard"
       ],
       "ConstraintDescription" : "Must be a valid Windows version."
+    },
+
+    "WindowsDate" : {
+      "Description" : "Optional Windows Date, specify to select a specific publication date for the Image",
+      "Type" : "String",
+      "Default" : "2017.04.12",
+      "AllowedPattern" : "(^$|^20(1[7-9]|[2-9][0-9])\\.(0[1-9]|1[0-2])\\.(0[1-9]|[1-2][0-9]|3[0-1])$)",
+      "ConstraintDescription" : "Must be a valid Windows date."
     }
   },
 
@@ -45,14 +45,24 @@
       }
     },
 
-    "Instance" : {
-      "Type" : "AWS::EC2::Instance",
+    "GetSpecificWindowsImageId" : {
+      "Type" : "Custom::GetSpecificWindowsImageId",
       "Properties" : {
-        "InstanceType" : { "Ref" : "InstanceType" },
-        "ImageId" : { "Fn::GetAtt" : [ "GetWindowsImageId", "ImageId" ]}
+        "ServiceToken" : { "Fn::Sub" : "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GetSpecificWindowsImageId" },
+        "Region" : { "Ref" : "AWS::Region" },
+        "OSName" : { "Ref" : "WindowsVersion" },
+        "OSDate" : { "Ref" : "WindowsDate" }
       }
     },
 
+    "GetNonSpecificWindowsImageId" : {
+      "Type" : "Custom::GetSpecificWindowsImageId",
+      "Properties" : {
+        "ServiceToken" : { "Fn::Sub" : "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GetSpecificWindowsImageId" },
+        "Region" : { "Ref" : "AWS::Region" },
+        "OSName" : { "Ref" : "WindowsVersion" }
+      }
+    }
   },
 
   "Outputs" : {
@@ -64,6 +74,26 @@
     "Name" : {
       "Description" : "The Image Name",
       "Value" : { "Fn::GetAtt" : [ "GetWindowsImageId", "Name" ]}
+    },
+
+    "SpecificImageId" : {
+      "Description" : "The SpecificImageId",
+      "Value" : { "Fn::GetAtt" : [ "GetSpecificWindowsImageId", "ImageId" ]}
+    },
+
+    "SpecificName" : {
+      "Description" : "The Specific Image Name",
+      "Value" : { "Fn::GetAtt" : [ "GetSpecificWindowsImageId", "Name" ]}
+    },
+
+    "NonSpecificImageId" : {
+      "Description" : "The NonSpecificImageId",
+      "Value" : { "Fn::GetAtt" : [ "GetNonSpecificWindowsImageId", "ImageId" ]}
+    },
+
+    "NonSpecificName" : {
+      "Description" : "The NonSpecific Image Name",
+      "Value" : { "Fn::GetAtt" : [ "GetNonSpecificWindowsImageId", "Name" ]}
     }
   }
 }
