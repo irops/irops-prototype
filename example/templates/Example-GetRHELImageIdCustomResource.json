@@ -4,20 +4,13 @@
   "Description" : "Example-GetRHELImageIdCustomResource Template. This demonstrates how to dynamically get the most recent RHEL ImageId, given the RHEL OS Variant and Region. This template provisions an EC2 instance with an AMI ID that is based on the selected InstanceType, Windows OS Variant and Region.",
 
   "Parameters" : {
-    "InstanceType" : {
-      "Description" : "EC2 instance type",
-      "Type" : "String",
-      "Default" : "t2.medium",
-      "AllowedValues" : [ "t2.micro", "t2.small", "t2.medium" ],
-      "ConstraintDescription" : "Must be a valid EC2 instance type."
-    },
-
     "RHELVersion" : {
       "Description" : "RHEL Version",
       "Type" : "String",
-      "Default" : "RHEL 7",
+      "Default" : "RHEL 7.3",
       "AllowedValues" : [
         "RHEL 7",
+        "RHEL 7.4",
         "RHEL 7.3",
         "RHEL 7.2",
         "RHEL 7.1",
@@ -27,11 +20,27 @@
         "RHEL 6.7"
       ],
       "ConstraintDescription" : "Must be a valid RHEL version."
+    },
+
+    "RHELDate" : {
+      "Description" : "Optional RHEL Date, specify to select a specific publication date for the Image",
+      "Type" : "String",
+      "Default" : "2016.10.26",
+      "AllowedPattern" : "(^$|^20(1[6-9]|[2-9][0-9])\\.(0[1-9]|1[0-2])\\.(0[1-9]|[1-2][0-9]|3[0-1])$)",
+      "ConstraintDescription" : "Must be a valid date."
     }
   },
 
   "Resources" : {
-    "GetRHELImageId" : {
+    "GetLatestRHELImageId" : {
+      "Type" : "Custom::GetRHELImageId",
+      "Properties" : {
+        "ServiceToken" : { "Fn::Sub" : "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GetRHELImageId" },
+        "Region" : { "Ref" : "AWS::Region" }
+      }
+    },
+
+    "GetLatestVersionedRHELImageId" : {
       "Type" : "Custom::GetRHELImageId",
       "Properties" : {
         "ServiceToken" : { "Fn::Sub" : "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GetRHELImageId" },
@@ -40,25 +49,46 @@
       }
     },
 
-    "Instance" : {
-      "Type" : "AWS::EC2::Instance",
+    "GetSpecificVersionedRHELImageId" : {
+      "Type" : "Custom::GetRHELImageId",
       "Properties" : {
-        "InstanceType" : { "Ref" : "InstanceType" },
-        "ImageId" : { "Fn::GetAtt" : [ "GetRHELImageId", "ImageId" ]}
+        "ServiceToken" : { "Fn::Sub" : "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GetRHELImageId" },
+        "Region" : { "Ref" : "AWS::Region" },
+        "OSName" : { "Ref" : "RHELVersion" },
+        "OSDate" : { "Ref" : "RHELDate" }
       }
-    },
-
+    }
   },
 
   "Outputs" : {
-    "ImageId" : {
-      "Description" : "The ImageId",
-      "Value" : { "Fn::GetAtt" : [ "GetRHELImageId", "ImageId" ]}
+    "LatestImageId" : {
+      "Description" : "The Latest ImageId",
+      "Value" : { "Fn::GetAtt" : [ "GetLatestRHELImageId", "ImageId" ]}
     },
 
-    "Name" : {
-      "Description" : "The Image Name",
-      "Value" : { "Fn::GetAtt" : [ "GetRHELImageId", "Name" ]}
+    "LatestName" : {
+      "Description" : "The Latest Image Name",
+      "Value" : { "Fn::GetAtt" : [ "GetLatestRHELImageId", "Name" ]}
+    },
+
+    "LatestVersionedImageId" : {
+      "Description" : "The Latest Versioned ImageId",
+      "Value" : { "Fn::GetAtt" : [ "GetLatestVersionedRHELImageId", "ImageId" ]}
+    },
+
+    "LatestVersionedName" : {
+      "Description" : "The Latest Versioned Image Name",
+      "Value" : { "Fn::GetAtt" : [ "GetLatestVersionedRHELImageId", "Name" ]}
+    },
+
+    "SpecificVersionedImageId" : {
+      "Description" : "The Specific Versioned ImageId",
+      "Value" : { "Fn::GetAtt" : [ "GetSpecificVersionedRHELImageId", "ImageId" ]}
+    },
+
+    "SpecificVersionedName" : {
+      "Description" : "The Specific Versioned Image Name",
+      "Value" : { "Fn::GetAtt" : [ "GetSpecificVersionedRHELImageId", "Name" ]}
     }
   }
 }

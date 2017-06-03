@@ -30,13 +30,21 @@
       "Description" : "Optional Windows Date, specify to select a specific publication date for the Image",
       "Type" : "String",
       "Default" : "2017.04.12",
-      "AllowedPattern" : "(^$|^20(1[7-9]|[2-9][0-9])\\.(0[1-9]|1[0-2])\\.(0[1-9]|[1-2][0-9]|3[0-1])$)",
-      "ConstraintDescription" : "Must be a valid Windows date."
+      "AllowedPattern" : "(^$|^20(1[6-9]|[2-9][0-9])\\.(0[1-9]|1[0-2])\\.(0[1-9]|[1-2][0-9]|3[0-1])$)",
+      "ConstraintDescription" : "Must be a valid date."
     }
   },
 
   "Resources" : {
-    "GetWindowsImageId" : {
+    "GetLatestWindowsImageId" : {
+      "Type" : "Custom::GetWindowsImageId",
+      "Properties" : {
+        "ServiceToken" : { "Fn::Sub" : "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GetWindowsImageId" },
+        "Region" : { "Ref" : "AWS::Region" }
+      }
+    },
+
+    "GetLatestVersionedWindowsImageId" : {
       "Type" : "Custom::GetWindowsImageId",
       "Properties" : {
         "ServiceToken" : { "Fn::Sub" : "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GetWindowsImageId" },
@@ -45,55 +53,46 @@
       }
     },
 
-    "GetSpecificWindowsImageId" : {
-      "Type" : "Custom::GetSpecificWindowsImageId",
+    "GetSpecificVersionedWindowsImageId" : {
+      "Type" : "Custom::GetWindowsImageId",
       "Properties" : {
-        "ServiceToken" : { "Fn::Sub" : "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GetSpecificWindowsImageId" },
+        "ServiceToken" : { "Fn::Sub" : "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GetWindowsImageId" },
         "Region" : { "Ref" : "AWS::Region" },
         "OSName" : { "Ref" : "WindowsVersion" },
         "OSDate" : { "Ref" : "WindowsDate" }
-      }
-    },
-
-    "GetNonSpecificWindowsImageId" : {
-      "Type" : "Custom::GetSpecificWindowsImageId",
-      "Properties" : {
-        "ServiceToken" : { "Fn::Sub" : "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GetSpecificWindowsImageId" },
-        "Region" : { "Ref" : "AWS::Region" },
-        "OSName" : { "Ref" : "WindowsVersion" }
       }
     }
   },
 
   "Outputs" : {
-    "ImageId" : {
-      "Description" : "The ImageId",
-      "Value" : { "Fn::GetAtt" : [ "GetWindowsImageId", "ImageId" ]}
+    "LatestImageId" : {
+      "Description" : "The Latest ImageId",
+      "Value" : { "Fn::GetAtt" : [ "GetLatestWindowsImageId", "ImageId" ]}
     },
 
-    "Name" : {
-      "Description" : "The Image Name",
-      "Value" : { "Fn::GetAtt" : [ "GetWindowsImageId", "Name" ]}
+    "LatestName" : {
+      "Description" : "The Latest Image Name",
+      "Value" : { "Fn::GetAtt" : [ "GetLatestWindowsImageId", "Name" ]}
     },
 
-    "SpecificImageId" : {
-      "Description" : "The SpecificImageId",
-      "Value" : { "Fn::GetAtt" : [ "GetSpecificWindowsImageId", "ImageId" ]}
+    "LatestVersionedImageId" : {
+      "Description" : "The Latest Versioned ImageId",
+      "Value" : { "Fn::GetAtt" : [ "GetLatestVersionedWindowsImageId", "ImageId" ]}
     },
 
-    "SpecificName" : {
-      "Description" : "The Specific Image Name",
-      "Value" : { "Fn::GetAtt" : [ "GetSpecificWindowsImageId", "Name" ]}
+    "LatestVersionedName" : {
+      "Description" : "The Latest Versioned Image Name",
+      "Value" : { "Fn::GetAtt" : [ "GetLatestVersionedWindowsImageId", "Name" ]}
     },
 
-    "NonSpecificImageId" : {
-      "Description" : "The NonSpecificImageId",
-      "Value" : { "Fn::GetAtt" : [ "GetNonSpecificWindowsImageId", "ImageId" ]}
+    "SpecificVersionedImageId" : {
+      "Description" : "The Specific Versioned ImageId",
+      "Value" : { "Fn::GetAtt" : [ "GetSpecificVersionedWindowsImageId", "ImageId" ]}
     },
 
-    "NonSpecificName" : {
-      "Description" : "The NonSpecific Image Name",
-      "Value" : { "Fn::GetAtt" : [ "GetNonSpecificWindowsImageId", "Name" ]}
+    "SpecificVersionedName" : {
+      "Description" : "The Specific Versioned Image Name",
+      "Value" : { "Fn::GetAtt" : [ "GetSpecificVersionedWindowsImageId", "Name" ]}
     }
   }
 }
