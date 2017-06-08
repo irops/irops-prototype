@@ -1,0 +1,658 @@
+#!/bin/bash
+#
+# This script updates the Application MiddleTier Stack in an Environment Account.
+#
+# This script is written in a format suitable for interactive demos,
+# but can be run non-Iteractively and more quickly with the "-I" flag.
+#
+
+#  1. Initalize Environment
+
+bindir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+templatesdir=${bindir%/*}/templates
+tmpdir=/var/tmp
+
+step=0
+speed_max=400
+run_default=10
+pause_default=2
+next_default=5
+update_default=15
+update_attempts=40
+
+interactive=0
+speed=100
+verbose=0
+monitor=0
+override=0
+owner=${OWNER_EMAIL:-$USER@dxc.com}
+company=${COMPANY_NAME:-Travel}
+system=${SYSTEM_NAME:-IROPS}
+environment=${ENVIRONMENT_NAME:-Production}
+environment_type=${ENVIRONMENT_TYPE:-large}
+application=${APPLICATION_NAME:-MiddleTier}
+application_version=${APPLICATION_VERSION:-1.0.0}
+administrator_networks=${MIDDLETIER_ADMINISTRATOR_NETWORKS:-NONE,NONE,NONE,NONE,NONE,NONE,NONE,NONE}
+integration_networks=${MIDDLETIER_INTEGRATION_NETWORKS:-NONE,NONE,NONE,NONE,NONE,NONE,NONE,NONE}
+region=${AWS_DEFAULT_REGION:-us-west-2}
+account=${AWS_ACCOUNT_ALIAS:-irops}
+user=${AWS_USER_NAME:-administrator}
+key=${AWS_KEY_NAME:-user}
+
+
+#  2. Define functions
+
+usage () {
+    echo "Usage: ${BASH_SOURCE##*/} [[-i] | [-s | -f]] [-v] [-m] [-o]"
+    echo "                  [-O owner] [-C company] [-S system]"
+    echo "                  [-E environment] [-T type]"
+    echo "                  [-A application] [-V version]"
+    echo "                  [-N networks] [-I networks]"
+    echo "                  [-r region] [-a account] [-u user] [-k key]"
+    echo "  -i              interactive"
+    echo "  -s              slower: increase pauses by 25%"
+    echo "  -f              faster: reduce pauses by 25%"
+    echo "  -v              verbose"
+    echo "  -m              monitor"
+    echo "  -o              override StackPolicy"
+    echo "  -O owner        Owner Email (default: $owner)"
+    echo "  -C company      Company Name (default: $company)"
+    echo "  -S system       System Name (default: $system)"
+    echo "  -E environment  Environment Name (default: $environment)"
+    echo "  -T type         Environment Type (default: $environment_type)"
+    echo "  -A application  Application Name (default: $application)"
+    echo "  -V version      Application Version (default: $application_version)"
+    echo "  -N networks     Administrator Networks (default: $administrator_networks)"
+    echo "  -I networks     Integration Networks (default: $integration_networks)"
+    echo "  -r region       Region (default: $region)"
+    echo "  -a account      Account (default: $account)"
+    echo "  -u user         User (default: $user)"
+    echo "  -k key          Key (default: $key)"
+}
+
+run() {
+    if [ -z $1 ] || (($1 % 25 != 0)); then
+        ((seconds=run_default * speed / 100))
+    else
+        ((seconds=run_default * $1 * speed / 10000))
+    fi
+    if [ $interactive = 1 ]; then
+        echo
+        echo -n "Run? [Y/n/q]"
+        read choice
+        case "$choice" in
+            "" | "y" | "Y" | "yes" | "Yes") choice=y ;;
+            "n" | "N" | "no" | "No") choice=n ;;
+             *) echo "cancelled"
+                exit 2;;
+        esac
+    else
+        echo
+        echo -n -e "Waiting $(printf '%2d' $seconds) seconds..."
+        while ((seconds > 0)); do
+            if ((seconds < 10 || seconds % 10 == 0)); then
+                echo -n -e "\rWaiting $(printf '%2d' $seconds) seconds..."
+            fi
+            sleep 1
+            ((seconds--))
+        done
+        echo " Done"
+        choice=y
+    fi
+}
+
+pause() {
+    if [ -z $1 ] || (($1 % 25 != 0)); then
+        ((seconds=pause_default * speed / 100))
+    else
+        ((seconds=pause_default * $1 * speed / 10000))
+    fi
+    if [ $interactive = 1 ]; then
+        echo "#"
+        read pause
+        echo -en "\033[1A\033[2K"    # undo newline from read
+    else
+        echo "#"
+        sleep $seconds
+    fi
+}
+
+next() {
+    if [ -z $1 ] || (($1 % 25 != 0)); then
+        ((seconds=next_default * speed / 100))
+    else
+        ((seconds=next_default * $1 * speed / 10000))
+    fi
+    if [ $interactive = 1 ]; then
+        echo
+        echo -n "Next? [Y/q]"
+        read choice
+        case "$choice" in
+            "" | "y" | "Y" | "yes" | "Yes") choice=y ;;
+             *) echo "cancelled"
+                exit 2;;
+        esac
+    else
+        echo
+        echo -n -e "Waiting $(printf '%2d' $seconds) seconds..."
+        while ((seconds > 0)); do
+            if ((seconds < 10 || seconds % 10 == 0)); then
+                echo -n -e "\rWaiting $(printf '%2d' $seconds) seconds..."
+            fi
+            sleep 1
+            ((seconds--))
+        done
+        echo " Done"
+        choice=y
+    fi
+}
+
+
+#  3. Parse command line options
+
+while getopts isfvmoO:C:S:E:T:A:V:N:I:r:a:u:k:? arg; do
+    case $arg in
+    i)  interactive=1;;
+    s)  ((speed < speed_max)) && ((speed=speed+25));;
+    f)  ((speed > 0)) && ((speed=speed-25));;
+    v)  verbose=1;;
+    m)  monitor=1;;
+    o)  override=1;;
+    O)  owner="$OPTARG";;
+    C)  company="$OPTARG";;
+    S)  system="$OPTARG";;
+    E)  environment="$OPTARG";;
+    T)  environment_type="$OPTARG";;
+    A)  application="$OPTARG";;
+    V)  application_version="$OPTARG";;
+    N)  administrator_networks="$OPTARG";;
+    I)  integration_networks="$OPTARG";;
+    r)  region="$OPTARG";;
+    a)  account="$OPTARG";;
+    u)  user="$OPTARG";;
+    k)  key="$OPTARG";;
+    ?)  usage
+        exit 1;;
+    esac
+done
+
+shift $(($OPTIND - 1))
+[ $monitor = 0 ] && verbose=0
+
+
+#  4. Validate environment
+
+if [ -z $owner ]; then
+    echo "-O owner missing!"
+    echo "Could not automatically determine owner, and it was not specified as a parameter"
+    exit 10
+fi
+
+if [ -z $company ]; then
+    echo "-C company missing!"
+    echo "Could not automatically determine company, and it was not specified as a parameter"
+    exit 12
+else
+    case $company in
+      Travel)
+        ;;
+      *)
+        echo "-C $company invalid! Must be Travel"
+        exit 13;;
+    esac
+fi
+
+if [ -z $system ]; then
+    echo "-S system missing!"
+    echo "Could not automatically determine system, and it was not specified as a parameter"
+    exit 14
+else
+    case $system in
+      IROPS)
+        ;;
+      *)
+        echo "-S $system invalid! Must be IROPS"
+        exit 15;;
+    esac
+fi
+
+if [ -z $environment ]; then
+    echo "-E environment missing!"
+    echo "Could not automatically determine environment, and it was not specified as a parameter"
+    exit 20
+else
+    case $environment in
+      Production)
+        os_name="RHEL 7.3"
+        use_static_address=false
+        use_filesystem_monitoring=true
+        log_retention=30
+        schedule="";;  # 11:00 - 4:00 UTC = 3:00 AM - 8:00 PM PST = 6:00 AM - 11:00 PM EST
+      Staging)
+        os_name="RHEL 7.3"
+        use_static_address=false
+        use_filesystem_monitoring=true
+        log_retention=7
+        schedule="";;  # 11:00 - 4:00 UTC = 3:00 AM - 8:00 PM PST = 6:00 AM - 11:00 PM EST
+      Testing)
+        os_name="RHEL 7.3"
+        use_static_address=false
+        use_filesystem_monitoring=false
+        log_retention=0
+        schedule="13:00-2:00";; # 13:00 - 2:00 UTC = 5:00 AM - 6:00 PM PST = 8:00 AM - 9:00 PM EST
+      Development)
+        os_name="RHEL 7.3"
+        use_static_address=false
+        use_filesystem_monitoring=false
+        log_retention=0
+        schedule="";; # 13:00 - 2:00 UTC = 5:00 AM - 6:00 PM PST = 8:00 AM - 9:00 PM EST
+      Core)
+        os_name="RHEL 7.3"
+        use_static_address=false
+        use_filesystem_monitoring=true
+        log_retention=14
+        schedule="";;  # 11:00 - 4:00 UTC = 3:00 AM - 8:00 PM PST = 6:00 AM - 11:00 PM EST
+      *)
+        echo "-E $environment invalid! Must be Production, Staging, Testing, Development or Core"
+        exit 21;;
+    esac
+fi
+
+if [ -z $environment_type ]; then
+    echo "-T type missing!"
+    echo "Could not automatically determine environment type, and it was not specified as a parameter"
+    exit 22
+else
+    case $environment_type in
+      small|medium|large|xlarge)
+        ;;
+      *)
+        echo "-T $environment_type invalid! Must be small, medium, large or xlarge"
+        exit 23;;
+    esac
+fi
+
+if [ -z $application ]; then
+    echo "-A application missing!"
+    echo "Could not automatically determine application, and it was not specified as a parameter"
+    exit 30
+else
+    case $application in
+      MiddleTier)
+        ;;
+      *)
+        echo "-A $application invalid! Must be MiddleTier"
+        exit 31;;
+    esac
+fi
+
+if [ -z $application_version ]; then
+    echo "-V version missing!"
+    echo "Could not automatically determine version, and it was not specified as a parameter"
+    exit 34
+fi
+
+if [ -z $administrator_networks ]; then
+    echo "-N networks missing!"
+    echo "Could not automatically determine administrator networks, and it was not specified as a parameter"
+    exit 42
+fi
+
+if [ -z $integration_networks ]; then
+    echo "-I networks missing!"
+    echo "Could not automatically determine integration networks, and it was not specified as a parameter"
+    exit 44
+fi
+
+if [ -z $region ]; then
+    echo "-r region missing!"
+    echo "Could not automatically determine region, and it was not specified as a parameter"
+    exit 50
+else
+    case $region in
+      us-east-1)
+        s3_domain=s3.amazonaws.com;;
+      us-east-2|us-west-1|us-west-2|ca-central-1|eu-west-1|eu-central-1|eu-west-2|ap-southeast-1|ap-southeast-2|ap-northeast-2|ap-northeast-1|ap-south-1|sa-east-1)
+        s3_domain=s3-$region.amazonaws.com;;
+      *)
+        echo "-r $region invalid: Please specify a valid region"
+        exit 51;;
+    esac
+fi
+
+if [ -z $account ]; then
+    echo "-a account missing!"
+    echo "Could not automatically determine account, and it was not specified as a parameter"
+    exit 52
+fi
+
+if [ -z $user ]; then
+    echo "-u user missing!"
+    echo "Could not automatically determine user, and it was not specified as a parameter"
+    exit 54
+fi
+
+if [ -z $key ]; then
+    echo "-k key missing!"
+    echo "Could not automatically determine key, and it was not specified as a parameter"
+    exit 56
+fi
+
+profile=$account-$user
+
+if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
+    echo "Could not find ($account) Account ($user) User AWSCLI profile!"
+    echo "Expected to find: [profile $profile] in ~/.aws/config"
+    exit 58
+fi
+
+if ! aws cloudformation describe-stacks --stack-name $environment-$application \
+                                        --profile $profile --region $region --output text &> /dev/null; then
+    echo "Unable to update - $environment-$application Stack does not exist!"
+    exit 80
+fi
+
+templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
+template_folder=application
+
+products_bucket=${AWS_PRODUCTS_BUCKET:-products-$region-$account}
+product_folder=MiddleTier
+product_object=WS_MQ_V8.0.0.4_LINUX_ON_X86_64_IM.tar.gz
+
+configurations_bucket=${AWS_CONFIGURATIONS_BUCKET:-configurations-$region-$account}
+configuration_folder=MiddleTier
+configuration_object=$environment-MiddleTier-etc-paxupd.tgz
+
+# Prevent certain environment variables from breaking commands
+unset AWS_DEFAULT_PROFILE
+unset AWS_CREDENTIAL_FILE
+unset EC2_PRIVATE_KEY
+unset EC2_CERT
+
+
+#  5. Run
+
+start=$(date +%s)
+
+((++step))
+read -r -d '' statement << EOS
+aws cloudformation describe-stacks --query 'Stacks[].[StackName,StackStatus]' \\
+                                   --profile $profile --region $region --output table
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'}"
+
+if [ $verbose = 1 ]; then
+    clear
+    echo
+    echo "============================================================"
+    echo
+    echo "$(printf '%2d' $step). List Existing Stacks"
+    echo
+    echo "============================================================"
+    echo
+    echo "Commands:"
+    echo
+    echo "$statement"
+
+    run 50
+
+    if [ $choice = y ]; then
+        echo
+        echo "$run_statement"
+        eval "$eval_statement"
+
+        next
+    fi
+fi
+
+
+((++step))
+read -r -d '' statement << EOS
+aws s3 sync $templatesdir \\
+            s3://$templates_bucket/$template_folder \\
+            --exclude '*' --include 'Application-MiddleTier.json' --include 'Application-MiddleTier-StackPolicy.json' \\
+            --profile $profile --region $region --output table
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'}"
+
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Sync Template and Policy to ($templates_bucket) Bucket"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
+
+next 50
+
+echo
+echo "$run_statement"
+eval "$eval_statement"
+
+next 50
+
+
+((++step))
+template_parameter="--template-url https://$s3_domain/$templates_bucket/$template_folder/Application-MiddleTier.json"
+stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$template_folder/Application-MiddleTier-StackPolicy.json"
+if [ $override = 1 ]; then
+    stack_policy_parameter="$stack_policy_parameter \\"$'\n'"                                --stack-policy-during-update-body file://$templatesdir/Override-StackPolicy.json"
+fi
+read -r -d '' statement << EOS
+aws cloudformation update-stack --stack-name $environment-$application \\
+                                $template_parameter \\
+                                $stack_policy_parameter \\
+                                --parameters ParameterKey=VPNStackName,ParameterValue=$environment-OpenVPNAS \\
+                                             ParameterKey=VPCStackName,ParameterValue=$environment-VPC \\
+                                             ParameterKey=CustomIdentifierFunctionsStackName,ParameterValue=CustomIdentifierFunctions \\
+                                             ParameterKey=StandardCIDRFunctionsStackName,ParameterValue=StandardCIDRFunctions \\
+                                             ParameterKey=StandardAMIFunctionsStackName,ParameterValue=StandardAMIFunctions \\
+                                             ParameterKey=StandardBucketsStackName,ParameterValue=StandardBuckets \\
+                                             ParameterKey=StandardTopicsStackName,ParameterValue=StandardTopics \\
+                                             ParameterKey=KeyName,ParameterValue=$key \\
+                                             ParameterKey=CompanyName,ParameterValue=$company \\
+                                             ParameterKey=SystemName,ParameterValue=$system \\
+                                             ParameterKey=EnvironmentType,ParameterValue=$environment_type \\
+                                             ParameterKey=OSName,ParameterValue="$os_name" \\
+                                             ParameterKey=ProductFolder,ParameterValue=$product_folder \\
+                                             ParameterKey=ProductObject,ParameterValue=$product_object \\
+                                             ParameterKey=ConfigurationFolder,ParameterValue=$configuration_folder \\
+                                             ParameterKey=ConfigurationObject,ParameterValue=$configuration_object \\
+                                             ParameterKey=ApplicationName,ParameterValue=$application \\
+                                             ParameterKey=UseStaticAddress,ParameterValue=$use_static_address \\
+                                             ParameterKey=UseFileSystemMonitoring,ParameterValue=$use_filesystem_monitoring \\
+                                             ParameterKey=LogRetention,ParameterValue=$log_retention \\
+                                             ParameterKey=Schedule,ParameterValue=$schedule \\
+                                             ParameterKey=AdministratorNetworks,ParameterValue=\"$administrator_networks\" \\
+                                             ParameterKey=IntegrationNetworks,ParameterValue=\"$integration_networks\" \\
+                                --tags Key=Owner,Value=$owner \\
+                                       Key=Company,Value=$company \\
+                                       Key=System,Value=$system \\
+                                       Key=Environment,Value=$environment \\
+                                       Key=Application,Value=$application \\
+                                --capabilities CAPABILITY_IAM \\
+                                --profile $profile --region $region --output table
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'}"
+
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Update the Stack"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
+
+run
+
+if [ $choice = y ]; then
+    echo
+    echo "$run_statement"
+    eval "$eval_statement"
+
+    next
+fi
+
+
+((++step))
+read -r -d '' statement << EOS
+aws cloudformation describe-stacks --stack-name $environment-$application \\
+                                   --query 'Stacks[].[StackName,StackStatus]' \\
+                                   --profile $profile --region $region --output table
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'} 2> /dev/null"
+
+read -r -d '' statement2 << EOS
+aws cloudformation describe-stack-events --stack-name $environment-$application --max-items 5 \\
+                                         --query 'StackEvents[].[LogicalResourceId,ResourceStatus,Timestamp]' \\
+                                         --profile $profile --region $region --output table
+EOS
+run_statement2=$(echo "$statement2" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement2="${statement2//\\$'\n'} 2> /dev/null"
+
+if [ $monitor = 1 ]; then
+    clear
+    echo
+    echo "============================================================"
+    echo
+    echo "$(printf '%2d' $step). Monitor Stack update"
+    echo
+    echo "============================================================"
+    echo
+    echo "Commands:"
+    echo
+    echo "$statement"
+    echo
+    echo "$statement2"
+
+    if [ "$(aws cloudformation describe-stacks --stack-name $environment-$application \
+                                               --query 'Stacks[].StackStatus' \
+                                               --profile $profile --region $region --output text 2> /dev/null)" = "UPDATE_COMPLETE" ]; then
+        echo
+        tput rev
+        echo "Already Complete!"
+        tput sgr0
+
+        next 50
+
+    else
+        run 50
+
+        if [ $choice = y ]; then
+            echo
+            echo "$run_statement"
+            eval "$eval_statement"
+
+            attempt=0
+            seconds=$update_default
+            while ((attempt++ <= update_attempts)); do
+                echo
+                echo "$run_statement2"
+                eval "$eval_statement2"
+
+                status=$(aws cloudformation describe-stacks --stack-name $environment-$application \
+                                                            --query 'Stacks[].StackStatus' \
+                                                            --profile $profile --region $region --output text 2> /dev/null)
+                if [ -z "$status" -o "$status" = "UPDATE_COMPLETE" -o "$status" = "UPDATE_FAILED" -o "$status" = "ROLLBACK_COMPLETE" ]; then
+                    break
+                else
+                    echo
+                    echo -n "Not finished ($status). Waiting $seconds seconds..."
+                    sleep $seconds
+                    echo " Done"
+                fi
+            done
+
+            next
+        fi
+    fi
+fi
+
+
+((++step))
+read -r -d '' statement << EOS
+aws cloudformation describe-stacks --query 'Stacks[].[StackName,StackStatus]' \\
+                                   --profile $profile --region $region --output table
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'} 2> /dev/null"
+
+if [ $verbose = 1 ]; then
+    clear
+    echo
+    echo "============================================================"
+    echo
+    echo "$(printf '%2d' $step). List Resulting Stacks"
+    echo
+    echo "============================================================"
+    echo
+    echo "Commands:"
+    echo
+    echo "$statement"
+
+    run 50
+
+    if [ $choice = y ]; then
+        echo
+        echo "$run_statement"
+        eval "$eval_statement"
+
+        next
+    fi
+fi
+
+
+((++step))
+read -r -d '' statement << EOS
+aws cloudformation describe-stack-resources --stack-name $environment-$application \\
+                                            --query 'StackResources[].[ResourceType,LogicalResourceId,PhysicalResourceId,ResourceStatus]' \\
+                                            --profile $profile --region $region --output table
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'} 2> /dev/null"
+
+if [ $verbose = 1 ]; then
+    clear
+    echo
+    echo "============================================================"
+    echo
+    echo "$(printf '%2d' $step). List Resulting Stack Resources"
+    echo
+    echo "============================================================"
+    echo
+    echo "Commands:"
+    echo
+    echo "$statement"
+
+    run 50
+
+    if [ $choice = y ]; then
+        echo
+        echo "$run_statement"
+        eval "$eval_statement"
+
+        next
+    fi
+fi
+
+end=$(date +%s)
+
+echo
+case $(uname) in
+  Darwin)
+    echo "(time: $(date -u -r $((end-start)) +"%T"))";;
+  *)
+    echo "(time: $(date -u -d @$((end-start)) +"%T"))";;
+esac

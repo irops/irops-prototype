@@ -1,0 +1,1669 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Application-MiddleTier Template. This template creates the MiddleTier Application.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "VPNStackName",
+            "VPCStackName",
+            "CustomIdentifierFunctionsStackName",
+            "StandardCIDRFunctionsStackName",
+            "StandardAMIFunctionsStackName",
+            "StandardBucketsStackName",
+            "StandardTopicsStackName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Resource Dependencies" },
+          "Parameters" : [
+            "KeyName"
+          ]
+        },
+        {
+          "Label" : { "default" : "System Configuration" },
+          "Parameters" : [
+            "CompanyName",
+            "SystemName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Environment Configuration" },
+          "Parameters" : [
+            "EnvironmentType",
+            "OSName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Application Dependencies Configuration" },
+          "Parameters" : [
+            "ProductFolder",
+            "ProductObject",
+            "ConfigurationFolder",
+            "ConfigurationObject"
+          ]
+        },
+        {
+          "Label" : { "default" : "Application Configuration" },
+          "Parameters" : [
+            "ApplicationName",
+            "UseStaticAddress",
+            "EFSPerformanceMode",
+            "UseFileSystemMonitoring",
+            "LogRetention",
+            "Schedule"
+          ]
+        },
+        {
+          "Label" : { "default" : "Security Configuration" },
+          "Parameters" : [
+            "AdministratorNetworks",
+            "IntegrationNetworks"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "VPNStackName" : { "default" : "VPN Stack Name" },
+        "VPCStackName" : { "default" : "VPC Stack Name" },
+        "CustomIdentifierFunctionsStackName" : { "default" : "CustomIdentifierFunctions Stack Name" },
+        "StandardCIDRFunctionsStackName" : { "default" : "StandardCIDRFunctions Stack Name" },
+        "StandardAMIFunctionsStackName" : { "default" : "StandardAMIFunctions Stack Name" },
+        "StandardBucketsStackName" : { "default" : "StandardBuckets Stack Name" },
+        "StandardTopicsStackName" : { "default" : "StandardTopics Stack Name" },
+        "KeyName" : { "default" : "Key Name" },
+        "CompanyName" : { "default" : "Company Name" },
+        "SystemName" : { "default" : "System Name" },
+        "EnvironmentType" : { "default" : "Environment Type" },
+        "OSName" : { "default" : "Operating System Name" },
+        "ProductFolder" : { "default" : "Product Folder" },
+        "ProductObject" : { "default" : "Product Object" },
+        "ConfigurationFolder" : { "default" : "Configuration Folder" },
+        "ConfigurationObject" : { "default" : "Configuration Object" },
+        "ApplicationName" : { "default" : "Application Name" },
+        "UseStaticAddress" : { "default" : "Use Static Address" },
+        "EFSPerformanceMode" : { "default" : "EFS Performance Mode" },
+        "UseFileSystemMonitoring" : { "default" : "Use FileSystem Monitoring" },
+        "LogRetention" : { "default" : "Log Retention" },
+        "Schedule" : { "default" : "Schedule" },
+        "AdministratorNetworks" : { "default" : "Administrator Networks" },
+        "IntegrationNetworks" : { "default" : "Integration Networks" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "VPNStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing VPN Instances",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "Production-OpenVPN",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "VPCStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the VPC",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-VPC",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "CustomIdentifierFunctionsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Custom Identifier Functions",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "CustomIdentifierFunctions",
+      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "StandardCIDRFunctionsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Standard CIDR Functions",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "StandardCIDRFunctions",
+      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "StandardAMIFunctionsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Standard AMI Functions",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "StandardAMIFunctions",
+      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "StandardBucketsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Buckets",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardBuckets",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "StandardTopicsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Topics",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardTopics",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "KeyName" : {
+      "Description" : "Name of an existing KeyPair to enable SSH access to the Instances",
+      "Type" : "AWS::EC2::KeyPair::KeyName",
+      "MaxLength" : 32,
+      "Default" : "administrator",
+      "AllowedPattern" : "(^$|^[_a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
+    },
+
+    "CompanyName" : {
+      "Description" : "Name of the Company associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "Travel",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "SystemName" : {
+      "Description" : "Name of the System associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "IROPS",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "EnvironmentType" : {
+      "Description" : "Type of the Environment to build. Used to select size-related options in Mappings",
+      "Type" : "String",
+      "Default" : "small",
+      "AllowedValues" : [ "small", "medium", "large", "xlarge" ],
+      "ConstraintDescription" : "must be small, medium, large or xlarge."
+    },
+
+    "OSName" : {
+      "Description" : "The Operating System to use for Instances",
+      "Type" : "String",
+      "Default" : "Amazon Linux",
+      "AllowedValues" : [ "Amazon Linux", "Amazon Linux 2017.03.0", "RHEL 7", "RHEL 7.4", "RHEL 7.3" ],
+      "ConstraintDescription" : "must be \"Amazon Linux\" (latest), \"Amazon Linux 2017.03.0\", \"RHEL 7\" (latest), \"RHEL 7.4\" or \"RHEL 7.3\"."
+    },
+
+    "ProductFolder" : {
+      "Description" : "Folder within the S3 Products bucket containing Products deployed by this Template",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "MiddleTier",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "ProductObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the installer",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be a valid filename, not containing slashes."
+    },
+
+    "ConfigurationFolder" : {
+      "Description" : "Folder within the S3 Configurations bucket containing Configurations deployed by this Template",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "MiddleTier",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "ConfigurationObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the configuration",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be a valid filename, not containing slashes."
+    },
+
+    "ApplicationName" : {
+      "Description" : "Name of the Application associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "MiddleTier",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "UseStaticAddress" : {
+      "Description" : "Create and attach a separate Static Address",
+      "Type" : "String",
+      "Default" : "true",
+      "AllowedValues" : [ "true", "false" ],
+      "ConstraintDescription" : "must be either true or false."
+    },
+
+    "EFSPerformanceMode" : {
+      "Description" : "EFS Performance Mode",
+      "Type" : "String",
+      "Default" : "maxIO",
+      "AllowedValues" : [ "generalPurpose", "maxIO" ],
+      "ConstraintDescription" : "must be either generalPurpose or maxIO."
+    },
+
+    "UseFileSystemMonitoring" : {
+      "Description" : "Send EFS NFS Statistics to CloudWatch as Custom Metrics",
+      "Type" : "String",
+      "Default" : "true",
+      "AllowedValues" : [ "true", "false" ],
+      "ConstraintDescription" : "must be either true or false."
+    },
+
+    "LogRetention" : {
+      "Description" : "Number of days to retain CloudWatch Log Events (0 disables use of CloudWatch Logs)",
+      "Type" : "Number",
+      "Default" : 14,
+      "AllowedValues" : [ 0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653 ],
+      "ConstraintDescription" : "must be: 0 (disabled), 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827 or 3653."
+    },
+
+    "Schedule" : {
+      "Description" : "Schedule Tag Value (blank disables Scheduler)",
+      "Type" : "String",
+      "Default" : "",
+      "AllowedPattern" : "(^$|^([0-9]|1[0-9]|2[0-3]):[0-5][0-9]-([0-9]|1[0-9]|2[0-3]):[0-5][0-9]T?$)",
+      "ConstraintDescription" : "See Scheduler Lambda Function description for Tag format."
+    },
+
+    "AdministratorNetworks" : {
+      "Description" : "Networks that can administer the Application",
+      "Type" : "String",
+      "Default" : "NONE,NONE,NONE,NONE,NONE,NONE,NONE,NONE",
+      "ConstraintDescription" : "must be a comma-separated list of 8 values, each an IP CIDR range of the form x.x.x.x/x or the word NONE."
+    },
+
+    "IntegrationNetworks" : {
+      "Description" : "Networks that can integrate with the Application",
+      "Type" : "String",
+      "Default" : "NONE,NONE,NONE,NONE,NONE,NONE,NONE,NONE",
+      "ConstraintDescription" : "must be a comma-separated list of 8 values, each an IP CIDR range of the form x.x.x.x/x or the word NONE."
+    }
+  },
+
+  "Mappings" : {
+    "InstanceTypeMap" : {
+      "Queue" : { "small" : "t2.large", "medium" : "c4.xlarge", "large" : "c4.2xlarge", "xlarge" : "c4.4xlarge" }
+    }
+  },
+
+  "Conditions" : {
+    "ConfigureGlobalS3" : { "Fn::Equals" : [{ "Ref" : "AWS::Region" }, "us-east-1" ]},
+    "ConfigureKey" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "KeyName" }, "" ]}]},
+    "ConfigureAMZN" : { "Fn::Equals" : [{ "Fn::Select" : [ "0", { "Fn::Split" : [ " ", { "Ref" : "OSName" }]}]}, "Amazon" ]},
+    "ConfigureRHEL" : { "Fn::Equals" : [{ "Fn::Select" : [ "0", { "Fn::Split" : [ " ", { "Ref" : "OSName" }]}]}, "RHEL" ]},
+    "InstallProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ProductObject" }, "" ]}]},
+    "InstallConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ConfigurationObject" }, "" ]}]},
+    "ConfigureStaticAddress" : { "Fn::Equals" : [{ "Ref" : "UseStaticAddress" }, "true" ]},
+    "ConfigureFileSystemMonitoring" : { "Fn::Equals" : [{ "Ref" : "UseFileSystemMonitoring" }, "true" ]},
+    "ConfigureLogs" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LogRetention" }, "0" ]}]},
+    "ConfigureSchedule" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "Schedule" }, "" ]}]},
+    "ConfigureAdministratorNetwork0" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureAdministratorNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureAdministratorNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureAdministratorNetwork3" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureAdministratorNetwork4" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureAdministratorNetwork5" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureAdministratorNetwork6" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureAdministratorNetwork7" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureIntegrationNetwork0" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureIntegrationNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureIntegrationNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureIntegrationNetwork3" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureIntegrationNetwork4" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureIntegrationNetwork5" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureIntegrationNetwork6" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureIntegrationNetwork7" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}, "NONE" ]}]},
+  },
+
+  "Resources" : {
+    "Role" : {
+      "Type" : "AWS::IAM::Role",
+      "Properties" : {
+        "Path" : "/",
+        "AssumeRolePolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Principal" : { "Service" : [ "ec2.amazonaws.com" ]},
+            "Action" : [ "sts:AssumeRole" ]
+          }]
+        },
+        "ManagedPolicyArns" : [ "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM" ]
+      }
+    },
+
+    "DownloadProductFromS3Policy" : {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "DownloadProductFromS3Policy",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [
+              "s3:GetObject"
+            ],
+            "Resource" : { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }}, "/", { "Ref" : "ProductFolder" }, "/*" ]]}
+          }]
+        },
+        "Roles" : [{ "Ref" : "Role" }]
+      }
+    },
+
+    "DownloadConfigurationFromS3Policy" : {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "DownloadConfigurationFromS3Policy",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [
+              "s3:GetObject"
+            ],
+            "Resource" : { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/*" ]]}
+          }]
+        },
+        "Roles" : [{ "Ref" : "Role" }]
+      }
+    },
+
+    "FileSystemMonitoringPolicy" : {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "FileSystemMonitoringPolicy",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [
+              "cloudwatch:PutMetricData"
+            ],
+            "Resource" : "*"
+          }]
+        },
+        "Roles" : [{ "Ref" : "Role" }]
+      },
+      "Condition" : "ConfigureFileSystemMonitoring"
+    },
+
+    "LogMonitoringPolicy" : {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "LogMonitoringPolicy",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [
+              "logs:CreateLogGroup",
+              "logs:CreateLogStream",
+              "logs:PutLogEvents",
+              "logs:DescribeLogStreams"
+            ],
+            "Resource" : "arn:aws:logs:*:*:*"
+          }]
+        },
+        "Roles" : [{ "Ref" : "Role" }]
+      },
+      "Condition" : "ConfigureLogs"
+    },
+
+    "LogGroup" : {
+      "Type" : "AWS::Logs::LogGroup",
+      "Properties" : {
+        "RetentionInDays" : { "Ref" : "LogRetention" }
+      },
+      "Condition" : "ConfigureLogs"
+    },
+
+    "InstanceSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "InstanceSecurityGroup" ]]},
+        "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPC" }},
+        "SecurityGroupIngress" : [
+          { "IpProtocol" : "icmp", "FromPort" :    "0", "ToPort" :    "0", "CidrIp" : "0.0.0.0/0" },
+          { "IpProtocol" : "icmp", "FromPort" :    "3", "ToPort" :    "3", "CidrIp" : "0.0.0.0/0" },
+          { "IpProtocol" : "icmp", "FromPort" :    "8", "ToPort" :    "8", "CidrIp" : "0.0.0.0/0" },
+          { "IpProtocol" : "icmp", "FromPort" :   "11", "ToPort" :   "11", "CidrIp" : "0.0.0.0/0" },
+          { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPNStackName}-SecurityGroup" }}},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork0", { "IpProtocol" : "tcp",  "FromPort" :  "22", "ToPort" :  "22", "CidrIp" : { "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" :  "22", "ToPort" :  "22", "CidrIp" : { "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" :  "22", "ToPort" :  "22", "CidrIp" : { "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork3", { "IpProtocol" : "tcp",  "FromPort" :  "22", "ToPort" :  "22", "CidrIp" : { "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork4", { "IpProtocol" : "tcp",  "FromPort" :  "22", "ToPort" :  "22", "CidrIp" : { "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork5", { "IpProtocol" : "tcp",  "FromPort" :  "22", "ToPort" :  "22", "CidrIp" : { "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork6", { "IpProtocol" : "tcp",  "FromPort" :  "22", "ToPort" :  "22", "CidrIp" : { "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork7", { "IpProtocol" : "tcp",  "FromPort" :  "22", "ToPort" :  "22", "CidrIp" : { "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureIntegrationNetwork0", { "IpProtocol" : "tcp",  "FromPort" : "1414", "ToPort" : "1430", "CidrIp" : { "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureIntegrationNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "1414", "ToPort" : "1430", "CidrIp" : { "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureIntegrationNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "1414", "ToPort" : "1430", "CidrIp" : { "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureIntegrationNetwork3", { "IpProtocol" : "tcp",  "FromPort" : "1414", "ToPort" : "1430", "CidrIp" : { "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureIntegrationNetwork4", { "IpProtocol" : "tcp",  "FromPort" : "1414", "ToPort" : "1430", "CidrIp" : { "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureIntegrationNetwork5", { "IpProtocol" : "tcp",  "FromPort" : "1414", "ToPort" : "1430", "CidrIp" : { "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureIntegrationNetwork6", { "IpProtocol" : "tcp",  "FromPort" : "1414", "ToPort" : "1430", "CidrIp" : { "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureIntegrationNetwork7", { "IpProtocol" : "tcp",  "FromPort" : "1414", "ToPort" : "1430", "CidrIp" : { "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]}
+        ],
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "InstanceSecurityGroup" ]]}}
+        ]
+      }
+    },
+
+    "MountTargetSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "MountTargetSecurityGroup" ]]},
+        "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPC" }},
+        "SecurityGroupIngress" : [
+          { "IpProtocol" : "icmp", "FromPort" :    "0", "ToPort" :    "0", "CidrIp" : "0.0.0.0/0" },
+          { "IpProtocol" : "icmp", "FromPort" :    "3", "ToPort" :    "3", "CidrIp" : "0.0.0.0/0" },
+          { "IpProtocol" : "icmp", "FromPort" :    "8", "ToPort" :    "8", "CidrIp" : "0.0.0.0/0" },
+          { "IpProtocol" : "icmp", "FromPort" :   "11", "ToPort" :   "11", "CidrIp" : "0.0.0.0/0" },
+          { "IpProtocol" : "tcp",  "FromPort" : "2049", "ToPort" : "2049", "SourceSecurityGroupId" : { "Ref" : "InstanceSecurityGroup" }}
+        ],
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "MountTargetSecurityGroup" ]]}}
+        ]
+      }
+    },
+
+    "FileSystem" : {
+      "Type" : "AWS::EFS::FileSystem",
+      "Properties" : {
+        "PerformanceMode" : { "Ref" : "EFSPerformanceMode" },
+        "FileSystemTags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "Volume" ]]}}
+        ]
+      }
+    },
+
+    "MountTargetA" : {
+      "Type" : "AWS::EFS::MountTarget",
+      "Properties" : {
+        "FileSystemId" : { "Ref" : "FileSystem" },
+        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-CacheSubnetA" }},
+        "SecurityGroups" : [{ "Ref" : "MountTargetSecurityGroup" }]
+      }
+    },
+
+    "MountTargetB" : {
+      "Type" : "AWS::EFS::MountTarget",
+      "Properties" : {
+        "FileSystemId" : { "Ref" : "FileSystem" },
+        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-CacheSubnetB" }},
+        "SecurityGroups" : [{ "Ref" : "MountTargetSecurityGroup" }]
+      }
+    },
+
+    "GetHostName" : {
+      "Type" : "Custom::GetHostName",
+      "Properties" : {
+        "ServiceToken" : { "Fn::ImportValue" : { "Fn::Sub" : "${CustomIdentifierFunctionsStackName}-GetHostNameFunctionArn" }},
+        "CompanyName" : { "Ref" : "CompanyName" },
+        "LocationName" : { "Ref": "AWS::Region" },
+        "EnvironmentName" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }},
+        "ApplicationName" : { "Ref" : "ApplicationName" }
+      }
+    },
+
+    "GetAmazonLinuxImageId" : {
+      "Type" : "Custom::GetAmazonLinuxImageId",
+      "Properties" : {
+        "ServiceToken" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardAMIFunctionsStackName}-GetAmazonLinuxImageIdFunctionArn" }},
+        "Region" : { "Ref" : "AWS::Region" },
+        "OSName" : { "Ref" : "OSName" }
+      },
+      "Condition" : "ConfigureAMZN"
+    },
+
+    "GetRHELImageId" : {
+      "Type" : "Custom::GetRHELImageId",
+      "Properties" : {
+        "ServiceToken" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardAMIFunctionsStackName}-GetRHELImageIdFunctionArn" }},
+        "Region" : { "Ref" : "AWS::Region" },
+        "OSName" : { "Ref" : "OSName" }
+      },
+      "Condition" : "ConfigureRHEL"
+    },
+
+    "InstanceProfile" : {
+      "Type" : "AWS::IAM::InstanceProfile",
+      "Properties" : {
+        "Path" : "/",
+        "Roles" : [{ "Ref" : "Role" }]
+      }
+    },
+
+    "AddressCalculatorA" : {
+      "Type" : "Custom::AddressCalculator",
+      "Properties" : {
+        "ServiceToken" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardCIDRFunctionsStackName}-AddressCalculatorFunctionArn" }},
+        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-CacheSubnetA" }}
+      },
+      "Condition" : "ConfigureStaticAddress"
+    },
+
+    "Instance01A" : {
+      "Type" : "AWS::EC2::Instance",
+      "Metadata" : {
+        "AWS::CloudFormation::Authentication" : {
+          "S3Credentials" : {
+            "type" : "S3",
+            "roleName" : { "Ref" : "Role" },
+            "buckets" : [
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }},
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}
+            ]
+          }
+        },
+        "AWS::CloudFormation::Init" : {
+          "configSets" : {
+            "All" : [
+              "UpdateOS",
+              { "Fn::If" : [ "ConfigureAMZN", "ConfigureOSUpdates", { "Ref": "AWS::NoValue" }]},
+              "ConfigureHostname",
+              "ConfigureOS",
+              "ConfigureMQHAFileSystem",
+              { "Fn::If" : [ "ConfigureFileSystemMonitoring", "ConfigureMQHAFileSystemMonitoring", { "Ref": "AWS::NoValue" }]},
+              "ConfigureCFN",
+              "InstallSSMAgent",
+              { "Fn::If" : [ "InstallProduct", "InstallMiddleTierProduct", { "Ref": "AWS::NoValue" }]},
+              { "Fn::If" : [ "InstallConfiguration", "InstallMiddleTierConfiguration", { "Ref": "AWS::NoValue" }]},
+              { "Fn::If" : [ "ConfigureLogs", { "Fn::If" : [ "ConfigureAMZN", "InstallLogs", "BuildLogs" ]}, { "Ref": "AWS::NoValue" }]},
+              { "Fn::If" : [ "ConfigureLogs", "ConfigureLogs", { "Ref": "AWS::NoValue" }]}
+            ]
+          },
+          "UpdateOS" : {
+            "commands" : {
+              "01_yum_update" : {
+                "command" : "yum update -y",
+                "ignoreErrors" : "false"
+              }
+            }
+          },
+          "ConfigureOSUpdates" : {
+            "packages" : {
+              "yum" : {
+                "yum-cron" : []
+              }
+            },
+            "files" : {
+              "/etc/yum/yum-cron.conf" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "[commands]",
+                  "update_cmd = security",
+                  "update_messages = yes",
+                  "download_updates = yes",
+                  "apply_updates = yes",
+                  "random_sleep = 10"
+                ]]},
+                "mode"  : "000644",
+                "owner" : "root",
+                "group" : "root"
+              }
+            }
+          },
+          "ConfigureHostname" : {
+            "files" : {
+              "/root/bin/sethostname" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "#!/bin/bash",
+                  "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)",
+                  "region=${zone::-1}",
+                  { "Fn::Join" : [ "", [ "hostname=", { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01a.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]},
+                  "address=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)",
+                  "sed -i -e \"/^$address/d\" -e \"$ a$address $hostname ${hostname%%.*} paxupd\" /etc/hosts",
+                  "hostname $hostname"
+                ]]},
+                "mode"  : "000700",
+                "owner" : "root",
+                "group" : "root"
+              }
+            },
+            "commands" : {
+              "01_sethostname" : {
+                "command" : "/root/bin/sethostname",
+                "ignoreErrors" : "false"
+              }
+            }
+          },
+          "ConfigureOS" : {
+            "users" : {
+              "pax" : {}
+            },
+            "files" : {
+              "/etc/profile.d/local.sh" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "alias lsa='ls -lAF'",
+                  "alias ip4='ip addr | grep \" inet \"'"
+                ]]},
+                "mode"  : "000644",
+                "owner" : "root",
+                "group" : "root"
+              },
+              "/home/pax/.bashrc" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "# .bashrc",
+                  "",
+                  "# Source global definitions",
+                  "if [ -f /etc/bashrc ]; then",
+                  "        . /etc/bashrc",
+                  "fi",
+                  "",
+                  "# User specific aliases and functions",
+                ]]},
+                "mode"  : "000644",
+                "owner" : "pax",
+                "group" : "pax"
+              },
+              "/home/pax/.bash_profile" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "# .bash_profile",
+                  "",
+                  "# Get the aliases and functions",
+                  "if [ -f ~/.bashrc ]; then",
+                  "        . ~/.bashrc",
+                  "fi",
+                  "",
+                  "# User specific environment and startup programs",
+                  "",
+                  "PATH=$PATH:$HOME/.local/bin:$HOME/bin:/var/pax:/opt:.",
+                  "",
+                  "export PATH",
+                  "",
+                  "set -o vi"
+                ]]},
+                "mode"  : "000644",
+                "owner" : "pax",
+                "group" : "pax"
+              },
+            "commands" : {
+              "01_usermod_pax" : {
+                "command" : "usermod -s /bin/bash pax",
+                "ignoreErrors" : "false"
+              },
+              "02_chown_home_pax" : {
+                "command" : "chown -R pax:pax /home/pax",
+                "ignoreErrors" : "false"
+              },
+              "03_mkdir_opt_pax" : {
+                "command" : "mkdir -p /opt/pax",
+                "ignoreErrors" : "false"
+              },
+              "04_chown_opt_pax" : {
+                "command" : "chown -R pax:pax /opt/pax",
+                "ignoreErrors" : "false"
+              },
+              "05_mkdir_var_pax" : {
+                "command" : "mkdir -p /var/pax",
+                "ignoreErrors" : "false"
+              },
+              "06_chown_var_pax" : {
+                "command" : "chown -R pax:pax /var/pax",
+                "ignoreErrors" : "false"
+              },
+              "07_mkdir_jboss" : {
+                "command" : "mkdir -p /jboss",
+                "ignoreErrors" : "false"
+              },
+              "08_chown_jboss" : {
+                "command" : "chown -R pax:pax /jboss",
+                "ignoreErrors" : "false"
+              }
+            }
+          },
+          "ConfigureVolumes" : {
+            "packages" : {
+              "yum" : {
+                "parted" : [],
+                "xfsprogs" : []
+              }
+            },
+            "files" : {
+              "/root/bin/configurevolumes" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "#!/bin/bash",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Wait for Instance to recognize Volume /dev/xvdb\"",
+                  "attempt=0",
+                  "attempts=30",
+                  "delay=5",
+                  "while ((attempt++ <= attempts)); do",
+                  "    if fdisk -l /dev/xvdb &> /dev/null; then",
+                  "        break",
+                  "    else",
+                  "        echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdb not yet attached, pausing $delay seconds...\"",
+                  "        sleep $delay",
+                  "    fi",
+                  "done",
+                  "filesystem_type=$(file -sL /dev/xvdb)",
+                  "if [[ $filesystem_type == *\"XFS\"* ]]; then",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdb formatted with XFS Filesystem\"",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Existing Volume: using Snapshot, or mapping Volume to replacement Instance\"",
+                  "else",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdb not formatted\"",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] New Volume: mounted to initial Instance\"",
+                  "    mkfs -t xfs /dev/xvdb 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "    xfs_admin -L rabbitmq /dev/xvdb 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "fi",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Add Volume /dev/xvdb MountPoint to /etc/fstab\"",
+                  "sed -i -e \"/\\/var\\/lib\\/rabbitmq/d\" /etc/fstab",
+                  "sed -i -e \"/^LABEL=\\// aLABEL=rabbitmq /var/lib/rabbitmq xfs     defaults,noatime  1   1\" /etc/fstab",
+                  "sed -i -e \"/^UUID=[^ ]* \\// aLABEL=rabbitmq /var/lib/rabbitmq xfs     defaults,noatime  1   1\" /etc/fstab",
+                  "mkdir /var/lib/rabbitmq 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Mounting /var/lib/rabbitmq\"",
+                  "mount /var/lib/rabbitmq 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\""
+                ]]},
+                "mode"  : "000700",
+                "owner" : "root",
+                "group" : "root"
+              }
+            },
+            "commands" : {
+              "01-configure-volumes" : {
+                "command" : "/root/bin/configurevolumes",
+                "ignoreErrors" : "false"
+              }
+            }
+          },
+              "/root/crontab" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "* * * * * /usr/sbin/nfsstat | /root/bin/putfilesystemmetrics"
+                ]]},
+                "owner" : "root",
+                "group" : "root"
+              }
+            }
+          },
+          "ConfigureCFN" : {
+            "files" : {
+              "/etc/cfn/cfn-hup.conf" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "[main]",
+                  { "Fn::Sub" : "stack=${AWS::StackId}" },
+                  { "Fn::Sub" : "region=${AWS::Region}" }
+                ]]},
+                "mode"  : "000400",
+                "owner" : "root",
+                "group" : "root"
+              },
+              "/etc/cfn/hooks.d/cfn-auto-reloader.conf" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "[cfn-auto-reloader-hook]",
+                  "triggers=post.update",
+                  "path=Resources.Instance01A.Metadata.AWS::CloudFormation::Init",
+                  { "Fn::Sub" : "action=/opt/aws/bin/cfn-init --verbose --configsets All --stack ${AWS::StackName} --resource Instance01A --region ${AWS::Region}" }
+                ]]},
+                "mode"  : "000400",
+                "owner" : "root",
+                "group" : "root"
+              }
+            },
+            "services" : {
+              "sysvinit" : {
+                "cfn-hup" : {
+                  "enabled" : "true",
+                  "ensureRunning" : "true",
+                  "files" : [
+                    "/etc/cfn/cfn-hup.conf",
+                    "/etc/cfn/hooks.d/cfn-auto-reloader.conf"
+                  ]
+                }
+              }
+            }
+          },
+          "InstallSSMAgent" : {
+            "packages" : {
+              "rpm" : {
+                "amazon-ssm-agent" : [ "https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm" ]
+              }
+            }
+          },
+          "InstallMiddleTierProduct" : {
+            "sources" : {
+              "/var/tmp" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }}, "/", { "Ref" : "ProductFolder" }, "/", { "Ref" : "ProductObject" }]]}
+            }
+          },
+          "InstallMiddleTierConfiguration" : {
+            "sources" : {
+              "/etc" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/", { "Ref" : "ConfigurationObject" }]]}
+            }
+          },
+          "InstallLogs" : {
+            "packages" : {
+              "yum" : {
+                "awslogs" : []
+              }
+            }
+          },
+          "BuildLogs" : {
+            "files" : {
+              "/etc/awslogs/awscli.conf" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "[plugins]",
+                  "cwlogs = cwlogs",
+                  "[default]",
+                  "region = us-east-1"
+                ]]},
+                "mode"  : "000644",
+                "owner" : "root",
+                "group" : "root"
+              },
+              "/etc/awslogs/awslogs.conf" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "[general]",
+                  "state_file = /var/lib/awslogs/agent-state",
+                  "[/var/log/messages]",
+                  "datetime_format = %b %d %H:%M:%S",
+                  "file = /var/log/messages",
+                  "buffer_duration = 5000",
+                  "log_stream_name = {instance_id}",
+                  "initial_position = start_of_file",
+                  "log_group_name = /var/log/messages"
+                ]]},
+                "mode"  : "000644",
+                "owner" : "root",
+                "group" : "root"
+              },
+              "/root/bin/buildawslogs" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "#!/bin/bash",
+                  "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)",
+                  "region=${zone::-1}",
+                  "cd /var/tmp",
+                  "curl -O https://s3.amazonaws.com/aws-cloudwatch/downloads/latest/awslogs-agent-setup.py",
+                  { "Fn::Sub" : "python awslogs-agent-setup.py --non-interactive --configfile /etc/awslogs/awslogs.conf --region ${AWS::Region}" },
+                  "# Create symlinks to make this work like rpm",
+                  "ln -s /var/awslogs /var/lib/awslogs",
+                  "mv /var/awslogs/etc/aws.conf /var/awslogs/etc/aws.conf.bak",
+                  "ln -s /etc/awslogs/awscli.conf /var/awslogs/etc/aws.conf",
+                  "mv /var/awslogs/etc/awslogs.conf /var/awslogs/etc/awslogs.conf.bak",
+                  "ln -s /etc/awslogs/awslogs.conf /var/awslogs/etc/awslogs.conf"
+                ]]},
+                "mode"  : "000700",
+                "owner" : "root",
+                "group" : "root"
+              }
+            },
+            "commands" : {
+              "01_buildawslogs" : {
+                "command" : "/root/bin/buildawslogs"
+              }
+            }
+          },
+          "ConfigureLogs" : {
+            "files" : {
+              "/etc/awslogs/awscli.conf" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "[default]",
+                  { "Fn::Sub" : "region = ${AWS::Region}" },
+                  "[plugins]",
+                  "cwlogs = cwlogs"
+                ]]},
+                "mode"  : "000644",
+                "owner" : "root",
+                "group" : "root"
+              },
+              "/etc/awslogs/awslogs.conf" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "[general]",
+                  "state_file = /var/lib/awslogs/agent-state",
+                  "[/var/log/messages]",
+                  "datetime_format = %b %d %H:%M:%S",
+                  "file = /var/log/messages",
+                  "log_stream_name = Queue/{instance_id}/var/log/messages",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]},
+                  "[/var/log/secure]",
+                  "datetime_format = %b %d %H:%M:%S",
+                  "file = /var/log/secure",
+                  "log_stream_name = Queue/{instance_id}/var/log/secure",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]},
+                  "[/var/log/cron]",
+                  "datetime_format = %b %d %H:%M:%S",
+                  "file = /var/log/cron",
+                  "log_stream_name = Queue/{instance_id}/var/log/cron",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]},
+                  "[/var/log/cloud-init.log]",
+                  "datetime_format = %b %d %H:%M:%S",
+                  "file = /var/log/cloud-init.log",
+                  "log_stream_name = Queue/{instance_id}/var/log/cloud-init.log",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]},
+                  "[/var/log/cfn-init.log]",
+                  "datetime_format = %Y-%m-%d %H:%M:%S",
+                  "file = /var/log/cfn-init.log",
+                  "log_stream_name = Queue/{instance_id}/var/log/cfn-init.log",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]},
+                  "[/var/log/cfn-hup.log]",
+                  "datetime_format = %Y-%m-%d %H:%M:%S",
+                  "file = /var/log/cfn-hup.log",
+                  "log_stream_name = Queue/{instance_id}/var/log/cfn-hup.log",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]},
+                  "[/var/log/cfn-init-cmd.log]",
+                  "datetime_format = %Y-%m-%d %H:%M:%S",
+                  "file = /var/log/cfn-init-cmd.log",
+                  "log_stream_name = Queue/{instance_id}/var/log/cfn-init-cmd.log",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]},
+                  "[/var/log/cloud-init-output.log]",
+                  "file = /var/log/cloud-init-output.log",
+                  "log_stream_name = Queue/{instance_id}/var/log/cloud-init-output.log",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]},
+                  "[/var/log/dmesg]",
+                  "file = /var/log/dmesg",
+                  "log_stream_name = Queue/{instance_id}/var/log/dmesg",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]},
+                  "[/var/log/httpd/access_log]",
+                  "file = /var/log/httpd/access_log",
+                  "log_stream_name = Queue/{instance_id}/var/log/httpd/access_log",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]},
+                  "[/var/log/httpd/error_log]",
+                  "file = /var/log/httpd/error_log",
+                  "log_stream_name = Queue/{instance_id}/var/log/httpd/error_log",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]}
+                ]]},
+                "mode"  : "000644",
+                "owner" : "root",
+                "group" : "root"
+              }
+            },
+            "services" : {
+              "sysvinit" : {
+                "awslogs" : {
+                  "enabled" : "true",
+                  "ensureRunning" : "true",
+                  "packages" : { "yum" : [ "awslogs" ]},
+                  "files" : [
+                    "/etc/awslogs/awslogs.conf",
+                    "/etc/awslogs/awscli.conf"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "Properties" : {
+        "ImageId" : { "Fn::If" : [ "ConfigureAMZN", { "Fn::GetAtt" : [ "GetAmazonLinuxImageId", "ImageId" ]},
+                                                    { "Fn::GetAtt" : [ "GetRHELImageId", "ImageId" ]}]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Queue", { "Ref" : "EnvironmentType" }]},
+        "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
+        "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
+        "NetworkInterfaces" : [{
+          "Description"              : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "NetworkInterface01A", "eth0" ]]},
+          "DeviceIndex"              : "0",
+          "SubnetId"                 : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-CacheSubnetA" }},
+          "PrivateIpAddress"         : { "Fn::If" : [ "ConfigureStaticAddress", { "Fn::GetAtt" : [ "AddressCalculatorA", "Address4" ]}, { "Ref" : "AWS::NoValue" }]},
+          "GroupSet"                 : [{ "Ref" :  "InstanceSecurityGroup" }],
+          "AssociatePublicIpAddress" : "false",
+          "DeleteOnTermination"      : "true"
+        }],
+        "BlockDeviceMappings" : [{
+          "DeviceName" : { "Fn::If" : [ "ConfigureAMZN", "/dev/xvda", "/dev/sda1" ]},
+          "Ebs" : {
+            "VolumeType" : "gp2",
+            "VolumeSize" : "100",
+            "Iops" : "1000",
+            "DeleteOnTermination" : "false"
+          }
+        }],
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "Instance01A" ]]}},
+          { "Fn::If" : [ "ConfigureSchedule", { "Key" : "Schedule", "Value" : { "Ref" : "Schedule" }}, { "Ref" : "AWS::NoValue" }]}
+        ],
+        "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "\n", [
+          "#!/bin/bash -xe",
+          { "Fn::If" : [ "ConfigureRHEL", { "Fn::Join" : [ "\n", [
+            "# Add to RHEL what Amazon Linux includes",
+            "# Install EPEL",
+            "yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm",
+            "# Install Python Pip and Python Daemon",
+            "yum install -y python-pip python-daemon",
+            "pip install --upgrade pip",
+            "# Install AWS CLI",
+            "pip install awscli",
+            "# Install AWS CLI CloudWatch Logs Plugin",
+            "pip install awscli-cwlogs",
+            "# Download CFN Bootstrap",
+            "cd /opt",
+            "curl -O https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz",
+            "tar -xvpf aws-cfn-bootstrap-latest.tar.gz",
+            "rm -f aws-cfn-bootstrap-latest.tar.gz",
+            "# Build and Install CFN Bootstrap",
+            "cd aws-cfn-bootstrap-*",
+            "python setup.py build",
+            "python setup.py install",
+            "cd /opt",
+            "rm -Rf aws-cfn-bootstrap-*",
+            "# Create CFN Bootstrap symlinks",
+            "ln -s /usr/init/redhat/cfn-hup /etc/init.d/cfn-hup",
+            "chmod 775 /usr/init/redhat/cfn-hup",
+            "mkdir -p /opt/aws/bin",
+            "ln -s /usr/bin/cfn-hup /opt/aws/bin/cfn-hup",
+            "ln -s /usr/bin/cfn-init /opt/aws/bin/cfn-init",
+            "ln -s /usr/bin/cfn-signal /opt/aws/bin/cfn-signal",
+            "ln -s /usr/bin/cfn-elect-cmd-leader /opt/aws/bin/cfn-elect-cmd-leader",
+            "ln -s /usr/bin/cfn-get-metadata /opt/aws/bin/cfn-get-metadata",
+            "ln -s /usr/bin/cfn-send-cmd-event /opt/aws/bin/cfn-send-cmd-event",
+            "ln -s /usr/bin/cfn-send-cmd-result /opt/aws/bin/cfn-send-cmd-result"
+          ]]},
+            "yum update -y aws-cfn-bootstrap"
+          ]},
+          "",
+          { "Fn::Sub" : "/opt/aws/bin/cfn-init --verbose --configsets All --stack ${AWS::StackName} --resource Instance01A --region ${AWS::Region}" },
+          { "Fn::Sub" : "/opt/aws/bin/cfn-signal --exit-code $? --stack ${AWS::StackName} --resource Instance01A --region ${AWS::Region}" }
+        ]]}}
+      },
+      "CreationPolicy" : {
+        "ResourceSignal" : {
+          "Timeout" : "PT30M"
+        }
+      }
+    },
+
+    "AddressCalculatorB" : {
+      "Type" : "Custom::AddressCalculator",
+      "Properties" : {
+        "ServiceToken" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardCIDRFunctionsStackName}-AddressCalculatorFunctionArn" }},
+        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-CacheSubnetB" }}
+      },
+      "Condition" : "ConfigureStaticAddress"
+    },
+
+    "Instance01B" : {
+      "Type" : "AWS::EC2::Instance",
+      "Metadata" : {
+        "AWS::CloudFormation::Authentication" : {
+          "S3Credentials" : {
+            "type" : "S3",
+            "roleName" : { "Ref" : "Role" },
+            "buckets" : [
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }},
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}
+            ]
+          }
+        },
+        "AWS::CloudFormation::Init" : {
+          "configSets" : {
+            "All" : [
+              "UpdateOS",
+              { "Fn::If" : [ "ConfigureAMZN", "ConfigureOSUpdates", { "Ref": "AWS::NoValue" }]},
+              "ConfigureHostname",
+              "ConfigureOS",
+              "ConfigureMQHAFileSystem",
+              { "Fn::If" : [ "ConfigureFileSystemMonitoring", "ConfigureMQHAFileSystemMonitoring", { "Ref": "AWS::NoValue" }]},
+              "ConfigureCFN",
+              "ConfigureVolumes",
+              "InstallSSMAgent",
+              { "Fn::If" : [ "InstallProduct", "InstallMiddleTierProduct", { "Ref": "AWS::NoValue" }]},
+              { "Fn::If" : [ "InstallConfiguration", "InstallMiddleTierConfiguration", { "Ref": "AWS::NoValue" }]},
+              { "Fn::If" : [ "ConfigureLogs", { "Fn::If" : [ "ConfigureAMZN", "InstallLogs", "BuildLogs" ]}, { "Ref": "AWS::NoValue" }]},
+              { "Fn::If" : [ "ConfigureLogs", "ConfigureLogs", { "Ref": "AWS::NoValue" }]}
+            ]
+          },
+          "UpdateOS" : {
+            "commands" : {
+              "01_yum_update" : {
+                "command" : "yum update -y",
+                "ignoreErrors" : "false"
+              }
+            }
+          },
+          "ConfigureOSUpdates" : {
+            "packages" : {
+              "yum" : {
+                "yum-cron" : []
+              }
+            },
+            "files" : {
+              "/etc/yum/yum-cron.conf" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "[commands]",
+                  "update_cmd = security",
+                  "update_messages = yes",
+                  "download_updates = yes",
+                  "apply_updates = yes",
+                  "random_sleep = 10"
+                ]]},
+                "mode"  : "000644",
+                "owner" : "root",
+                "group" : "root"
+              }
+            }
+          },
+          "ConfigureHostname" : {
+            "files" : {
+              "/root/bin/sethostname" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "#!/bin/bash",
+                  "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)",
+                  "region=${zone::-1}",
+                  { "Fn::Join" : [ "", [ "hostname=", { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01b.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]},
+                  "address=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)",
+                  "sed -i -e \"/^$address/d\" -e \"$ a$address $hostname ${hostname%%.*} paxupd\" /etc/hosts",
+                  "hostname $hostname"
+                ]]},
+                "mode"  : "000700",
+                "owner" : "root",
+                "group" : "root"
+              }
+            },
+            "commands" : {
+              "01_sethostname" : {
+                "command" : "/root/bin/sethostname",
+                "ignoreErrors" : "false"
+              }
+            }
+          },
+          "ConfigureOS" : {
+            "users" : {
+              "pax" : {}
+            },
+            "files" : {
+              "/etc/profile.d/local.sh" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "alias lsa='ls -lAF'",
+                  "alias ip4='ip addr | grep \" inet \"'"
+                ]]},
+                "mode"  : "000644",
+                "owner" : "root",
+                "group" : "root"
+              },
+              "/home/pax/.bashrc" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "# .bashrc",
+                  "",
+                  "# Source global definitions",
+                  "if [ -f /etc/bashrc ]; then",
+                  "        . /etc/bashrc",
+                  "fi",
+                  "",
+                  "# User specific aliases and functions",
+                ]]},
+                "mode"  : "000644",
+                "owner" : "pax",
+                "group" : "pax"
+              },
+              "/home/pax/.bash_profile" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "# .bash_profile",
+                  "",
+                  "# Get the aliases and functions",
+                  "if [ -f ~/.bashrc ]; then",
+                  "        . ~/.bashrc",
+                  "fi",
+                  "",
+                  "# User specific environment and startup programs",
+                  "",
+                  "PATH=$PATH:$HOME/.local/bin:$HOME/bin:/var/pax:/opt:.",
+                  "",
+                  "export PATH",
+                  "",
+                  "set -o vi"
+                ]]},
+                "mode"  : "000644",
+                "owner" : "pax",
+                "group" : "pax"
+              },
+            "commands" : {
+              "01_usermod_pax" : {
+                "command" : "usermod -s /bin/bash pax",
+                "ignoreErrors" : "false"
+              },
+              "02_chown_home_pax" : {
+                "command" : "chown -R pax:pax /home/pax",
+                "ignoreErrors" : "false"
+              },
+              "03_mkdir_opt_pax" : {
+                "command" : "mkdir -p /opt/pax",
+                "ignoreErrors" : "false"
+              },
+              "04_chown_opt_pax" : {
+                "command" : "chown -R pax:pax /opt/pax",
+                "ignoreErrors" : "false"
+              },
+              "05_mkdir_var_pax" : {
+                "command" : "mkdir -p /var/pax",
+                "ignoreErrors" : "false"
+              },
+              "06_chown_var_pax" : {
+                "command" : "chown -R pax:pax /var/pax",
+                "ignoreErrors" : "false"
+              },
+              "07_mkdir_jboss" : {
+                "command" : "mkdir -p /jboss",
+                "ignoreErrors" : "false"
+              },
+              "08_chown_jboss" : {
+                "command" : "chown -R pax:pax /jboss",
+                "ignoreErrors" : "false"
+              }
+            }
+          },
+          "ConfigureVolumes" : {
+            "packages" : {
+              "yum" : {
+                "parted" : [],
+                "xfsprogs" : []
+              }
+            },
+            "files" : {
+              "/root/bin/configurevolumes" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "#!/bin/bash",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Wait for Instance to recognize Volume /dev/xvdb\"",
+                  "attempt=0",
+                  "attempts=30",
+                  "delay=5",
+                  "while ((attempt++ <= attempts)); do",
+                  "    if fdisk -l /dev/xvdb &> /dev/null; then",
+                  "        break",
+                  "    else",
+                  "        echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdb not yet attached, pausing $delay seconds...\"",
+                  "        sleep $delay",
+                  "    fi",
+                  "done",
+                  "filesystem_type=$(file -sL /dev/xvdb)",
+                  "if [[ $filesystem_type == *\"XFS\"* ]]; then",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdb formatted with XFS Filesystem\"",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Existing Volume: using Snapshot, or mapping Volume to replacement Instance\"",
+                  "else",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Volume /dev/xvdb not formatted\"",
+                  "    echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] New Volume: mounted to initial Instance\"",
+                  "    mkfs -t xfs /dev/xvdb 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "    xfs_admin -L rabbitmq /dev/xvdb 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "fi",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Add Volume /dev/xvdb MountPoint to /etc/fstab\"",
+                  "sed -i -e \"/\\/var\\/lib\\/rabbitmq/d\" /etc/fstab",
+                  "sed -i -e \"/^LABEL=\\// aLABEL=rabbitmq /var/lib/rabbitmq xfs     defaults,noatime  1   1\" /etc/fstab",
+                  "sed -i -e \"/^UUID=[^ ]* \\// aLABEL=rabbitmq /var/lib/rabbitmq xfs     defaults,noatime  1   1\" /etc/fstab",
+                  "mkdir /var/lib/rabbitmq 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\"",
+                  "echo \"$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] Mounting /var/lib/rabbitmq\"",
+                  "mount /var/lib/rabbitmq 2>&1 | sed -e \"s/^/$(date +'%Y-%m-%d %H:%M:%S,%3N') [DEBUG] /\""
+                ]]},
+                "mode"  : "000700",
+                "owner" : "root",
+                "group" : "root"
+              }
+            },
+            "commands" : {
+              "01-configure-volumes" : {
+                "command" : "/root/bin/configurevolumes",
+                "ignoreErrors" : "false"
+              }
+            }
+          },
+              "/root/crontab" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "* * * * * /usr/sbin/nfsstat | /root/bin/putfilesystemmetrics"
+                ]]},
+                "owner" : "root",
+                "group" : "root"
+              }
+            }
+          },
+          "ConfigureCFN" : {
+            "files" : {
+              "/etc/cfn/cfn-hup.conf" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "[main]",
+                  { "Fn::Sub" : "stack=${AWS::StackId}" },
+                  { "Fn::Sub" : "region=${AWS::Region}" }
+                ]]},
+                "mode"  : "000400",
+                "owner" : "root",
+                "group" : "root"
+              },
+              "/etc/cfn/hooks.d/cfn-auto-reloader.conf" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "[cfn-auto-reloader-hook]",
+                  "triggers=post.update",
+                  "path=Resources.Instance01A.Metadata.AWS::CloudFormation::Init",
+                  { "Fn::Sub" : "action=/opt/aws/bin/cfn-init --verbose --configsets All --stack ${AWS::StackName} --resource Instance01B --region ${AWS::Region}" }
+                ]]},
+                "mode"  : "000400",
+                "owner" : "root",
+                "group" : "root"
+              }
+            },
+            "services" : {
+              "sysvinit" : {
+                "cfn-hup" : {
+                  "enabled" : "true",
+                  "ensureRunning" : "true",
+                  "files" : [
+                    "/etc/cfn/cfn-hup.conf",
+                    "/etc/cfn/hooks.d/cfn-auto-reloader.conf"
+                  ]
+                }
+              }
+            }
+          },
+          "InstallSSMAgent" : {
+            "packages" : {
+              "rpm" : {
+                "amazon-ssm-agent" : [ "https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm" ]
+              }
+            }
+          },
+          "InstallMiddleTierProduct" : {
+            "sources" : {
+              "/var/tmp" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }}, "/", { "Ref" : "ProductFolder" }, "/", { "Ref" : "ProductObject" }]]}
+            }
+          },
+          "InstallMiddleTierConfiguration" : {
+            "sources" : {
+              "/etc" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/", { "Ref" : "ConfigurationObject" }]]}
+            }
+          },
+          "InstallLogs" : {
+            "packages" : {
+              "yum" : {
+                "awslogs" : []
+              }
+            }
+          },
+          "BuildLogs" : {
+            "files" : {
+              "/etc/awslogs/awscli.conf" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "[plugins]",
+                  "cwlogs = cwlogs",
+                  "[default]",
+                  "region = us-east-1"
+                ]]},
+                "mode"  : "000644",
+                "owner" : "root",
+                "group" : "root"
+              },
+              "/etc/awslogs/awslogs.conf" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "[general]",
+                  "state_file = /var/lib/awslogs/agent-state",
+                  "[/var/log/messages]",
+                  "datetime_format = %b %d %H:%M:%S",
+                  "file = /var/log/messages",
+                  "buffer_duration = 5000",
+                  "log_stream_name = {instance_id}",
+                  "initial_position = start_of_file",
+                  "log_group_name = /var/log/messages"
+                ]]},
+                "mode"  : "000644",
+                "owner" : "root",
+                "group" : "root"
+              },
+              "/root/bin/buildawslogs" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "#!/bin/bash",
+                  "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)",
+                  "region=${zone::-1}",
+                  "cd /var/tmp",
+                  "curl -O https://s3.amazonaws.com/aws-cloudwatch/downloads/latest/awslogs-agent-setup.py",
+                  { "Fn::Sub" : "python awslogs-agent-setup.py --non-interactive --configfile /etc/awslogs/awslogs.conf --region ${AWS::Region}" },
+                  "# Create symlinks to make this work like rpm",
+                  "ln -s /var/awslogs /var/lib/awslogs",
+                  "mv /var/awslogs/etc/aws.conf /var/awslogs/etc/aws.conf.bak",
+                  "ln -s /etc/awslogs/awscli.conf /var/awslogs/etc/aws.conf",
+                  "mv /var/awslogs/etc/awslogs.conf /var/awslogs/etc/awslogs.conf.bak",
+                  "ln -s /etc/awslogs/awslogs.conf /var/awslogs/etc/awslogs.conf"
+                ]]},
+                "mode"  : "000700",
+                "owner" : "root",
+                "group" : "root"
+              }
+            },
+            "commands" : {
+              "01_buildawslogs" : {
+                "command" : "/root/bin/buildawslogs"
+              }
+            }
+          },
+          "ConfigureLogs" : {
+            "files" : {
+              "/etc/awslogs/awscli.conf" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "[default]",
+                  { "Fn::Sub" : "region = ${AWS::Region}" },
+                  "[plugins]",
+                  "cwlogs = cwlogs"
+                ]]},
+                "mode"  : "000644",
+                "owner" : "root",
+                "group" : "root"
+              },
+              "/etc/awslogs/awslogs.conf" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "[general]",
+                  "state_file = /var/lib/awslogs/agent-state",
+                  "[/var/log/messages]",
+                  "datetime_format = %b %d %H:%M:%S",
+                  "file = /var/log/messages",
+                  "log_stream_name = Queue/{instance_id}/var/log/messages",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]},
+                  "[/var/log/secure]",
+                  "datetime_format = %b %d %H:%M:%S",
+                  "file = /var/log/secure",
+                  "log_stream_name = Queue/{instance_id}/var/log/secure",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]},
+                  "[/var/log/cron]",
+                  "datetime_format = %b %d %H:%M:%S",
+                  "file = /var/log/cron",
+                  "log_stream_name = Queue/{instance_id}/var/log/cron",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]},
+                  "[/var/log/cloud-init.log]",
+                  "datetime_format = %b %d %H:%M:%S",
+                  "file = /var/log/cloud-init.log",
+                  "log_stream_name = Queue/{instance_id}/var/log/cloud-init.log",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]},
+                  "[/var/log/cfn-init.log]",
+                  "datetime_format = %Y-%m-%d %H:%M:%S",
+                  "file = /var/log/cfn-init.log",
+                  "log_stream_name = Queue/{instance_id}/var/log/cfn-init.log",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]},
+                  "[/var/log/cfn-hup.log]",
+                  "datetime_format = %Y-%m-%d %H:%M:%S",
+                  "file = /var/log/cfn-hup.log",
+                  "log_stream_name = Queue/{instance_id}/var/log/cfn-hup.log",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]},
+                  "[/var/log/cfn-init-cmd.log]",
+                  "datetime_format = %Y-%m-%d %H:%M:%S",
+                  "file = /var/log/cfn-init-cmd.log",
+                  "log_stream_name = Queue/{instance_id}/var/log/cfn-init-cmd.log",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]},
+                  "[/var/log/cloud-init-output.log]",
+                  "file = /var/log/cloud-init-output.log",
+                  "log_stream_name = Queue/{instance_id}/var/log/cloud-init-output.log",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]},
+                  "[/var/log/dmesg]",
+                  "file = /var/log/dmesg",
+                  "log_stream_name = Queue/{instance_id}/var/log/dmesg",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]},
+                  "[/var/log/httpd/access_log]",
+                  "file = /var/log/httpd/access_log",
+                  "log_stream_name = Queue/{instance_id}/var/log/httpd/access_log",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]},
+                  "[/var/log/httpd/error_log]",
+                  "file = /var/log/httpd/error_log",
+                  "log_stream_name = Queue/{instance_id}/var/log/httpd/error_log",
+                  { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "log_group_name = ${LogGroup}" }, { "Ref" : "AWS::NoValue" }]}
+                ]]},
+                "mode"  : "000644",
+                "owner" : "root",
+                "group" : "root"
+              }
+            },
+            "services" : {
+              "sysvinit" : {
+                "awslogs" : {
+                  "enabled" : "true",
+                  "ensureRunning" : "true",
+                  "packages" : { "yum" : [ "awslogs" ]},
+                  "files" : [
+                    "/etc/awslogs/awslogs.conf",
+                    "/etc/awslogs/awscli.conf"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "Properties" : {
+        "ImageId" : { "Fn::If" : [ "ConfigureAMZN", { "Fn::GetAtt" : [ "GetAmazonLinuxImageId", "ImageId" ]},
+                                                    { "Fn::GetAtt" : [ "GetRHELImageId", "ImageId" ]}]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Queue", { "Ref" : "EnvironmentType" }]},
+        "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
+        "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
+        "NetworkInterfaces" : [{
+          "Description"              : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "NetworkInterface01B", "eth0" ]]},
+          "DeviceIndex"              : "0",
+          "SubnetId"                 : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-CacheSubnetB" }},
+          "PrivateIpAddress"         : { "Fn::If" : [ "ConfigureStaticAddress", { "Fn::GetAtt" : [ "AddressCalculatorB", "Address4" ]}, { "Ref" : "AWS::NoValue" }]},
+          "GroupSet"                 : [{ "Ref" :  "InstanceSecurityGroup" }],
+          "AssociatePublicIpAddress" : "false",
+          "DeleteOnTermination"      : "true"
+        }],
+        "BlockDeviceMappings" : [{
+          "DeviceName" : { "Fn::If" : [ "ConfigureAMZN", "/dev/xvda", "/dev/sda1" ]},
+          "Ebs" : {
+            "VolumeType" : "gp2",
+            "VolumeSize" : "100",
+            "Iops" : "1000",
+            "DeleteOnTermination" : "false"
+          }
+        }],
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "Instance01B" ]]}},
+          { "Fn::If" : [ "ConfigureSchedule", { "Key" : "Schedule", "Value" : { "Ref" : "Schedule" }}, { "Ref" : "AWS::NoValue" }]}
+        ],
+        "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "\n", [
+          "#!/bin/bash -xe",
+          { "Fn::If" : [ "ConfigureRHEL", { "Fn::Join" : [ "\n", [
+            "# Add to RHEL what Amazon Linux includes",
+            "# Install EPEL",
+            "yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm",
+            "# Install Python Pip and Python Daemon",
+            "yum install -y python-pip python-daemon",
+            "pip install --upgrade pip",
+            "# Install AWS CLI",
+            "pip install awscli",
+            "# Install AWS CLI CloudWatch Logs Plugin",
+            "pip install awscli-cwlogs",
+            "# Download CFN Bootstrap",
+            "cd /opt",
+            "curl -O https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz",
+            "tar -xvpf aws-cfn-bootstrap-latest.tar.gz",
+            "rm -f aws-cfn-bootstrap-latest.tar.gz",
+            "# Build and Install CFN Bootstrap",
+            "cd aws-cfn-bootstrap-*",
+            "python setup.py build",
+            "python setup.py install",
+            "cd /opt",
+            "rm -Rf aws-cfn-bootstrap-*",
+            "# Create CFN Bootstrap symlinks",
+            "ln -s /usr/init/redhat/cfn-hup /etc/init.d/cfn-hup",
+            "chmod 775 /usr/init/redhat/cfn-hup",
+            "mkdir -p /opt/aws/bin",
+            "ln -s /usr/bin/cfn-hup /opt/aws/bin/cfn-hup",
+            "ln -s /usr/bin/cfn-init /opt/aws/bin/cfn-init",
+            "ln -s /usr/bin/cfn-signal /opt/aws/bin/cfn-signal",
+            "ln -s /usr/bin/cfn-elect-cmd-leader /opt/aws/bin/cfn-elect-cmd-leader",
+            "ln -s /usr/bin/cfn-get-metadata /opt/aws/bin/cfn-get-metadata",
+            "ln -s /usr/bin/cfn-send-cmd-event /opt/aws/bin/cfn-send-cmd-event",
+            "ln -s /usr/bin/cfn-send-cmd-result /opt/aws/bin/cfn-send-cmd-result"
+          ]]},
+            "yum update -y aws-cfn-bootstrap"
+          ]},
+          "",
+          { "Fn::Sub" : "/opt/aws/bin/cfn-init --verbose --configsets All --stack ${AWS::StackName} --resource Instance01B --region ${AWS::Region}" },
+          { "Fn::Sub" : "/opt/aws/bin/cfn-signal --exit-code $? --stack ${AWS::StackName} --resource Instance01B --region ${AWS::Region}" }
+        ]]}}
+      },
+      "CreationPolicy" : {
+        "ResourceSignal" : {
+          "Timeout" : "PT30M"
+        }
+      }
+    }
+  },
+
+  "Outputs" : {
+    "InstanceSecurityGroup" : {
+      "Description" : "The Instance SecurityGroup",
+      "Value" : { "Ref" : "InstanceSecurityGroup" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-InstanceSecurityGroup" }}
+    },
+
+    "MountTargetSecurityGroup" : {
+      "Description" : "The MountTarget SecurityGroup",
+      "Value" : { "Ref" : "MountTargetSecurityGroup" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-MountTargetSecurityGroup" }}
+    },
+
+    "FileSystem" : {
+      "Description" : "The FileSystem",
+      "Value" : { "Ref" : "FileSystem" }
+    },
+
+    "MountTargetA" : {
+      "Description" : "The MountTargetA",
+      "Value" : { "Ref" : "MountTargetA" }
+    },
+
+    "MountTargetB" : {
+      "Description" : "The MountTargetB",
+      "Value" : { "Ref" : "MountTargetB" }
+    },
+
+    "Instance01A" : {
+      "Description" : "The Instance01A",
+      "Value" : { "Ref" : "Instance01A" }
+    },
+
+    "HostName01A" : {
+      "Description" : "The HostName01A",
+      "Value" : { "Fn::Join" : [ "", [ { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01a.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]}
+    },
+
+    "Instance01B" : {
+      "Description" : "The Instance01B",
+      "Value" : { "Ref" : "Instance01B" }
+    },
+
+    "HostName01B" : {
+      "Description" : "The HostName01B",
+      "Value" : { "Fn::Join" : [ "", [ { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01b.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]}
+    }
+  }
+}
