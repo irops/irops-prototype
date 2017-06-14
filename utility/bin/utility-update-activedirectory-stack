@@ -14,8 +14,8 @@ speed_max=400
 run_default=10
 pause_default=2
 next_default=5
-update_default=15
-update_attempts=40
+update_default=60
+update_attempts=60
 
 interactive=0
 speed=100

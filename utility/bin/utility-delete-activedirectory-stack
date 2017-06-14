@@ -14,8 +14,8 @@ speed_max=400
 run_default=10
 pause_default=2
 next_default=5
-delete_default=15
-delete_attempts=40
+delete_default=60
+delete_attempts=10
 
 interactive=0
 speed=100

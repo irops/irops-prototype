@@ -14,8 +14,8 @@ speed_max=400
 run_default=10
 pause_default=2
 next_default=5
-create_default=15
-create_attempts=40
+create_default=60
+create_attempts=60
 
 interactive=0
 speed=100
