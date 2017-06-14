@@ -147,27 +147,6 @@
       }
     },
 
-    "DHCPOptions" : {
-      "Type" : "AWS::EC2::DHCPOptions",
-      "Properties" : {
-        "DomainName" : { "Fn::ImportValue" : { "Fn::Sub" : "${HostedZoneStackName}-Domain" }},
-        "DomainNameServers" : [ "AmazonProvidedDNS" ],
-        "Tags" : [
-          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-DHCPOptions" }}
-        ]
-      },
-      "Condition" : "ConfigureDomainNames"
-    },
-
-    "VPCDHCPOptionsAssociation" : {
-      "Type" : "AWS::EC2::VPCDHCPOptionsAssociation",
-      "Properties" : {
-        "VpcId" : { "Ref" : "VPC" },
-        "DhcpOptionsId" : { "Ref" : "DHCPOptions" }
-      },
-      "Condition" : "ConfigureDomainNames"
-    },
-
     "InternetGateway" : {
       "Type" : "AWS::EC2::InternetGateway",
       "Properties" : {
@@ -964,13 +943,6 @@
       "Condition" : "ConfigureDomainNames"
     },
 
-    "DHCPOptions" : {
-      "Description" : "The DHCPOptions",
-      "Value" :  { "Ref" : "DHCPOptions" },
-      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-DHCPOptions" }},
-      "Condition" : "ConfigureDomainNames"
-    },
-
     "PublicHostedZone" : {
       "Description" : "The Public HostedZone",
       "Value" : { "Fn::ImportValue" : { "Fn::Sub" : "${HostedZoneStackName}-HostedZone" }},
@@ -983,6 +955,18 @@
       "Value" :  { "Ref" : "VPNGateway" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-VPNGateway" }},
       "Condition" : "ConfigureVPNGateway"
+    },
+
+    "ZoneA" : {
+      "Description" : "The AvailabilityZone used for ZoneA",
+      "Value" :  { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-ZoneA" }}
+    },
+
+    "ZoneB" : {
+      "Description" : "The AvailabilityZone used for ZoneB",
+      "Value" :  { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-ZoneB" }}
     },
 
     "PublicSubnetA" : {

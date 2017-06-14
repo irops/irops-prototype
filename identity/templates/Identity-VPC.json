@@ -140,32 +140,11 @@
       "Properties" : {
         "EnableDnsSupport" : "true",
         "EnableDnsHostnames" : "true",
-        "CidrBlock" : { "Ref" : "IdentityNetwork" },
+        "CidrBlock" : { "Ref" : "Network" },
         "Tags" : [
           { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-VPC" }}
         ]
       }
-    },
-
-    "DHCPOptions" : {
-      "Type" : "AWS::EC2::DHCPOptions",
-      "Properties" : {
-        "DomainName" : { "Fn::ImportValue" : { "Fn::Sub" : "${HostedZoneStackName}-Domain" }},
-        "DomainNameServers" : [ "AmazonProvidedDNS" ],
-        "Tags" : [
-          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-DHCPOptions" }}
-        ]
-      },
-      "Condition" : "ConfigureDomainNames"
-    },
-
-    "VPCDHCPOptionsAssociation" : {
-      "Type" : "AWS::EC2::VPCDHCPOptionsAssociation",
-      "Properties" : {
-        "VpcId" : { "Ref" : "VPC" },
-        "DhcpOptionsId" : { "Ref" : "DHCPOptions" }
-      },
-      "Condition" : "ConfigureDomainNames"
     },
 
     "InternetGateway" : {
@@ -395,13 +374,13 @@
   "Outputs" : {
     "VPC" : {
       "Description" : "The VPC",
-      "Value" : { "Ref" : "VPC" },
+      "Value" :  { "Ref" : "VPC" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-VPC" }}
     },
 
     "VPCName" : {
       "Description" : "The VPC Name",
-      "Value" :  "Build",
+      "Value" :  { "Ref" : "Name" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-VPCName" }}
     },
 
@@ -415,13 +394,6 @@
       "Description" : "The VPC Domain",
       "Value" :  { "Fn::ImportValue" : { "Fn::Sub" : "${HostedZoneStackName}-Domain" }},
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-VPCDomain" }},
-      "Condition" : "ConfigureDomainNames"
-    },
-
-    "DHCPOptions" : {
-      "Description" : "The DHCPOptions",
-      "Value" :  { "Ref" : "DHCPOptions" },
-      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-DHCPOptions" }},
       "Condition" : "ConfigureDomainNames"
     },
 
@@ -439,27 +411,39 @@
       "Condition" : "ConfigureVPNGateway"
     },
 
+    "ZoneA" : {
+      "Description" : "The AvailabilityZone used for ZoneA",
+      "Value" :  { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-ZoneA" }}
+    },
+
+    "ZoneB" : {
+      "Description" : "The AvailabilityZone used for ZoneB",
+      "Value" :  { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-ZoneB" }}
+    },
+
     "PublicSubnetA" : {
       "Description" : "The Public Subnet in Availability Zone A",
-      "Value" : { "Ref" : "PublicSubnetA" },
+      "Value" :  { "Ref" : "PublicSubnetA" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-PublicSubnetA" }}
     },
 
     "PublicSubnetB" : {
       "Description" : "The Public Subnet in Availability Zone B",
-      "Value" : { "Ref" : "PublicSubnetB" },
+      "Value" :  { "Ref" : "PublicSubnetB" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-PublicSubnetB" }}
     },
 
     "IdentitySubnetA" : {
       "Description" : "The Identity Subnet in Availability Zone A",
-      "Value" : { "Ref" : "IdentitySubnetA" },
+      "Value" :  { "Ref" : "IdentitySubnetA" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-IdentitySubnetA" }}
     },
 
     "IdentitySubnetB" : {
       "Description" : "The Identity Subnet in Availability Zone B",
-      "Value" : { "Ref" : "IdentitySubnetB" },
+      "Value" :  { "Ref" : "IdentitySubnetB" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-IdentitySubnetB" }}
     },
 
