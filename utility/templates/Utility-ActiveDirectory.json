@@ -252,7 +252,7 @@
       "Type" : "String",
       "Default" : "example.com",
       "MinLength" : "3",
-      "MaxLength" : "30",
+      "MaxLength" : "40",
       "AllowedPattern" : "[-a-zA-Z0-9]+\\..+",
       "ConstraintDescription" : "must be a valid DNS domain name."
     },
