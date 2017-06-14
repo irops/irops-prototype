@@ -1,7 +1,11 @@
 # Override some default behavior for binary files
+* text=auto
 *.xls binary
 *.xlsx binary
 *.doc binary
 *.docx binary
 *.vsd binary
 *.pdf binary
+*.png binary
+*.md text
+*.json text
