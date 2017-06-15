@@ -306,13 +306,13 @@ else
 fi
 
 if [ -z $environment_private_domain ]; then
-    echo "-D domain missing!"
+    echo "-d domain missing!"
     echo "Could not automatically determine private domain, and it was not specified as a parameter"
     exit 26
 fi
 
 if [ -z $environment_netbios_domain ]; then
-    echo "-D domain missing!"
+    echo "-b domain missing!"
     echo "Could not automatically determine NetBIOS domain, and it was not specified as a parameter"
     exit 28
 fi

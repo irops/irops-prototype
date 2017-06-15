@@ -315,13 +315,13 @@ if [ -z $environment_private_domain ]; then
 fi
 
 if [ -z $environment_netbios_domain ]; then
-    echo "-D domain missing!"
+    echo "-d domain missing!"
     echo "Could not automatically determine NetBIOS domain, and it was not specified as a parameter"
     exit 28
 fi
 
 if [ -z $utility ]; then
-    echo "-U utility missing!"
+    echo "-b utility missing!"
     echo "Could not automatically determine utility, and it was not specified as a parameter"
     exit 30
 else
