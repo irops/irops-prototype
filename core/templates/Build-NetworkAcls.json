@@ -195,6 +195,22 @@
         "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-BuildSubnetB" }},
         "NetworkAclId" : { "Ref" : "PrivateNetworkAcl" }
       }
+    },
+
+    "IdentitySubnetANetworkAclAssociation" : {
+      "Type" : "AWS::EC2::SubnetNetworkAclAssociation",
+      "Properties" : {
+        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-IdentitySubnetA" }},
+        "NetworkAclId" : { "Ref" : "PrivateNetworkAcl" }
+      }
+    },
+
+    "IdentitySubnetBNetworkAclAssociation" : {
+      "Type" : "AWS::EC2::SubnetNetworkAclAssociation",
+      "Properties" : {
+        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-IdentitySubnetB" }},
+        "NetworkAclId" : { "Ref" : "PrivateNetworkAcl" }
+      }
     }
   }
 }

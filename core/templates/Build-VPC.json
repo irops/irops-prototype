@@ -320,6 +320,32 @@
       }
     },
 
+    "IdentitySubnetA" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet15A" ]},
+        "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "false",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-IdentitySubnetA" }}
+        ]
+      }
+    },
+
+    "IdentitySubnetB" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Fn::GetAtt" : [ "SubnetCalculator", "Subnet15B" ]},
+        "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]},
+        "MapPublicIpOnLaunch" : "false",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Sub" : "${Name}-IdentitySubnetB" }}
+        ]
+      }
+    },
+
     "PublicRouteTable" : {
       "Type" : "AWS::EC2::RouteTable",
       "Properties" : {
@@ -465,6 +491,14 @@
       }
     },
 
+    "IdentitySubnetARouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PrivateRouteTableA" },
+        "SubnetId" : { "Ref" : "IdentitySubnetA" }
+      }
+    },
+
     "PrivateRouteTableB" : {
       "Type" : "AWS::EC2::RouteTable",
       "Properties" : {
@@ -505,6 +539,14 @@
       "Properties" : {
         "RouteTableId" : { "Ref" : "PrivateRouteTableB" },
         "SubnetId" : { "Ref" : "BuildSubnetB" }
+      }
+    },
+
+    "IdentitySubnetBRouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PrivateRouteTableB" },
+        "SubnetId" : { "Ref" : "IdentitySubnetB" }
       }
     },
 
@@ -661,6 +703,18 @@
       "Description" : "The Build Subnet in Availability Zone B",
       "Value" :  { "Ref" : "BuildSubnetB" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-BuildSubnetB" }}
+    },
+
+    "IdentitySubnetA" : {
+      "Description" : "The Identity Subnet in Availability Zone A",
+      "Value" :  { "Ref" : "IdentitySubnetA" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-IdentitySubnetA" }}
+    },
+
+    "IdentitySubnetB" : {
+      "Description" : "The Identity Subnet in Availability Zone B",
+      "Value" :  { "Ref" : "IdentitySubnetB" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-IdentitySubnetB" }}
     },
 
     "PublicRouteTable" : {
