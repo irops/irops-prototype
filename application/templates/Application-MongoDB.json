@@ -918,6 +918,7 @@
                   { "Fn::Join" : [ "", [ "hostname=", { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01a.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]},
                   "address=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)",
                   "sed -i -e \"/^$address/d\" -e \"$ a$address $hostname ${hostname%%.*}\" /etc/hosts",
+                  "echo $hostname > /etc/hostname",
                   "hostname $hostname"
                 ]]},
                 "mode"  : "000700",
@@ -1426,6 +1427,7 @@
                   { "Fn::Join" : [ "", [ "hostname=", { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "02a.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]},
                   "address=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)",
                   "sed -i -e \"/^$address/d\" -e \"$ a$address $hostname ${hostname%%.*}\" /etc/hosts",
+                  "echo $hostname > /etc/hostname",
                   "hostname $hostname"
                 ]]},
                 "mode"  : "000700",
@@ -1944,6 +1946,7 @@
                   { "Fn::Join" : [ "", [ "hostname=", { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01b.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]},
                   "address=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)",
                   "sed -i -e \"/^$address/d\" -e \"$ a$address $hostname ${hostname%%.*}\" /etc/hosts",
+                  "echo $hostname > /etc/hostname",
                   "hostname $hostname"
                 ]]},
                 "mode"  : "000700",
