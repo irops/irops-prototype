@@ -40,7 +40,7 @@ usage () {
     echo "Usage: ${BASH_SOURCE##*/} [[-i] | [-s | -f]] [-v] [-m] [-o]"
     echo "                  [-O owner] [-C company] [-S system]"
     echo "                  [-E environment]"
-    echo "                  [-G gateway] [-b asn] [-i address]"
+    echo "                  [-G gateway] [-B asn] [-A address]"
     echo "                  [-r region] [-a account] [-u user]"
     echo "  -i              interactive"
     echo "  -s              slower: increase pauses by 25%"
@@ -53,8 +53,8 @@ usage () {
     echo "  -S system       System Name (default: $system)"
     echo "  -E environment  Environment Name (default: $environment)"
     echo "  -G gateway      Gateway Name (default: $gateway)"
-    echo "  -b asn          Gateway BGP ASN (default: $gateway_asn)"
-    echo "  -i address      Gateway Address (default: $gateway_address)"
+    echo "  -B asn          Gateway BGP ASN (default: $gateway_asn)"
+    echo "  -A address      Gateway Address (default: $gateway_address)"
     echo "  -r region       Region (default: $region)"
     echo "  -a account      Account (default: $account)"
     echo "  -u user         User (default: $user)"
@@ -140,7 +140,7 @@ next() {
 
 #  3. Parse command line options
 
-while getopts isfvmoO:C:S:E:r:a:u:? arg; do
+while getopts isfvmoO:C:S:E:G:B:A:r:a:u:? arg; do
     case $arg in
     i)  interactive=1;;
     s)  ((speed < speed_max)) && ((speed=speed+25));;
@@ -153,8 +153,8 @@ while getopts isfvmoO:C:S:E:r:a:u:? arg; do
     S)  system="$OPTARG";;
     E)  environment="$OPTARG";;
     G)  gateway="$OPTARG";;
-    b)  gateway_asn="$OPTARG";;
-    i)  gateway_address="$OPTARG";;
+    B)  gateway_asn="$OPTARG";;
+    A)  gateway_address="$OPTARG";;
     r)  region="$OPTARG";;
     a)  account="$OPTARG";;
     u)  user="$OPTARG";;
