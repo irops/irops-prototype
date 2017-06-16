@@ -1,9 +1,6 @@
-  #!/bin/bash
+#!/bin/bash
 #
 # This script updates the Utility OpenVPNAS Stack in an Environment, Core or Build VPC.
-#
-# This script is written in a format suitable for interactive demos,
-# but can be run non-Iteractively and more quickly with the "-I" flag.
 #
 
 #  1. Initalize Environment
