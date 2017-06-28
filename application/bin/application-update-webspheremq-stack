@@ -2,9 +2,6 @@
 #
 # This script updates the Application WebSphereMQ Stack in an Environment Account.
 #
-# This script is written in a format suitable for interactive demos,
-# but can be run non-Iteractively and more quickly with the "-I" flag.
-#
 
 #  1. Initalize Environment
 
@@ -224,30 +221,35 @@ else
     case $environment in
       Production)
         os_name="RHEL 7.3"
+        os_date="20161026"
         use_static_address=false
         use_filesystem_monitoring=true
         log_retention=30
         schedule="";;  # 11:00 - 4:00 UTC = 3:00 AM - 8:00 PM PST = 6:00 AM - 11:00 PM EST
       Staging)
         os_name="RHEL 7.3"
+        os_date="20161026"
         use_static_address=false
         use_filesystem_monitoring=true
         log_retention=7
         schedule="";;  # 11:00 - 4:00 UTC = 3:00 AM - 8:00 PM PST = 6:00 AM - 11:00 PM EST
       Testing)
         os_name="RHEL 7.3"
+        os_date="20161026"
         use_static_address=false
         use_filesystem_monitoring=false
         log_retention=0
         schedule="13:00-2:00";; # 13:00 - 2:00 UTC = 5:00 AM - 6:00 PM PST = 8:00 AM - 9:00 PM EST
       Development)
         os_name="RHEL 7.3"
+        os_date="20161026"
         use_static_address=false
         use_filesystem_monitoring=false
         log_retention=0
         schedule="";; # 13:00 - 2:00 UTC = 5:00 AM - 6:00 PM PST = 8:00 AM - 9:00 PM EST
       Core)
         os_name="RHEL 7.3"
+        os_date="20161026"
         use_static_address=false
         use_filesystem_monitoring=true
         log_retention=14
@@ -355,13 +357,20 @@ fi
 templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
 template_folder=application
 
+scripts_bucket=${AWS_SCRIPTS_BUCKET:-scripts-$region-$account}
+shared_script_folder=Linux
+script_folder=WebSphereMQ
+
 products_bucket=${AWS_PRODUCTS_BUCKET:-products-$region-$account}
+shared_product_folder=Linux
 product_folder=WebSphereMQ
-product_object=WS_MQ_V8.0.0.4_LINUX_ON_X86_64_IM.tar.gz
+webspheremq_product_object=WS_MQ_V8.0.0.4_LINUX_ON_X86_64_IM.tar.gz
 
 configurations_bucket=${AWS_CONFIGURATIONS_BUCKET:-configurations-$region-$account}
+shared_configuration_folder=Linux
 configuration_folder=WebSphereMQ
-configuration_object=$environment-WebSphereMQ-etc-wmq.tgz
+#webspheremq_configuration_object=$environment-WebSphereMQ-etc-wmq.tgz
+webspheremq_configuration_object=""
 
 # Prevent certain environment variables from breaking commands
 unset AWS_DEFAULT_PROFILE
@@ -460,10 +469,15 @@ aws cloudformation update-stack --stack-name $environment-$application \\
                                              ParameterKey=SystemName,ParameterValue=$system \\
                                              ParameterKey=EnvironmentType,ParameterValue=$environment_type \\
                                              ParameterKey=OSName,ParameterValue="$os_name" \\
+                                             ParameterKey=OSDate,ParameterValue="$os_date" \\
+                                             ParameterKey=SharedScriptFolder,ParameterValue=$shared_script_folder \\
+                                             ParameterKey=ScriptFolder,ParameterValue=$script_folder \\
+                                             ParameterKey=SharedProductFolder,ParameterValue=$shared_product_folder \\
                                              ParameterKey=ProductFolder,ParameterValue=$product_folder \\
-                                             ParameterKey=ProductObject,ParameterValue=$product_object \\
+                                             ParameterKey=WebSphereMQProductObject,ParameterValue=$webspheremq_product_object \\
+                                             ParameterKey=SharedConfigurationFolder,ParameterValue=$shared_configuration_folder \\
                                              ParameterKey=ConfigurationFolder,ParameterValue=$configuration_folder \\
-                                             ParameterKey=ConfigurationObject,ParameterValue=$configuration_object \\
+                                             ParameterKey=WebSphereMQConfigurationObject,ParameterValue=$webspheremq_configuration_object \\
                                              ParameterKey=ApplicationName,ParameterValue=$application \\
                                              ParameterKey=UseStaticAddress,ParameterValue=$use_static_address \\
                                              ParameterKey=UseFileSystemMonitoring,ParameterValue=$use_filesystem_monitoring \\
