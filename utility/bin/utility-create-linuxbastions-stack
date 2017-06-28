@@ -219,7 +219,6 @@ else
       Production)
         os_name="Amazon Linux"
         use_static_public_address=true
-        use_static_private_address=false
         use_local_users=true
         log_retention=30
         on_schedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
@@ -227,7 +226,6 @@ else
       Staging)
         os_name="Amazon Linux"
         use_static_public_address=true
-        use_static_private_address=false
         use_local_users=true
         log_retention=7
         on_schedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
@@ -235,7 +233,6 @@ else
       Testing)
         os_name="Amazon Linux"
         use_static_public_address=true
-        use_static_private_address=false
         use_local_users=true
         log_retention=0
         on_schedule="0 13 * * 1-5" # 13:00 UTC = 5:00 AM PST = 8:00 AM EST, Mon-Fri
@@ -243,7 +240,6 @@ else
       Development)
         os_name="Amazon Linux"
         use_static_public_address=true
-        use_static_private_address=false
         use_local_users=true
         log_retention=14
         on_schedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
@@ -251,7 +247,6 @@ else
       Core)
         os_name="Amazon Linux"
         use_static_public_address=true
-        use_static_private_address=false
         use_local_users=true
         log_retention=7
         on_schedule="" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
@@ -259,7 +254,6 @@ else
       Build)
         os_name="Amazon Linux"
         use_static_public_address=true
-        use_static_private_address=false
         use_local_users=true
         log_retention=0
         on_schedule="0 11 * * 1-5" # 11:00 UTC = 3:00 AM PST = 6:00 AM EST, Mon-Fri
@@ -384,10 +378,10 @@ if ! aws cloudformation describe-stacks --stack-name StandardAMIFunctions \
     exit 62
 fi
 
-if ! aws cloudformation describe-stacks --stack-name StandardCIDRFunctions \
+if ! aws cloudformation describe-stacks --stack-name CustomIdentifierFunctions \
                                         --profile $profile --region $region --output text &> /dev/null; then
-    echo "Stack dependency missing - StandardCIDRFunctions Stack does not exist!"
-    exit 63
+    echo "Stack dependency missing - CustomIdentifierFunctions Stack does not exist!"
+    exit 64
 fi
 
 if ! aws cloudformation describe-stacks --stack-name $environment-VPC \
@@ -396,12 +390,25 @@ if ! aws cloudformation describe-stacks --stack-name $environment-VPC \
     exit 70
 fi
 
+activedirectory_stack=$environment-ActiveDirectory
+if ! aws cloudformation describe-stacks --stack-name $activedirectory_stack \
+                                        --profile $profile --region $region --output text &> /dev/null; then
+    echo "Stack optional dependency missing - $environment-ActiveDirectory Stack does not exist!"
+    activedirectory_stack=""
+fi
+
 templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
 template_folder=utility
 
+scripts_bucket=${AWS_SCRIPTS_BUCKET:-scripts-$region-$account}
+shared_script_folder=Linux
+script_folder=LinuxBastions
+
 configurations_bucket=${AWS_CONFIGURATIONS_BUCKET:-configurations-$region-$account}
-configuration_folder=$utility
-configuration_object=$environment-$utility-etc-hosts
+shared_configuration_folder=Linux
+configuration_folder=LinuxBastions
+#hosts_configuration_object=$environment-etc-hosts
+hosts_configuration_object=""
 
 # Prevent certain environment variables from breaking commands
 unset AWS_DEFAULT_PROFILE
@@ -485,8 +492,9 @@ read -r -d '' statement << EOS
 aws cloudformation create-stack --stack-name $environment-$utility \\
                                 $template_parameter \\
                                 $stack_policy_parameter \\
-                                --parameters ParameterKey=VPCStackName,ParameterValue=$environment-VPC \\
-                                             ParameterKey=StandardCIDRFunctionsStackName,ParameterValue=StandardCIDRFunctions \\
+                                --parameters ParameterKey=ActiveDirectoryStackName,ParameterValue=$activedirectory_stack \\
+                                             ParameterKey=VPCStackName,ParameterValue=$environment-VPC \\
+                                             ParameterKey=CustomIdentifierFunctionsStackName,ParameterValue=CustomIdentifierFunctions \\
                                              ParameterKey=StandardAMIFunctionsStackName,ParameterValue=StandardAMIFunctions \\
                                              ParameterKey=StandardBucketsStackName,ParameterValue=StandardBuckets \\
                                              ParameterKey=StandardTopicsStackName,ParameterValue=StandardTopics \\
@@ -496,12 +504,14 @@ aws cloudformation create-stack --stack-name $environment-$utility \\
                                              ParameterKey=EnvironmentType,ParameterValue=$environment_type \\
                                              ParameterKey=EnvironmentZones,ParameterValue=$environment_zones \\
                                              ParameterKey=OSName,ParameterValue="$os_name" \\
+                                             ParameterKey=SharedScriptFolder,ParameterValue=$shared_script_folder \\
+                                             ParameterKey=ScriptFolder,ParameterValue=$script_folder \\
+                                             ParameterKey=SharedConfigurationFolder,ParameterValue=$shared_configuration_folder \\
                                              ParameterKey=ConfigurationFolder,ParameterValue=$configuration_folder \\
-                                             ParameterKey=ConfigurationObject,ParameterValue=$configuration_object \\
+                                             ParameterKey=HostsConfigurationObject,ParameterValue=$hosts_configuration_object \\
                                              ParameterKey=UtilityName,ParameterValue=$utility \\
                                              ParameterKey=UtilityDomain,ParameterValue=$utility_domain \\
                                              ParameterKey=UseStaticPublicAddress,ParameterValue=$use_static_public_address \\
-                                             ParameterKey=UseStaticPrivateAddress,ParameterValue=$use_static_private_address \\
                                              ParameterKey=UseLocalUsers,ParameterValue=$use_local_users \\
                                              ParameterKey=LogRetention,ParameterValue=$log_retention \\
                                              ParameterKey=OnSchedule,ParameterValue="$on_schedule" \\

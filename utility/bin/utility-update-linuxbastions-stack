@@ -378,9 +378,15 @@ fi
 templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
 template_folder=utility
 
+scripts_bucket=${AWS_SCRIPTS_BUCKET:-scripts-$region-$account}
+shared_script_folder=Linux
+script_folder=LinuxBastions
+
 configurations_bucket=${AWS_CONFIGURATIONS_BUCKET:-configurations-$region-$account}
-configuration_folder=$utility
-configuration_object=$environment-$utility-etc-hosts
+shared_configuration_folder=Linux
+configuration_folder=LinuxBastions
+#hosts_configuration_object=$environment-etc-hosts
+hosts_configuration_object=""
 
 # Prevent certain environment variables from breaking commands
 unset AWS_DEFAULT_PROFILE
@@ -478,8 +484,11 @@ aws cloudformation update-stack --stack-name $environment-$utility \\
                                              ParameterKey=EnvironmentType,ParameterValue=$environment_type \\
                                              ParameterKey=EnvironmentZones,ParameterValue=$environment_zones \\
                                              ParameterKey=OSName,ParameterValue="$os_name" \\
+                                             ParameterKey=SharedScriptFolder,ParameterValue=$shared_script_folder \\
+                                             ParameterKey=ScriptFolder,ParameterValue=$script_folder \\
+                                             ParameterKey=SharedConfigurationFolder,ParameterValue=$shared_configuration_folder \\
                                              ParameterKey=ConfigurationFolder,ParameterValue=$configuration_folder \\
-                                             ParameterKey=ConfigurationObject,ParameterValue=$configuration_object \\
+                                             ParameterKey=HostsConfigurationObject,ParameterValue=$hosts_configuration_object \\
                                              ParameterKey=UtilityName,ParameterValue=$utility \\
                                              ParameterKey=UtilityDomain,ParameterValue=$utility_domain \\
                                              ParameterKey=UseStaticPublicAddress,ParameterValue=$use_static_public_address \\
