@@ -357,18 +357,36 @@ if ! aws cloudformation describe-stacks --stack-name StandardAMIFunctions \
     exit 62
 fi
 
+if ! aws cloudformation describe-stacks --stack-name CustomIdentifierFunctions \
+                                        --profile $profile --region $region --output text &> /dev/null; then
+    echo "Stack dependency missing - CustomIdentifierFunctions Stack does not exist!"
+    exit 64
+fi
+
 if ! aws cloudformation describe-stacks --stack-name $environment-VPC \
                                         --profile $profile --region $region --output text &> /dev/null; then
     echo "Stack dependency missing - $environment-VPC Stack does not exist!"
     exit 70
 fi
 
+activedirectory_stack=$environment-ActiveDirectory
+if ! aws cloudformation describe-stacks --stack-name $activedirectory_stack \
+                                        --profile $profile --region $region --output text &> /dev/null; then
+    echo "Stack optional dependency missing - $environment-ActiveDirectory Stack does not exist!"
+    activedirectory_stack=""
+fi
+
 templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
 template_folder=utility
 
+scripts_bucket=${AWS_SCRIPTS_BUCKET:-scripts-$region-$account}
+shared_script_folder=Linux
+script_folder=OpenVPN
+
 configurations_bucket=${AWS_CONFIGURATIONS_BUCKET:-configurations-$region-$account}
-configurations_folder=$utility
-configurations_object=$environment-$utility-etc-openvpn
+shared_configuration_folder=Linux
+configuration_folder=OpenVPN
+hosts_configuration_object=$environment-$utility-etc-hosts
 
 # Prevent certain environment variables from breaking commands
 unset AWS_DEFAULT_PROFILE
@@ -452,8 +470,11 @@ read -r -d '' statement << EOS
 aws cloudformation create-stack --stack-name $environment-$utility \\
                                 $template_parameter \\
                                 $stack_policy_parameter \\
-                                --parameters ParameterKey=VPCStackName,ParameterValue=$environment-VPC \\
+                                --parameters ParameterKey=ActiveDirectoryStackName,ParameterValue=$activedirectory_stack \\
+                                             ParameterKey=VPCStackName,ParameterValue=$environment-VPC \\
+                                             ParameterKey=CustomIdentifierFunctionsStackName,ParameterValue=CustomIdentifierFunctions \\
                                              ParameterKey=StandardAMIFunctionsStackName,ParameterValue=StandardAMIFunctions \\
+                                             ParameterKey=StandardBucketsStackName,ParameterValue=StandardBuckets \\
                                              ParameterKey=StandardTopicsStackName,ParameterValue=StandardTopics \\
                                              ParameterKey=KeyName,ParameterValue=$key \\
                                              ParameterKey=CompanyName,ParameterValue=$company \\

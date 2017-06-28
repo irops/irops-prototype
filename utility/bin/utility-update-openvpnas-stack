@@ -351,9 +351,14 @@ fi
 templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
 template_folder=utility
 
+scripts_bucket=${AWS_SCRIPTS_BUCKET:-scripts-$region-$account}
+shared_script_folder=Linux
+script_folder=OpenVPN
+
 configurations_bucket=${AWS_CONFIGURATIONS_BUCKET:-configurations-$region-$account}
-configurations_folder=$utility
-configurations_object=$environment-$utility-etc-openvpn
+shared_configuration_folder=Linux
+configuration_folder=OpenVPN
+hosts_configuration_object=$environment-$utility-etc-hosts
 
 # Prevent certain environment variables from breaking commands
 unset AWS_DEFAULT_PROFILE
@@ -440,8 +445,11 @@ read -r -d '' statement << EOS
 aws cloudformation update-stack --stack-name $environment-$utility \\
                                 $template_parameter \\
                                 $stack_policy_parameter \\
-                                --parameters ParameterKey=VPCStackName,ParameterValue=$environment-VPC \\
+                                --parameters ParameterKey=ActiveDirectoryStackName,ParameterValue=$activedirectory_stack \\
+                                             ParameterKey=VPCStackName,ParameterValue=$environment-VPC \\
+                                             ParameterKey=CustomIdentifierFunctionsStackName,ParameterValue=CustomIdentifierFunctions \\
                                              ParameterKey=StandardAMIFunctionsStackName,ParameterValue=StandardAMIFunctions \\
+                                             ParameterKey=StandardBucketsStackName,ParameterValue=StandardBuckets \\
                                              ParameterKey=StandardTopicsStackName,ParameterValue=StandardTopics \\
                                              ParameterKey=KeyName,ParameterValue=$key \\
                                              ParameterKey=CompanyName,ParameterValue=$company \\

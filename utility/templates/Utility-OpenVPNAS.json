@@ -9,8 +9,11 @@
         {
           "Label" : { "default" : "Stack Dependencies" },
           "Parameters" : [
+            "ActiveDirectoryStackName",
             "VPCStackName",
+            "CustomIdentifierFunctionsStackName",
             "StandardAMIFunctionsStackName",
+            "StandardBucketsStackName",
             "StandardTopicsStackName"
           ]
         },
@@ -51,8 +54,11 @@
       ],
 
       "ParameterLabels" : {
+        "ActiveDirectoryStackName" : { "default" : "Active Directory Stack Name" },
         "VPCStackName" : { "default" : "VPC Stack Name" },
+        "CustomIdentifierFunctionsStackName" : { "default" : "CustomIdentifierFunctions Stack Name" },
         "StandardAMIFunctionsStackName" : { "default" : "StandardAMIFunctions Stack Name" },
+        "StandardBucketsStackName" : { "default" : "StandardBuckets Stack Name" },
         "StandardTopicsStackName" : { "default" : "StandardTopics Stack Name" },
         "KeyName" : { "default" : "Key Name" },
         "CompanyName" : { "default" : "Company Name" },
@@ -68,6 +74,15 @@
   },
 
   "Parameters" : {
+    "ActiveDirectoryStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the ActiveDirectory DomainControllers",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
     "VPCStackName" : {
       "Description" : "Name of the CloudFormation Stack containing the VPC",
       "Type" : "String",
@@ -78,19 +93,40 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
+    "CustomIdentifierFunctionsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Custom Identifier Functions",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "CustomIdentifierFunctions",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
     "StandardAMIFunctionsStackName" : {
       "Description" : "Name of the CloudFormation Stack containing the Standard AMI Functions",
       "Type" : "String",
+      "MinLength" : 8,
       "MaxLength" : 64,
       "Default" : "StandardAMIFunctions",
-      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "StandardBucketsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Buckets",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "StandardBuckets",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
     "StandardTopicsStackName" : {
       "Description" : "Name of the CloudFormation Stack containing Standard Topics",
       "Type" : "String",
-      "MinLength" : 2,
+      "MinLength" : 8,
       "MaxLength" : 64,
       "Default" : "StandardTopics",
       "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
@@ -162,7 +198,7 @@
     },
 
     "UserNetworks" : {
-      "Description" : "Networks that can access the Utility",
+      "Description" : "Networks that can use the Utility",
       "Type" : "String",
       "Default" : "0.0.0.0/0,NONE,NONE,NONE,NONE,NONE,NONE,NONE",
       "ConstraintDescription" : "must be a comma-separated list of 8 values, each an IP CIDR range of the form x.x.x.x/x or the word NONE."
@@ -204,7 +240,9 @@
   },
 
   "Conditions" : {
+    "ConfigureGlobalS3" : { "Fn::Equals" : [{ "Ref" : "AWS::Region" }, "us-east-1" ]},
     "ConfigureKey" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "KeyName" }, "" ] }]},
+    "ConfigureActiveDirectoryIntegration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ActiveDirectoryStackName" }, "" ] }]},
     "ConfigureUserNetwork0" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}, "NONE" ]}]},
     "ConfigureUserNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}, "NONE" ]}]},
     "ConfigureUserNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}, "NONE" ]}]},
@@ -224,10 +262,10 @@
   },
 
   "Resources" : {
-    "SecurityGroup" : {
+    "InstanceSecurityGroup" : {
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
-        "GroupDescription" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "UtilityName" }, "SecurityGroup" ]]},
+        "GroupDescription" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "UtilityName" }, "InstanceSecurityGroup" ]]},
         "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPC" }},
         "SecurityGroupIngress" : [
           { "IpProtocol" : "icmp", "FromPort" :    "0", "ToPort" :    "0", "CidrIp" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCNetwork" }}},
@@ -348,8 +386,27 @@
           { "Fn::If" : [ "ConfigureAdministratorNetwork7",  { "IpProtocol" : "udp",  "FromPort" : "1194", "ToPort" : "1194", "CidrIp" : { "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]}
         ],
         "Tags" : [
-          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "UtilityName" }, "SecurityGroup" ]]}}
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "UtilityName" }, "InstanceSecurityGroup" ]]}}
         ]
+      }
+    },
+
+    "DomainControllerSecurityGroupIngress3389" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${ActiveDirectoryStackName}-DomainControllerSecurityGroup" }}, "IpProtocol" : "tcp", "FromPort" :  "3389", "ToPort" :  "3389", "SourceSecurityGroupId": { "Ref": "InstanceSecurityGroup" }
+      },
+      "Condition" : "ConfigureActiveDirectoryIntegration"
+    },
+
+    "GetHostName" : {
+      "Type" : "Custom::GetHostName",
+      "Properties" : {
+        "ServiceToken" : { "Fn::ImportValue" : { "Fn::Sub" : "${CustomIdentifierFunctionsStackName}-GetHostNameFunctionArn" }},
+        "CompanyName" : { "Ref" : "CompanyName" },
+        "LocationName" : { "Ref": "AWS::Region" },
+        "EnvironmentName" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }},
+        "ApplicationName" : { "Ref" : "UtilityName" }
       }
     },
 
@@ -363,15 +420,16 @@
           "Description"              : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "UtilityName" }, "NetworkInterface", "eth0" ]]},
           "DeviceIndex"              : "0",
           "SubnetId"                 : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-Public1SubnetA" }},
-          "GroupSet"                 : [{ "Ref" :  "SecurityGroup" }],
+          "GroupSet"                 : [{ "Ref" :  "InstanceSecurityGroup" }],
           "AssociatePublicIpAddress" : "false",
           "DeleteOnTermination"      : "true"
         }],
         "Tags" : [
-          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "UtilityName" }, "Instance" ]]}}
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "UtilityName" }, "Instance" ]]}},
+          { "Key" : "HostName", "Value" : { "Fn::Sub" : "${GetHostName.HostName}01" }}
         ],
         "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "\n", [
-          { "Fn::Join" : [ "", [ "public_hostname=", { "Ref" : "UtilityDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]},
+          { "Fn::Join" : [ "", [ "public_hostname=", { "Ref" : "UtilityDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPublicDomain" }}]]},
           "admin_user=openvpn",
           "admin_pw=changemeviaguiafterinstall",
           "reroute_gw=0",
@@ -395,12 +453,12 @@
       }
     },
 
-    "RecordSet" : {
+    "PublicRecordSet" : {
       "Type" : "AWS::Route53::RecordSet",
       "Properties" : {
         "HostedZoneId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicHostedZone" }},
         "Comment" : { "Fn::Join" : [ "", [ "DNS name for ", { "Ref" : "UtilityName" }, " Instance" ]]},
-        "Name" : { "Fn::Join" : [ "", [ { "Ref" : "UtilityDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "." ]]},
+        "Name" : { "Fn::Join" : [ "", [ { "Ref" : "UtilityDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPublicDomain" }}, "." ]]},
         "Type" : "A",
         "TTL" : "900",
         "ResourceRecords" : [{ "Ref" : "EIP" }]
@@ -409,10 +467,10 @@
   },
 
   "Outputs" : {
-    "SecurityGroup" : {
-      "Description" : "The SecurityGroup",
-      "Value" : { "Ref" : "SecurityGroup" },
-      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-SecurityGroup" }}
+    "InstanceSecurityGroup" : {
+      "Description" : "The Instance SecurityGroup",
+      "Value" : { "Ref" : "InstanceSecurityGroup" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-InstanceSecurityGroup" }}
     },
 
     "EIP" : {
@@ -423,19 +481,19 @@
 
     "PublicHostname" : {
       "Description" : "The Public Hostname of the OpenVPN Instance",
-      "Value" : { "Fn::Join" : [ "", [ { "Ref" : "UtilityDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]},
+      "Value" : { "Fn::Join" : [ "", [ { "Ref" : "UtilityDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPublicDomain" }}]]},
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-PublicHostname" }}
     },
 
     "UserWebsiteURL" : {
       "Description" : "The User Website URL",
-      "Value" : { "Fn::Join" : [ "", [ "https://", { "Ref" : "UtilityDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "/" ]]},
+      "Value" : { "Fn::Join" : [ "", [ "https://", { "Ref" : "UtilityDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPublicDomain" }}, "/" ]]},
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-UserWebsiteURL" }}
     },
 
     "AdministratorWebsiteURL" : {
       "Description" : "The Administration Website URL",
-      "Value" : { "Fn::Join" : [ "", [ "https://", { "Ref" : "UtilityDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, ":943/admin/" ]]},
+      "Value" : { "Fn::Join" : [ "", [ "https://", { "Ref" : "UtilityDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPublicDomain" }}, ":943/admin/" ]]},
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-AdministratorWebsiteURL" }}
     }
   }
