@@ -27,13 +27,11 @@ system=${SYSTEM_NAME:-IROPS}
 environment=${ENVIRONMENT_NAME:-Production}
 environment_type=${ENVIRONMENT_TYPE:-large}
 environment_zones=${ENVIRONMENT_ZONES:-2}
-environment_private_domain=${ENVIRONMENT_PRIVATE_DOMAIN:-iropscmp.travel.svcs.entsvcs.com}
-environment_netbios_domain=${ENVIRONMENT_NETBIOS_DOMAIN:-iropscmp}
 utility=${UTILITY_NAME:-ActiveDirectory}
 utility_restore_mode_password=${ACTIVEDIRECTORY_RESTORE_MODE_PASSWORD:-} # This should have no default value
-utility_domainadmin_user=${ACTIVEDIRECTORY_DOMAINADMIN_USER:-StackAdmin}
-utility_domainadmin_password=${ACTIVEDIRECTORY_DOMAINADMIN_PASSWORD:-} # This should have no default value
 administrator_networks=${ACTIVEDIRECTORY_ADMINISTRATOR_NETWORKS:-NONE,NONE,NONE,NONE,NONE,NONE,NONE,NONE}
+domainadmin_user=${DOMAINADMIN_USER:-StackAdmin}
+domainadmin_password=${DOMAINADMIN_PASSWORD:-} # This should have no default value
 region=${AWS_DEFAULT_REGION:-us-west-2}
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-administrator}
@@ -45,10 +43,10 @@ key=${AWS_KEY_NAME:-administrator}
 usage () {
     echo "Usage: ${BASH_SOURCE##*/} [[-i] | [-s | -f]] [-v] [-m]"
     echo "                  [-O owner] [-C company] [-S system]"
-    echo "                  [-E environment] [-T type] [-Z zones] [-d domain] [-b domain]"
-    echo "                  [-U utility] [-R password] [-A user] [-P password]"
-    echo "                  [-R utility]"
+    echo "                  [-E environment] [-T type] [-Z zones]"
+    echo "                  [-U utility] [-R password]"
     echo "                  [-N networks]"
+    echo "                  [-A user] [-P password]"
     echo "                  [-r region] [-a account] [-u user] [-k key]"
     echo "  -i              interactive"
     echo "  -s              slower: increase pauses by 25%"
@@ -61,13 +59,11 @@ usage () {
     echo "  -E environment  Environment Name (default: $environment)"
     echo "  -T type         Environment Type (default: $environment_type)"
     echo "  -Z zones        Environment Zones (default: $environment_zones)"
-    echo "  -d domain       Environment Private Domain (default: $environment_private_domain)"
-    echo "  -b domain       Environment NetBIOS Domain (default: $environment_netbios_domain)"
     echo "  -U utility      Utility Name (default: $utility)"
     echo "  -R password     Utility Restore Mode Password (default: $utility_restore_mode_password)"
-    echo "  -A user         Utility DomainAdmin User (default: $utility_domainadmin_user)"
-    echo "  -P password     Utility DomainAdmin Password (default: $utility_domainadmin_password)"
     echo "  -N networks     Administrator Networks (default: $administrator_networks)"
+    echo "  -A user         DomainAdmin User (default: $domainadmin_user)"
+    echo "  -P password     DomainAdmin Password (default: $domainadmin_password)"
     echo "  -r region       Region (default: $region)"
     echo "  -a account      Account (default: $account)"
     echo "  -u user         User (default: $user)"
@@ -154,7 +150,7 @@ next() {
 
 #  3. Parse command line options
 
-while getopts isfvmO:C:S:E:T:Z:d:b:U:R:A:P:N:r:a:u:k:? arg; do
+while getopts isfvmO:C:S:E:T:Z:U:R:N:A:P:r:a:u:k:? arg; do
     case $arg in
     i)  interactive=1;;
     s)  ((speed < speed_max)) && ((speed=speed+25));;
@@ -167,13 +163,11 @@ while getopts isfvmO:C:S:E:T:Z:d:b:U:R:A:P:N:r:a:u:k:? arg; do
     E)  environment="$OPTARG";;
     T)  environment_type="$OPTARG";;
     Z)  environment_zones="$OPTARG";;
-    d)  environment_private_domain="$OPTARG";;
-    b)  environment_netbios_domain="$OPTARG";;
     U)  utility="$OPTARG";;
     R)  utility_restore_mode_password="$OPTARG";;
-    A)  utility_domainadmin_user="$OPTARG";;
-    P)  utility_domainadmin_password="$OPTARG";;
     N)  administrator_networks="$OPTARG";;
+    A)  domainadmin_user="$OPTARG";;
+    P)  domainadmin_password="$OPTARG";;
     r)  region="$OPTARG";;
     a)  account="$OPTARG";;
     u)  user="$OPTARG";;
@@ -233,44 +227,37 @@ else
         os_name="Windows Server 2012 R2"
         os_date="20170510"
         use_static_address=true
-        log_retention=30
-        schedule="";;  # 11:00 - 4:00 UTC = 3:00 AM - 8:00 PM PST = 6:00 AM - 11:00 PM EST
+        log_retention=30;;
       Staging)
         os_name="Windows Server 2012 R2"
         os_date="20170510"
         use_static_address=true
-        log_retention=7
-        schedule="";;  # 11:00 - 4:00 UTC = 3:00 AM - 8:00 PM PST = 6:00 AM - 11:00 PM EST
+        log_retention=7;;
       Testing)
         os_name="Windows Server 2012 R2"
         os_date="20170510"
-        use_static_address=false
-        log_retention=7
-        schedule="";;  # 11:00 - 4:00 UTC = 3:00 AM - 8:00 PM PST = 6:00 AM - 11:00 PM EST
+        use_static_address=true
+        log_retention=7;;
       Development)
         os_name="Windows Server 2012 R2"
         os_date="20170510"
         use_static_address=true
-        log_retention=14
-        schedule="";; # 13:00 - 2:00 UTC = 5:00 AM - 6:00 PM PST = 8:00 AM - 9:00 PM EST
+        log_retention=14;;
       Core)
         os_name="Windows Server 2012 R2"
         os_date="20170510"
         use_static_address=true
-        log_retention=30
-        schedule="";;  # 11:00 - 4:00 UTC = 3:00 AM - 8:00 PM PST = 6:00 AM - 11:00 PM EST
+        log_retention=30;;
       Build)
         os_name="Windows Server 2012 R2"
         os_date="20170510"
-        use_static_address=false
-        log_retention=7
-        schedule="";; # 13:00 - 2:00 UTC = 5:00 AM - 6:00 PM PST = 8:00 AM - 9:00 PM EST
+        use_static_address=true
+        log_retention=7;;
       Identity)
         os_name="Windows Server 2012 R2"
         os_date="20170510"
-        use_static_address=false
-        log_retention=30
-        schedule="";;  # 11:00 - 4:00 UTC = 3:00 AM - 8:00 PM PST = 6:00 AM - 11:00 PM EST
+        use_static_address=true
+        log_retention=30;;
       *)
         echo "-E $environment invalid! Must be Production, Staging, Testing, Development, Core, Build or Identity"
         exit 21;;
@@ -305,18 +292,6 @@ else
     esac
 fi
 
-if [ -z $environment_private_domain ]; then
-    echo "-d domain missing!"
-    echo "Could not automatically determine private domain, and it was not specified as a parameter"
-    exit 26
-fi
-
-if [ -z $environment_netbios_domain ]; then
-    echo "-b domain missing!"
-    echo "Could not automatically determine NetBIOS domain, and it was not specified as a parameter"
-    exit 28
-fi
-
 if [ -z $utility ]; then
     echo "-U utility missing!"
     echo "Could not automatically determine utility, and it was not specified as a parameter"
@@ -334,26 +309,6 @@ fi
 if [ -z $utility_restore_mode_password ]; then
     echo "-R password missing!"
     echo "Could not automatically determine utility restore mode password, and it was not specified as a parameter"
-    exit 32
-fi
-
-if [ -z $utility_domainadmin_user ]; then
-    echo "-A user missing!"
-    echo "Could not automatically determine utility DomainAdmin user, and it was not specified as a parameter"
-    exit 34
-else
-    case $utility_domainadmin_user in
-      StackAdmin)
-        ;;
-      *)
-        echo "-A $utility_domainadmin_user invalid! Must be StackAdmin"
-        exit 35;;
-    esac
-fi
-
-if [ -z $utility_domainadmin_password ]; then
-    echo "-P password missing!"
-    echo "Could not automatically determine utility DomainAdmin password, and it was not specified as a parameter"
     exit 36
 fi
 
@@ -361,6 +316,26 @@ if [ -z $administrator_networks ]; then
     echo "-N networks missing!"
     echo "Could not automatically determine administrator networks, and it was not specified as a parameter"
     exit 42
+fi
+
+if [ -z $domainadmin_user ]; then
+    echo "-A user missing!"
+    echo "Could not automatically determine DomainAdmin user, and it was not specified as a parameter"
+    exit 46
+else
+    case $domainadmin_user in
+      StackAdmin)
+        ;;
+      *)
+        echo "-A $domainadmin_user invalid! Must be StackAdmin"
+        exit 47;;
+    esac
+fi
+
+if [ -z $domainadmin_password ]; then
+    echo "-P password missing!"
+    echo "Could not automatically determine DomainAdmin password, and it was not specified as a parameter"
+    exit 48
 fi
 
 if [ -z $region ]; then
@@ -441,17 +416,16 @@ if ! aws cloudformation describe-stacks --stack-name $environment-VPC \
     exit 70
 fi
 
-if ! aws cloudformation describe-stacks --stack-name $environment-OpenVPNAS \
-                                        --profile $profile --region $region --output text &> /dev/null; then
-    echo "Stack dependency missing - $environment-OpenVPNAS Stack does not exist!"
-    exit 80
-fi
-
 templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
 template_folder=utility
 
 scripts_bucket=${AWS_SCRIPTS_BUCKET:-scripts-$region-$account}
-script_folder=$utility
+shared_script_folder=Windows
+script_folder=ActiveDirectory
+
+configurations_bucket=${AWS_CONFIGURATIONS_BUCKET:-configurations-$region-$account}
+shared_configuration_folder=Windows
+configuration_folder=ActiveDirectory
 
 # Prevent certain environment variables from breaking commands
 unset AWS_DEFAULT_PROFILE
@@ -529,14 +503,66 @@ next 50
 
 
 ((++step))
+vpc=$(aws cloudformation describe-stack-resource --stack-name $environment-VPC \
+                                                 --logical-resource-id VPC \
+                                                 --query 'StackResourceDetail.PhysicalResourceId' \
+                                                 --profile $profile --region $region --output text)
+
+dopt=$(aws ec2 describe-dhcp-options --filters 'Name=tag:Name,Values=Default-DHCPOptions' \
+                                     --query 'DhcpOptions[0].DhcpOptionsId' \
+                                     --profile $profile --region $region --output text)
+
+read -r -d '' statement << EOS
+aws ec2 associate-dhcp-options --vpc-id $vpc \\
+                               --dhcp-options-id $dopt \\
+                               --profile $profile --region $region
+EOS
+run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_statement="${statement//\\$'\n'}"
+
+clear
+echo
+echo "============================================================"
+echo
+echo "$(printf '%2d' $step). Correct missing DHCPOptions"
+echo
+echo "============================================================"
+echo
+echo "Commands:"
+echo
+echo "$statement"
+
+if [ "$(aws ec2 describe-vpcs --vpc-id $vpc \
+                              --query 'Vpcs[].DhcpOptionsId' \
+                              --profile $profile --region $region --output text 2> /dev/null)" != "default" ]; then
+    echo
+    tput rev
+    echo "Already Corrected!"
+    tput sgr0
+
+    next 50
+
+else
+    run
+
+    if [ $choice = y ]; then
+        echo
+        echo "$run_statement"
+        eval "$eval_statement"
+
+        next
+    fi
+fi
+
+
+((++step))
 template_parameter="--template-url https://$s3_domain/$templates_bucket/$template_folder/Utility-ActiveDirectory.json"
 stack_policy_parameter="--stack-policy-url https://$s3_domain/$templates_bucket/$template_folder/Utility-ActiveDirectory-StackPolicy.json"
 read -r -d '' statement << EOS
 aws cloudformation create-stack --stack-name $environment-$utility \\
                                 $template_parameter \\
                                 $stack_policy_parameter \\
-                                --parameters ParameterKey=VPNStackName,ParameterValue=$environment-OpenVPNAS \\
-                                             ParameterKey=VPCStackName,ParameterValue=$environment-VPC \\
+                                --parameters ParameterKey=VPCStackName,ParameterValue=$environment-VPC \\
                                              ParameterKey=CustomIdentifierFunctionsStackName,ParameterValue=CustomIdentifierFunctions \\
                                              ParameterKey=StandardCIDRFunctionsStackName,ParameterValue=StandardCIDRFunctions \\
                                              ParameterKey=StandardAMIFunctionsStackName,ParameterValue=StandardAMIFunctions \\
@@ -547,19 +573,19 @@ aws cloudformation create-stack --stack-name $environment-$utility \\
                                              ParameterKey=SystemName,ParameterValue=$system \\
                                              ParameterKey=EnvironmentType,ParameterValue=$environment_type \\
                                              ParameterKey=EnvironmentZones,ParameterValue=$environment_zones \\
-                                             ParameterKey=EnvironmentPrivateDomain,ParameterValue=$environment_private_domain \\
-                                             ParameterKey=EnvironmentNetBIOSDomain,ParameterValue=$environment_netbios_domain \\
                                              ParameterKey=OSName,ParameterValue="$os_name" \\
                                              ParameterKey=OSDate,ParameterValue=$os_date \\
+                                             ParameterKey=SharedScriptFolder,ParameterValue=$shared_script_folder \\
                                              ParameterKey=ScriptFolder,ParameterValue=$script_folder \\
+                                             ParameterKey=SharedConfigurationFolder,ParameterValue=$shared_configuration_folder \\
+                                             ParameterKey=ScriptFolder,ParameterValue=$configuration_folder \\
                                              ParameterKey=UtilityName,ParameterValue=$utility \\
                                              ParameterKey=RestoreModePassword,ParameterValue="$utility_restore_mode_password" \\
-                                             ParameterKey=DomainAdminUser,ParameterValue="$utility_domainadmin_user" \\
-                                             ParameterKey=DomainAdminPassword,ParameterValue="$utility_domainadmin_password" \\
                                              ParameterKey=UseStaticAddress,ParameterValue=$use_static_address \\
                                              ParameterKey=LogRetention,ParameterValue=$log_retention \\
-                                             ParameterKey=Schedule,ParameterValue="$schedule" \\
                                              ParameterKey=AdministratorNetworks,ParameterValue=\"$administrator_networks\" \\
+                                             ParameterKey=DomainAdminUser,ParameterValue="$domainadmin_user" \\
+                                             ParameterKey=DomainAdminPassword,ParameterValue="$domainadmin_password" \\
                                 --tags Key=Owner,Value=$owner \\
                                        Key=Company,Value=$company \\
                                        Key=System,Value=$system \\
