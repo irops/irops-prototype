@@ -98,21 +98,19 @@ var applicationNameToCode = {
 };
 
 var componentNameToCode = {
-  'Web'               : 'web',
-  'Queue'             : 'que',
-  'Calculation'       : 'cal',
-  'DataStaging'       : 'stg',
-  'Publishing'        : 'pub',
-  'Monitoring'        : 'mon',
-  'Logging'           : 'log',
-  'MongoDB'           : 'mdb',
-  'RabbitMQ'          : 'rmq',
-  'Deploy'            : 'dep',
+  'Web'               : 'w',
+  'Queue'             : 'q',
+  'Calculation'       : 'c',
+  'DataStaging'       : 'ds',
+  'Publishing'        : 'p',
+  'Monitoring'        : 'm',
+  'Logging'           : 'l',
+  'Deploy'            : 'd',
   'DomainController'  : 'dc',
-  'SFTP'              : 'ftp',
-  'PolicyServer'      : 'pol',
-  'SecurityServer'    : 'sec',
-  'Update'            : 'upd'
+  'SFTP'              : 'ft',
+  'PolicyServer'      : 'ps',
+  'SecurityServer'    : 'ss',
+  'Update'            : 'u'
 };
 
 var responseData = {};
