@@ -2,9 +2,6 @@
 #
 # This script updates the Application RabbitMQ Stack in an Environment Account.
 #
-# This script is written in a format suitable for interactive demos,
-# but can be run non-Iteractively and more quickly with the "-I" flag.
-#
 
 #  1. Initalize Environment
 
@@ -20,7 +17,7 @@ next_default=5
 update_default=15
 update_attempts=40
 
-interactive=1
+interactive=0
 speed=100
 verbose=0
 monitor=0
@@ -33,12 +30,8 @@ environment_type=${ENVIRONMENT_TYPE:-large}
 environment_zones=${ENVIRONMENT_ZONES:-2}
 application=${APPLICATION_NAME:-RabbitMQ}
 application_version=${APPLICATION_VERSION:-3.6.9}
-private_user_network=${PRIVATE_USER_NETWORK:-10.0.0.0/16}
-private_user_network1=${PRIVATE_USER_NETWORK1:-}
-private_user_network2=${PRIVATE_USER_NETWORK2:-}
-private_administrator_network=${PRIVATE_ADMINISTRATOR_NETWORK:-10.0.0.0/16}
-private_administrator_network1=${PRIVATE_ADMINISTRATOR_NETWORK1:-}
-private_administrator_network2=${PRIVATE_ADMINISTRATOR_NETWORK2:-}
+administrator_networks=${RABBITMQ_ADMINISTRATOR_NETWORKS:-NONE,NONE,NONE,NONE,NONE,NONE,NONE,NONE}
+integration_networks=${RABBITMQ_INTEGRATION_NETWORKS:-NONE,NONE,NONE,NONE,NONE,NONE,NONE,NONE}
 region=${AWS_DEFAULT_REGION:-us-west-2}
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-administrator}
@@ -48,13 +41,13 @@ key=${AWS_KEY_NAME:-user}
 #  2. Define functions
 
 usage () {
-    echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v] [-m] [-o]"
+    echo "Usage: ${BASH_SOURCE##*/} [[-i] | [-s | -f]] [-v] [-m] [-o]"
     echo "                  [-O owner] [-C company] [-S system]"
     echo "                  [-E environment] [-T type] [-Z zones]"
     echo "                  [-A application] [-V version]"
-    echo "                  [-n network] [-N network]"
+    echo "                  [-N networks] [-I networks]"
     echo "                  [-r region] [-a account] [-u user] [-k key]"
-    echo "  -I              non-interactive"
+    echo "  -i              interactive"
     echo "  -s              slower: increase pauses by 25%"
     echo "  -f              faster: reduce pauses by 25%"
     echo "  -v              verbose"
@@ -68,8 +61,8 @@ usage () {
     echo "  -Z zones        Environment Zones (default: $environment_zones)"
     echo "  -A application  Application Name (default: $application)"
     echo "  -V version      Application Version (default: $application_version)"
-    echo "  -n network      Private User Network (default: $private_user_network)"
-    echo "  -N network      Private Administrator Network (default: $private_administrator_network)"
+    echo "  -N networks     Administrator Networks (default: $administrator_networks)"
+    echo "  -I networks     Integration Networks (default: $integration_networks)"
     echo "  -r region       Region (default: $region)"
     echo "  -a account      Account (default: $account)"
     echo "  -u user         User (default: $user)"
@@ -155,11 +148,10 @@ next() {
 
 
 #  3. Parse command line options
-#     - Note, using options 1-8 as hidden options to set additional network ranges
 
-while getopts IsfvmoO:C:S:E:T:Z:A:V:n:5:6:N:7:8:r:a:u:k:? arg; do
+while getopts isfvmoO:C:S:E:T:Z:A:V:N:I:r:a:u:k:? arg; do
     case $arg in
-    I)  interactive=0;;
+    i)  interactive=1;;
     s)  ((speed < speed_max)) && ((speed=speed+25));;
     f)  ((speed > 0)) && ((speed=speed-25));;
     v)  verbose=1;;
@@ -173,12 +165,8 @@ while getopts IsfvmoO:C:S:E:T:Z:A:V:n:5:6:N:7:8:r:a:u:k:? arg; do
     Z)  environment_zones="$OPTARG";;
     A)  application="$OPTARG";;
     V)  application_version="$OPTARG";;
-    n)  private_user_network="$OPTARG";;
-    5)  private_user_network1="$OPTARG";;
-    6)  private_user_network2="$OPTARG";;
-    N)  private_administrator_network="$OPTARG";;
-    7)  private_administrator_network1="$OPTARG";;
-    8)  private_administrator_network2="$OPTARG";;
+    N)  administrator_networks="$OPTARG";;
+    I)  integration_networks="$OPTARG";;
     r)  region="$OPTARG";;
     a)  account="$OPTARG";;
     u)  user="$OPTARG";;
@@ -236,21 +224,25 @@ else
     case $environment in
       Production)
         os_name="RHEL 7.3"
+        os_date="20161026"
         use_static_address=false
         log_retention=30
         schedule="";;  # 11:00 - 4:00 UTC = 3:00 AM - 8:00 PM PST = 6:00 AM - 11:00 PM EST
       Staging)
         os_name="RHEL 7.3"
+        os_date="20161026"
         use_static_address=false
         log_retention=7
         schedule="";;  # 11:00 - 4:00 UTC = 3:00 AM - 8:00 PM PST = 6:00 AM - 11:00 PM EST
       Testing)
         os_name="RHEL 7.3"
+        os_date="20161026"
         use_static_address=false
         log_retention=0
         schedule="13:00-2:00";; # 13:00 - 2:00 UTC = 5:00 AM - 6:00 PM PST = 8:00 AM - 9:00 PM EST
       Development)
         os_name="RHEL 7.3"
+        os_date="20161026"
         use_static_address=false
         log_retention=0
         schedule="";; # 13:00 - 2:00 UTC = 5:00 AM - 6:00 PM PST = 8:00 AM - 9:00 PM EST
@@ -308,17 +300,16 @@ if [ -z $application_version ]; then
     exit 34
 fi
 
-
-if [ -z $private_user_network ]; then
-    echo "-n network missing!"
-    echo "Could not automatically determine private user network, and it was not specified as a parameter"
-    exit 44
+if [ -z $administrator_networks ]; then
+    echo "-N networks missing!"
+    echo "Could not automatically determine administrator networks, and it was not specified as a parameter"
+    exit 42
 fi
 
-if [ -z $private_administrator_network ]; then
-    echo "-N network missing!"
-    echo "Could not automatically determine private administrator network, and it was not specified as a parameter"
-    exit 46
+if [ -z $integration_networks ]; then
+    echo "-I networks missing!"
+    echo "Could not automatically determine integration networks, and it was not specified as a parameter"
+    exit 44
 fi
 
 if [ -z $region ]; then
@@ -372,7 +363,12 @@ fi
 templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
 template_folder=application
 
+scripts_bucket=${AWS_SCRIPTS_BUCKET:-scripts-$region-$account}
+shared_script_folder=Linux
+script_folder=RabbitMQ
+
 products_bucket=${AWS_PRODUCTS_BUCKET:-products-$region-$account}
+shared_product_folder=Linux
 product_folder=RabbitMQ
 #erlang_product_object=esl-erlang_19.3-1~centos~7_amd64.rpm
 #rabbitmq_product_object=rabbitmq-server-$application_version-1.el7.noarch.rpm
@@ -380,6 +376,7 @@ erlang_product_object=""
 rabbitmq_product_object=""
 
 configurations_bucket=${AWS_CONFIGURATIONS_BUCKET:-configurations-$region-$account}
+shared_configuration_folder=Linux
 configuration_folder=RabbitMQ
 #erlang_configuration_object=$environment-RabbitMQ-etc-erlang.tgz
 #rabbitmq_configuration_object=$environment-RabbitMQ-etc-rabbitmq.tgz
@@ -484,9 +481,14 @@ aws cloudformation update-stack --stack-name $environment-$application \\
                                              ParameterKey=EnvironmentType,ParameterValue=$environment_type \\
                                              ParameterKey=EnvironmentZones,ParameterValue=$environment_zones \\
                                              ParameterKey=OSName,ParameterValue="$os_name" \\
+                                             ParameterKey=OSDate,ParameterValue="$os_date" \\
+                                             ParameterKey=SharedScriptFolder,ParameterValue=$shared_script_folder \\
+                                             ParameterKey=ScriptFolder,ParameterValue=$script_folder \\
+                                             ParameterKey=SharedProductFolder,ParameterValue=$shared_product_folder \\
                                              ParameterKey=ProductFolder,ParameterValue=$product_folder \\
                                              ParameterKey=ErlangProductObject,ParameterValue=$erlang_product_object \\
                                              ParameterKey=RabbitMQProductObject,ParameterValue=$rabbitmq_product_object \\
+                                             ParameterKey=SharedConfigurationFolder,ParameterValue=$shared_configuration_folder \\
                                              ParameterKey=ConfigurationFolder,ParameterValue=$configuration_folder \\
                                              ParameterKey=ErlangConfigurationObject,ParameterValue=$erlang_configuration_object \\
                                              ParameterKey=RabbitMQConfigurationObject,ParameterValue=$rabbitmq_configuration_object \\
@@ -494,12 +496,8 @@ aws cloudformation update-stack --stack-name $environment-$application \\
                                              ParameterKey=UseStaticAddress,ParameterValue=$use_static_address \\
                                              ParameterKey=LogRetention,ParameterValue=$log_retention \\
                                              ParameterKey=Schedule,ParameterValue=$schedule \\
-                                             ParameterKey=PrivateUserNetwork,ParameterValue=$private_user_network \\
-                                             ParameterKey=PrivateUserNetwork1,ParameterValue=$private_user_network1 \\
-                                             ParameterKey=PrivateUserNetwork2,ParameterValue=$private_user_network2 \\
-                                             ParameterKey=PrivateAdministratorNetwork,ParameterValue=$private_administrator_network \\
-                                             ParameterKey=PrivateAdministratorNetwork1,ParameterValue=$private_administrator_network1 \\
-                                             ParameterKey=PrivateAdministratorNetwork2,ParameterValue=$private_administrator_network2 \\
+                                             ParameterKey=AdministratorNetworks,ParameterValue=\"$administrator_networks\" \\
+                                             ParameterKey=IntegrationNetworks,ParameterValue=\"$integration_networks\" \\
                                 --tags Key=Owner,Value=$owner \\
                                        Key=Company,Value=$company \\
                                        Key=System,Value=$system \\
