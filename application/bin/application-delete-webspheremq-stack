@@ -31,7 +31,7 @@ user=${AWS_USER_NAME:-administrator}
 #  2. Define functions
 
 usage () {
-    echo "Usage: ${BASH_SOURCE##*/} [[-I] | [-s | -f]] [-v] [-m]"
+    echo "Usage: ${BASH_SOURCE##*/} [[-i] | [-s | -f]] [-v] [-m]"
     echo "                  [-E environment]"
     echo "                  [-A application]"
     echo "                  [-r region] [-a account] [-u user]"

@@ -195,14 +195,14 @@ fi
 if [ -z $component ]; then
     echo "-c component missing!"
     echo "Could not automatically determine component, and it was not specified as a parameter"
-    exit 36
+    exit 38
 else
     case $component in
       Deploy)
         ;;
       *)
         echo "-c $component invalid! Must be Deploy"
-        exit 37;;
+        exit 39;;
     esac
 fi
 
