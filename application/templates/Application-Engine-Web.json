@@ -1686,7 +1686,6 @@
           }
         }
       },
-
       "Properties" : {
         "ImageId" : { "Fn::If" : [ "GetImageID", { "Fn::GetAtt" : [ "GetWindowsImageId", "ImageId" ]},
                                                  { "Fn::FindInMap" : [ "ImageIdMap", { "Ref" : "AWS::Region" }, { "Ref" : "OSDate" }]}]},
