@@ -240,11 +240,18 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     exit 58
 fi
 
+echo -n "Confirming Stack pre-requisites "
+
 if ! aws cloudformation describe-stacks --stack-name StandardTopics \
                                         --profile $profile --region $region --output text &> /dev/null; then
+    echo
     echo "Stack dependency missing - StandardTopics Stack does not exist!"
     exit 60
+else
+    echo -n "."
 fi
+echo " Done"
+sleep 1
 
 templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
 template_folder=core

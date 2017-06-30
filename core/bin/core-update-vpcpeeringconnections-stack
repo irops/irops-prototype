@@ -232,42 +232,63 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     exit 58
 fi
 
+echo -n "Confirming Stack pre-requisites "
+
 if ! aws cloudformation describe-stacks --stack-name Core-VPCPeeringConnections \
                                         --profile $profile --region $region --output text &> /dev/null; then
+    echo
     echo "Unable to update - Core-VPCPeeringConnections Stack does not exist!"
-    exit 80
+    exit 98
+else
+    echo -n "."
 fi
 
 if ! aws cloudformation describe-stacks --stack-name Build-VPC \
                                         --profile $profile --region $region --output text &> /dev/null; then
     echo "Stack dependency missing - Build-VPC Stack does not exist!"
+    echo "- VPCPeeringConnection between Core and Build VPCs will not be created!"
     unset build_vpc_stack_name
+else
+    echo -n "."
 fi
 
 if ! aws cloudformation describe-stacks --stack-name Production-VPC \
                                         --profile $profile --region $region --output text &> /dev/null; then
     echo "Stack dependency missing - Production-VPC Stack does not exist!"
+    echo "- VPCPeeringConnection between Core and Production VPCs will not be created!"
     unset production_vpc_stack_name
+else
+    echo -n "."
 fi
 
 if ! aws cloudformation describe-stacks --stack-name Staging-VPC \
                                         --profile $profile --region $region --output text &> /dev/null; then
     echo "Stack dependency missing - Staging-VPC Stack does not exist!"
+    echo "- VPCPeeringConnection between Core and Staging VPCs will not be created!"
     unset staging_vpc_stack_name
+else
+    echo -n "."
 fi
 
 if ! aws cloudformation describe-stacks --stack-name Testing-VPC \
                                         --profile $profile --region $region --output text &> /dev/null; then
     echo "Stack dependency missing - Testing-VPC Stack does not exist!"
+    echo "- VPCPeeringConnection between Core and Testing VPCs will not be created!"
     unset testing_vpc_stack_name
+else
+    echo -n "."
 fi
 
 if ! aws cloudformation describe-stacks --stack-name Development-VPC \
                                         --profile $profile --region $region --output text &> /dev/null; then
     echo "Stack dependency missing - Development-VPC Stack does not exist!"
+    echo "- VPCPeeringConnection between Core and Development VPCs will not be created!"
     unset development_vpc_stack_name
+else
+    echo -n "."
 fi
-sleep 2
+echo " Done"
+sleep 1
 
 templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
 template_folder=core
