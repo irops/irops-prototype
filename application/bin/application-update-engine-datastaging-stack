@@ -399,11 +399,18 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     exit 58
 fi
 
+echo -n "Confirming Stack pre-requisites "
+
 if ! aws cloudformation describe-stacks --stack-name $environment-$application-$component \
                                         --profile $profile --region $region --output text &> /dev/null; then
+    echo
     echo "Unable to update - $environment-$application-$component Stack does not exist!"
-    exit 80
+    exit 98
+else
+    echo -n "."
 fi
+echo " Done"
+sleep 1
 
 templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
 template_folder=application
@@ -513,10 +520,13 @@ read -r -d '' statement << EOS
 aws cloudformation update-stack --stack-name $environment-$application-$component \\
                                 $template_parameter \\
                                 $stack_policy_parameter \\
-                                --parameters ParameterKey=VPNStackName,ParameterValue=$environment-OpenVPNAS \\
-                                             ParameterKey=OctopusDeployStackName,ParameterValue=$environment-Octopus-Deploy \\
+                                --parameters ParameterKey=EngineMonitoringStackName,ParameterValue=$environment-Engine-Monitoring \\
+                                             ParameterKey=DataTransferSFTPStackName,ParameterValue= \\
                                              ParameterKey=MongoDBStackName,ParameterValue=$environment-MongoDB \\
                                              ParameterKey=RabbitMQStackName,ParameterValue=$environment-RabbitMQ \\
+                                             ParameterKey=WebSphereMQStackName,ParameterValue=$environment-WebSphereMQ \\
+                                             ParameterKey=OctopusDeployStackName,ParameterValue=$environment-Octopus-Deploy \\
+                                             ParameterKey=VPNStackName,ParameterValue=$environment-OpenVPNAS \\
                                              ParameterKey=ActiveDirectoryStackName,ParameterValue=$environment-ActiveDirectory \\
                                              ParameterKey=VPCStackName,ParameterValue=$environment-VPC \\
                                              ParameterKey=CustomIdentifierFunctionsStackName,ParameterValue=CustomIdentifierFunctions \\

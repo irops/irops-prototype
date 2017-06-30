@@ -9,10 +9,13 @@
         {
           "Label" : { "default" : "Stack Dependencies" },
           "Parameters" : [
-            "VPNStackName",
-            "OctopusDeployStackName",
+            "EngineMonitoringStackName",
+            "DataTransferSFTPStackName",
             "MongoDBStackName",
             "RabbitMQStackName",
+            "WebSphereMQStackName",
+            "OctopusDeployStackName",
+            "VPNStackName",
             "ActiveDirectoryStackName",
             "VPCStackName",
             "CustomIdentifierFunctionsStackName",
@@ -84,10 +87,13 @@
       ],
 
       "ParameterLabels" : {
-        "VPNStackName" : { "default" : "VPN Stack Name" },
-        "OctopusDeployStackName" : { "default" : "Octopus Deploy Stack Name" },
+        "EngineMonitoringStackName" : { "default" : "Engine Monitoring Stack Name" },
+        "DataTransferSFTPStackName" : { "default" : "DataTransfer SFTP Stack Name" },
         "MongoDBStackName" : { "default" : "MongoDB Stack Name" },
         "RabbitMQStackName" : { "default" : "RabbitMQ Stack Name" },
+        "WebSphereMQStackName" : { "default" : "WebSphereMQ Stack Name" },
+        "OctopusDeployStackName" : { "default" : "Octopus Deploy Stack Name" },
+        "VPNStackName" : { "default" : "VPN Stack Name" },
         "ActiveDirectoryStackName" : { "default" : "Active Directory Stack Name" },
         "VPCStackName" : { "default" : "VPC Stack Name" },
         "CustomIdentifierFunctionsStackName" : { "default" : "CustomIdentifierFunctions Stack Name" },
@@ -129,21 +135,21 @@
   },
 
   "Parameters" : {
-    "VPNStackName" : {
-      "Description" : "Name of the CloudFormation Stack containing the VPN Instances",
+    "EngineMonitoringStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Engine Monitoring Instances",
       "Type" : "String",
       "MinLength" : 8,
       "MaxLength" : 64,
-      "Default" : "Production-OpenVPN",
+      "Default" : "Production-Engine-Monitoring",
       "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
-    "OctopusDeployStackName" : {
-      "Description" : "Name of the CloudFormation Stack containing the Octopus Deploy Instances",
+    "DataTransferSFTPStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the DataTransfer SFTP Instances",
       "Type" : "String",
       "MaxLength" : 64,
-      "Default" : "Production-Octopus-Deploy",
+      "Default" : "",
       "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
@@ -164,6 +170,35 @@
       "MinLength" : 8,
       "MaxLength" : 64,
       "Default" : "Production-RabbitMQ",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "WebSphereMQStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the WebSphereMQ Instances",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-WebSphereMQ",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "OctopusDeployStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Octopus Deploy Instances",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "Production-Octopus-Deploy",
+      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "VPNStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the VPN Instances",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-OpenVPN",
       "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
@@ -542,6 +577,7 @@
     "ConfigureStaticAddress&MultiZone" : { "Fn::And" : [{ "Condition" : "ConfigureStaticAddress" }, { "Condition" : "ConfigureMultiZone" }]},
     "ConfigureLogs" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LogRetention" }, "0" ]}]},
     "ConfigureSchedule" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "Schedule" }, "" ]}]},
+    "ConfigureDataTransferIntegration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "DataTransferSFTPStackName" }, "" ] }]},
     "ConfigureOctopusIntegration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "OctopusDeployStackName" }, "" ] }]},
     "ConfigureAdministratorNetwork0" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}, "NONE" ]}]},
     "ConfigureAdministratorNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}, "NONE" ]}]},
@@ -1107,8 +1143,11 @@
           "GroupSet"                 : [
             { "Ref" :  "InstanceSecurityGroup" },
             { "Fn::ImportValue" : { "Fn::Sub" : "${ActiveDirectoryStackName}-DomainMemberSecurityGroup" }},
+            { "Fn::ImportValue" : { "Fn::Sub" : "${WebSphereMQStackName}-ClientSecurityGroup" }},
             { "Fn::ImportValue" : { "Fn::Sub" : "${RabbitMQStackName}-ClientSecurityGroup" }},
-            { "Fn::ImportValue" : { "Fn::Sub" : "${MongoDBStackName}-ClientSecurityGroup" }}
+            { "Fn::ImportValue" : { "Fn::Sub" : "${MongoDBStackName}-ClientSecurityGroup" }},
+            { "Fn::If" : [ "ConfigureDataTransferIntegration", { "Fn::ImportValue" : { "Fn::Sub" : "${DataTransferSFTPStackName}-ClientSecurityGroup" }}, { "Ref" : "AWS::NoValue" }]},
+            { "Fn::ImportValue" : { "Fn::Sub" : "${EngineMonitoringStackName}-ClientSecurityGroup" }}
           ],
           "AssociatePublicIpAddress" : "false",
           "DeleteOnTermination"      : "true"
@@ -1491,8 +1530,11 @@
           "GroupSet"                 : [
             { "Ref" :  "InstanceSecurityGroup" },
             { "Fn::ImportValue" : { "Fn::Sub" : "${ActiveDirectoryStackName}-DomainMemberSecurityGroup" }},
+            { "Fn::ImportValue" : { "Fn::Sub" : "${WebSphereMQStackName}-ClientSecurityGroup" }},
             { "Fn::ImportValue" : { "Fn::Sub" : "${RabbitMQStackName}-ClientSecurityGroup" }},
-            { "Fn::ImportValue" : { "Fn::Sub" : "${MongoDBStackName}-ClientSecurityGroup" }}
+            { "Fn::ImportValue" : { "Fn::Sub" : "${MongoDBStackName}-ClientSecurityGroup" }},
+            { "Fn::If" : [ "ConfigureDataTransferIntegration", { "Fn::ImportValue" : { "Fn::Sub" : "${DataTransferSFTPStackName}-ClientSecurityGroup" }}, { "Ref" : "AWS::NoValue" }]},
+            { "Fn::ImportValue" : { "Fn::Sub" : "${EngineMonitoringStackName}-ClientSecurityGroup" }}
           ],
           "AssociatePublicIpAddress" : "false",
           "DeleteOnTermination"      : "true"
@@ -1875,8 +1917,11 @@
           "GroupSet"                 : [
             { "Ref" :  "InstanceSecurityGroup" },
             { "Fn::ImportValue" : { "Fn::Sub" : "${ActiveDirectoryStackName}-DomainMemberSecurityGroup" }},
+            { "Fn::ImportValue" : { "Fn::Sub" : "${WebSphereMQStackName}-ClientSecurityGroup" }},
             { "Fn::ImportValue" : { "Fn::Sub" : "${RabbitMQStackName}-ClientSecurityGroup" }},
-            { "Fn::ImportValue" : { "Fn::Sub" : "${MongoDBStackName}-ClientSecurityGroup" }}
+            { "Fn::ImportValue" : { "Fn::Sub" : "${MongoDBStackName}-ClientSecurityGroup" }},
+            { "Fn::If" : [ "ConfigureDataTransferIntegration", { "Fn::ImportValue" : { "Fn::Sub" : "${DataTransferSFTPStackName}-ClientSecurityGroup" }}, { "Ref" : "AWS::NoValue" }]},
+            { "Fn::ImportValue" : { "Fn::Sub" : "${EngineMonitoringStackName}-ClientSecurityGroup" }}
           ],
           "AssociatePublicIpAddress" : "false",
           "DeleteOnTermination"      : "true"
@@ -2268,8 +2313,11 @@
           "GroupSet"                 : [
             { "Ref" :  "InstanceSecurityGroup" },
             { "Fn::ImportValue" : { "Fn::Sub" : "${ActiveDirectoryStackName}-DomainMemberSecurityGroup" }},
+            { "Fn::ImportValue" : { "Fn::Sub" : "${WebSphereMQStackName}-ClientSecurityGroup" }},
             { "Fn::ImportValue" : { "Fn::Sub" : "${RabbitMQStackName}-ClientSecurityGroup" }},
-            { "Fn::ImportValue" : { "Fn::Sub" : "${MongoDBStackName}-ClientSecurityGroup" }}
+            { "Fn::ImportValue" : { "Fn::Sub" : "${MongoDBStackName}-ClientSecurityGroup" }},
+            { "Fn::If" : [ "ConfigureDataTransferIntegration", { "Fn::ImportValue" : { "Fn::Sub" : "${DataTransferSFTPStackName}-ClientSecurityGroup" }}, { "Ref" : "AWS::NoValue" }]},
+            { "Fn::ImportValue" : { "Fn::Sub" : "${EngineMonitoringStackName}-ClientSecurityGroup" }}
           ],
           "AssociatePublicIpAddress" : "false",
           "DeleteOnTermination"      : "true"
@@ -2655,8 +2703,11 @@
           "GroupSet"                 : [
             { "Ref" :  "InstanceSecurityGroup" },
             { "Fn::ImportValue" : { "Fn::Sub" : "${ActiveDirectoryStackName}-DomainMemberSecurityGroup" }},
+            { "Fn::ImportValue" : { "Fn::Sub" : "${WebSphereMQStackName}-ClientSecurityGroup" }},
             { "Fn::ImportValue" : { "Fn::Sub" : "${RabbitMQStackName}-ClientSecurityGroup" }},
-            { "Fn::ImportValue" : { "Fn::Sub" : "${MongoDBStackName}-ClientSecurityGroup" }}
+            { "Fn::ImportValue" : { "Fn::Sub" : "${MongoDBStackName}-ClientSecurityGroup" }},
+            { "Fn::If" : [ "ConfigureDataTransferIntegration", { "Fn::ImportValue" : { "Fn::Sub" : "${DataTransferSFTPStackName}-ClientSecurityGroup" }}, { "Ref" : "AWS::NoValue" }]},
+            { "Fn::ImportValue" : { "Fn::Sub" : "${EngineMonitoringStackName}-ClientSecurityGroup" }}
           ],
           "AssociatePublicIpAddress" : "false",
           "DeleteOnTermination"      : "true"
@@ -3042,8 +3093,11 @@
           "GroupSet"                 : [
             { "Ref" :  "InstanceSecurityGroup" },
             { "Fn::ImportValue" : { "Fn::Sub" : "${ActiveDirectoryStackName}-DomainMemberSecurityGroup" }},
+            { "Fn::ImportValue" : { "Fn::Sub" : "${WebSphereMQStackName}-ClientSecurityGroup" }},
             { "Fn::ImportValue" : { "Fn::Sub" : "${RabbitMQStackName}-ClientSecurityGroup" }},
-            { "Fn::ImportValue" : { "Fn::Sub" : "${MongoDBStackName}-ClientSecurityGroup" }}
+            { "Fn::ImportValue" : { "Fn::Sub" : "${MongoDBStackName}-ClientSecurityGroup" }},
+            { "Fn::If" : [ "ConfigureDataTransferIntegration", { "Fn::ImportValue" : { "Fn::Sub" : "${DataTransferSFTPStackName}-ClientSecurityGroup" }}, { "Ref" : "AWS::NoValue" }]},
+            { "Fn::ImportValue" : { "Fn::Sub" : "${EngineMonitoringStackName}-ClientSecurityGroup" }}
           ],
           "AssociatePublicIpAddress" : "false",
           "DeleteOnTermination"      : "true"

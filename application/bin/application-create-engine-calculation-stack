@@ -396,71 +396,117 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     exit 58
 fi
 
+echo -n "Confirming Stack pre-requisites "
+
 if ! aws cloudformation describe-stacks --stack-name StandardTopics \
                                         --profile $profile --region $region --output text &> /dev/null; then
+    echo
     echo "Stack dependency missing - StandardTopics Stack does not exist!"
     exit 60
+else
+    echo -n "."
 fi
 
 if ! aws cloudformation describe-stacks --stack-name StandardBuckets \
                                         --profile $profile --region $region --output text &> /dev/null; then
+    echo
     echo "Stack dependency missing - StandardBuckets Stack does not exist!"
     exit 61
+else
+    echo -n "."
 fi
 
 if ! aws cloudformation describe-stacks --stack-name StandardAMIFunctions \
                                         --profile $profile --region $region --output text &> /dev/null; then
+    echo
     echo "Stack dependency missing - StandardAMIFunctions Stack does not exist!"
     exit 62
+else
+    echo -n "."
 fi
 
 if ! aws cloudformation describe-stacks --stack-name StandardCIDRFunctions \
                                         --profile $profile --region $region --output text &> /dev/null; then
+    echo
     echo "Stack dependency missing - StandardCIDRFunctions Stack does not exist!"
     exit 63
+else
+    echo -n "."
 fi
 
 if ! aws cloudformation describe-stacks --stack-name CustomIdentifierFunctions \
                                         --profile $profile --region $region --output text &> /dev/null; then
+    echo
     echo "Stack dependency missing - CustomIdentifierFunctions Stack does not exist!"
     exit 64
+else
+    echo -n "."
 fi
 
 if ! aws cloudformation describe-stacks --stack-name $environment-VPC \
                                         --profile $profile --region $region --output text &> /dev/null; then
+    echo
     echo "Stack dependency missing - $environment-VPC Stack does not exist!"
     exit 70
+else
+    echo -n "."
 fi
 
 if ! aws cloudformation describe-stacks --stack-name $environment-ActiveDirectory \
                                         --profile $profile --region $region --output text &> /dev/null; then
+    echo
     echo "Stack dependency missing - $environment-ActiveDirectory Stack does not exist!"
-    exit 80
-fi
-
-if ! aws cloudformation describe-stacks --stack-name $environment-RabbitMQ \
-                                        --profile $profile --region $region --output text &> /dev/null; then
-    echo "Stack dependency missing - $environment-RabbitMQ Stack does not exist!"
-    exit 81
-fi
-
-if ! aws cloudformation describe-stacks --stack-name $environment-MongoDB \
-                                        --profile $profile --region $region --output text &> /dev/null; then
-    echo "Stack dependency missing - $environment-MongoDB Stack does not exist!"
-    exit 82
-fi
-
-if ! aws cloudformation describe-stacks --stack-name $environment-Octopus-Deploy \
-                                        --profile $profile --region $region --output text &> /dev/null; then
-    echo "Stack dependency missing - $environment-Octopus-Deploy Stack does not exist!"
-    exit 83
+    exit 72
+else
+    echo -n "."
 fi
 
 if ! aws cloudformation describe-stacks --stack-name $environment-OpenVPNAS \
                                         --profile $profile --region $region --output text &> /dev/null; then
+    echo
     echo "Stack dependency missing - $environment-OpenVPNAS Stack does not exist!"
-    exit 89
+    exit 76
+else
+    echo -n "."
 fi
+
+if ! aws cloudformation describe-stacks --stack-name $environment-Octopus-Deploy \
+                                        --profile $profile --region $region --output text &> /dev/null; then
+    echo
+    echo "Stack dependency missing - $environment-Octopus-Deploy Stack does not exist!"
+    exit 79
+else
+    echo -n "."
+fi
+
+if ! aws cloudformation describe-stacks --stack-name $environment-RabbitMQ \
+                                        --profile $profile --region $region --output text &> /dev/null; then
+    echo
+    echo "Stack dependency missing - $environment-RabbitMQ Stack does not exist!"
+    exit 81
+else
+    echo -n "."
+fi
+
+if ! aws cloudformation describe-stacks --stack-name $environment-MongoDB \
+                                        --profile $profile --region $region --output text &> /dev/null; then
+    echo
+    echo "Stack dependency missing - $environment-MongoDB Stack does not exist!"
+    exit 82
+else
+    echo -n "."
+fi
+
+if ! aws cloudformation describe-stacks --stack-name $environment-Engine-Monitoring \
+                                        --profile $profile --region $region --output text &> /dev/null; then
+    echo
+    echo "Stack dependency missing - $environment-Engine-Monitoring Stack does not exist!"
+    exit 90
+else
+    echo -n "."
+fi
+echo " Done"
+sleep 1
 
 templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
 template_folder=application
@@ -567,10 +613,11 @@ read -r -d '' statement << EOS
 aws cloudformation create-stack --stack-name $environment-$application-$component \\
                                 $template_parameter \\
                                 $stack_policy_parameter \\
-                                --parameters ParameterKey=VPNStackName,ParameterValue=$environment-OpenVPNAS \\
-                                             ParameterKey=OctopusDeployStackName,ParameterValue=$environment-Octopus-Deploy \\
+                                --parameters ParameterKey=EngineMonitoringStackName,ParameterValue=$environment-Engine-Monitoring \\
                                              ParameterKey=MongoDBStackName,ParameterValue=$environment-MongoDB \\
                                              ParameterKey=RabbitMQStackName,ParameterValue=$environment-RabbitMQ \\
+                                             ParameterKey=OctopusDeployStackName,ParameterValue=$environment-Octopus-Deploy \\
+                                             ParameterKey=VPNStackName,ParameterValue=$environment-OpenVPNAS \\
                                              ParameterKey=ActiveDirectoryStackName,ParameterValue=$environment-ActiveDirectory \\
                                              ParameterKey=VPCStackName,ParameterValue=$environment-VPC \\
                                              ParameterKey=CustomIdentifierFunctionsStackName,ParameterValue=CustomIdentifierFunctions \\
