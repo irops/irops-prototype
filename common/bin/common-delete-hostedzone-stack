@@ -206,11 +206,18 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     exit 58
 fi
 
+echo -n "Confirming Stack pre-requisites "
+
 if ! aws cloudformation describe-stacks --stack-name $environment-HostedZone \
                                         --profile $profile --region $region --output text &> /dev/null; then
+    echo
     echo "Unable to delete - $environment-HostedZone Stack does not exist!"
-    exit 80
+    exit 99
+else
+    echo -n "."
 fi
+echo " Done"
+sleep 1
 
 # Prevent certain environment variables from breaking commands
 unset AWS_DEFAULT_PROFILE
