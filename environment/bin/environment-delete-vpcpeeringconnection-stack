@@ -32,7 +32,7 @@ user=${AWS_USER_NAME:-administrator}
 
 usage () {
     echo "Usage: ${BASH_SOURCE##*/} [[-i] | [-s | -f]] [-v] [-m]"
-    echo "                  [-E environment]"
+    echo "                  [-E environment] [-P peer]"
     echo "                  [-r region] [-a account] [-u user]"
     echo "  -i              interactive"
     echo "  -s              slower: increase pauses by 25%"
@@ -229,11 +229,18 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     exit 58
 fi
 
+echo -n "Confirming Stack pre-requisites "
+
 if ! aws cloudformation describe-stacks --stack-name $environment-${environment_peer}VPCPeeringConnection \
                                         --profile $profile --region $region --output text &> /dev/null; then
+    echo
     echo "Unable to delete - $environment-${environment_peer}VPCPeeringConnection Stack does not exist!"
-    exit 80
+    exit 99
+else
+    echo -n "."
 fi
+echo " Done"
+sleep 1
 
 # Prevent certain environment variables from breaking commands
 unset AWS_DEFAULT_PROFILE
