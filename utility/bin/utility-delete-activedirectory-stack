@@ -15,7 +15,7 @@ run_default=10
 pause_default=2
 next_default=5
 delete_default=60
-delete_attempts=10
+delete_attempts=60
 
 interactive=0
 speed=100
@@ -226,11 +226,18 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     exit 58
 fi
 
+echo -n "Confirming Stack pre-requisites "
+
 if ! aws cloudformation describe-stacks --stack-name $environment-$utility \
                                         --profile $profile --region $region --output text &> /dev/null; then
+    echo
     echo "Unable to delete - $environment-$utility Stack does not exist!"
-    exit 80
+    exit 99
+else
+    echo -n "."
 fi
+echo " Done"
+sleep 1
 
 # Prevent certain environment variables from breaking commands
 unset AWS_DEFAULT_PROFILE

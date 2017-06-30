@@ -383,11 +383,18 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     exit 58
 fi
 
+echo -n "Confirming Stack pre-requisites "
+
 if ! aws cloudformation describe-stacks --stack-name $environment-$utility \
                                         --profile $profile --region $region --output text &> /dev/null; then
+    echo
     echo "Unable to update - $environment-$utility Stack does not exist!"
-    exit 80
+    exit 98
+else
+    echo -n "."
 fi
+echo " Done"
+sleep 1
 
 templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
 template_folder=utility
@@ -497,7 +504,7 @@ aws cloudformation update-stack --stack-name $environment-$utility \\
                                              ParameterKey=EnvironmentType,ParameterValue=$environment_type \\
                                              ParameterKey=EnvironmentZones,ParameterValue=$environment_zones \\
                                              ParameterKey=OSName,ParameterValue="$os_name" \\
-                                             ParameterKey=OSDate,ParameterValue=$os_date \\
+                                             ParameterKey=OSDate,ParameterValue="$os_date" \\
                                              ParameterKey=SharedScriptFolder,ParameterValue=$shared_script_folder \\
                                              ParameterKey=ScriptFolder,ParameterValue=$script_folder \\
                                              ParameterKey=SharedConfigurationFolder,ParameterValue=$shared_configuration_folder \\

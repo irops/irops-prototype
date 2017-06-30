@@ -380,41 +380,63 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     exit 58
 fi
 
+echo -n "Confirming Stack pre-requisites "
+
 if ! aws cloudformation describe-stacks --stack-name StandardTopics \
                                         --profile $profile --region $region --output text &> /dev/null; then
+    echo
     echo "Stack dependency missing - StandardTopics Stack does not exist!"
     exit 60
+else
+    echo -n "."
 fi
 
 if ! aws cloudformation describe-stacks --stack-name StandardBuckets \
                                         --profile $profile --region $region --output text &> /dev/null; then
+    echo
     echo "Stack dependency missing - StandardBuckets Stack does not exist!"
     exit 61
+else
+    echo -n "."
 fi
 
 if ! aws cloudformation describe-stacks --stack-name StandardAMIFunctions \
                                         --profile $profile --region $region --output text &> /dev/null; then
+    echo
     echo "Stack dependency missing - StandardAMIFunctions Stack does not exist!"
     exit 62
+else
+    echo -n "."
 fi
 
 if ! aws cloudformation describe-stacks --stack-name StandardCIDRFunctions \
                                         --profile $profile --region $region --output text &> /dev/null; then
+    echo
     echo "Stack dependency missing - StandardCIDRFunctions Stack does not exist!"
     exit 63
+else
+    echo -n "."
 fi
 
 if ! aws cloudformation describe-stacks --stack-name CustomIdentifierFunctions \
                                         --profile $profile --region $region --output text &> /dev/null; then
+    echo
     echo "Stack dependency missing - CustomIdentifierFunctions Stack does not exist!"
     exit 64
+else
+    echo -n "."
 fi
 
 if ! aws cloudformation describe-stacks --stack-name $environment-VPC \
                                         --profile $profile --region $region --output text &> /dev/null; then
+    echo
     echo "Stack dependency missing - $environment-VPC Stack does not exist!"
     exit 70
+else
+    echo -n "."
 fi
+echo " Done"
+sleep 1
 
 templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
 template_folder=utility
@@ -574,7 +596,7 @@ aws cloudformation create-stack --stack-name $environment-$utility \\
                                              ParameterKey=EnvironmentType,ParameterValue=$environment_type \\
                                              ParameterKey=EnvironmentZones,ParameterValue=$environment_zones \\
                                              ParameterKey=OSName,ParameterValue="$os_name" \\
-                                             ParameterKey=OSDate,ParameterValue=$os_date \\
+                                             ParameterKey=OSDate,ParameterValue="$os_date" \\
                                              ParameterKey=SharedScriptFolder,ParameterValue=$shared_script_folder \\
                                              ParameterKey=ScriptFolder,ParameterValue=$script_folder \\
                                              ParameterKey=SharedConfigurationFolder,ParameterValue=$shared_configuration_folder \\
