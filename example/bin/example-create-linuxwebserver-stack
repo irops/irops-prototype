@@ -2,9 +2,6 @@
 #
 # This script creates the Example LinuxWebServer Stack in an Environment Account.
 #
-# This script is written in a format suitable for interactive demos,
-# but can be run non-Iteractively and more quickly with the "-I" flag.
-#
 
 #  1. Initalize Environment
 
@@ -20,7 +17,7 @@ next_default=5
 create_default=15
 create_attempts=40
 
-interactive=1
+interactive=0
 speed=100
 verbose=0
 monitor=0
@@ -33,18 +30,8 @@ environment_type=${ENVIRONMENT_TYPE:-small}
 application=${APPLICATION_NAME:-LinuxWebServer}
 application_domain=${APPLICATION_DOMAIN:-lws}
 application_version=${APPLICATION_VERSION:-2.0.0}
-public_user_network=${PUBLIC_USER_NETWORK:-0.0.0.0/0}
-public_user_network1=${PUBLIC_USER_NETWORK1:-}
-public_user_network2=${PUBLIC_USER_NETWORK2:-}
-public_administrator_network=${PUBLIC_ADMINISTRATOR_NETWORK:-0.0.0.0/0}
-public_administrator_network1=${PUBLIC_ADMINISTRATOR_NETWORK1:-}
-public_administrator_network2=${PUBLIC_ADMINISTRATOR_NETWORK2:-}
-private_user_network=${PRIVATE_USER_NETWORK:-10.0.0.0/16}
-private_user_network1=${PRIVATE_USER_NETWORK1:-}
-private_user_network2=${PRIVATE_USER_NETWORK2:-}
-private_administrator_network=${PRIVATE_ADMINISTRATOR_NETWORK:-10.0.0.0/16}
-private_administrator_network1=${PRIVATE_ADMINISTRATOR_NETWORK1:-}
-private_administrator_network2=${PRIVATE_ADMINISTRATOR_NETWORK2:-}
+user_networks=${USER_NETWORKS:-0.0.0.0/0,NONE,NONE,NONE,NONE,NONE,NONE,NONE}
+administrator_networks=${ADMINISTRATOR_NETWORKS:-NONE,NONE,NONE,NONE,NONE,NONE,NONE,NONE}
 region=${AWS_DEFAULT_REGION:-us-west-2}
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-administrator}
@@ -54,14 +41,13 @@ key=${AWS_KEY_NAME:-example}
 #  2. Define functions
 
 usage () {
-    echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v] [-m] [-d]"
+    echo "Usage: ${BASH_SOURCE##*/} [[-i] | [-s | -f]] [-v] [-m] [-d]"
     echo "                  [-O owner] [-C company] [-S system]"
     echo "                  [-E environment] [-T type]"
     echo "                  [-A application] [-D domain] [-V version]"
-    echo "                  [-p network] [-P network]"
-    echo "                  [-n network] [-N network]"
+    echo "                  [-n networks] [-N networks]"
     echo "                  [-r region] [-a account] [-u user] [-k key]"
-    echo "  -I              non-interactive"
+    echo "  -i              interactive"
     echo "  -s              slower: increase pauses by 25%"
     echo "  -f              faster: reduce pauses by 25%"
     echo "  -v              verbose"
@@ -75,10 +61,8 @@ usage () {
     echo "  -A application  Application Name (default: $application)"
     echo "  -D domain       Application Domain (default: $application_domain)"
     echo "  -V version      Application Version (default: $application_version)"
-    echo "  -p network      Public User Network (default: $public_user_network)"
-    echo "  -P network      Public Administrator Network (default: $public_administrator_network)"
-    echo "  -n network      Private User Network (default: $private_user_network)"
-    echo "  -N network      Private Administrator Network (default: $private_administrator_network)"
+    echo "  -n networks     User Networks (default: $user_networks)"
+    echo "  -N networks     Administrator Networks (default: $administrator_networks)"
     echo "  -r region       Region (default: $region)"
     echo "  -a account      Account (default: $account)"
     echo "  -u user         User (default: $user)"
@@ -164,11 +148,10 @@ next() {
 
 
 #  3. Parse command line options
-#     - Note, using options 1-8 as hidden options to set additional network ranges
 
-while getopts IsfvmdO:C:S:E:T:A:D:V:p:1:2:P:3:4:n:5:6:N:7:8:r:a:u:k:? arg; do
+while getopts isfvmdO:C:S:E:T:A:D:V:n:N:r:a:u:k:? arg; do
     case $arg in
-    I)  interactive=0;;
+    i)  interactive=1;;
     s)  ((speed < speed_max)) && ((speed=speed+25));;
     f)  ((speed > 0)) && ((speed=speed-25));;
     v)  verbose=1;;
@@ -182,18 +165,8 @@ while getopts IsfvmdO:C:S:E:T:A:D:V:p:1:2:P:3:4:n:5:6:N:7:8:r:a:u:k:? arg; do
     A)  application="$OPTARG";;
     D)  application_domain="$OPTARG";;
     V)  application_version="$OPTARG";;
-    p)  public_user_network="$OPTARG";;
-    1)  public_user_network1="$OPTARG";;
-    2)  public_user_network2="$OPTARG";;
-    P)  public_administrator_network="$OPTARG";;
-    3)  public_administrator_network1="$OPTARG";;
-    4)  public_administrator_network2="$OPTARG";;
-    n)  private_user_network="$OPTARG";;
-    5)  private_user_network1="$OPTARG";;
-    6)  private_user_network2="$OPTARG";;
-    N)  private_administrator_network="$OPTARG";;
-    7)  private_administrator_network1="$OPTARG";;
-    8)  private_administrator_network2="$OPTARG";;
+    n)  user_networks="$OPTARG";;
+    N)  administrator_networks="$OPTARG";;
     r)  region="$OPTARG";;
     a)  account="$OPTARG";;
     u)  user="$OPTARG";;
@@ -313,28 +286,16 @@ if [ -z $application_version ]; then
     exit 34
 fi
 
-if [ -z $public_user_network ]; then
-    echo "-p network missing!"
-    echo "Could not automatically determine public user network, and it was not specified as a parameter"
+if [ -z $user_networks ]; then
+    echo "-n networks missing!"
+    echo "Could not automatically determine user networks, and it was not specified as a parameter"
     exit 40
 fi
 
-if [ -z $public_administrator_network ]; then
-    echo "-P network missing!"
-    echo "Could not automatically determine public administrator network, and it was not specified as a parameter"
+if [ -z $administrator_networks ]; then
+    echo "-N networks missing!"
+    echo "Could not automatically determine administrator networks, and it was not specified as a parameter"
     exit 42
-fi
-
-if [ -z $private_user_network ]; then
-    echo "-n network missing!"
-    echo "Could not automatically determine private user network, and it was not specified as a parameter"
-    exit 44
-fi
-
-if [ -z $private_administrator_network ]; then
-    echo "-N network missing!"
-    echo "Could not automatically determine private administrator network, and it was not specified as a parameter"
-    exit 46
 fi
 
 if [ -z $region ]; then
@@ -379,40 +340,65 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     exit 58
 fi
 
+echo -n "Confirming Stack pre-requisites "
+
 if ! aws cloudformation describe-stacks --stack-name StandardTopics \
                                         --profile $profile --region $region --output text &> /dev/null; then
+    echo
     echo "Stack dependency missing - StandardTopics Stack does not exist!"
     exit 60
+else
+    echo -n "."
 fi
 
 if ! aws cloudformation describe-stacks --stack-name StandardBuckets \
                                         --profile $profile --region $region --output text &> /dev/null; then
+    echo
     echo "Stack dependency missing - StandardBuckets Stack does not exist!"
     exit 61
+else
+    echo -n "."
 fi
 
 if ! aws cloudformation describe-stacks --stack-name StandardAMIFunctions \
                                         --profile $profile --region $region --output text &> /dev/null; then
+    echo
     echo "Stack dependency missing - StandardAMIFunctions Stack does not exist!"
     exit 62
+else
+    echo -n "."
 fi
 
 if ! aws cloudformation describe-stacks --stack-name CustomIdentifierFunctions \
                                         --profile $profile --region $region --output text &> /dev/null; then
+    echo
     echo "Stack dependency missing - CustomIdentifierFunctions Stack does not exist!"
     exit 64
+else
+    echo -n "."
 fi
 
 if ! aws cloudformation describe-stacks --stack-name $environment-VPC \
                                         --profile $profile --region $region --output text &> /dev/null; then
+    echo
     echo "Stack dependency missing - $environment-VPC Stack does not exist!"
     exit 70
+else
+    echo -n "."
 fi
+
+echo " Done"
+sleep 1
 
 templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
 template_folder=example
 
+scripts_bucket=${AWS_SCRIPTS_BUCKET:-scripts-$region-$account}
+shared_script_folder=Linux
+script_folder=LinuxBastions
+
 examples_bucket=${AWS_EXAMPLES_BUCKET:-examples-$region-$account}
+shared_example_folder=Linux
 example_folder=LinuxWebServer
 example_object=LinuxWebServer-$application_version.tgz
 
@@ -512,24 +498,17 @@ aws cloudformation create-stack --stack-name $environment-$application \\
                                              ParameterKey=SystemName,ParameterValue=$system \\
                                              ParameterKey=EnvironmentType,ParameterValue=$environment_type \\
                                              ParameterKey=OSName,ParameterValue="$os_name" \\
+                                             ParameterKey=SharedScriptFolder,ParameterValue=$shared_script_folder \\
+                                             ParameterKey=ScriptFolder,ParameterValue=$script_folder \\
+                                             ParameterKey=SharedApplicationFolder,ParameterValue=$shared_example_folder \\
                                              ParameterKey=ApplicationFolder,ParameterValue=$example_folder \\
                                              ParameterKey=ApplicationObject,ParameterValue=$example_object \\
                                              ParameterKey=ApplicationName,ParameterValue=$application \\
                                              ParameterKey=ApplicationDomain,ParameterValue=$application_domain \\
                                              ParameterKey=ApplicationVersion,ParameterValue=$application_version \\
                                              ParameterKey=LogRetention,ParameterValue=$log_retention \\
-                                             ParameterKey=PublicUserNetwork,ParameterValue=$public_user_network \\
-                                             ParameterKey=PublicUserNetwork1,ParameterValue=$public_user_network1 \\
-                                             ParameterKey=PublicUserNetwork2,ParameterValue=$public_user_network2 \\
-                                             ParameterKey=PublicAdministratorNetwork,ParameterValue=$public_administrator_network \\
-                                             ParameterKey=PublicAdministratorNetwork1,ParameterValue=$public_administrator_network1 \\
-                                             ParameterKey=PublicAdministratorNetwork2,ParameterValue=$public_administrator_network2 \\
-                                             ParameterKey=PrivateUserNetwork,ParameterValue=$private_user_network \\
-                                             ParameterKey=PrivateUserNetwork1,ParameterValue=$private_user_network1 \\
-                                             ParameterKey=PrivateUserNetwork2,ParameterValue=$private_user_network2 \\
-                                             ParameterKey=PrivateAdministratorNetwork,ParameterValue=$private_administrator_network \\
-                                             ParameterKey=PrivateAdministratorNetwork1,ParameterValue=$private_administrator_network1 \\
-                                             ParameterKey=PrivateAdministratorNetwork2,ParameterValue=$private_administrator_network2 \\
+                                             ParameterKey=UserNetworks,ParameterValue=\"$user_networks\" \\
+                                             ParameterKey=AdministratorNetworks,ParameterValue=\"$administrator_networks\" \\
                                 --tags Key=Owner,Value=$owner \\
                                        Key=Company,Value=$company \\
                                        Key=System,Value=$system \\
