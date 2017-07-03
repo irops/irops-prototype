@@ -37,8 +37,16 @@
           ]
         },
         {
+          "Label" : { "default" : "Application Dependencies Configuration" },
+          "Parameters" : [
+            "SharedScriptFolder",
+            "ScriptFolder"
+          ]
+        },
+        {
           "Label" : { "default" : "Application Configuration" },
           "Parameters" : [
+            "SharedApplicationFolder",
             "ApplicationFolder",
             "ApplicationObject",
             "ApplicationName",
@@ -52,18 +60,8 @@
         {
           "Label" : { "default" : "Security Configuration" },
           "Parameters" : [
-            "PublicUserNetwork",
-            "PublicUserNetwork1",
-            "PublicUserNetwork2",
-            "PublicAdministratorNetwork",
-            "PublicAdministratorNetwork1",
-            "PublicAdministratorNetwork2",
-            "PrivateUserNetwork",
-            "PrivateUserNetwork1",
-            "PrivateUserNetwork2",
-            "PrivateAdministratorNetwork",
-            "PrivateAdministratorNetwork1",
-            "PrivateAdministratorNetwork2"
+            "UserNetworks",
+            "AdministratorNetworks"
           ]
         }
       ],
@@ -79,6 +77,9 @@
         "SystemName" : { "default" : "System Name" },
         "EnvironmentType" : { "default" : "Environment Type" },
         "OSName" : { "default" : "Operating System Name" },
+        "SharedScriptFolder" : { "default" : "Shared Script Folder" },
+        "ScriptFolder" : { "default" : "Script Folder" },
+        "SharedApplicationFolder" : { "default" : "Shared Application Folder" },
         "ApplicationFolder" : { "default" : "Application Folder" },
         "ApplicationObject" : { "default" : "Application Object" },
         "ApplicationName" : { "default" : "Application Name" },
@@ -87,18 +88,8 @@
         "LogRetention" : { "default" : "Log Retention" },
         "NormalSchedule" : { "default" : "Normal Schedule" },
         "ReducedSchedule" : { "default" : "Reduced Schedule" },
-        "PublicUserNetwork" : { "default" : "Public User Network" },
-        "PublicUserNetwork1" : { "default" : "Additional Public User Network 1" },
-        "PublicUserNetwork2" : { "default" : "Additional Public User Network 2" },
-        "PublicAdministratorNetwork" : { "default" : "Public Administrator Network" },
-        "PublicAdministratorNetwork1" : { "default" : "Additional Public Administrator Network 1" },
-        "PublicAdministratorNetwork2" : { "default" : "Additional Public Administrator Network 2" },
-        "PrivateUserNetwork" : { "default" : "Private User Network" },
-        "PrivateUserNetwork1" : { "default" : "Additional Private User Network 1" },
-        "PrivateUserNetwork2" : { "default" : "Additional Private User Network 2" },
-        "PrivateAdministratorNetwork" : { "default" : "Private Administrator Network" },
-        "PrivateAdministratorNetwork1" : { "default" : "Additional Private Administrator Network 1" },
-        "PrivateAdministratorNetwork2" : { "default" : "Additional Private Administrator Network 2" }
+        "UserNetworks" : { "default" : "User Networks" },
+        "AdministratorNetworks" : { "default" : "Administrator Networks" }
       }
     }
   },
@@ -117,25 +108,27 @@
     "CustomIdentifierFunctionsStackName" : {
       "Description" : "Name of the CloudFormation Stack containing the Custom Identifier Functions",
       "Type" : "String",
+      "MinLength" : 8,
       "MaxLength" : 64,
       "Default" : "CustomIdentifierFunctions",
-      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
     "StandardAMIFunctionsStackName" : {
       "Description" : "Name of the CloudFormation Stack containing the Standard AMI Functions",
       "Type" : "String",
+      "MinLength" : 8,
       "MaxLength" : 64,
       "Default" : "StandardAMIFunctions",
-      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
     "StandardBucketsStackName" : {
       "Description" : "Name of the CloudFormation Stack containing Standard Buckets",
       "Type" : "String",
-      "MinLength" : 2,
+      "MinLength" : 8,
       "MaxLength" : 64,
       "Default" : "StandardBuckets",
       "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
@@ -145,7 +138,7 @@
     "StandardTopicsStackName" : {
       "Description" : "Name of the CloudFormation Stack containing Standard Topics",
       "Type" : "String",
-      "MinLength" : 2,
+      "MinLength" : 8,
       "MaxLength" : 64,
       "Default" : "StandardTopics",
       "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
@@ -197,6 +190,36 @@
       "ConstraintDescription" : "must be \"Amazon Linux\" (latest), \"Amazon Linux 2017.03.0\", \"Amazon Linux 2016.09.1\", \"Amazon Linux 2016.09.0\", \"RHEL 7\" (latest), \"RHEL 7.4\" or \"RHEL 7.3\"."
     },
 
+    "SharedScriptFolder" : {
+      "Description" : "Folder within the S3 Scripts bucket containing Shared Scripts deployed by this Template",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "Linux",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "ScriptFolder" : {
+      "Description" : "Folder within the S3 Scripts bucket containing Scripts deployed by this Template",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "LinuxBastions",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "SharedApplicationFolder" : {
+      "Description" : "Folder within the S3 Applications bucket containing Shared Applications deployed by this Template",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "Windows",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
     "ApplicationFolder" : {
       "Description" : "Folder within the S3 Applications bucket containing Applications deployed by this Template",
       "Type" : "String",
@@ -208,7 +231,7 @@
     },
 
     "ApplicationObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the LinuxWebServers Application",
+      "Description" : "Object within the S3 bucket and folder containing the Application",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
@@ -269,100 +292,18 @@
       "ConstraintDescription" : "must follow constrained cron syntax: \"0 H * * *\", where H = 0-7."
     },
 
-    "PublicUserNetwork" : {
-      "Description" : "Public network that can access the Application",
+    "UserNetworks" : {
+      "Description" : "Networks that can use the Application",
       "Type" : "String",
-      "Default" : "0.0.0.0/0",
-      "AllowedPattern" : "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$",
-      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+      "Default" : "NONE,NONE,NONE,NONE,NONE,NONE,NONE,NONE",
+      "ConstraintDescription" : "must be a comma-separated list of 8 values, each an IP CIDR range of the form x.x.x.x/x or the word NONE."
     },
 
-    "PublicUserNetwork1" : {
-      "Description" : "Additional public network that can access the Application",
+    "AdministratorNetworks" : {
+      "Description" : "Networks that can administer the Application",
       "Type" : "String",
-      "Default" : "",
-      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
-      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
-    },
-
-    "PublicUserNetwork2" : {
-      "Description" : "Additional public network that can access the Application",
-      "Type" : "String",
-      "Default" : "",
-      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
-      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
-    },
-
-    "PublicAdministratorNetwork" : {
-      "Description" : "Public network that can administer the Application",
-      "Type" : "String",
-      "Default" : "0.0.0.0/0",
-      "AllowedPattern" : "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$",
-      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
-    },
-
-    "PublicAdministratorNetwork1" : {
-      "Description" : "Additional public network that can administer the Application",
-      "Type" : "String",
-      "Default" : "",
-      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
-      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
-    },
-
-    "PublicAdministratorNetwork2" : {
-      "Description" : "Additional public network that can administer the Application",
-      "Type" : "String",
-      "Default" : "",
-      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
-      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
-    },
-
-    "PrivateUserNetwork" : {
-      "Description" : "Private network that can access the Application",
-      "Type" : "String",
-      "Default" : "10.0.0.0/16",
-      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
-      "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
-    },
-
-    "PrivateUserNetwork1" : {
-      "Description" : "Additional private network that can access the Application",
-      "Type" : "String",
-      "Default" : "",
-      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
-      "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
-    },
-
-    "PrivateUserNetwork2" : {
-      "Description" : "Additional private network that can access the Application",
-      "Type" : "String",
-      "Default" : "",
-      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
-      "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
-    },
-
-    "PrivateAdministratorNetwork" : {
-      "Description" : "Private network that can administer the Application",
-      "Type" : "String",
-      "Default" : "10.0.0.0/16",
-      "AllowedPattern" : "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$",
-      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
-    },
-
-    "PrivateAdministratorNetwork1" : {
-      "Description" : "Additional private network that can administer the Application",
-      "Type" : "String",
-      "Default" : "",
-      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
-      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
-    },
-
-    "PrivateAdministratorNetwork2" : {
-      "Description" : "Additional private network that can administer the Application",
-      "Type" : "String",
-      "Default" : "",
-      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
-      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+      "Default" : "NONE,NONE,NONE,NONE,NONE,NONE,NONE,NONE",
+      "ConstraintDescription" : "must be a comma-separated list of 8 values, each an IP CIDR range of the form x.x.x.x/x or the word NONE."
     }
   },
 
@@ -398,18 +339,22 @@
     "ConfigureLogs" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LogRetention" }, "0" ]}]},
     "ConfigureNormalSchedule" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "NormalSchedule" }, "" ]}]},
     "ConfigureReducedSchedule" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ReducedSchedule" }, "" ]}]},
-    "ConfigurePublicUserNetwork" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicUserNetwork" }, "" ]}]},
-    "ConfigurePublicUserNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicUserNetwork1" }, "" ]}]},
-    "ConfigurePublicUserNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicUserNetwork2" }, "" ]}]},
-    "ConfigurePublicAdministratorNetwork" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicAdministratorNetwork" }, "" ]}]},
-    "ConfigurePublicAdministratorNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicAdministratorNetwork1" }, "" ]}]},
-    "ConfigurePublicAdministratorNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicAdministratorNetwork2" }, "" ]}]},
-    "ConfigurePrivateUserNetwork" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateUserNetwork" }, "" ]}]},
-    "ConfigurePrivateUserNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateUserNetwork1" }, "" ]}]},
-    "ConfigurePrivateUserNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateUserNetwork2" }, "" ]}]},
-    "ConfigurePrivateAdministratorNetwork" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateAdministratorNetwork" }, "" ]}]},
-    "ConfigurePrivateAdministratorNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateAdministratorNetwork1" }, "" ]}]},
-    "ConfigurePrivateAdministratorNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateAdministratorNetwork2" }, "" ]}]}
+    "ConfigureUserNetwork0" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureUserNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureUserNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureUserNetwork3" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureUserNetwork4" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureUserNetwork5" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureUserNetwork6" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureUserNetwork7" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureAdministratorNetwork0" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureAdministratorNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureAdministratorNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureAdministratorNetwork3" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureAdministratorNetwork4" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureAdministratorNetwork5" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureAdministratorNetwork6" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureAdministratorNetwork7" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}, "NONE" ]}]}
   },
 
   "Resources" : {
@@ -471,7 +416,10 @@
             "Action" : [
               "s3:GetObject"
             ],
-            "Resource" : { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ExamplesBucket" }}, "/", { "Ref" : "ApplicationFolder" }, "/*" ]]}
+            "Resource" : [
+              { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ApplicationsBucket" }}, "/", { "Ref" : "SharedApplicationFolder" }, "/*" ]]},
+              { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ApplicationsBucket" }}, "/", { "Ref" : "ApplicationFolder" }, "/*" ]]}
+            ]
           }]
         },
         "Roles" : [{ "Ref" : "Role" }]
@@ -581,24 +529,54 @@
         "GroupDescription" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "LoadBalancerSecurityGroup" ]]},
         "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPC" }},
         "SecurityGroupIngress" : [
-          { "Fn::If" : [ "ConfigurePublicUserNetwork",  { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PublicUserNetwork" }},  { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicUserNetwork",  { "IpProtocol" : "tcp",  "FromPort" :   "80", "ToPort" :   "80", "CidrIp" : { "Ref" : "PublicUserNetwork" }},  { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicUserNetwork",  { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Ref" : "PublicUserNetwork" }},  { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicUserNetwork1", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PublicUserNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicUserNetwork1", { "IpProtocol" : "tcp",  "FromPort" :   "80", "ToPort" :   "80", "CidrIp" : { "Ref" : "PublicUserNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicUserNetwork1", { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Ref" : "PublicUserNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicUserNetwork2", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PublicUserNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicUserNetwork2", { "IpProtocol" : "tcp",  "FromPort" :   "80", "ToPort" :   "80", "CidrIp" : { "Ref" : "PublicUserNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicUserNetwork2", { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Ref" : "PublicUserNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateUserNetwork",  { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateUserNetwork" }},  { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateUserNetwork",  { "IpProtocol" : "tcp",  "FromPort" :   "80", "ToPort" :   "80", "CidrIp" : { "Ref" : "PrivateUserNetwork" }},  { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateUserNetwork",  { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Ref" : "PrivateUserNetwork" }},  { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateUserNetwork1", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateUserNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateUserNetwork1", { "IpProtocol" : "tcp",  "FromPort" :   "80", "ToPort" :   "80", "CidrIp" : { "Ref" : "PrivateUserNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateUserNetwork1", { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Ref" : "PrivateUserNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateUserNetwork2", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateUserNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateUserNetwork2", { "IpProtocol" : "tcp",  "FromPort" :   "80", "ToPort" :   "80", "CidrIp" : { "Ref" : "PrivateUserNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateUserNetwork2", { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Ref" : "PrivateUserNetwork2" }}, { "Ref" : "AWS::NoValue" }]}
+          { "Fn::If" : [ "ConfigureUserNetwork0", { "IpProtocol" : "icmp", "FromPort" :     "0", "ToPort" :     "0", "CidrIp" : { "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork0", { "IpProtocol" : "icmp", "FromPort" :     "3", "ToPort" :     "3", "CidrIp" : { "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork0", { "IpProtocol" : "icmp", "FromPort" :     "8", "ToPort" :     "8", "CidrIp" : { "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork0", { "IpProtocol" : "icmp", "FromPort" :    "11", "ToPort" :    "11", "CidrIp" : { "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork0", { "IpProtocol" : "tcp",  "FromPort" :    "80", "ToPort" :    "80", "CidrIp" : { "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork0", { "IpProtocol" : "tcp",  "FromPort" :   "443", "ToPort" :   "443", "CidrIp" : { "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork1", { "IpProtocol" : "icmp", "FromPort" :     "0", "ToPort" :     "0", "CidrIp" : { "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork1", { "IpProtocol" : "icmp", "FromPort" :     "3", "ToPort" :     "3", "CidrIp" : { "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork1", { "IpProtocol" : "icmp", "FromPort" :     "8", "ToPort" :     "8", "CidrIp" : { "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork1", { "IpProtocol" : "icmp", "FromPort" :    "11", "ToPort" :    "11", "CidrIp" : { "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork1", { "IpProtocol" : "tcp",  "FromPort" :    "80", "ToPort" :    "80", "CidrIp" : { "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork1", { "IpProtocol" : "tcp",  "FromPort" :   "443", "ToPort" :   "443", "CidrIp" : { "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork2", { "IpProtocol" : "icmp", "FromPort" :     "0", "ToPort" :     "0", "CidrIp" : { "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork2", { "IpProtocol" : "icmp", "FromPort" :     "3", "ToPort" :     "3", "CidrIp" : { "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork2", { "IpProtocol" : "icmp", "FromPort" :     "8", "ToPort" :     "8", "CidrIp" : { "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork2", { "IpProtocol" : "icmp", "FromPort" :    "11", "ToPort" :    "11", "CidrIp" : { "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork2", { "IpProtocol" : "tcp",  "FromPort" :    "80", "ToPort" :    "80", "CidrIp" : { "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork2", { "IpProtocol" : "tcp",  "FromPort" :   "443", "ToPort" :   "443", "CidrIp" : { "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork3", { "IpProtocol" : "icmp", "FromPort" :     "0", "ToPort" :     "0", "CidrIp" : { "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork3", { "IpProtocol" : "icmp", "FromPort" :     "3", "ToPort" :     "3", "CidrIp" : { "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork3", { "IpProtocol" : "icmp", "FromPort" :     "8", "ToPort" :     "8", "CidrIp" : { "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork3", { "IpProtocol" : "icmp", "FromPort" :    "11", "ToPort" :    "11", "CidrIp" : { "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork3", { "IpProtocol" : "tcp",  "FromPort" :    "80", "ToPort" :    "80", "CidrIp" : { "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork3", { "IpProtocol" : "tcp",  "FromPort" :   "443", "ToPort" :   "443", "CidrIp" : { "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork4", { "IpProtocol" : "icmp", "FromPort" :     "0", "ToPort" :     "0", "CidrIp" : { "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork4", { "IpProtocol" : "icmp", "FromPort" :     "3", "ToPort" :     "3", "CidrIp" : { "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork4", { "IpProtocol" : "icmp", "FromPort" :     "8", "ToPort" :     "8", "CidrIp" : { "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork4", { "IpProtocol" : "icmp", "FromPort" :    "11", "ToPort" :    "11", "CidrIp" : { "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork4", { "IpProtocol" : "tcp",  "FromPort" :    "80", "ToPort" :    "80", "CidrIp" : { "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork4", { "IpProtocol" : "tcp",  "FromPort" :   "443", "ToPort" :   "443", "CidrIp" : { "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork5", { "IpProtocol" : "icmp", "FromPort" :     "0", "ToPort" :     "0", "CidrIp" : { "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork5", { "IpProtocol" : "icmp", "FromPort" :     "3", "ToPort" :     "3", "CidrIp" : { "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork5", { "IpProtocol" : "icmp", "FromPort" :     "8", "ToPort" :     "8", "CidrIp" : { "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork5", { "IpProtocol" : "icmp", "FromPort" :    "11", "ToPort" :    "11", "CidrIp" : { "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork5", { "IpProtocol" : "tcp",  "FromPort" :    "80", "ToPort" :    "80", "CidrIp" : { "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork5", { "IpProtocol" : "tcp",  "FromPort" :   "443", "ToPort" :   "443", "CidrIp" : { "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork6", { "IpProtocol" : "icmp", "FromPort" :     "0", "ToPort" :     "0", "CidrIp" : { "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork6", { "IpProtocol" : "icmp", "FromPort" :     "3", "ToPort" :     "3", "CidrIp" : { "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork6", { "IpProtocol" : "icmp", "FromPort" :     "8", "ToPort" :     "8", "CidrIp" : { "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork6", { "IpProtocol" : "icmp", "FromPort" :    "11", "ToPort" :    "11", "CidrIp" : { "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork6", { "IpProtocol" : "tcp",  "FromPort" :    "80", "ToPort" :    "80", "CidrIp" : { "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork6", { "IpProtocol" : "tcp",  "FromPort" :   "443", "ToPort" :   "443", "CidrIp" : { "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork7", { "IpProtocol" : "icmp", "FromPort" :     "0", "ToPort" :     "0", "CidrIp" : { "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork7", { "IpProtocol" : "icmp", "FromPort" :     "3", "ToPort" :     "3", "CidrIp" : { "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork7", { "IpProtocol" : "icmp", "FromPort" :     "8", "ToPort" :     "8", "CidrIp" : { "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork7", { "IpProtocol" : "icmp", "FromPort" :    "11", "ToPort" :    "11", "CidrIp" : { "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork7", { "IpProtocol" : "tcp",  "FromPort" :    "80", "ToPort" :    "80", "CidrIp" : { "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork7", { "IpProtocol" : "tcp",  "FromPort" :   "443", "ToPort" :   "443", "CidrIp" : { "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]}
         ],
         "Tags" : [
           { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "LoadBalancerSecurityGroup" ]]}}
@@ -614,30 +592,62 @@
         "SecurityGroupIngress" : [
           { "IpProtocol" : "tcp",  "FromPort" :   "80", "ToPort" :   "80", "SourceSecurityGroupId" : { "Ref" : "LoadBalancerSecurityGroup" }},
           { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "SourceSecurityGroupId" : { "Ref" : "LoadBalancerSecurityGroup" }},
-          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork",  { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PublicAdministratorNetwork" }},  { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork",  { "IpProtocol" : "tcp",  "FromPort" :   "80", "ToPort" :   "80", "CidrIp" : { "Ref" : "PublicAdministratorNetwork" }},  { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork",  { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Ref" : "PublicAdministratorNetwork" }},  { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork",  { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "CidrIp" : { "Ref" : "PublicAdministratorNetwork" }},  { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork1", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PublicAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" :   "80", "ToPort" :   "80", "CidrIp" : { "Ref" : "PublicAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Ref" : "PublicAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "CidrIp" : { "Ref" : "PublicAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork2", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PublicAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" :   "80", "ToPort" :   "80", "CidrIp" : { "Ref" : "PublicAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Ref" : "PublicAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "CidrIp" : { "Ref" : "PublicAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork",  { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork" }},  { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork",  { "IpProtocol" : "tcp",  "FromPort" :   "80", "ToPort" :   "80", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork" }},  { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork",  { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork" }},  { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork",  { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork" }},  { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork1", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" :   "80", "ToPort" :   "80", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork2", { "IpProtocol" : "icmp", "FromPort" :   "-1", "ToPort" :   "-1", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" :   "80", "ToPort" :   "80", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]}
+          { "Fn::If" : [ "ConfigureAdministratorNetwork0", { "IpProtocol" : "icmp", "FromPort" :     "0", "ToPort" :     "0", "CidrIp" : { "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork0", { "IpProtocol" : "icmp", "FromPort" :     "3", "ToPort" :     "3", "CidrIp" : { "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork0", { "IpProtocol" : "icmp", "FromPort" :     "8", "ToPort" :     "8", "CidrIp" : { "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork0", { "IpProtocol" : "icmp", "FromPort" :    "11", "ToPort" :    "11", "CidrIp" : { "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork0", { "IpProtocol" : "tcp",  "FromPort" :    "80", "ToPort" :    "80", "CidrIp" : { "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork0", { "IpProtocol" : "tcp",  "FromPort" :   "443", "ToPort" :   "443", "CidrIp" : { "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork0", { "IpProtocol" : "tcp",  "FromPort" :    "22", "ToPort" :    "22", "CidrIp" : { "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork1", { "IpProtocol" : "icmp", "FromPort" :     "0", "ToPort" :     "0", "CidrIp" : { "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork1", { "IpProtocol" : "icmp", "FromPort" :     "3", "ToPort" :     "3", "CidrIp" : { "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork1", { "IpProtocol" : "icmp", "FromPort" :     "8", "ToPort" :     "8", "CidrIp" : { "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork1", { "IpProtocol" : "icmp", "FromPort" :    "11", "ToPort" :    "11", "CidrIp" : { "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" :    "80", "ToPort" :    "80", "CidrIp" : { "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" :   "443", "ToPort" :   "443", "CidrIp" : { "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" :    "22", "ToPort" :    "22", "CidrIp" : { "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork2", { "IpProtocol" : "icmp", "FromPort" :     "0", "ToPort" :     "0", "CidrIp" : { "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork2", { "IpProtocol" : "icmp", "FromPort" :     "3", "ToPort" :     "3", "CidrIp" : { "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork2", { "IpProtocol" : "icmp", "FromPort" :     "8", "ToPort" :     "8", "CidrIp" : { "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork2", { "IpProtocol" : "icmp", "FromPort" :    "11", "ToPort" :    "11", "CidrIp" : { "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" :    "80", "ToPort" :    "80", "CidrIp" : { "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" :   "443", "ToPort" :   "443", "CidrIp" : { "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" :    "22", "ToPort" :    "22", "CidrIp" : { "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork3", { "IpProtocol" : "icmp", "FromPort" :     "0", "ToPort" :     "0", "CidrIp" : { "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork3", { "IpProtocol" : "icmp", "FromPort" :     "3", "ToPort" :     "3", "CidrIp" : { "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork3", { "IpProtocol" : "icmp", "FromPort" :     "8", "ToPort" :     "8", "CidrIp" : { "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork3", { "IpProtocol" : "icmp", "FromPort" :    "11", "ToPort" :    "11", "CidrIp" : { "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork3", { "IpProtocol" : "tcp",  "FromPort" :    "80", "ToPort" :    "80", "CidrIp" : { "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork3", { "IpProtocol" : "tcp",  "FromPort" :   "443", "ToPort" :   "443", "CidrIp" : { "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork3", { "IpProtocol" : "tcp",  "FromPort" :    "22", "ToPort" :    "22", "CidrIp" : { "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork4", { "IpProtocol" : "icmp", "FromPort" :     "0", "ToPort" :     "0", "CidrIp" : { "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork4", { "IpProtocol" : "icmp", "FromPort" :     "3", "ToPort" :     "3", "CidrIp" : { "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork4", { "IpProtocol" : "icmp", "FromPort" :     "8", "ToPort" :     "8", "CidrIp" : { "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork4", { "IpProtocol" : "icmp", "FromPort" :    "11", "ToPort" :    "11", "CidrIp" : { "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork4", { "IpProtocol" : "tcp",  "FromPort" :    "80", "ToPort" :    "80", "CidrIp" : { "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork4", { "IpProtocol" : "tcp",  "FromPort" :   "443", "ToPort" :   "443", "CidrIp" : { "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork4", { "IpProtocol" : "tcp",  "FromPort" :    "22", "ToPort" :    "22", "CidrIp" : { "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork5", { "IpProtocol" : "icmp", "FromPort" :     "0", "ToPort" :     "0", "CidrIp" : { "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork5", { "IpProtocol" : "icmp", "FromPort" :     "3", "ToPort" :     "3", "CidrIp" : { "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork5", { "IpProtocol" : "icmp", "FromPort" :     "8", "ToPort" :     "8", "CidrIp" : { "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork5", { "IpProtocol" : "icmp", "FromPort" :    "11", "ToPort" :    "11", "CidrIp" : { "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork5", { "IpProtocol" : "tcp",  "FromPort" :    "80", "ToPort" :    "80", "CidrIp" : { "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork5", { "IpProtocol" : "tcp",  "FromPort" :   "443", "ToPort" :   "443", "CidrIp" : { "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork5", { "IpProtocol" : "tcp",  "FromPort" :    "22", "ToPort" :    "22", "CidrIp" : { "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork6", { "IpProtocol" : "icmp", "FromPort" :     "0", "ToPort" :     "0", "CidrIp" : { "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork6", { "IpProtocol" : "icmp", "FromPort" :     "3", "ToPort" :     "3", "CidrIp" : { "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork6", { "IpProtocol" : "icmp", "FromPort" :     "8", "ToPort" :     "8", "CidrIp" : { "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork6", { "IpProtocol" : "icmp", "FromPort" :    "11", "ToPort" :    "11", "CidrIp" : { "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork6", { "IpProtocol" : "tcp",  "FromPort" :    "80", "ToPort" :    "80", "CidrIp" : { "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork6", { "IpProtocol" : "tcp",  "FromPort" :   "443", "ToPort" :   "443", "CidrIp" : { "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork6", { "IpProtocol" : "tcp",  "FromPort" :    "22", "ToPort" :    "22", "CidrIp" : { "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork7", { "IpProtocol" : "icmp", "FromPort" :     "0", "ToPort" :     "0", "CidrIp" : { "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork7", { "IpProtocol" : "icmp", "FromPort" :     "3", "ToPort" :     "3", "CidrIp" : { "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork7", { "IpProtocol" : "icmp", "FromPort" :     "8", "ToPort" :     "8", "CidrIp" : { "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork7", { "IpProtocol" : "icmp", "FromPort" :    "11", "ToPort" :    "11", "CidrIp" : { "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork7", { "IpProtocol" : "tcp",  "FromPort" :    "80", "ToPort" :    "80", "CidrIp" : { "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork7", { "IpProtocol" : "tcp",  "FromPort" :   "443", "ToPort" :   "443", "CidrIp" : { "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork7", { "IpProtocol" : "tcp",  "FromPort" :    "22", "ToPort" :    "22", "CidrIp" : { "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]}
         ],
         "Tags" : [
           { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "InstanceSecurityGroup" ]]}}
@@ -706,8 +716,8 @@
               { "Fn::If" : [ "ConfigureLogs", { "Fn::If" : [ "ConfigureAMZN", "InstallLogs", "BuildLogs" ]}, { "Ref": "AWS::NoValue" }]},
               { "Fn::If" : [ "ConfigureLogs", "ConfigureLogs", { "Ref": "AWS::NoValue" }]},
               "ConfigureCFN",
-              "ConfigureHostname",
               "ConfigureOS",
+              "ConfigureHostname",
               "InstallApache",
               { "Fn::If" : [ "InstallApplication", "InstallApplication", "ConfigureApplication" ]}
             ]
@@ -936,33 +946,6 @@
               }
             }
           },
-          "ConfigureHostname" : {
-            "files" : {
-              "/root/bin/sethostname" : {
-                "content" : { "Fn::Join" : [ "\n", [
-                  "#!/bin/bash",
-                  "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)",
-                  "region=${zone::-1}",
-                  "case $zone in",
-                  { "Fn::Join" : [ "", [ "  ", { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]}, ") hostname=", { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01a.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, ";;" ]]},
-                  { "Fn::Join" : [ "", [ "  ", { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]}, ") hostname=", { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01b.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, ";;" ]]},
-                  "esac",
-                  "address=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)",
-                  "sed -i -e \"/^$address/d\" -e \"$ a$address $hostname ${hostname%%.*}\" /etc/hosts",
-                  "hostname $hostname"
-                ]]},
-                "mode"  : "000700",
-                "owner" : "root",
-                "group" : "root"
-              }
-            },
-            "commands" : {
-              "01_sethostname" : {
-                "command" : "/root/bin/sethostname",
-                "ignoreErrors" : "false"
-              }
-            }
-          },
           "ConfigureOS" : {
             "packages" : {
               "yum" : {
@@ -978,6 +961,33 @@
                 "mode"  : "000644",
                 "owner" : "root",
                 "group" : "root"
+              }
+            }
+          },
+          "ConfigureHostname" : {
+            "files" : {
+              "/root/bin/sethostname" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "#!/bin/bash",
+                  "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)",
+                  "region=${zone::-1}",
+                  "case $zone in",
+                  { "Fn::Join" : [ "", [ "  ", { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]}, ") hostname=", { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01a.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPrivateDomain" }}, ";;" ]]},
+                  { "Fn::Join" : [ "", [ "  ", { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]}, ") hostname=", { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01b.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPrivateDomain" }}, ";;" ]]},
+                  "esac",
+                  "address=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)",
+                  "sed -i -e \"/^$address/d\" -e \"$ a$address $hostname ${hostname%%.*}\" /etc/hosts",
+                  "hostname $hostname"
+                ]]},
+                "mode"  : "000700",
+                "owner" : "root",
+                "group" : "root"
+              }
+            },
+            "commands" : {
+              "01_sethostname" : {
+                "command" : "/root/bin/sethostname",
+                "ignoreErrors" : "false"
               }
             }
           },
@@ -1218,13 +1228,13 @@
       "DependsOn" : "DecreaseScalingPolicy"
     },
 
-    "RecordSetGroup" : {
+    "ServiceNameRecordSetGroup" : {
       "Type" : "AWS::Route53::RecordSetGroup",
       "Properties" : {
         "HostedZoneId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicHostedZone" }},
         "Comment" : { "Fn::Sub" : "Public DNS ServiceName for ${ApplicationName}." },
         "RecordSets" : [{
-          "Name" : { "Fn::Join" : [ "", [ { "Ref" : "ApplicationDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "." ]]},
+          "Name" : { "Fn::Join" : [ "", [ { "Ref" : "ApplicationDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPublicDomain" }}, "." ]]},
           "Type" : "A",
           "AliasTarget" : {
             "HostedZoneId" : { "Fn::GetAtt" : [ "LoadBalancer", "CanonicalHostedZoneNameID" ]},
@@ -1251,7 +1261,7 @@
 
     "URL" : {
       "Description" : "The Sample Website URL",
-      "Value" :  { "Fn::Join" : [ "", [ "http://", { "Ref" : "ApplicationDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "/" ]]},
+      "Value" :  { "Fn::Join" : [ "", [ "http://", { "Ref" : "ApplicationDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPublicDomain" }}, "/" ]]},
       "Condition" : "ConfigureDomainName"
     }
   }
