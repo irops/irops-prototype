@@ -1,0 +1,1168 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Utility-WindowsBastions Template: This adds Windows Bastions to a VPC. These Bastions are wrapped in an AutoScalingGroup, so if they fail, they are re-created automatically. Optionally, static public and private IP addresses can be requested, and optionally registered in public and private DNS. Optionally, logs can be uploaded to CloudWatch Logs, with an Alarm to monitor invalid users.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "ActiveDirectoryStackName",
+            "VPCStackName",
+            "CustomIdentifierFunctionsStackName",
+            "StandardAMIFunctionsStackName",
+            "StandardBucketsStackName",
+            "StandardTopicsStackName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Resource Dependencies" },
+          "Parameters" : [
+            "KeyName"
+          ]
+        },
+        {
+          "Label" : { "default" : "System Configuration" },
+          "Parameters" : [
+            "CompanyName",
+            "SystemName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Environment Configuration" },
+          "Parameters" : [
+            "EnvironmentType",
+            "EnvironmentZones",
+            "OSName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Utility Dependencies Configuration" },
+          "Parameters" : [
+            "SharedScriptFolder",
+            "ScriptFolder",
+            "SharedConfigurationFolder",
+            "ConfigurationFolder",
+            "HostsConfigurationObject"
+          ]
+        },
+        {
+          "Label" : { "default" : "Utility Configuration" },
+          "Parameters" : [
+            "UtilityName",
+            "UtilityDomain",
+            "UseStaticPublicAddress",
+            "LogRetention",
+            "OnSchedule",
+            "OffSchedule"
+          ]
+        },
+        {
+          "Label" : { "default" : "Security Configuration" },
+          "Parameters" : [
+            "UserNetworks",
+            "DomainAdminUser",
+            "DomainAdminPassword"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "ActiveDirectoryStackName" : { "default" : "Active Directory Stack Name" },
+        "VPCStackName" : { "default" : "VPC Stack Name" },
+        "CustomIdentifierFunctionsStackName" : { "default" : "CustomIdentifierFunctions Stack Name" },
+        "StandardAMIFunctionsStackName" : { "default" : "StandardAMIFunctions Stack Name" },
+        "StandardBucketsStackName" : { "default" : "StandardBuckets Stack Name" },
+        "StandardTopicsStackName" : { "default" : "StandardTopics Stack Name" },
+        "KeyName" : { "default" : "Key Name" },
+        "CompanyName" : { "default" : "Company Name" },
+        "SystemName" : { "default" : "System Name" },
+        "EnvironmentType" : { "default" : "Environment Type" },
+        "EnvironmentZones" : { "default" : "Environment Zones" },
+        "OSName" : { "default" : "Operating System Name" },
+        "SharedScriptFolder" : { "default" : "Shared Script Folder" },
+        "ScriptFolder" : { "default" : "Script Folder" },
+        "SharedConfigurationFolder" : { "default" : "Shared Configuration Folder" },
+        "ConfigurationFolder" : { "default" : "Configuration Folder" },
+        "HostsConfigurationObject" : { "default" : "Hosts Configuration Object" },
+        "UtilityName" : { "default" : "Utility Name" },
+        "UtilityDomain" : { "default" : "Utility Domain" },
+        "UseStaticPublicAddress" : { "default" : "Use Static Public Address" },
+        "LogRetention" : { "default" : "Log Retention" },
+        "OnSchedule" : { "default" : "On Schedule" },
+        "OffSchedule" : { "default" : "Off Schedule" },
+        "UserNetworks" : { "default" : "User Networks" },
+        "DomainAdminUser" : { "default" : "DomainAdmin User" },
+        "DomainAdminPassword" : { "default" : "DomainAdmin Password" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "ActiveDirectoryStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the ActiveDirectory DomainControllers",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-ActiveDirectory",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "VPCStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the VPC",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-VPC",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "CustomIdentifierFunctionsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Custom Identifier Functions",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "CustomIdentifierFunctions",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "StandardAMIFunctionsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Standard AMI Functions",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "StandardAMIFunctions",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "StandardBucketsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Buckets",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "StandardBuckets",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "StandardTopicsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard Topics",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "StandardTopics",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "KeyName" : {
+      "Description" : "Name of an existing KeyPair to enable SSH access to the Instances",
+      "Type" : "AWS::EC2::KeyPair::KeyName",
+      "MaxLength" : 32,
+      "Default" : "example",
+      "AllowedPattern" : "(^$|^[_a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
+    },
+
+    "CompanyName" : {
+      "Description" : "Name of the Company associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "Travel",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "SystemName" : {
+      "Description" : "Name of the System associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "IROPS",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "EnvironmentType" : {
+      "Description" : "Type of the Environment to build. Used to select size-related options in Mappings",
+      "Type" : "String",
+      "Default" : "small",
+      "AllowedValues" : [ "standby", "small", "medium", "large", "xlarge", "2xlarge" ],
+      "ConstraintDescription" : "must be standby, small, medium, large, xlarge or 2xlarge."
+    },
+
+    "EnvironmentZones" : {
+      "Description" : "Number of Availability Zones to build",
+      "Type" : "String",
+      "Default" : "1",
+      "AllowedValues" : [ "1", "2" ],
+      "ConstraintDescription" : "must be 1 or 2."
+    },
+
+    "OSName" : {
+      "Description" : "The Operating System to use for Instances",
+      "Type" : "String",
+      "Default" : "Windows Server 2012 R2",
+      "AllowedValues" : [ "Windows Server 2012 R2", "Windows Server 2016" ],
+      "ConstraintDescription" : "must be \"Windows Server 2012 R2\" or \"Windows Server 2016\"."
+    },
+
+    "SharedScriptFolder" : {
+      "Description" : "Folder within the S3 Scripts bucket containing Shared Scripts deployed by this Template",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "Windows",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "ScriptFolder" : {
+      "Description" : "Folder within the S3 Scripts bucket containing Scripts deployed by this Template",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "WindowsBastions",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "SharedConfigurationFolder" : {
+      "Description" : "Folder within the S3 Configurations bucket containing Configurations deployed by this Template",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "Linux",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "ConfigurationFolder" : {
+      "Description" : "Folder within the S3 Configurations bucket containing Configurations deployed by this Template",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "WindowsBastions",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "HostsConfigurationObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the /etc/hosts configuration",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must be a valid filename, not containing slashes."
+    },
+
+    "UtilityName" : {
+      "Description" : "Name of the Utility associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "WindowsBastions",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "UtilityDomain" : {
+      "Description" : "DNS Name of the Utility associated with the Stack",
+      "Type" : "String",
+      "MaxLength" : 16,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[a-z][-a-z0-9]*$)",
+      "ConstraintDescription" : "must begin with a lower case letter and contain only lower case letters, numbers and dashes."
+    },
+
+    "UseStaticPublicAddress" : {
+      "Description" : "Create and associate a separate Static Public Address",
+      "Type" : "String",
+      "Default" : "true",
+      "AllowedValues" : [ "true", "false" ],
+      "ConstraintDescription" : "must be either true or false."
+    },
+
+    "LogRetention" : {
+      "Description" : "Number of days to retain CloudWatch Log Events (0 disables use of CloudWatch Logs)",
+      "Type" : "Number",
+      "Default" : 14,
+      "AllowedValues" : [ 0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653 ],
+      "ConstraintDescription" : "must be: 0 (disabled), 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827 or 3653."
+    },
+
+    "OnSchedule" : {
+      "Description" : "On Schedule in constrained Cron format (UTC)",
+      "Type" : "String",
+      "Default" : "0 11 * * 1-5",
+      "AllowedPattern" : "(^$|^0 ([5-9]|1[0-6]) \\* \\* 1-5$)",
+      "ConstraintDescription" : "must follow constrained cron syntax: \"0 H * * 1-5\", where H = 5-16."
+    },
+
+    "OffSchedule" : {
+      "Description" : "Off Schedule in constrained Cron format (UTC)",
+      "Type" : "String",
+      "Default" : "0 4 * * *",
+      "AllowedPattern" : "(^$|^0 [0-7] \\* \\* \\*$)",
+      "ConstraintDescription" : "must follow constrained cron syntax: \"0 H * * *\", where H = 0-7."
+    },
+
+    "UserNetworks" : {
+      "Description" : "Networks that can use the Utility",
+      "Type" : "String",
+      "Default" : "0.0.0.0/0,NONE,NONE,NONE,NONE,NONE,NONE,NONE",
+      "ConstraintDescription" : "must be a comma-separated list of 8 values, each an IP CIDR range of the form x.x.x.x/x or the word NONE."
+    },
+
+    "DomainAdminUser" : {
+      "Description" : "User name for the account that will be added as Domain Administrator. This is separate from the default \"Administrator\" account",
+      "Type" : "String",
+      "MinLength" : "5",
+      "MaxLength" : "25",
+      "Default" : "StackAdmin",
+      "AllowedPattern" : "[a-zA-Z0-9]*",
+      "ConstraintDescription" : "must be alphanumeric."
+    },
+
+    "DomainAdminPassword" : {
+      "Description" : "Password for the domain admin user. Must be at least 8 characters containing letters, numbers and symbols",
+      "Type" : "String",
+      "NoEcho" : "true",
+      "MinLength" : "8",
+      "MaxLength" : "32",
+      "AllowedPattern" : "(?=^.{6,255}$)((?=.*\\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*",
+      "ConstraintDescription" : "must be a valid password."
+    }
+  },
+
+  "Mappings" : {
+    "InstanceTypeMap" : {
+      "Bastion" : { "standby" : "t2.small", "small" : "t2.small", "medium" : "t2.medium", "large" : "m4.large", "xlarge" : "m4.xlarge", "2xlarge" : "m4.2xlarge" }
+    }
+  },
+
+  "Conditions" : {
+    "ConfigureGlobalS3" : { "Fn::Equals" : [{ "Ref" : "AWS::Region" }, "us-east-1" ]},
+    "ConfigureKey" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "KeyName" }, "" ] }]},
+    "ConfigureStandby" : { "Fn::Equals" : [{ "Ref" : "EnvironmentType" }, "standby" ]},
+    "ConfigureMultiZone" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "EnvironmentZones" }, "1" ]}]},
+    "InstallHostsConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "HostsConfigurationObject" }, "" ]}]},
+    "ConfigureStaticPublicAddress" : { "Fn::Equals" : [{ "Ref" : "UseStaticPublicAddress" }, "true" ]},
+    "ConfigureStaticPublicAddress&MultiZone" : { "Fn::And" : [{ "Condition" : "ConfigureStaticPublicAddress" }, { "Condition" : "ConfigureMultiZone" }]},
+    "ConfigureDomainName" : { "Fn::And" : [{ "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "UtilityDomain" }, "" ]}]}, { "Condition" : "ConfigureStaticPublicAddress" }]},
+    "ConfigureDomainName&MultiZone" : { "Fn::And" : [{ "Condition" : "ConfigureDomainName" }, { "Condition" : "ConfigureMultiZone" }]},
+    "ConfigureLogs" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LogRetention" }, "0" ]}]},
+    "ConfigureOnSchedule" : { "Fn::And" : [{ "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "OnSchedule" }, "" ]}]}, { "Fn::Not" : [{ "Condition" : "ConfigureStandby" }]}]},
+    "ConfigureOffSchedule" : { "Fn::And" : [{ "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "OffSchedule" }, "" ]}]}, { "Fn::Not" : [{ "Condition" : "ConfigureStandby" }]}]},
+    "ConfigureUserNetwork0" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureUserNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureUserNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureUserNetwork3" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureUserNetwork4" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureUserNetwork5" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureUserNetwork6" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureUserNetwork7" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}, "NONE" ]}]}
+  },
+
+  "Resources" : {
+    "Role" : {
+      "Type" : "AWS::IAM::Role",
+      "Properties" : {
+        "Path" : "/",
+        "AssumeRolePolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Principal" : { "Service" : [ "ec2.amazonaws.com" ]},
+            "Action" : [ "sts:AssumeRole" ]
+          }]
+        },
+        "ManagedPolicyArns" : [ "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM" ]
+      }
+    },
+
+    "DownloadScriptFromS3Policy" : {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "DownloadScriptFromS3Policy",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [
+              "s3:GetObject"
+            ],
+            "Resource" : [
+              { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ScriptsBucket" }}, "/", { "Ref" : "SharedScriptFolder" }, "/*" ]]},
+              { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ScriptsBucket" }}, "/", { "Ref" : "ScriptFolder" }, "/*" ]]}
+            ]
+          }]
+        },
+        "Roles" : [{ "Ref" : "Role" }]
+      }
+    },
+
+    "DownloadConfigurationFromS3Policy" : {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "DownloadConfigurationFromS3Policy",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [
+              "s3:GetObject"
+            ],
+            "Resource" : [
+              { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "SharedConfigurationFolder" }, "/*" ]]},
+              { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/*" ]]}
+            ]
+          }]
+        },
+        "Roles" : [{ "Ref" : "Role" }]
+      }
+    },
+
+    "StaticPublicAddressPolicy" : {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "StaticPublicAddressPolicy",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [
+              "ec2:AssociateAddress",
+              "ec2:DisassociateAddress"
+            ],
+            "Resource" : "*"
+          }]
+        },
+        "Roles" : [{ "Ref" : "Role" }]
+      },
+      "Condition" : "ConfigureStaticPublicAddress"
+    },
+
+    "LogMonitoringPolicy" : {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "LogMonitoringPolicy",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [
+              "logs:CreateLogGroup",
+              "logs:CreateLogStream",
+              "logs:PutLogEvents",
+              "logs:DescribeLogStreams"
+            ],
+            "Resource" : [
+              "arn:aws:logs:*:*:*"
+            ]
+          }]
+        },
+        "Roles" : [{ "Ref" : "Role" }]
+      },
+      "Condition" : "ConfigureLogs"
+    },
+
+    "LogGroup" : {
+      "Type" : "AWS::Logs::LogGroup",
+      "Properties" : {
+        "RetentionInDays" : { "Ref" : "LogRetention" }
+      },
+      "Condition" : "ConfigureLogs"
+    },
+
+    "InstanceSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "UtilityName" }, "InstanceSecurityGroup" ]]},
+        "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPC" }},
+        "SecurityGroupIngress" : [
+          { "IpProtocol" : "icmp", "FromPort" :    "0", "ToPort" :  "0", "CidrIp" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCNetwork" }}},
+          { "IpProtocol" : "icmp", "FromPort" :    "3", "ToPort" :  "3", "CidrIp" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCNetwork" }}},
+          { "IpProtocol" : "icmp", "FromPort" :    "8", "ToPort" :  "8", "CidrIp" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCNetwork" }}},
+          { "IpProtocol" : "icmp", "FromPort" :   "11", "ToPort" : "11", "CidrIp" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCNetwork" }}},
+          { "Fn::If" : [ "ConfigureUserNetwork0", { "IpProtocol" : "icmp", "FromPort" :    "0", "ToPort" :    "0", "CidrIp" : { "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork0", { "IpProtocol" : "icmp", "FromPort" :    "3", "ToPort" :    "3", "CidrIp" : { "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork0", { "IpProtocol" : "icmp", "FromPort" :    "8", "ToPort" :    "8", "CidrIp" : { "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork0", { "IpProtocol" : "icmp", "FromPort" :   "11", "ToPort" :   "11", "CidrIp" : { "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork0", { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork0", { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork1", { "IpProtocol" : "icmp", "FromPort" :    "0", "ToPort" :    "0", "CidrIp" : { "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork1", { "IpProtocol" : "icmp", "FromPort" :    "3", "ToPort" :    "3", "CidrIp" : { "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork1", { "IpProtocol" : "icmp", "FromPort" :    "8", "ToPort" :    "8", "CidrIp" : { "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork1", { "IpProtocol" : "icmp", "FromPort" :   "11", "ToPort" :   "11", "CidrIp" : { "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork1", { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork2", { "IpProtocol" : "icmp", "FromPort" :    "0", "ToPort" :    "0", "CidrIp" : { "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork2", { "IpProtocol" : "icmp", "FromPort" :    "3", "ToPort" :    "3", "CidrIp" : { "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork2", { "IpProtocol" : "icmp", "FromPort" :    "8", "ToPort" :    "8", "CidrIp" : { "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork2", { "IpProtocol" : "icmp", "FromPort" :   "11", "ToPort" :   "11", "CidrIp" : { "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork2", { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork3", { "IpProtocol" : "icmp", "FromPort" :    "0", "ToPort" :    "0", "CidrIp" : { "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork3", { "IpProtocol" : "icmp", "FromPort" :    "3", "ToPort" :    "3", "CidrIp" : { "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork3", { "IpProtocol" : "icmp", "FromPort" :    "8", "ToPort" :    "8", "CidrIp" : { "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork3", { "IpProtocol" : "icmp", "FromPort" :   "11", "ToPort" :   "11", "CidrIp" : { "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork3", { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork3", { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork4", { "IpProtocol" : "icmp", "FromPort" :    "0", "ToPort" :    "0", "CidrIp" : { "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork4", { "IpProtocol" : "icmp", "FromPort" :    "3", "ToPort" :    "3", "CidrIp" : { "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork4", { "IpProtocol" : "icmp", "FromPort" :    "8", "ToPort" :    "8", "CidrIp" : { "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork4", { "IpProtocol" : "icmp", "FromPort" :   "11", "ToPort" :   "11", "CidrIp" : { "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork4", { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork4", { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork5", { "IpProtocol" : "icmp", "FromPort" :    "0", "ToPort" :    "0", "CidrIp" : { "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork5", { "IpProtocol" : "icmp", "FromPort" :    "3", "ToPort" :    "3", "CidrIp" : { "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork5", { "IpProtocol" : "icmp", "FromPort" :    "8", "ToPort" :    "8", "CidrIp" : { "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork5", { "IpProtocol" : "icmp", "FromPort" :   "11", "ToPort" :   "11", "CidrIp" : { "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork5", { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork5", { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork6", { "IpProtocol" : "icmp", "FromPort" :    "0", "ToPort" :    "0", "CidrIp" : { "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork6", { "IpProtocol" : "icmp", "FromPort" :    "3", "ToPort" :    "3", "CidrIp" : { "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork6", { "IpProtocol" : "icmp", "FromPort" :    "8", "ToPort" :    "8", "CidrIp" : { "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork6", { "IpProtocol" : "icmp", "FromPort" :   "11", "ToPort" :   "11", "CidrIp" : { "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork6", { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork6", { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork7", { "IpProtocol" : "icmp", "FromPort" :    "0", "ToPort" :    "0", "CidrIp" : { "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork7", { "IpProtocol" : "icmp", "FromPort" :    "3", "ToPort" :    "3", "CidrIp" : { "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork7", { "IpProtocol" : "icmp", "FromPort" :    "8", "ToPort" :    "8", "CidrIp" : { "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork7", { "IpProtocol" : "icmp", "FromPort" :   "11", "ToPort" :   "11", "CidrIp" : { "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork7", { "IpProtocol" : "tcp",  "FromPort" :  "443", "ToPort" :  "443", "CidrIp" : { "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork7", { "IpProtocol" : "tcp",  "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]}
+        ],
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "UtilityName" }, "InstanceSecurityGroup" ]]}}
+        ]
+      }
+    },
+
+    "DomainControllerSecurityGroupIngress3389" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${ActiveDirectoryStackName}-DomainControllerSecurityGroup" }}, "IpProtocol" : "tcp", "FromPort" :  "3389", "ToPort" :  "3389", "SourceSecurityGroupId": { "Ref": "InstanceSecurityGroup" }
+      }
+    },
+
+    "EIPA" : {
+      "Type" : "AWS::EC2::EIP",
+      "Properties" : {
+        "Domain" : "vpc"
+      },
+      "Condition" : "ConfigureStaticPublicAddress"
+    },
+
+    "EIPB" : {
+      "Type" : "AWS::EC2::EIP",
+      "Properties" : {
+        "Domain" : "vpc"
+      },
+      "Condition" : "ConfigureStaticPublicAddress&MultiZone"
+    },
+
+    "GetHostName" : {
+      "Type" : "Custom::GetHostName",
+      "Properties" : {
+        "ServiceToken" : { "Fn::ImportValue" : { "Fn::Sub" : "${CustomIdentifierFunctionsStackName}-GetHostNameFunctionArn" }},
+        "CompanyName" : { "Ref" : "CompanyName" },
+        "LocationName" : { "Ref": "AWS::Region" },
+        "EnvironmentName" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }},
+        "ApplicationName" : { "Ref" : "UtilityName" }
+      }
+    },
+
+    "GetWindowsImageId" : {
+      "Type" : "Custom::GetWindowsImageId",
+      "Properties" : {
+        "ServiceToken" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardAMIFunctionsStackName}-GetWindowsImageIdFunctionArn" }},
+        "Region" : { "Ref" : "AWS::Region" },
+        "OSName" : { "Ref" : "OSName" }
+      }
+    },
+
+    "InstanceProfile" : {
+      "Type" : "AWS::IAM::InstanceProfile",
+      "Properties" : {
+        "Path" : "/",
+        "Roles" : [{ "Ref" : "Role" }]
+      }
+    },
+
+    "LaunchConfiguration" : {
+      "Type" : "AWS::AutoScaling::LaunchConfiguration",
+      "Metadata" : {
+        "AWS::CloudFormation::Authentication" : {
+          "S3Credentials" : {
+            "type" : "S3",
+            "roleName" : { "Ref" : "Role" },
+            "buckets" : [
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ScriptsBucket" }},
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}
+            ]
+          }
+        },
+        "AWS::CloudFormation::Init" : {
+          "configSets" : {
+            "All" : [
+              { "Fn::If" : [ "ConfigureLogs", "ConfigureLogs", { "Ref": "AWS::NoValue" }]},
+              "ConfigureCFN",
+              "ConfigureOS",
+              "ConfigureHostName",
+              "JoinDomain",
+              "InstallAWSQuickStartModule",
+              "InstallRDSGateway",
+              "ConfigureRDSGateway",
+              { "Fn::If" : [ "ConfigureStaticPublicAddress", "ConfigureStaticPublicAddress", { "Ref": "AWS::NoValue" }]},
+              { "Fn::If" : [ "InstallHostsConfiguration", "InstallHostsConfiguration", { "Ref" : "AWS::NoValue" }]},
+              "SignalCFN"
+            ]
+          },
+          "ConfigureLogs" : {
+            "files" : {
+              "C:\\Program Files\\Amazon\\SSM\\Plugins\\awsCloudWatch\\AWS.EC2.Windows.CloudWatch.json" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "{",
+                  "  \"IsEnabled\" : true,",
+                  "  \"EngineConfiguration\" : {",
+                  "    \"PollInterval\" : \"00:00:10\",",
+                  "    \"Components\" : [{",
+                  "      \"Id\" : \"ApplicationEventLog\",",
+                  "      \"FullName\" : \"AWS.EC2.Windows.CloudWatch.EventLog.EventLogInputComponent,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\" : {",
+                  "        \"LogName\" : \"Application\",",
+                  "        \"Levels\" : \"7\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\" : \"SystemEventLog\",",
+                  "      \"FullName\" : \"AWS.EC2.Windows.CloudWatch.EventLog.EventLogInputComponent,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\" : {",
+                  "        \"LogName\" : \"System\",",
+                  "        \"Levels\" : \"7\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\" : \"SecurityEventLog\",",
+                  "      \"FullName\" : \"AWS.EC2.Windows.CloudWatch.EventLog.EventLogInputComponent,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\" : {",
+                  "        \"LogName\" : \"Security\",",
+                  "        \"Levels\" : \"7\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\" : \"EC2ConfigLog\",",
+                  "      \"FullName\": \"AWS.EC2.Windows.CloudWatch.CustomLog.CustomLogInputComponent,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\": {",
+                  "        \"LogDirectoryPath\": \"C:\\\\Program Files\\\\Amazon\\\\Ec2ConfigService\\\\Logs\",",
+                  "        \"TimestampFormat\": \"yyyy-MM-ddTHH:mm:ss.fffZ:\",",
+                  "        \"Encoding\": \"ASCII\",",
+                  "        \"Filter\": \"EC2ConfigLog.txt\",",
+                  "        \"CultureName\": \"en-US\",",
+                  "        \"TimeZoneKind\": \"UTC\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\": \"CfnInitLog\",",
+                  "      \"FullName\": \"AWS.EC2.Windows.CloudWatch.CustomLog.CustomLogInputComponent,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\": {",
+                  "        \"LogDirectoryPath\": \"C:\\\\cfn\\\\log\",",
+                  "        \"TimestampFormat\": \"yyyy-MM-dd HH:mm:ss,fff\",",
+                  "        \"Encoding\": \"ASCII\",",
+                  "        \"Filter\": \"cfn-init.log\",",
+                  "        \"CultureName\": \"en-US\",",
+                  "        \"TimeZoneKind\": \"Local\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\" : \"IISLogs\",",
+                  "      \"FullName\" : \"AWS.EC2.Windows.CloudWatch.CustomLog.CustomLogInputComponent,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\" : {",
+                  "        \"LogDirectoryPath\" : \"C:\\\\inetpub\\\\logs\\\\LogFiles\\\\W3SVC1\",",
+                  "        \"TimestampFormat\" : \"yyyy-MM-dd HH:mm:ss\",",
+                  "        \"Encoding\" : \"UTF-8\",",
+                  "        \"Filter\" : \"\",",
+                  "        \"CultureName\" : \"en-US\",",
+                  "        \"TimeZoneKind\" : \"UTC\",",
+                  "        \"LineCount\" : \"3\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\" : \"MemoryPerformanceCounter\",",
+                  "      \"FullName\" : \"AWS.EC2.Windows.CloudWatch.PerformanceCounterComponent.PerformanceCounterInputComponent,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\" : {",
+                  "        \"CategoryName\" : \"Memory\",",
+                  "        \"CounterName\" : \"Available MBytes\",",
+                  "        \"InstanceName\" : \"\",",
+                  "        \"MetricName\" : \"Memory\",",
+                  "        \"Unit\" : \"Megabytes\",",
+                  "        \"DimensionName\" : \"\",",
+                  "        \"DimensionValue\" : \"\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\": \"CloudWatchApplicationEventLog\",",
+                  "      \"FullName\": \"AWS.EC2.Windows.CloudWatch.CloudWatchLogsOutput,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\": {",
+                  "        \"AccessKey\": \"\",",
+                  "        \"SecretKey\": \"\",",
+                           { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
+                           { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
+                  "        \"LogStream\": \"Gateway/{instance_id}/ApplicationEventLog\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\": \"CloudWatchSystemEventLog\",",
+                  "      \"FullName\": \"AWS.EC2.Windows.CloudWatch.CloudWatchLogsOutput,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\": {",
+                  "        \"AccessKey\": \"\",",
+                  "        \"SecretKey\": \"\",",
+                           { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
+                           { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
+                  "        \"LogStream\": \"Gateway/{instance_id}/SystemEventLog\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\": \"CloudWatchSecurityEventLog\",",
+                  "      \"FullName\": \"AWS.EC2.Windows.CloudWatch.CloudWatchLogsOutput,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\": {",
+                  "        \"AccessKey\": \"\",",
+                  "        \"SecretKey\": \"\",",
+                           { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
+                           { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
+                  "        \"LogStream\": \"Gateway/{instance_id}/SecurityEventLog\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\": \"CloudWatchEC2ConfigLog\",",
+                  "      \"FullName\": \"AWS.EC2.Windows.CloudWatch.CloudWatchLogsOutput,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\": {",
+                  "        \"AccessKey\": \"\",",
+                  "        \"SecretKey\": \"\",",
+                           { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
+                           { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
+                  "        \"LogStream\": \"Gateway/{instance_id}/EC2ConfigLog\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\": \"CloudWatchCfnInitLog\",",
+                  "      \"FullName\": \"AWS.EC2.Windows.CloudWatch.CloudWatchLogsOutput,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\": {",
+                  "        \"AccessKey\": \"\",",
+                  "        \"SecretKey\": \"\",",
+                           { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
+                           { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
+                  "        \"LogStream\": \"Gateway/{instance_id}/CfnInitLog\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\": \"CloudWatchIISLogs\",",
+                  "      \"FullName\": \"AWS.EC2.Windows.CloudWatch.CloudWatchLogsOutput,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\": {",
+                  "        \"AccessKey\": \"\",",
+                  "        \"SecretKey\": \"\",",
+                           { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
+                           { "Fn::If" : [ "ConfigureLogs", { "Fn::Sub" : "        \"LogGroup\": \"${LogGroup}\","}, { "Ref" : "AWS::NoValue" }]},
+                  "        \"LogStream\": \"Gateway/{instance_id}/IISLogs\"",
+                  "      }",
+                  "    },",
+                  "    {",
+                  "      \"Id\" : \"CloudWatch\",",
+                  "      \"FullName\" : \"AWS.EC2.Windows.CloudWatch.CloudWatch.CloudWatchOutputComponent,AWS.EC2.Windows.CloudWatch\",",
+                  "      \"Parameters\" : {",
+                  "        \"AccessKey\" : \"\",",
+                  "        \"SecretKey\" : \"\",",
+                           { "Fn::Sub" : "        \"Region\": \"${AWS::Region}\","},
+                  "        \"NameSpace\" : \"Windows/Default\"",
+                  "      }",
+                  "    }],",
+                  "    \"Flows\": {",
+                  "      \"Flows\": [",
+                  "        \"ApplicationEventLog,CloudWatchApplicationEventLog\",",
+                  "        \"SystemEventLog,CloudWatchSystemEventLog\",",
+                  "        \"SecurityEventLog,CloudWatchSecurityEventLog\",",
+                  "        \"EC2ConfigLog,CloudWatchEC2ConfigLog\",",
+                  "        \"CfnInitLog,CloudWatchCfnInitLog\",",
+                  "        \"IISLogs,CloudWatchIISLogs\",",
+                  "        \"MemoryPerformanceCounter,CloudWatch\"",
+                  "      ]",
+                  "    }",
+                  "  }",
+                  "}"
+                ]]}
+              }
+            },
+            "commands" : {
+              "01-enable-SSM" : {
+                "command" : "powershell.exe -Command \"Set-Service -Name AmazonSSMAgent -StartupType Automatic\"",
+                "waitAfterCompletion" : "0"
+              },
+              "02-restart-SSM" : {
+                "command" : "powershell.exe -Command \"Restart-Service AmazonSSMAgent\"",
+                "waitAfterCompletion" : "30"
+              }
+            }
+          },
+          "ConfigureCFN" : {
+            "files" : {
+              "c:\\cfn\\cfn-hup.conf" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "[main]",
+                  { "Fn::Sub" : "stack=${AWS::StackId}" },
+                  { "Fn::Sub" : "region=${AWS::Region}" }
+                  ]]}
+              },
+              "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf" : {
+                "content": { "Fn::Join" : [ "\n", [
+                  "[cfn-auto-reloader-hook]",
+                  "triggers=post.update",
+                  "path=Resources.LaunchConfiguration.Metadata.AWS::CloudFormation::Init",
+                  { "Fn::Sub" : "action=cfn-init.exe --verbose --configsets All --stack ${AWS::StackId} --resource LaunchConfiguration --region ${AWS::Region}" }
+                ]]}
+              }
+            },
+            "services" : {
+              "windows" : {
+                "cfn-hup" : {
+                  "enabled" : "true",
+                  "ensureRunning" : "true",
+                  "files" : [
+                    "c:\\cfn\\cfn-hup.conf",
+                    "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf"
+                  ]
+                }
+              }
+            }
+          },
+          "ConfigureOS" : {
+            "commands" : {
+              "01-set-execution-policy" : {
+                "command" : "powershell.exe -Command \"Set-ExecutionPolicy RemoteSigned -Force\"",
+                "waitAfterCompletion" : "0"
+              }
+            }
+          },
+          "ConfigureHostName" : {
+            "files" : {
+              "C:\\cfn\\scripts\\Configure-HostName.ps1" : {
+                "source" : { "Fn::Join" : [ "", [
+                  "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/",
+                  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ScriptsBucket" }}, "/", { "Ref" : "ScriptFolder" }, "/Configure-HostName.ps1"
+                ]]},
+                "authentication" : "S3Credentials"
+              }
+            },
+            "commands" : {
+              "01-configure-hostname" : {
+                "command" : { "Fn::Join" : [ "", [
+                  "powershell.exe -Command \"C:\\cfn\\scripts\\Configure-HostName.ps1",
+                  " -ZoneA ", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-ZoneA" }},
+                  " -ZoneB ", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-ZoneB" }},
+                  " -HostNamePrefix ", { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}
+                ]]},
+                "waitAfterCompletion" : "forever"
+              }
+            }
+          },
+          "JoinDomain" : {
+            "files" : {
+              "C:\\cfn\\scripts\\Join-Domain.ps1" : {
+                "source" : { "Fn::Join" : [ "", [
+                  "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/",
+                  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ScriptsBucket" }}, "/", { "Ref" : "SharedScriptFolder" }, "/Join-Domain.ps1"
+                ]]},
+                "authentication" : "S3Credentials"
+              }
+            },
+            "commands" : {
+              "01-join-domain" : {
+                "command" : { "Fn::Join" : [ "", [
+                  "powershell.exe -Command \"C:\\cfn\\scripts\\Join-Domain.ps1",
+                  " -DomainName '", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPrivateDomain" }}, "'",
+                  " -UserName '", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCNetBIOSDomain" }}, "\\", { "Ref" : "DomainAdminUser" }, "'",
+                  " -Password '", { "Ref" : "DomainAdminPassword" }, "'\""
+                ]]},
+                "waitAfterCompletion" : "forever"
+              }
+            }
+          },
+          "InstallAWSQuickStartModule" : {
+            "files" : {
+              "C:\\cfn\\scripts\\Unzip-Archive.ps1" : {
+                "source" : { "Fn::Join" : [ "", [
+                  "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/",
+                  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ScriptsBucket" }}, "/", { "Ref" : "SharedScriptFolder" }, "/Unzip-Archive.ps1"
+                ]]},
+                "authentication" : "S3Credentials"
+              },
+              "C:\\cfn\\modules\\AWSQuickStart.zip" : {
+                "source" : { "Fn::Join" : [ "", [
+                  "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/",
+                  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ScriptsBucket" }}, "/", { "Ref" : "SharedScriptFolder" }, "/AWSQuickStart.zip"
+                ]]},
+                "authentication" : "S3Credentials"
+              }
+            },
+            "commands" : {
+              "01-install-awsquickstart-module" : {
+                "command" : "powershell.exe -Command C:\\cfn\\scripts\\Unzip-Archive.ps1 -Source C:\\cfn\\modules\\AWSQuickStart.zip -Destination C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\Modules\\",
+                "waitAfterCompletion" : "0"
+              }
+            }
+          },
+          "InstallRDSGateway" : {
+            "commands" : {
+              "01-install-rds-gateway" : {
+                "command" : "powershell.exe -Command \"Install-WindowsFeature RDS-Gateway,RSAT-RDS-Gateway\"",
+                "waitAfterCompletion" : "0"
+              }
+            }
+          },
+          "ConfigureRDSGateway" : {
+            "files" : {
+              "c:\\cfn\\scripts\\Initialize-RDGW.ps1" : {
+                "source" : { "Fn::Join" : [ "", [
+                  "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/",
+                  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ScriptsBucket" }}, "/", { "Ref" : "ScriptFolder" }, "/Initialize-RDGW.ps1"
+                ]]},
+                "authentication" : "S3Credentials"
+              }
+            },
+            "commands" : {
+              "01-initialize-rdgw" : {
+                "command" : { "Fn::Join" : [ "", [
+                  "powershell.exe -ExecutionPolicy RemoteSigned C:\\cfn\\scripts\\Initialize-RDGW.ps1",
+                  " -ServerFQDN $($env:COMPUTERNAME + '.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPrivateDomain" }}, "')",
+                  " -DomainNetBiosName ", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCNetBIOSDomain" }},
+                  " -GroupName 'domain admins'"
+                ]]},
+                "waitAfterCompletion" : "0"
+              }
+            }
+          },
+          "ConfigureStaticPublicAddress" : {
+            "files" : {
+              "c:\\cfn\\scripts\\Configure-StaticPublicAddress.ps1" : {
+                "source" : { "Fn::Join" : [ "", [
+                  "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/",
+                  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ScriptsBucket" }}, "/", { "Ref" : "SharedScriptFolder" }, "/Configure-StaticPublicAddress.ps1"
+                ]]},
+                "authentication" : "S3Credentials"
+              }
+            },
+            "commands" : {
+              "01-configure-staticpublicaddress" : {
+                "command" : { "Fn::Join" : [ "", [
+                  "powershell.exe -ExecutionPolicy RemoteSigned C:\\cfn\\scripts\\Configure-StaticPublicAddress.ps1",
+                  " -ZoneA ", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-ZoneA" }},
+                  " -ZoneB ", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-ZoneB" }},
+                  { "Fn::If" : [ "ConfigureStaticPublicAddress", { "Fn::Sub" : " -EIPAllocationA ${EIPA.AllocationId}" }, { "Ref" : "AWS::NoValue" }]},
+                  { "Fn::If" : [ "ConfigureStaticPublicAddress&MultiZone", { "Fn::Sub" : " -EIPAllocationB ${EIPB.AllocationId}" }, { "Ref" : "AWS::NoValue" }]}
+                ]]},
+                "waitAfterCompletion" : "0"
+              }
+            }
+          },
+          "InstallHostsConfiguration" : {
+            "files" : {
+              "c:\\cfn\\temp\\hosts" : {
+                "source" :  { "Fn::Join" : [ "", [
+                  "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/",
+                  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "SharedConfigurationFolder" }, "/", { "Ref" : "HostsConfigurationObject" }
+                ]]},
+                "authentication" : "S3Credentials"
+              }
+            },
+            "commands" : {
+              "01-append-hosts" : {
+                "command" : "powershell.exe -Command \"Add-Content -Path 'c:\\windows\\system32\\drivers\\etc\\hosts' -Value (Get-Content 'c:\\cfn\\temp\\hosts')\"",
+                "ignoreErrors" : "false"
+              }
+            }
+          },
+          "SignalCFN" : {
+            "commands" : {
+              "01-init-signal" : {
+                "command" : { "Fn::Sub" : "powershell.exe -Command \"New-AWSQuickStartResourceSignal -Stack '${AWS::StackName}' -Resource 'AutoScalingGroup' -Region '${AWS::Region}'\"" },
+                "waitAfterCompletion" : "0"
+              },
+              "02-signal-success" : {
+                "command" : "powershell.exe -Command \"Write-AWSQuickStartStatus\"",
+                "waitAfterCompletion" : "0"
+              }
+            }
+          }
+        }
+      },
+      "Properties" : {
+        "ImageId" : { "Fn::GetAtt" : [ "GetWindowsImageId", "ImageId" ]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Bastion", { "Ref" : "EnvironmentType" }]},
+        "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
+        "KeyName" : { "Ref" : "KeyName" },
+        "SecurityGroups" : [
+          { "Ref" : "InstanceSecurityGroup" },
+          { "Fn::ImportValue" : { "Fn::Sub" : "${ActiveDirectoryStackName}-DomainMemberSecurityGroup" }}
+        ],
+        "BlockDeviceMappings" : [{
+          "DeviceName" : "/dev/sda1",
+          "Ebs" : {
+            "VolumeSize" : "50",
+            "VolumeType" : "gp2"
+          }
+        }],
+        "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "\n", [
+          "<script>",
+          { "Fn::Sub" : "cfn-init.exe --verbose --configsets All --stack ${AWS::StackId} --resource LaunchConfiguration --region ${AWS::Region}" },
+          "</script>"
+        ]]}}
+      }
+    },
+
+    "AutoScalingGroup" : {
+      "Type" : "AWS::AutoScaling::AutoScalingGroup",
+      "Properties" : {
+        "LaunchConfigurationName" : { "Ref" : "LaunchConfiguration" },
+        "VPCZoneIdentifier" : [
+          { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-Public1SubnetA" }},
+          { "Fn::If" : [ "ConfigureMultiZone", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-Public1SubnetB" }}, { "Ref" : "AWS::NoValue" }]}
+        ],
+        "MinSize" : { "Fn::If" : [ "ConfigureStandby", "0", { "Fn::If" : [ "ConfigureMultiZone", "2", "1" ]}]},
+        "MaxSize" : { "Fn::If" : [ "ConfigureStandby", "0", { "Fn::If" : [ "ConfigureMultiZone", "2", "1" ]}]},
+        "DesiredCapacity" : { "Fn::If" : [ "ConfigureStandby", "0", { "Fn::If" : [ "ConfigureMultiZone", "2", "1" ]}]},
+        "Cooldown" : "300",
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "UtilityName" }, "Instance" ]]}, "PropagateAtLaunch" : "true" }
+        ]
+      },
+      "CreationPolicy" : {
+        "ResourceSignal" : {
+          "Count" : { "Fn::If" : [ "ConfigureStandby", "0", { "Fn::If" : [ "ConfigureMultiZone", "2", "1" ]}]},
+          "Timeout" : "PT30M"
+        }
+      },
+      "UpdatePolicy" : {
+        "AutoScalingRollingUpdate" : {
+          "MinInstancesInService" : "1",
+          "MaxBatchSize" : "1",
+          "PauseTime" : "PT30M",
+          "WaitOnResourceSignals" : "true"
+        }
+      }
+    },
+
+    "OnScheduledAction" : {
+      "Type" : "AWS::AutoScaling::ScheduledAction",
+      "Properties" : {
+        "AutoScalingGroupName" : { "Ref" : "AutoScalingGroup" },
+        "MinSize" : { "Fn::If" : [ "ConfigureStandby", "0", { "Fn::If" : [ "ConfigureMultiZone", "2", "1" ]}]},
+        "MaxSize" : { "Fn::If" : [ "ConfigureStandby", "0", { "Fn::If" : [ "ConfigureMultiZone", "2", "1" ]}]},
+        "DesiredCapacity" : { "Fn::If" : [ "ConfigureStandby", "0", { "Fn::If" : [ "ConfigureMultiZone", "2", "1" ]}]},
+        "Recurrence" : { "Ref" : "OnSchedule" }
+      },
+      "Condition" : "ConfigureOnSchedule"
+    },
+
+    "OffScheduledAction" : {
+      "Type" : "AWS::AutoScaling::ScheduledAction",
+      "Properties" : {
+        "AutoScalingGroupName" : { "Ref" : "AutoScalingGroup" },
+        "MinSize" : 0,
+        "MaxSize" : 0,
+        "DesiredCapacity" : 0,
+        "Recurrence" : { "Ref" : "OffSchedule" }
+      },
+      "Condition" : "ConfigureOffSchedule"
+    },
+
+    "PublicRecordSet" : {
+      "Type" : "AWS::Route53::RecordSet",
+      "Properties" : {
+        "HostedZoneId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicHostedZone" }},
+        "Comment" : { "Fn::Join" : [ "", [ "DNS name for ", { "Ref" : "UtilityName" }, " Instance" ]]},
+        "Name" : { "Fn::Join" : [ "", [ { "Ref" : "UtilityDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPublicDomain" }}, "." ]]},
+        "Type" : "A",
+        "TTL" : "900",
+        "ResourceRecords" : [{ "Ref" : "EIPA" }]
+      },
+      "Condition" : "ConfigureDomainName"
+    },
+
+    "PublicRecordSetA" : {
+      "Type" : "AWS::Route53::RecordSet",
+      "Properties" : {
+        "HostedZoneId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicHostedZone" }},
+        "Comment" : { "Fn::Join" : [ "", [ "DNS name for ", { "Ref" : "UtilityName" }, " Instance in ", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-ZoneA" }}]]},
+        "Name" : { "Fn::Join" : [ "", [ { "Ref" : "UtilityDomain" }, "a.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPublicDomain" }}, "." ]]},
+        "Type" : "A",
+        "TTL" : "900",
+        "ResourceRecords" : [{ "Ref" : "EIPA" }]
+      },
+      "Condition" : "ConfigureDomainName&MultiZone"
+    },
+
+    "PublicRecordSetB" : {
+      "Type" : "AWS::Route53::RecordSet",
+      "Properties" : {
+        "HostedZoneId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicHostedZone" }},
+        "Comment" : { "Fn::Join" : [ "", [ "DNS name for ", { "Ref" : "UtilityName" }, " Instance in ", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-ZoneB" }}]]},
+        "Name" : { "Fn::Join" : [ "", [ { "Ref" : "UtilityDomain" }, "b.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPublicDomain" }}, "." ]]},
+        "Type" : "A",
+        "TTL" : "900",
+        "ResourceRecords" : [{ "Ref" : "EIPB" }]
+      },
+      "Condition" : "ConfigureDomainName&MultiZone"
+    }
+  },
+
+  "Outputs" : {
+    "InstanceSecurityGroup" : {
+      "Description" : "The Instance SecurityGroup",
+      "Value" : { "Ref" : "InstanceSecurityGroup" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-InstanceSecurityGroup" }}
+    },
+
+    "EIPA" : {
+      "Description" : "The Public Address of the Bastion in Availability Zone A",
+      "Value" : { "Ref" : "EIPA" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-EIPA" }},
+      "Condition" : "ConfigureStaticPublicAddress"
+    },
+
+    "EIPB" : {
+      "Description" : "The Public Address of the Bastion in Availability Zone B",
+      "Value" : { "Ref" : "EIPB" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-EIPB" }},
+      "Condition" : "ConfigureStaticPublicAddress&MultiZone"
+    },
+
+    "PublicHostname" : {
+      "Description" : "The Public Hostname of the Bastion",
+      "Value" : { "Fn::Join" : [ "", [ { "Ref" : "UtilityDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPublicDomain" }}]]},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-PublicHostname" }},
+      "Condition" : "ConfigureDomainName"
+    },
+
+    "PublicHostnameA" : {
+      "Description" : "The Public Hostname of the Bastion in Availability Zone A",
+      "Value" : { "Fn::Join" : [ "", [ { "Ref" : "UtilityDomain" }, "a.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPublicDomain" }}]]},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-PublicHostnameA" }},
+      "Condition" : "ConfigureDomainName&MultiZone"
+    },
+
+    "PublicHostnameB" : {
+      "Description" : "The Public Hostname of the Bastion in Availability Zone B",
+      "Value" : { "Fn::Join" : [ "", [ { "Ref" : "UtilityDomain" }, "b.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPublicDomain" }}]]},
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-PublicHostnameB" }},
+      "Condition" : "ConfigureDomainName&MultiZone"
+    }
+  }
+}

@@ -2,9 +2,6 @@
 #
 # This script updates the Environment VPC Stack in an Environment Account.
 #
-# This script is written in a format suitable for interactive demos,
-# but can be run non-Iteractively and more quickly with the "-I" flag.
-#
 
 #  1. Initalize Environment
 
@@ -20,7 +17,7 @@ next_default=5
 update_default=15
 update_attempts=40
 
-interactive=1
+interactive=0
 speed=100
 verbose=0
 monitor=0
@@ -30,6 +27,9 @@ company=${COMPANY_NAME:-Travel}
 system=${SYSTEM_NAME:-IROPS}
 environment=${ENVIRONMENT_NAME:-Production}
 environment_network=${ENVIRONMENT_NETWORK:-172.21.0.0/21}
+environment_public_domain=${ENVIRONMENT_PUBLIC_DOMAIN:-us-west-2.tvl.iropshub.com}
+environment_private_domain=${ENVIRONMENT_PRIVATE_DOMAIN:-iropscmp.travel.svcs.entsvcs.com}
+environment_netbios_domain=${ENVIRONMENT_NETBIOS_DOMAIN:-iropscmp}
 region=${AWS_DEFAULT_REGION:-us-west-2}
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-administrator}
@@ -38,12 +38,12 @@ user=${AWS_USER_NAME:-administrator}
 #  2. Define functions
 
 usage () {
-    echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v] [-m] [-o]"
+    echo "Usage: ${BASH_SOURCE##*/} [[-i] | [-s | -f]] [-v] [-m] [-o]"
     echo "                  [-O owner] [-C company] [-S system]"
-    echo "                  [-E environment]"
-    echo "                  [-N network]"
+    echo "                  [-E environment] [-N network]"
+    echo "                  [-D domain] [-d domain] [-b domain]"
     echo "                  [-r region] [-a account] [-u user]"
-    echo "  -I              non-interactive"
+    echo "  -i              interactive"
     echo "  -s              slower: increase pauses by 25%"
     echo "  -f              faster: reduce pauses by 25%"
     echo "  -v              verbose"
@@ -54,6 +54,9 @@ usage () {
     echo "  -S system       System Name (default: $system)"
     echo "  -E environment  Environment Name (default: $environment)"
     echo "  -N network      Environment Network (default: $environment_network)"
+    echo "  -D domain       Environment Public Domain (default: $environment_public_domain)"
+    echo "  -d domain       Environment Private Domain (default: $environment_private_domain)"
+    echo "  -b domain       Environment NetBIOS Domain (default: $environment_netbios_domain)"
     echo "  -r region       Region (default: $region)"
     echo "  -a account      Account (default: $account)"
     echo "  -u user         User (default: $user)"
@@ -139,9 +142,9 @@ next() {
 
 #  3. Parse command line options
 
-while getopts IsfvmoO:C:S:E:N:r:a:u:? arg; do
+while getopts isfvmoO:C:S:E:N:D:d:b:r:a:u:? arg; do
     case $arg in
-    I)  interactive=0;;
+    i)  interactive=1;;
     s)  ((speed < speed_max)) && ((speed=speed+25));;
     f)  ((speed > 0)) && ((speed=speed-25));;
     v)  verbose=1;;
@@ -152,6 +155,9 @@ while getopts IsfvmoO:C:S:E:N:r:a:u:? arg; do
     S)  system="$OPTARG";;
     E)  environment="$OPTARG";;
     N)  environment_network="$OPTARG";;
+    D)  environment_public_domain="$OPTARG";;
+    d)  environment_private_domain="$OPTARG";;
+    b)  environment_netbios_domain="$OPTARG";;
     r)  region="$OPTARG";;
     a)  account="$OPTARG";;
     u)  user="$OPTARG";;
@@ -207,15 +213,35 @@ if [ -z $environment ]; then
 else
     case $environment in
       Production)
+        addresses_per_subnet=32
+        subnets_per_availability_zone=32
+        availability_zones_per_vpc=2
+        use_public_hostedzone=true
+        use_private_hostedzone=false
         use_multi_zone_nat_gateways=false
         use_vpn_gateway=true;;
       Staging)
+        addresses_per_subnet=32
+        subnets_per_availability_zone=32
+        availability_zones_per_vpc=2
+        use_public_hostedzone=true
+        use_private_hostedzone=false
         use_multi_zone_nat_gateways=false
         use_vpn_gateway=true;;
       Testing)
+        addresses_per_subnet=32
+        subnets_per_availability_zone=32
+        availability_zones_per_vpc=2
+        use_public_hostedzone=true
+        use_private_hostedzone=false
         use_multi_zone_nat_gateways=false
         use_vpn_gateway=true;;
       Development)
+        addresses_per_subnet=32
+        subnets_per_availability_zone=32
+        availability_zones_per_vpc=2
+        use_public_hostedzone=true
+        use_private_hostedzone=false
         use_multi_zone_nat_gateways=false
         use_vpn_gateway=true;;
       *)
@@ -228,6 +254,24 @@ if [ -z $environment_network ]; then
     echo "-N network missing!"
     echo "Could not automatically determine environment network, and it was not specified as a parameter"
     exit 22
+fi
+
+if [ -z $environment_public_domain ]; then
+    echo "-D domain missing!"
+    echo "Could not automatically determine public domain, and it was not specified as a parameter"
+    exit 24
+fi
+
+if [ -z $environment_private_domain ]; then
+    echo "-d domain missing!"
+    echo "Could not automatically determine private domain, and it was not specified as a parameter"
+    exit 26
+fi
+
+if [ -z $environment_netbios_domain ]; then
+    echo "-b domain missing!"
+    echo "Could not automatically determine NetBIOS domain, and it was not specified as a parameter"
+    exit 28
 fi
 
 if [ -z $region ]; then
@@ -266,11 +310,18 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     exit 58
 fi
 
+echo -n "Confirming Stack pre-requisites "
+
 if ! aws cloudformation describe-stacks --stack-name $environment-VPC \
                                         --profile $profile --region $region --output text &> /dev/null; then
+    echo
     echo "Unable to update - $environment-VPC Stack does not exist!"
-    exit 80
+    exit 98
+else
+    echo -n "."
 fi
+echo " Done"
+sleep 1
 
 templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
 template_folder=environment
@@ -371,9 +422,16 @@ read -r -d '' statement << EOS
 aws cloudformation update-stack --stack-name $environment-VPC \\
                                 $template_parameter \\
                                 $stack_policy_parameter \\
-                                --parameters ParameterKey=HostedZoneStackName,ParameterValue=$environment-HostedZone \\
-                                             ParameterKey=Name,ParameterValue=$environment \\
+                                --parameters ParameterKey=Name,ParameterValue=$environment \\
                                              ParameterKey=Network,ParameterValue=$environment_network \\
+                                             ParameterKey=AddressesPerSubnet,ParameterValue=$addresses_per_subnet \\
+                                             ParameterKey=SubnetsPerAvailabilityZone,ParameterValue=$subnets_per_availability_zone \\
+                                             ParameterKey=AvailabilityZonesPerVPC,ParameterValue=$availability_zones_per_vpc \\
+                                             ParameterKey=PublicDomain,ParameterValue=$environment_public_domain \\
+                                             ParameterKey=PrivateDomain,ParameterValue=$environment_private_domain \\
+                                             ParameterKey=NetBIOSDomain,ParameterValue=$environment_netbios_domain \\
+                                             ParameterKey=UsePublicHostedZone,ParameterValue=$use_public_hostedzone \\
+                                             ParameterKey=UsePrivateHostedZone,ParameterValue=$use_private_hostedzone \\
                                              ParameterKey=UseMultiZoneNatGateways,ParameterValue=$use_multi_zone_nat_gateways \\
                                              ParameterKey=UseVPNGateway,ParameterValue=$use_vpn_gateway \\
                                 --tags Key=Owner,Value=$owner \\

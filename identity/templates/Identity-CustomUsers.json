@@ -9,40 +9,30 @@
         {
           "Label" : { "default" : "Stack Dependencies" },
           "Parameters" : [
-            "StandardManagedPoliciesStackName",
-            "CustomManagedPoliciesStackName",
+            "CustomGroupsStackName",
             "StandardGroupsStackName",
-            "CustomGroupsStackName"
+            "CustomManagedPoliciesStackName",
+            "StandardManagedPoliciesStackName"
           ]
         }
       ],
 
       "ParameterLabels" : {
-        "StandardManagedPoliciesStackName" : { "default" : "Standard ManagedPolicies Stack Name" },
-        "CustomManagedPoliciesStackName" : { "default" : "Custom ManagedPolicies Stack Name" },
+        "CustomGroupsStackName" : { "default" : "Custom Groups Stack Name" },
         "StandardGroupsStackName" : { "default" : "Standard Groups Stack Name" },
-        "CustomGroupsStackName" : { "default" : "Custom Groups Stack Name" }
+        "CustomManagedPoliciesStackName" : { "default" : "Custom ManagedPolicies Stack Name" },
+        "StandardManagedPoliciesStackName" : { "default" : "Standard ManagedPolicies Stack Name" }
       }
     }
   },
 
   "Parameters" : {
-    "StandardManagedPoliciesStackName" : {
-      "Description" : "Name of the CloudFormation Stack containing Standard ManagedPolicies.",
+    "CustomGroupsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Custom Groups.",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 64,
-      "Default" : "StandardManagedPolicies",
-      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
-      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
-    },
-
-    "CustomManagedPoliciesStackName" : {
-      "Description" : "Name of the CloudFormation Stack containing Custom ManagedPolicies.",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 64,
-      "Default" : "CustomManagedPolicies",
+      "Default" : "CustomGroups",
       "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
@@ -57,12 +47,22 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
-    "CustomGroupsStackName" : {
-      "Description" : "Name of the CloudFormation Stack containing Custom Groups.",
+    "CustomManagedPoliciesStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Custom ManagedPolicies.",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 64,
-      "Default" : "CustomGroups",
+      "Default" : "CustomManagedPolicies",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "StandardManagedPoliciesStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard ManagedPolicies.",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardManagedPolicies",
       "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     }

@@ -52,7 +52,7 @@
     "StandardTopicsStackName" : {
       "Description" : "Name of the CloudFormation Stack containing Standard Topics",
       "Type" : "String",
-      "MinLength" : 2,
+      "MinLength" : 8,
       "MaxLength" : 64,
       "Default" : "StandardTopics",
       "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
@@ -102,7 +102,9 @@
         "LogGroupName" : { "Ref" : "LogGroup" },
         "FilterPattern" : "[ip, identity, user_id, timestamp, request, status_code = 404, size, ...]",
         "MetricTransformations" : [{
-          "MetricNamespace" : { "Fn::Join" : [ "", [ { "Ref" : "SystemName" }, "/", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }]]},
+          "MetricNamespace" : { "Fn::Join" : [ "", [
+            { "Ref" : "SystemName" }, "/", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }
+          ]]},
           "MetricName" : "404Count",
           "MetricValue" : "1"
         }]
@@ -115,7 +117,9 @@
         "LogGroupName" : { "Ref" : "LogGroup" },
         "FilterPattern" : "[ip, identity, user_id, timestamp, request, status_code, size, ...]",
         "MetricTransformations" : [{
-          "MetricNamespace" : { "Fn::Join" : [ "", [ { "Ref" : "SystemName" }, "/", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }]]},
+          "MetricNamespace" : { "Fn::Join" : [ "", [
+            { "Ref" : "SystemName" }, "/", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }
+          ]]},
           "MetricName" : "BytesTransferred",
           "MetricValue" : "$size"
         }]
@@ -129,7 +133,9 @@
         "AlarmActions" : [
           { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-AlarmsTopic" }}
         ],
-        "Namespace" : { "Fn::Join" : [ "", [ { "Ref" : "SystemName" }, "/", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }]]},
+        "Namespace" : { "Fn::Join" : [ "", [
+          { "Ref" : "SystemName" }, "/", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }
+        ]]},
         "MetricName" : "404Count",
         "Statistic" : "Sum",
         "Period" : "60",
@@ -146,7 +152,9 @@
         "AlarmActions" : [
           { "Fn::ImportValue" : { "Fn::Sub" : "${StandardTopicsStackName}-AlarmsTopic" }}
         ],
-        "Namespace" : { "Fn::Join" : [ "", [ { "Ref" : "SystemName" }, "/", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }]]},
+        "Namespace" : { "Fn::Join" : [ "", [
+          { "Ref" : "SystemName" }, "/", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, "-", { "Ref" : "ApplicationName" }
+        ]]},
         "MetricName" : "BytesTransferred",
         "Statistic" : "Average",
         "Period" : "60",

@@ -9,36 +9,36 @@
         {
           "Label" : { "default" : "Stack Dependencies" },
           "Parameters" : [
-            "StandardManagedPoliciesStackName",
-            "StandardGroupsStackName"
+            "StandardGroupsStackName",
+            "StandardManagedPoliciesStackName"
           ]
         }
       ],
 
       "ParameterLabels" : {
-        "StandardManagedPoliciesStackName" : { "default" : "Standard ManagedPolicies Stack Name" },
-        "StandardGroupsStackName" : { "default" : "Standard Groups Stack Name" }
+        "StandardGroupsStackName" : { "default" : "Standard Groups Stack Name" },
+        "StandardManagedPoliciesStackName" : { "default" : "Standard ManagedPolicies Stack Name" }
       }
     }
   },
 
   "Parameters" : {
-    "StandardManagedPoliciesStackName" : {
-      "Description" : "Name of the CloudFormation Stack containing Standard ManagedPolicies.",
-      "Type" : "String",
-      "MinLength" : 2,
-      "MaxLength" : 64,
-      "Default" : "StandardManagedPolicies",
-      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
-      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
-    },
-
     "StandardGroupsStackName" : {
       "Description" : "Name of the CloudFormation Stack containing Standard Groups.",
       "Type" : "String",
       "MinLength" : 2,
       "MaxLength" : 64,
       "Default" : "StandardGroups",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "StandardManagedPoliciesStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing Standard ManagedPolicies.",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 64,
+      "Default" : "StandardManagedPolicies",
       "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     }

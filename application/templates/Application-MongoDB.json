@@ -36,16 +36,21 @@
           "Parameters" : [
             "EnvironmentType",
             "EnvironmentZones",
-            "OSName"
+            "OSName",
+            "OSDate"
           ]
         },
         {
           "Label" : { "default" : "Application Dependencies Configuration" },
           "Parameters" : [
+            "SharedScriptFolder",
+            "ScriptFolder",
+            "SharedProductFolder",
             "ProductFolder",
-            "ProductObject",
+            "MongoDBProductObject",
+            "SharedConfigurationFolder",
             "ConfigurationFolder",
-            "ConfigurationObject"
+            "MongoDBConfigurationObject"
           ]
         },
         {
@@ -60,12 +65,8 @@
         {
           "Label" : { "default" : "Security Configuration" },
           "Parameters" : [
-            "PrivateUserNetwork",
-            "PrivateUserNetwork1",
-            "PrivateUserNetwork2",
-            "PrivateAdministratorNetwork",
-            "PrivateAdministratorNetwork1",
-            "PrivateAdministratorNetwork2"
+            "AdministratorNetworks",
+            "IntegrationNetworks"
           ]
         }
       ],
@@ -84,29 +85,30 @@
         "EnvironmentType" : { "default" : "Environment Type" },
         "EnvironmentZones" : { "default" : "Environment Zones" },
         "OSName" : { "default" : "Operating System Name" },
+        "OSDate" : { "default" : "Operating System Name" },
+        "SharedScriptFolder" : { "default" : "Shared Script Folder" },
+        "ScriptFolder" : { "default" : "Script Folder" },
+        "SharedProductFolder" : { "default" : "Shared Product Folder" },
         "ProductFolder" : { "default" : "Product Folder" },
-        "ProductObject" : { "default" : "Product Object" },
+        "MongoDBProductObject" : { "default" : "MongoDB Product Object" },
+        "SharedConfigurationFolder" : { "default" : "Shared Configuration Folder" },
         "ConfigurationFolder" : { "default" : "Configuration Folder" },
-        "ConfigurationObject" : { "default" : "Configuration Object" },
+        "MongoDBConfigurationObject" : { "default" : "MongoDB Configuration Object" },
         "ApplicationName" : { "default" : "Application Name" },
         "UseStaticAddress" : { "default" : "Use Static Address" },
         "LogRetention" : { "default" : "Log Retention" },
         "Schedule" : { "default" : "Schedule" },
-        "PrivateUserNetwork" : { "default" : "Private User Network" },
-        "PrivateUserNetwork1" : { "default" : "Additional Private User Network 1" },
-        "PrivateUserNetwork2" : { "default" : "Additional Private User Network 2" },
-        "PrivateAdministratorNetwork" : { "default" : "Private Administrator Network" },
-        "PrivateAdministratorNetwork1" : { "default" : "Additional Private Administrator Network 1" },
-        "PrivateAdministratorNetwork2" : { "default" : "Additional Private Administrator Network 2" }
+        "AdministratorNetworks" : { "default" : "Administrator Networks" },
+        "IntegrationNetworks" : { "default" : "Integration Networks" }
       }
     }
   },
 
   "Parameters" : {
     "VPNStackName" : {
-      "Description" : "Name of the CloudFormation Stack containing VPN Instances",
+      "Description" : "Name of the CloudFormation Stack containing the VPN Instances",
       "Type" : "String",
-      "MinLength" : 2,
+      "MinLength" : 8,
       "MaxLength" : 64,
       "Default" : "Production-OpenVPN",
       "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
@@ -126,34 +128,37 @@
     "CustomIdentifierFunctionsStackName" : {
       "Description" : "Name of the CloudFormation Stack containing the Custom Identifier Functions",
       "Type" : "String",
+      "MinLength" : 8,
       "MaxLength" : 64,
       "Default" : "CustomIdentifierFunctions",
-      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
     "StandardCIDRFunctionsStackName" : {
       "Description" : "Name of the CloudFormation Stack containing the Standard CIDR Functions",
       "Type" : "String",
+      "MinLength" : 8,
       "MaxLength" : 64,
       "Default" : "StandardCIDRFunctions",
-      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
     "StandardAMIFunctionsStackName" : {
       "Description" : "Name of the CloudFormation Stack containing the Standard AMI Functions",
       "Type" : "String",
+      "MinLength" : 8,
       "MaxLength" : 64,
       "Default" : "StandardAMIFunctions",
-      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
     "StandardBucketsStackName" : {
       "Description" : "Name of the CloudFormation Stack containing Standard Buckets",
       "Type" : "String",
-      "MinLength" : 2,
+      "MinLength" : 8,
       "MaxLength" : 64,
       "Default" : "StandardBuckets",
       "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
@@ -163,7 +168,7 @@
     "StandardTopicsStackName" : {
       "Description" : "Name of the CloudFormation Stack containing Standard Topics",
       "Type" : "String",
-      "MinLength" : 2,
+      "MinLength" : 8,
       "MaxLength" : 64,
       "Default" : "StandardTopics",
       "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
@@ -218,9 +223,47 @@
     "OSName" : {
       "Description" : "The Operating System to use for Instances",
       "Type" : "String",
-      "Default" : "Amazon Linux",
+      "Default" : "RHEL 7.3",
       "AllowedValues" : [ "Amazon Linux", "Amazon Linux 2017.03.0", "RHEL 7", "RHEL 7.4", "RHEL 7.3" ],
       "ConstraintDescription" : "must be \"Amazon Linux\" (latest), \"Amazon Linux 2017.03.0\", \"RHEL 7\" (latest), \"RHEL 7.4\" or \"RHEL 7.3\"."
+    },
+
+    "OSDate" : {
+      "Description" : "Optional Operating System Date, specify to select a specific publication date for the Image",
+      "Type" : "String",
+      "Default" : "20161026",
+      "AllowedPattern" : "(^$|^20(1[6-9]|[2-9][0-9])(0[1-9]|1[0-2])(0[1-9]|[1-2][0-9]|3[0-1])$)",
+      "ConstraintDescription" : "Must be a valid date in YYYYMMDD format."
+    },
+
+    "SharedScriptFolder" : {
+      "Description" : "Folder within the S3 Scripts bucket containing Shared Scripts deployed by this Template",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "Linux",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "ScriptFolder" : {
+      "Description" : "Folder within the S3 Scripts bucket containing Scripts deployed by this Template",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "MongoDB",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "SharedProductFolder" : {
+      "Description" : "Folder within the S3 Products bucket containing Shared Products deployed by this Template",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "Linux",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
     "ProductFolder" : {
@@ -233,13 +276,23 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
-    "ProductObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the installer",
+    "MongoDBProductObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the MongoDB installer",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
       "AllowedPattern" : "(^$|^[-_.a-zA-Z0-9]*$)",
       "ConstraintDescription" : "must be a valid filename, not containing slashes."
+    },
+
+    "SharedConfigurationFolder" : {
+      "Description" : "Folder within the S3 Configurations bucket containing Shared Configurations deployed by this Template",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "Linux",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
     "ConfigurationFolder" : {
@@ -252,8 +305,8 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
-    "ConfigurationObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the configuration",
+    "MongoDBConfigurationObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the MongoDB configuration",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
@@ -295,58 +348,24 @@
       "ConstraintDescription" : "See Scheduler Lambda Function description for Tag format."
     },
 
-    "PrivateUserNetwork" : {
-      "Description" : "Private network that can access the Application",
+    "AdministratorNetworks" : {
+      "Description" : "Networks that can administer the Application",
       "Type" : "String",
-      "Default" : "10.0.0.0/16",
-      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
-      "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
+      "Default" : "NONE,NONE,NONE,NONE,NONE,NONE,NONE,NONE",
+      "ConstraintDescription" : "must be a comma-separated list of 8 values, each an IP CIDR range of the form x.x.x.x/x or the word NONE."
     },
 
-    "PrivateUserNetwork1" : {
-      "Description" : "Additional private network that can access the Application",
+    "IntegrationNetworks" : {
+      "Description" : "Networks that can integrate with the Application",
       "Type" : "String",
-      "Default" : "",
-      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
-      "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
-    },
-
-    "PrivateUserNetwork2" : {
-      "Description" : "Additional private network that can access the Application",
-      "Type" : "String",
-      "Default" : "",
-      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
-      "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
-    },
-
-    "PrivateAdministratorNetwork" : {
-      "Description" : "Private network that can administer the Application",
-      "Type" : "String",
-      "Default" : "10.0.0.0/16",
-      "AllowedPattern" : "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$",
-      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
-    },
-
-    "PrivateAdministratorNetwork1" : {
-      "Description" : "Additional private network that can administer the Application",
-      "Type" : "String",
-      "Default" : "",
-      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
-      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
-    },
-
-    "PrivateAdministratorNetwork2" : {
-      "Description" : "Additional private network that can administer the Application",
-      "Type" : "String",
-      "Default" : "",
-      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
-      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
+      "Default" : "NONE,NONE,NONE,NONE,NONE,NONE,NONE,NONE",
+      "ConstraintDescription" : "must be a comma-separated list of 8 values, each an IP CIDR range of the form x.x.x.x/x or the word NONE."
     }
   },
 
   "Mappings" : {
     "InstanceTypeMap" : {
-      "MongoDB" : { "small" : "t2.xlarge", "medium" : "r4.2xlarge", "large" : "r4.4xlarge", "xlarge" : "r4.8xlarge" }
+      "Database" : { "small" : "t2.xlarge", "medium" : "r4.2xlarge", "large" : "r4.4xlarge", "xlarge" : "r4.8xlarge" }
     }
   },
 
@@ -356,18 +375,28 @@
     "ConfigureMultiZone" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "EnvironmentZones" }, "1" ]}]},
     "ConfigureAMZN" : { "Fn::Equals" : [{ "Fn::Select" : [ "0", { "Fn::Split" : [ " ", { "Ref" : "OSName" }]}]}, "Amazon" ]},
     "ConfigureRHEL" : { "Fn::Equals" : [{ "Fn::Select" : [ "0", { "Fn::Split" : [ " ", { "Ref" : "OSName" }]}]}, "RHEL" ]},
-    "InstallProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ProductObject" }, "" ]}]},
-    "InstallConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ConfigurationObject" }, "" ]}]},
+    "InstallMongoDBProduct" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "MongoDBProductObject" }, "" ]}]},
+    "InstallMongoDBConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "MongoDBConfigurationObject" }, "" ]}]},
     "ConfigureStaticAddress" : { "Fn::Equals" : [{ "Ref" : "UseStaticAddress" }, "true" ]},
     "ConfigureStaticAddress&MultiZone" : { "Fn::And" : [{ "Condition" : "ConfigureStaticAddress" }, { "Condition" : "ConfigureMultiZone" }]},
     "ConfigureLogs" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LogRetention" }, "0" ]}]},
     "ConfigureSchedule" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "Schedule" }, "" ]}]},
-    "ConfigurePrivateUserNetwork" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateUserNetwork" }, "" ]}]},
-    "ConfigurePrivateUserNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateUserNetwork1" }, "" ]}]},
-    "ConfigurePrivateUserNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateUserNetwork2" }, "" ]}]},
-    "ConfigurePrivateAdministratorNetwork" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateAdministratorNetwork" }, "" ]}]},
-    "ConfigurePrivateAdministratorNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateAdministratorNetwork1" }, "" ]}]},
-    "ConfigurePrivateAdministratorNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateAdministratorNetwork2" }, "" ]}]}
+    "ConfigureAdministratorNetwork0" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureAdministratorNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureAdministratorNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureAdministratorNetwork3" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureAdministratorNetwork4" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureAdministratorNetwork5" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureAdministratorNetwork6" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureAdministratorNetwork7" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureIntegrationNetwork0" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureIntegrationNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureIntegrationNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureIntegrationNetwork3" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureIntegrationNetwork4" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureIntegrationNetwork5" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureIntegrationNetwork6" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureIntegrationNetwork7" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}, "NONE" ]}]}
   },
 
   "Resources" : {
@@ -387,6 +416,27 @@
       }
     },
 
+    "DownloadScriptFromS3Policy" : {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "DownloadScriptFromS3Policy",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [
+              "s3:GetObject"
+            ],
+            "Resource" : [
+              { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ScriptsBucket" }}, "/", { "Ref" : "SharedScriptFolder" }, "/*" ]]},
+              { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ScriptsBucket" }}, "/", { "Ref" : "ScriptFolder" }, "/*" ]]}
+            ]
+          }]
+        },
+        "Roles" : [{ "Ref" : "Role" }]
+      }
+    },
+
     "DownloadProductFromS3Policy" : {
       "Type" : "AWS::IAM::Policy",
       "Properties" : {
@@ -398,7 +448,10 @@
             "Action" : [
               "s3:GetObject"
             ],
-            "Resource" : { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }}, "/", { "Ref" : "ProductFolder" }, "/*" ]]}
+            "Resource" : [
+              { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }}, "/", { "Ref" : "SharedProductFolder" }, "/*" ]]},
+              { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }}, "/", { "Ref" : "ProductFolder" }, "/*" ]]}
+            ]
           }]
         },
         "Roles" : [{ "Ref" : "Role" }]
@@ -416,7 +469,10 @@
             "Action" : [
               "s3:GetObject"
             ],
-            "Resource" : { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/*" ]]}
+            "Resource" : [
+              { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "SharedConfigurationFolder" }, "/*" ]]},
+              { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/*" ]]}
+            ]
           }]
         },
         "Roles" : [{ "Ref" : "Role" }]
@@ -453,26 +509,54 @@
       "Condition" : "ConfigureLogs"
     },
 
+    "ClientSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "ClientSecurityGroup" ]]},
+        "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPC" }},
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "ClientSecurityGroup" ]]}}
+        ]
+      }
+    },
+
     "InstanceSecurityGroup" : {
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
         "GroupDescription" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "InstanceSecurityGroup" ]]},
         "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPC" }},
         "SecurityGroupIngress" : [
-          { "IpProtocol" : "icmp", "FromPort" :    "0", "ToPort" :    "0", "CidrIp" : "0.0.0.0/0" },
-          { "IpProtocol" : "icmp", "FromPort" :    "3", "ToPort" :    "3", "CidrIp" : "0.0.0.0/0" },
-          { "IpProtocol" : "icmp", "FromPort" :    "8", "ToPort" :    "8", "CidrIp" : "0.0.0.0/0" },
-          { "IpProtocol" : "icmp", "FromPort" :   "11", "ToPort" :   "11", "CidrIp" : "0.0.0.0/0" },
-          { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPNStackName}-SecurityGroup" }}},
-          { "Fn::If" : [ "ConfigurePrivateUserNetwork",  { "IpProtocol" : "tcp",  "FromPort" : "27017", "ToPort" : "27017", "CidrIp" : { "Ref" : "PrivateUserNetwork" }},  { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateUserNetwork",  { "IpProtocol" : "tcp",  "FromPort" : "28017", "ToPort" : "28017", "CidrIp" : { "Ref" : "PrivateUserNetwork" }},  { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateUserNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "27017", "ToPort" : "27017", "CidrIp" : { "Ref" : "PrivateUserNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateUserNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "28017", "ToPort" : "28017", "CidrIp" : { "Ref" : "PrivateUserNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateUserNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "27017", "ToPort" : "27017", "CidrIp" : { "Ref" : "PrivateUserNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateUserNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "28017", "ToPort" : "28017", "CidrIp" : { "Ref" : "PrivateUserNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork",  { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork" }},  { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" :   "22", "ToPort" :   "22", "CidrIp" : { "Ref" : "PrivateAdministratorNetwork2" }}, { "Ref" : "AWS::NoValue" }]}
+          { "IpProtocol" : "icmp", "FromPort" :     "0", "ToPort" :     "0", "CidrIp" : "0.0.0.0/0" },
+          { "IpProtocol" : "icmp", "FromPort" :     "3", "ToPort" :     "3", "CidrIp" : "0.0.0.0/0" },
+          { "IpProtocol" : "icmp", "FromPort" :     "8", "ToPort" :     "8", "CidrIp" : "0.0.0.0/0" },
+          { "IpProtocol" : "icmp", "FromPort" :    "11", "ToPort" :    "11", "CidrIp" : "0.0.0.0/0" },
+          { "IpProtocol" : "tcp",  "FromPort" :    "22", "ToPort" :    "22", "SourceSecurityGroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPNStackName}-InstanceSecurityGroup" }}},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork0", { "IpProtocol" : "tcp",  "FromPort" :    "22", "ToPort" :    "22", "CidrIp" : { "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork1", { "IpProtocol" : "tcp",  "FromPort" :    "22", "ToPort" :    "22", "CidrIp" : { "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork2", { "IpProtocol" : "tcp",  "FromPort" :    "22", "ToPort" :    "22", "CidrIp" : { "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork3", { "IpProtocol" : "tcp",  "FromPort" :    "22", "ToPort" :    "22", "CidrIp" : { "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork4", { "IpProtocol" : "tcp",  "FromPort" :    "22", "ToPort" :    "22", "CidrIp" : { "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork5", { "IpProtocol" : "tcp",  "FromPort" :    "22", "ToPort" :    "22", "CidrIp" : { "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork6", { "IpProtocol" : "tcp",  "FromPort" :    "22", "ToPort" :    "22", "CidrIp" : { "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureAdministratorNetwork7", { "IpProtocol" : "tcp",  "FromPort" :    "22", "ToPort" :    "22", "CidrIp" : { "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "AdministratorNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "IpProtocol" : "tcp",  "FromPort" : "27017", "ToPort" : "27017", "SourceSecurityGroupId" : { "Ref" : "ClientSecurityGroup" }},
+          { "IpProtocol" : "tcp",  "FromPort" : "28017", "ToPort" : "28017", "SourceSecurityGroupId" : { "Ref" : "ClientSecurityGroup" }},
+          { "Fn::If" : [ "ConfigureIntegrationNetwork0", { "IpProtocol" : "tcp",  "FromPort" : "27017", "ToPort" : "27017", "CidrIp" : { "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureIntegrationNetwork0", { "IpProtocol" : "tcp",  "FromPort" : "28017", "ToPort" : "28017", "CidrIp" : { "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureIntegrationNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "27017", "ToPort" : "27017", "CidrIp" : { "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureIntegrationNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "28017", "ToPort" : "28017", "CidrIp" : { "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureIntegrationNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "27017", "ToPort" : "27017", "CidrIp" : { "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureIntegrationNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "28017", "ToPort" : "28017", "CidrIp" : { "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureIntegrationNetwork3", { "IpProtocol" : "tcp",  "FromPort" : "27017", "ToPort" : "27017", "CidrIp" : { "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureIntegrationNetwork3", { "IpProtocol" : "tcp",  "FromPort" : "28017", "ToPort" : "28017", "CidrIp" : { "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureIntegrationNetwork4", { "IpProtocol" : "tcp",  "FromPort" : "27017", "ToPort" : "27017", "CidrIp" : { "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureIntegrationNetwork4", { "IpProtocol" : "tcp",  "FromPort" : "28017", "ToPort" : "28017", "CidrIp" : { "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureIntegrationNetwork5", { "IpProtocol" : "tcp",  "FromPort" : "27017", "ToPort" : "27017", "CidrIp" : { "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureIntegrationNetwork5", { "IpProtocol" : "tcp",  "FromPort" : "28017", "ToPort" : "28017", "CidrIp" : { "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureIntegrationNetwork6", { "IpProtocol" : "tcp",  "FromPort" : "27017", "ToPort" : "27017", "CidrIp" : { "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureIntegrationNetwork6", { "IpProtocol" : "tcp",  "FromPort" : "28017", "ToPort" : "28017", "CidrIp" : { "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureIntegrationNetwork7", { "IpProtocol" : "tcp",  "FromPort" : "27017", "ToPort" : "27017", "CidrIp" : { "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureIntegrationNetwork7", { "IpProtocol" : "tcp",  "FromPort" : "28017", "ToPort" : "28017", "CidrIp" : { "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "IntegrationNetworks" }]}]}}, { "Ref" : "AWS::NoValue" }]}
         ],
         "Tags" : [
           { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "InstanceSecurityGroup" ]]}}
@@ -510,7 +594,8 @@
       "Properties" : {
         "ServiceToken" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardAMIFunctionsStackName}-GetAmazonLinuxImageIdFunctionArn" }},
         "Region" : { "Ref" : "AWS::Region" },
-        "OSName" : { "Ref" : "OSName" }
+        "OSName" : { "Ref" : "OSName" },
+        "OSDate" : { "Ref" : "OSDate" }
       },
       "Condition" : "ConfigureAMZN"
     },
@@ -520,7 +605,8 @@
       "Properties" : {
         "ServiceToken" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardAMIFunctionsStackName}-GetRHELImageIdFunctionArn" }},
         "Region" : { "Ref" : "AWS::Region" },
-        "OSName" : { "Ref" : "OSName" }
+        "OSName" : { "Ref" : "OSName" },
+        "OSDate" : { "Ref" : "OSDate" }
       },
       "Condition" : "ConfigureRHEL"
     },
@@ -550,6 +636,7 @@
             "type" : "S3",
             "roleName" : { "Ref" : "Role" },
             "buckets" : [
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ScriptsBucket" }},
               { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }},
               { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}
             ]
@@ -565,10 +652,10 @@
               { "Fn::If" : [ "ConfigureLogs", "ConfigureLogs", { "Ref": "AWS::NoValue" }]},
               "ConfigureCFN",
               "ConfigureVolumes",
-              "ConfigureHostname",
               "ConfigureOS",
-              { "Fn::If" : [ "InstallProduct", "InstallMongoDBProduct", { "Ref": "AWS::NoValue" }]},
-              { "Fn::If" : [ "InstallConfiguration", "InstallMongoDBConfiguration", { "Ref": "AWS::NoValue" }]}
+              "ConfigureHostName",
+              { "Fn::If" : [ "InstallMongoDBProduct", "InstallMongoDBProduct", { "Ref": "AWS::NoValue" }]},
+              { "Fn::If" : [ "InstallMongoDBConfiguration", "InstallMongoDBConfiguration", { "Ref": "AWS::NoValue" }]}
             ]
           },
           "UpdateOS" : {
@@ -774,7 +861,7 @@
                 "content" : { "Fn::Join" : [ "\n", [
                   "[cfn-auto-reloader-hook]",
                   "triggers=post.update",
-                  "path=Resources.DatabbaseInstance01A.Metadata.AWS::CloudFormation::Init",
+                  "path=Resources.Instance01A.Metadata.AWS::CloudFormation::Init",
                   { "Fn::Sub" : "action=/opt/aws/bin/cfn-init --verbose --configsets All --stack ${AWS::StackName} --resource Instance01A --region ${AWS::Region}" }
                 ]]},
                 "mode"  : "000400",
@@ -908,30 +995,6 @@
               }
             }
           },
-          "ConfigureHostname" : {
-            "files" : {
-              "/root/bin/sethostname" : {
-                "content" : { "Fn::Join" : [ "\n", [
-                  "#!/bin/bash",
-                  "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)",
-                  "region=${zone::-1}",
-                  { "Fn::Join" : [ "", [ "hostname=", { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01a.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]},
-                  "address=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)",
-                  "sed -i -e \"/^$address/d\" -e \"$ a$address $hostname ${hostname%%.*}\" /etc/hosts",
-                  "hostname $hostname"
-                ]]},
-                "mode"  : "000700",
-                "owner" : "root",
-                "group" : "root"
-              }
-            },
-            "commands" : {
-              "01_sethostname" : {
-                "command" : "/root/bin/sethostname",
-                "ignoreErrors" : "false"
-              }
-            }
-          },
           "ConfigureOS" : {
             "files" : {
               "/etc/profile.d/local.sh" : {
@@ -945,14 +1008,58 @@
               }
             }
           },
+          "ConfigureHostName" : {
+            "files" : {
+              "/root/bin/sethostname" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "#!/bin/bash",
+                  "while getopts a:b:H:I:D: arg; do",
+                  "    case $arg in",
+                  "    a)  zonea=\"$OPTARG\";;",
+                  "    b)  zoneb=\"$OPTARG\";;",
+                  "    H)  host=\"$OPTARG\";;",
+                  "    I)  instance=\"$OPTARG\";;",
+                  "    D)  domain=\"$OPTARG\";;",
+                  "    esac",
+                  "done",
+                  "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)",
+                  "region=${zone::-1}",
+                  "case $zone in",
+                  "  $zonea) hostname=${host}${instance}a.$domain;;",
+                  "  $zoneb) hostname=${host}${instance}b.$domain;;",
+                  "esac",
+                  "address=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)",
+                  "sed -i -e \"/^$address/d\" -e \"$ a$address $hostname\" /etc/hosts",
+                  "echo $hostname > /etc/hostname",
+                  "hostname $hostname"
+                ]]},
+                "mode"  : "000700",
+                "owner" : "root",
+                "group" : "root"
+              }
+            },
+            "commands" : {
+              "01-sethostname" : {
+                "command" : { "Fn::Join" : [ "", [
+                  "/root/bin/sethostname",
+                  " -a ", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-ZoneA" }},
+                  " -b ", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-ZoneB" }},
+                  " -H ", { "Fn::GetAtt" : [ "GetHostName", "HostName" ]},
+                  " -I 01",
+                  " -D ", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPrivateDomain" }}
+                ]]},
+                "ignoreErrors" : "false"
+              }
+            }
+          },
           "InstallMongoDBProduct" : {
             "sources" : {
-              "/var/tmp" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }}, "/", { "Ref" : "ProductFolder" }, "/", { "Ref" : "ProductObject" }]]}
+              "/var/tmp" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }}, "/", { "Ref" : "ProductFolder" }, "/", { "Ref" : "MongoDBProductObject" }]]}
             }
           },
           "InstallMongoDBConfiguration" : {
             "sources" : {
-              "/etc" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/", { "Ref" : "ConfigurationObject" }]]}
+              "/etc" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/", { "Ref" : "MongoDBConfigurationObject" }]]}
             }
           }
         }
@@ -960,7 +1067,7 @@
       "Properties" : {
         "ImageId" : { "Fn::If" : [ "ConfigureAMZN", { "Fn::GetAtt" : [ "GetAmazonLinuxImageId", "ImageId" ]},
                                                     { "Fn::GetAtt" : [ "GetRHELImageId", "ImageId" ]}]},
-        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "MongoDB", { "Ref" : "EnvironmentType" }]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Database", { "Ref" : "EnvironmentType" }]},
         "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
         "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
         "NetworkInterfaces" : [{
@@ -998,6 +1105,7 @@
         }],
         "Tags" : [
           { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "Instance01A" ]]}},
+          { "Key" : "HostName", "Value" : { "Fn::Sub" : "${GetHostName.HostName}01a" }},
           { "Fn::If" : [ "ConfigureSchedule", { "Key" : "Schedule", "Value" : { "Ref" : "Schedule" }}, { "Ref" : "AWS::NoValue" }]}
         ],
         "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "\n", [
@@ -1058,6 +1166,7 @@
             "type" : "S3",
             "roleName" : { "Ref" : "Role" },
             "buckets" : [
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ScriptsBucket" }},
               { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }},
               { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}
             ]
@@ -1073,10 +1182,10 @@
               { "Fn::If" : [ "ConfigureLogs", "ConfigureLogs", { "Ref": "AWS::NoValue" }]},
               "ConfigureCFN",
               "ConfigureVolumes",
-              "ConfigureHostname",
               "ConfigureOS",
-              { "Fn::If" : [ "InstallProduct", "InstallMongoDBProduct", { "Ref": "AWS::NoValue" }]},
-              { "Fn::If" : [ "InstallConfiguration", "InstallMongoDBConfiguration", { "Ref": "AWS::NoValue" }]}
+              "ConfigureHostName",
+              { "Fn::If" : [ "InstallMongoDBProduct", "InstallMongoDBProduct", { "Ref": "AWS::NoValue" }]},
+              { "Fn::If" : [ "InstallMongoDBConfiguration", "InstallMongoDBConfiguration", { "Ref": "AWS::NoValue" }]}
             ]
           },
           "UpdateOS" : {
@@ -1416,30 +1525,6 @@
               }
             }
           },
-          "ConfigureHostname" : {
-            "files" : {
-              "/root/bin/sethostname" : {
-                "content" : { "Fn::Join" : [ "\n", [
-                  "#!/bin/bash",
-                  "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)",
-                  "region=${zone::-1}",
-                  { "Fn::Join" : [ "", [ "hostname=", { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "02a.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]},
-                  "address=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)",
-                  "sed -i -e \"/^$address/d\" -e \"$ a$address $hostname ${hostname%%.*}\" /etc/hosts",
-                  "hostname $hostname"
-                ]]},
-                "mode"  : "000700",
-                "owner" : "root",
-                "group" : "root"
-              }
-            },
-            "commands" : {
-              "01_sethostname" : {
-                "command" : "/root/bin/sethostname",
-                "ignoreErrors" : "false"
-              }
-            }
-          },
           "ConfigureOS" : {
             "files" : {
               "/etc/profile.d/local.sh" : {
@@ -1453,14 +1538,58 @@
               }
             }
           },
+          "ConfigureHostName" : {
+            "files" : {
+              "/root/bin/sethostname" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "#!/bin/bash",
+                  "while getopts a:b:H:I:D: arg; do",
+                  "    case $arg in",
+                  "    a)  zonea=\"$OPTARG\";;",
+                  "    b)  zoneb=\"$OPTARG\";;",
+                  "    H)  host=\"$OPTARG\";;",
+                  "    I)  instance=\"$OPTARG\";;",
+                  "    D)  domain=\"$OPTARG\";;",
+                  "    esac",
+                  "done",
+                  "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)",
+                  "region=${zone::-1}",
+                  "case $zone in",
+                  "  $zonea) hostname=${host}${instance}a.$domain;;",
+                  "  $zoneb) hostname=${host}${instance}b.$domain;;",
+                  "esac",
+                  "address=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)",
+                  "sed -i -e \"/^$address/d\" -e \"$ a$address $hostname\" /etc/hosts",
+                  "echo $hostname > /etc/hostname",
+                  "hostname $hostname"
+                ]]},
+                "mode"  : "000700",
+                "owner" : "root",
+                "group" : "root"
+              }
+            },
+            "commands" : {
+              "01-sethostname" : {
+                "command" : { "Fn::Join" : [ "", [
+                  "/root/bin/sethostname",
+                  " -a ", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-ZoneA" }},
+                  " -b ", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-ZoneB" }},
+                  " -H ", { "Fn::GetAtt" : [ "GetHostName", "HostName" ]},
+                  " -I 02",
+                  " -D ", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPrivateDomain" }}
+                ]]},
+                "ignoreErrors" : "false"
+              }
+            }
+          },
           "InstallMongoDBProduct" : {
             "sources" : {
-              "/var/tmp" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }}, "/", { "Ref" : "ProductFolder" }, "/", { "Ref" : "ProductObject" }]]}
+              "/var/tmp" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }}, "/", { "Ref" : "ProductFolder" }, "/", { "Ref" : "MongoDBProductObject" }]]}
             }
           },
           "InstallMongoDBConfiguration" : {
             "sources" : {
-              "/etc" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/", { "Ref" : "ConfigurationObject" }]]}
+              "/etc" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/", { "Ref" : "MongoDBConfigurationObject" }]]}
             }
           }
         }
@@ -1468,7 +1597,7 @@
       "Properties" : {
         "ImageId" : { "Fn::If" : [ "ConfigureAMZN", { "Fn::GetAtt" : [ "GetAmazonLinuxImageId", "ImageId" ]},
                                                     { "Fn::GetAtt" : [ "GetRHELImageId", "ImageId" ]}]},
-        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "MongoDB", { "Ref" : "EnvironmentType" }]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Database", { "Ref" : "EnvironmentType" }]},
         "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
         "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
         "NetworkInterfaces" : [{
@@ -1506,6 +1635,7 @@
         }],
         "Tags" : [
           { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "Instance02A" ]]}},
+          { "Key" : "HostName", "Value" : { "Fn::Sub" : "${GetHostName.HostName}02a" }},
           { "Fn::If" : [ "ConfigureSchedule", { "Key" : "Schedule", "Value" : { "Ref" : "Schedule" }}, { "Ref" : "AWS::NoValue" }]}
         ],
         "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "\n", [
@@ -1576,6 +1706,7 @@
             "type" : "S3",
             "roleName" : { "Ref" : "Role" },
             "buckets" : [
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ScriptsBucket" }},
               { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }},
               { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}
             ]
@@ -1591,10 +1722,10 @@
               { "Fn::If" : [ "ConfigureLogs", "ConfigureLogs", { "Ref": "AWS::NoValue" }]},
               "ConfigureCFN",
               "ConfigureVolumes",
-              "ConfigureHostname",
               "ConfigureOS",
-              { "Fn::If" : [ "InstallProduct", "InstallMongoDBProduct", { "Ref": "AWS::NoValue" }]},
-              { "Fn::If" : [ "InstallConfiguration", "InstallMongoDBConfiguration", { "Ref": "AWS::NoValue" }]}
+              "ConfigureHostName",
+              { "Fn::If" : [ "InstallMongoDBProduct", "InstallMongoDBProduct", { "Ref": "AWS::NoValue" }]},
+              { "Fn::If" : [ "InstallMongoDBConfiguration", "InstallMongoDBConfiguration", { "Ref": "AWS::NoValue" }]}
             ]
           },
           "UpdateOS" : {
@@ -1934,30 +2065,6 @@
               }
             }
           },
-          "ConfigureHostname" : {
-            "files" : {
-              "/root/bin/sethostname" : {
-                "content" : { "Fn::Join" : [ "\n", [
-                  "#!/bin/bash",
-                  "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)",
-                  "region=${zone::-1}",
-                  { "Fn::Join" : [ "", [ "hostname=", { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01b.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]},
-                  "address=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)",
-                  "sed -i -e \"/^$address/d\" -e \"$ a$address $hostname ${hostname%%.*}\" /etc/hosts",
-                  "hostname $hostname"
-                ]]},
-                "mode"  : "000700",
-                "owner" : "root",
-                "group" : "root"
-              }
-            },
-            "commands" : {
-              "01_sethostname" : {
-                "command" : "/root/bin/sethostname",
-                "ignoreErrors" : "false"
-              }
-            }
-          },
           "ConfigureOS" : {
             "files" : {
               "/etc/profile.d/local.sh" : {
@@ -1971,14 +2078,58 @@
               }
             }
           },
+          "ConfigureHostName" : {
+            "files" : {
+              "/root/bin/sethostname" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "#!/bin/bash",
+                  "while getopts a:b:H:I:D: arg; do",
+                  "    case $arg in",
+                  "    a)  zonea=\"$OPTARG\";;",
+                  "    b)  zoneb=\"$OPTARG\";;",
+                  "    H)  host=\"$OPTARG\";;",
+                  "    I)  instance=\"$OPTARG\";;",
+                  "    D)  domain=\"$OPTARG\";;",
+                  "    esac",
+                  "done",
+                  "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)",
+                  "region=${zone::-1}",
+                  "case $zone in",
+                  "  $zonea) hostname=${host}${instance}a.$domain;;",
+                  "  $zoneb) hostname=${host}${instance}b.$domain;;",
+                  "esac",
+                  "address=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)",
+                  "sed -i -e \"/^$address/d\" -e \"$ a$address $hostname\" /etc/hosts",
+                  "echo $hostname > /etc/hostname",
+                  "hostname $hostname"
+                ]]},
+                "mode"  : "000700",
+                "owner" : "root",
+                "group" : "root"
+              }
+            },
+            "commands" : {
+              "01-sethostname" : {
+                "command" : { "Fn::Join" : [ "", [
+                  "/root/bin/sethostname",
+                  " -a ", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-ZoneA" }},
+                  " -b ", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-ZoneB" }},
+                  " -H ", { "Fn::GetAtt" : [ "GetHostName", "HostName" ]},
+                  " -I 01",
+                  " -D ", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPrivateDomain" }}
+                ]]},
+                "ignoreErrors" : "false"
+              }
+            }
+          },
           "InstallMongoDBProduct" : {
             "sources" : {
-              "/var/tmp" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }}, "/", { "Ref" : "ProductFolder" }, "/", { "Ref" : "ProductObject" }]]}
+              "/var/tmp" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ProductsBucket" }}, "/", { "Ref" : "ProductFolder" }, "/", { "Ref" : "MongoDBProductObject" }]]}
             }
           },
           "InstallMongoDBConfiguration" : {
             "sources" : {
-              "/etc" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/", { "Ref" : "ConfigurationObject" }]]}
+              "/etc" : { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/", { "Ref" : "MongoDBConfigurationObject" }]]}
             }
           }
         }
@@ -1986,7 +2137,7 @@
       "Properties" : {
         "ImageId" : { "Fn::If" : [ "ConfigureAMZN", { "Fn::GetAtt" : [ "GetAmazonLinuxImageId", "ImageId" ]},
                                                     { "Fn::GetAtt" : [ "GetRHELImageId", "ImageId" ]}]},
-        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "MongoDB", { "Ref" : "EnvironmentType" }]},
+        "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Database", { "Ref" : "EnvironmentType" }]},
         "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
         "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
         "NetworkInterfaces" : [{
@@ -2024,6 +2175,7 @@
         }],
         "Tags" : [
           { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "Instance01B" ]]}},
+          { "Key" : "HostName", "Value" : { "Fn::Sub" : "${GetHostName.HostName}01b" }},
           { "Fn::If" : [ "ConfigureSchedule", { "Key" : "Schedule", "Value" : { "Ref" : "Schedule" }}, { "Ref" : "AWS::NoValue" }]}
         ],
         "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "\n", [
@@ -2079,8 +2231,14 @@
   },
 
   "Outputs" : {
+    "ClientSecurityGroup" : {
+      "Description" : "The Client SecurityGroup",
+      "Value" : { "Ref" : "ClientSecurityGroup" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-ClientSecurityGroup" }}
+    },
+
     "InstanceSecurityGroup" : {
-      "Description" : "The InstanceSecurityGroup",
+      "Description" : "The Instance SecurityGroup",
       "Value" : { "Ref" : "InstanceSecurityGroup" },
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-InstanceSecurityGroup" }}
     },
@@ -2092,7 +2250,7 @@
 
     "HostName01A" : {
       "Description" : "The HostName01A",
-      "Value" : { "Fn::Join" : [ "", [ { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01a.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]}
+      "Value" : { "Fn::Join" : [ "", [ { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01a.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPrivateDomain" }}]]}
     },
 
     "Instance02A" : {
@@ -2103,7 +2261,7 @@
 
     "HostName02A" : {
       "Description" : "The HostName02A",
-      "Value" : { "Fn::Join" : [ "", [ { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "02a.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]},
+      "Value" : { "Fn::Join" : [ "", [ { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "02a.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPrivateDomain" }}]]},
       "Condition" : "ConfigureMultiZone"
     },
 
@@ -2115,7 +2273,7 @@
 
     "HostName01B" : {
       "Description" : "The HostName01B",
-      "Value" : { "Fn::Join" : [ "", [ { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01b.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]},
+      "Value" : { "Fn::Join" : [ "", [ { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01b.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPrivateDomain" }}]]},
       "Condition" : "ConfigureMultiZone"
     }
   }

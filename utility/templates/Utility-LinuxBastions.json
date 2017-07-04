@@ -9,8 +9,9 @@
         {
           "Label" : { "default" : "Stack Dependencies" },
           "Parameters" : [
+            "ActiveDirectoryStackName",
             "VPCStackName",
-            "StandardCIDRFunctionsStackName",
+            "CustomIdentifierFunctionsStackName",
             "StandardAMIFunctionsStackName",
             "StandardBucketsStackName",
             "StandardTopicsStackName"
@@ -40,8 +41,11 @@
         {
           "Label" : { "default" : "Utility Dependencies Configuration" },
           "Parameters" : [
+            "SharedScriptFolder",
+            "ScriptFolder",
+            "SharedConfigurationFolder",
             "ConfigurationFolder",
-            "ConfigurationObject"
+            "HostsConfigurationObject"
           ]
         },
         {
@@ -50,7 +54,6 @@
             "UtilityName",
             "UtilityDomain",
             "UseStaticPublicAddress",
-            "UseStaticPrivateAddress",
             "UseLocalUsers",
             "LogRetention",
             "OnSchedule",
@@ -60,19 +63,15 @@
         {
           "Label" : { "default" : "Security Configuration" },
           "Parameters" : [
-            "PublicUserNetwork",
-            "PublicUserNetwork1",
-            "PublicUserNetwork2",
-            "PrivateUserNetwork",
-            "PrivateUserNetwork1",
-            "PrivateUserNetwork2"
+            "UserNetworks"
           ]
         }
       ],
 
       "ParameterLabels" : {
+        "ActiveDirectoryStackName" : { "default" : "Active Directory Stack Name" },
         "VPCStackName" : { "default" : "VPC Stack Name" },
-        "StandardCIDRFunctionsStackName" : { "default" : "StandardCIDRFunctions Stack Name" },
+        "CustomIdentifierFunctionsStackName" : { "default" : "CustomIdentifierFunctions Stack Name" },
         "StandardAMIFunctionsStackName" : { "default" : "StandardAMIFunctions Stack Name" },
         "StandardBucketsStackName" : { "default" : "StandardBuckets Stack Name" },
         "StandardTopicsStackName" : { "default" : "StandardTopics Stack Name" },
@@ -82,27 +81,33 @@
         "EnvironmentType" : { "default" : "Environment Type" },
         "EnvironmentZones" : { "default" : "Environment Zones" },
         "OSName" : { "default" : "Operating System Name" },
+        "SharedScriptFolder" : { "default" : "Shared Script Folder" },
+        "ScriptFolder" : { "default" : "Script Folder" },
+        "SharedConfigurationFolder" : { "default" : "Shared Configuration Folder" },
         "ConfigurationFolder" : { "default" : "Configuration Folder" },
-        "ConfigurationObject" : { "default" : "Configuration Object" },
+        "HostsConfigurationObject" : { "default" : "Hosts Configuration Object" },
         "UtilityName" : { "default" : "Utility Name" },
         "UtilityDomain" : { "default" : "Utility Domain" },
         "UseStaticPublicAddress" : { "default" : "Use Static Public Address" },
-        "UseStaticPrivateAddress" : { "default" : "Use Static Private Address" },
         "UseLocalUsers" : { "default" : "Use Local Users" },
         "LogRetention" : { "default" : "Log Retention" },
         "OnSchedule" : { "default" : "On Schedule" },
         "OffSchedule" : { "default" : "Off Schedule" },
-        "PublicUserNetwork" : { "default" : "Public User Network" },
-        "PublicUserNetwork1" : { "default" : "Additional Public User Network 1" },
-        "PublicUserNetwork2" : { "default" : "Additional Public User Network 2" },
-        "PrivateUserNetwork" : { "default" : "Private User Network" },
-        "PrivateUserNetwork1" : { "default" : "Additional Private User Network 1" },
-        "PrivateUserNetwork2" : { "default" : "Additional Private User Network 2" }
+        "UserNetworks" : { "default" : "User Networks" }
       }
     }
   },
 
   "Parameters" : {
+    "ActiveDirectoryStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the ActiveDirectory DomainControllers",
+      "Type" : "String",
+      "MaxLength" : 64,
+      "Default" : "",
+      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
     "VPCStackName" : {
       "Description" : "Name of the CloudFormation Stack containing the VPC",
       "Type" : "String",
@@ -113,28 +118,30 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
-    "StandardCIDRFunctionsStackName" : {
-      "Description" : "Name of the CloudFormation Stack containing the Standard CIDR Functions",
+    "CustomIdentifierFunctionsStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the Custom Identifier Functions",
       "Type" : "String",
+      "MinLength" : 8,
       "MaxLength" : 64,
-      "Default" : "StandardCIDRFunctions",
-      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "Default" : "CustomIdentifierFunctions",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
     "StandardAMIFunctionsStackName" : {
       "Description" : "Name of the CloudFormation Stack containing the Standard AMI Functions",
       "Type" : "String",
+      "MinLength" : 8,
       "MaxLength" : 64,
       "Default" : "StandardAMIFunctions",
-      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
     "StandardBucketsStackName" : {
       "Description" : "Name of the CloudFormation Stack containing Standard Buckets",
       "Type" : "String",
-      "MinLength" : 2,
+      "MinLength" : 8,
       "MaxLength" : 64,
       "Default" : "StandardBuckets",
       "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
@@ -144,7 +151,7 @@
     "StandardTopicsStackName" : {
       "Description" : "Name of the CloudFormation Stack containing Standard Topics",
       "Type" : "String",
-      "MinLength" : 2,
+      "MinLength" : 8,
       "MaxLength" : 64,
       "Default" : "StandardTopics",
       "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
@@ -204,6 +211,36 @@
       "ConstraintDescription" : "must be \"Amazon Linux\" (latest) or \"Amazon Linux 2017.03.0\"."
     },
 
+    "SharedScriptFolder" : {
+      "Description" : "Folder within the S3 Scripts bucket containing Shared Scripts deployed by this Template",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "Linux",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "ScriptFolder" : {
+      "Description" : "Folder within the S3 Scripts bucket containing Scripts deployed by this Template",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "LinuxBastions",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "SharedConfigurationFolder" : {
+      "Description" : "Folder within the S3 Configurations bucket containing Configurations deployed by this Template",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "Linux",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
     "ConfigurationFolder" : {
       "Description" : "Folder within the S3 Configurations bucket containing Configurations deployed by this Template",
       "Type" : "String",
@@ -214,8 +251,8 @@
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
-    "ConfigurationObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the configuration",
+    "HostsConfigurationObject" : {
+      "Description" : "Object within the S3 bucket and folder containing the /etc/hosts configuration",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
@@ -244,14 +281,6 @@
 
     "UseStaticPublicAddress" : {
       "Description" : "Create and associate a separate Static Public Address",
-      "Type" : "String",
-      "Default" : "true",
-      "AllowedValues" : [ "true", "false" ],
-      "ConstraintDescription" : "must be either true or false."
-    },
-
-    "UseStaticPrivateAddress" : {
-      "Description" : "Create and attach a separate Static Private Address",
       "Type" : "String",
       "Default" : "true",
       "AllowedValues" : [ "true", "false" ],
@@ -290,52 +319,11 @@
       "ConstraintDescription" : "must follow constrained cron syntax: \"0 H * * *\", where H = 0-7."
     },
 
-    "PublicUserNetwork" : {
-      "Description" : "Public network that can access the Utility",
+    "UserNetworks" : {
+      "Description" : "Networks that can use the Utility",
       "Type" : "String",
-      "Default" : "0.0.0.0/0",
-      "AllowedPattern" : "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$",
-      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
-    },
-
-    "PublicUserNetwork1" : {
-      "Description" : "Additional public network that can access the Utility",
-      "Type" : "String",
-      "Default" : "",
-      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
-      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
-    },
-
-    "PublicUserNetwork2" : {
-      "Description" : "Additional public network that can access the Utility",
-      "Type" : "String",
-      "Default" : "",
-      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
-      "ConstraintDescription" : "must be a valid IP CIDR range of the form x.x.x.x/x."
-    },
-
-    "PrivateUserNetwork" : {
-      "Description" : "Private network that can access the Utility",
-      "Type" : "String",
-      "Default" : "10.0.0.0/16",
-      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
-      "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
-    },
-
-    "PrivateUserNetwork1" : {
-      "Description" : "Additional private network that can access the Utility",
-      "Type" : "String",
-      "Default" : "",
-      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
-      "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
-    },
-
-    "PrivateUserNetwork2" : {
-      "Description" : "Additional private network that can access the Utility",
-      "Type" : "String",
-      "Default" : "",
-      "AllowedPattern" : "(^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$)",
-      "ConstraintDescription" : "must be a valid IP CIDR range of the form 10.x.x.x/x."
+      "Default" : "0.0.0.0/0,NONE,NONE,NONE,NONE,NONE,NONE,NONE",
+      "ConstraintDescription" : "must be a comma-separated list of 8 values, each an IP CIDR range of the form x.x.x.x/x or the word NONE."
     }
   },
 
@@ -350,23 +338,24 @@
     "ConfigureKey" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "KeyName" }, "" ] }]},
     "ConfigureStandby" : { "Fn::Equals" : [{ "Ref" : "EnvironmentType" }, "standby" ]},
     "ConfigureMultiZone" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "EnvironmentZones" }, "1" ]}]},
-    "InstallConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ConfigurationObject" }, "" ]}]},
+    "InstallHostsConfiguration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "HostsConfigurationObject" }, "" ]}]},
     "ConfigureStaticPublicAddress" : { "Fn::Equals" : [{ "Ref" : "UseStaticPublicAddress" }, "true" ]},
     "ConfigureStaticPublicAddress&MultiZone" : { "Fn::And" : [{ "Condition" : "ConfigureStaticPublicAddress" }, { "Condition" : "ConfigureMultiZone" }]},
-    "ConfigureStaticPrivateAddress" : { "Fn::Equals" : [{ "Ref" : "UseStaticPrivateAddress" }, "true" ]},
-    "ConfigureStaticPrivateAddress&MultiZone" : { "Fn::And" : [{ "Condition" : "ConfigureStaticPrivateAddress" }, { "Condition" : "ConfigureMultiZone" }]},
     "ConfigureDomainName" : { "Fn::And" : [{ "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "UtilityDomain" }, "" ]}]}, { "Condition" : "ConfigureStaticPublicAddress" }]},
     "ConfigureDomainName&MultiZone" : { "Fn::And" : [{ "Condition" : "ConfigureDomainName" }, { "Condition" : "ConfigureMultiZone" }]},
     "ConfigureUsers" : { "Fn::Equals" : [{ "Ref" : "UseLocalUsers" }, "true" ]},
     "ConfigureLogs" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "LogRetention" }, "0" ]}]},
     "ConfigureOnSchedule" : { "Fn::And" : [{ "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "OnSchedule" }, "" ]}]}, { "Fn::Not" : [{ "Condition" : "ConfigureStandby" }]}]},
     "ConfigureOffSchedule" : { "Fn::And" : [{ "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "OffSchedule" }, "" ]}]}, { "Fn::Not" : [{ "Condition" : "ConfigureStandby" }]}]},
-    "ConfigurePublicUserNetwork" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicUserNetwork" }, "" ]}]},
-    "ConfigurePublicUserNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicUserNetwork1" }, "" ]}]},
-    "ConfigurePublicUserNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PublicUserNetwork2" }, "" ]}]},
-    "ConfigurePrivateUserNetwork" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateUserNetwork" }, "" ]}]},
-    "ConfigurePrivateUserNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateUserNetwork1" }, "" ]}]},
-    "ConfigurePrivateUserNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "PrivateUserNetwork2" }, "" ]}]}
+    "ConfigureActiveDirectoryIntegration" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ActiveDirectoryStackName" }, "" ] }]},
+    "ConfigureUserNetwork0" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureUserNetwork1" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureUserNetwork2" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureUserNetwork3" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureUserNetwork4" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureUserNetwork5" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureUserNetwork6" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}, "NONE" ]}]},
+    "ConfigureUserNetwork7" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}, "NONE" ]}]}
   },
 
   "Resources" : {
@@ -386,6 +375,27 @@
       }
     },
 
+    "DownloadScriptFromS3Policy" : {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "DownloadScriptFromS3Policy",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [
+              "s3:GetObject"
+            ],
+            "Resource" : [
+              { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ScriptsBucket" }}, "/", { "Ref" : "SharedScriptFolder" }, "/*" ]]},
+              { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ScriptsBucket" }}, "/", { "Ref" : "ScriptFolder" }, "/*" ]]}
+            ]
+          }]
+        },
+        "Roles" : [{ "Ref" : "Role" }]
+      }
+    },
+
     "DownloadConfigurationFromS3Policy" : {
       "Type" : "AWS::IAM::Policy",
       "Properties" : {
@@ -397,12 +407,14 @@
             "Action" : [
               "s3:GetObject"
             ],
-            "Resource" : { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/*" ]]}
+            "Resource" : [
+              { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "SharedConfigurationFolder" }, "/*" ]]},
+              { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/*" ]]}
+            ]
           }]
         },
         "Roles" : [{ "Ref" : "Role" }]
-      },
-      "Condition" : "InstallConfiguration"
+      }
     },
 
     "StaticPublicAddressPolicy" : {
@@ -423,26 +435,6 @@
         "Roles" : [{ "Ref" : "Role" }]
       },
       "Condition" : "ConfigureStaticPublicAddress"
-    },
-
-    "StaticPrivateAddressPolicy" : {
-      "Type" : "AWS::IAM::Policy",
-      "Properties" : {
-        "PolicyName" : "StaticPrivateAddressPolicy",
-        "PolicyDocument" : {
-          "Version" : "2012-10-17",
-          "Statement" : [{
-            "Effect" : "Allow",
-            "Action" : [
-              "ec2:AttachNetworkInterface",
-              "ec2:DetachNetworkInterface"
-            ],
-            "Resource" : "*"
-          }]
-        },
-        "Roles" : [{ "Ref" : "Role" }]
-      },
-      "Condition" : "ConfigureStaticPrivateAddress"
     },
 
     "LocalUsersPolicy" : {
@@ -553,29 +545,69 @@
       "Condition" : "ConfigureLogs"
     },
 
-    "SecurityGroup" : {
+    "InstanceSecurityGroup" : {
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
-        "GroupDescription" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "UtilityName" }, "SecurityGroup" ]]},
+        "GroupDescription" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "UtilityName" }, "InstanceSecurityGroup" ]]},
         "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPC" }},
         "SecurityGroupIngress" : [
-          { "Fn::If" : [ "ConfigurePublicUserNetwork",  { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PublicUserNetwork" }},  { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicUserNetwork",  { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "PublicUserNetwork" }},  { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicUserNetwork1", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PublicUserNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicUserNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "PublicUserNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicUserNetwork2", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PublicUserNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePublicUserNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "PublicUserNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateUserNetwork",  { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PrivateUserNetwork" }},  { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateUserNetwork",  { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "PrivateUserNetwork" }},  { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateUserNetwork1", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PrivateUserNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateUserNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "PrivateUserNetwork1" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateUserNetwork2", { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : { "Ref" : "PrivateUserNetwork2" }}, { "Ref" : "AWS::NoValue" }]},
-          { "Fn::If" : [ "ConfigurePrivateUserNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "PrivateUserNetwork2" }}, { "Ref" : "AWS::NoValue" }]}
+          { "IpProtocol" : "icmp", "FromPort" :    "0", "ToPort" :  "0", "CidrIp" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCNetwork" }}},
+          { "IpProtocol" : "icmp", "FromPort" :    "3", "ToPort" :  "3", "CidrIp" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCNetwork" }}},
+          { "IpProtocol" : "icmp", "FromPort" :    "8", "ToPort" :  "8", "CidrIp" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCNetwork" }}},
+          { "IpProtocol" : "icmp", "FromPort" :   "11", "ToPort" : "11", "CidrIp" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCNetwork" }}},
+          { "Fn::If" : [ "ConfigureUserNetwork0", { "IpProtocol" : "icmp", "FromPort" :  "0", "ToPort" :  "0", "CidrIp" : { "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork0", { "IpProtocol" : "icmp", "FromPort" :  "3", "ToPort" :  "3", "CidrIp" : { "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork0", { "IpProtocol" : "icmp", "FromPort" :  "8", "ToPort" :  "8", "CidrIp" : { "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork0", { "IpProtocol" : "icmp", "FromPort" : "11", "ToPort" : "11", "CidrIp" : { "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork0", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Fn::Select" : [ "0", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork1", { "IpProtocol" : "icmp", "FromPort" :  "0", "ToPort" :  "0", "CidrIp" : { "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork1", { "IpProtocol" : "icmp", "FromPort" :  "3", "ToPort" :  "3", "CidrIp" : { "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork1", { "IpProtocol" : "icmp", "FromPort" :  "8", "ToPort" :  "8", "CidrIp" : { "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork1", { "IpProtocol" : "icmp", "FromPort" : "11", "ToPort" : "11", "CidrIp" : { "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork1", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Fn::Select" : [ "1", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork2", { "IpProtocol" : "icmp", "FromPort" :  "0", "ToPort" :  "0", "CidrIp" : { "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork2", { "IpProtocol" : "icmp", "FromPort" :  "3", "ToPort" :  "3", "CidrIp" : { "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork2", { "IpProtocol" : "icmp", "FromPort" :  "8", "ToPort" :  "8", "CidrIp" : { "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork2", { "IpProtocol" : "icmp", "FromPort" : "11", "ToPort" : "11", "CidrIp" : { "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork2", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Fn::Select" : [ "2", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork3", { "IpProtocol" : "icmp", "FromPort" :  "0", "ToPort" :  "0", "CidrIp" : { "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork3", { "IpProtocol" : "icmp", "FromPort" :  "3", "ToPort" :  "3", "CidrIp" : { "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork3", { "IpProtocol" : "icmp", "FromPort" :  "8", "ToPort" :  "8", "CidrIp" : { "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork3", { "IpProtocol" : "icmp", "FromPort" : "11", "ToPort" : "11", "CidrIp" : { "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork3", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Fn::Select" : [ "3", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork4", { "IpProtocol" : "icmp", "FromPort" :  "0", "ToPort" :  "0", "CidrIp" : { "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork4", { "IpProtocol" : "icmp", "FromPort" :  "3", "ToPort" :  "3", "CidrIp" : { "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork4", { "IpProtocol" : "icmp", "FromPort" :  "8", "ToPort" :  "8", "CidrIp" : { "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork4", { "IpProtocol" : "icmp", "FromPort" : "11", "ToPort" : "11", "CidrIp" : { "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork4", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Fn::Select" : [ "4", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork5", { "IpProtocol" : "icmp", "FromPort" :  "0", "ToPort" :  "0", "CidrIp" : { "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork5", { "IpProtocol" : "icmp", "FromPort" :  "3", "ToPort" :  "3", "CidrIp" : { "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork5", { "IpProtocol" : "icmp", "FromPort" :  "8", "ToPort" :  "8", "CidrIp" : { "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork5", { "IpProtocol" : "icmp", "FromPort" : "11", "ToPort" : "11", "CidrIp" : { "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork5", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Fn::Select" : [ "5", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork6", { "IpProtocol" : "icmp", "FromPort" :  "0", "ToPort" :  "0", "CidrIp" : { "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork6", { "IpProtocol" : "icmp", "FromPort" :  "3", "ToPort" :  "3", "CidrIp" : { "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork6", { "IpProtocol" : "icmp", "FromPort" :  "8", "ToPort" :  "8", "CidrIp" : { "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork6", { "IpProtocol" : "icmp", "FromPort" : "11", "ToPort" : "11", "CidrIp" : { "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork6", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Fn::Select" : [ "6", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork7", { "IpProtocol" : "icmp", "FromPort" :  "0", "ToPort" :  "0", "CidrIp" : { "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork7", { "IpProtocol" : "icmp", "FromPort" :  "3", "ToPort" :  "3", "CidrIp" : { "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork7", { "IpProtocol" : "icmp", "FromPort" :  "8", "ToPort" :  "8", "CidrIp" : { "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork7", { "IpProtocol" : "icmp", "FromPort" : "11", "ToPort" : "11", "CidrIp" : { "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]},
+          { "Fn::If" : [ "ConfigureUserNetwork7", { "IpProtocol" : "tcp",  "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Fn::Select" : [ "7", { "Fn::Split" : [ ",", { "Ref" : "UserNetworks" }]}]}},  { "Ref" : "AWS::NoValue" }]}
         ],
         "Tags" : [
-          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "UtilityName" }, "SecurityGroup" ]]}}
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "UtilityName" }, "InstanceSecurityGroup" ]]}}
         ]
       }
+    },
+
+    "DomainControllerSecurityGroupIngress3389" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${ActiveDirectoryStackName}-DomainControllerSecurityGroup" }}, "IpProtocol" : "tcp", "FromPort" :  "3389", "ToPort" :  "3389", "SourceSecurityGroupId": { "Ref": "InstanceSecurityGroup" }
+      },
+      "Condition" : "ConfigureActiveDirectoryIntegration"
     },
 
     "EIPA" : {
@@ -594,6 +626,17 @@
       "Condition" : "ConfigureStaticPublicAddress&MultiZone"
     },
 
+    "GetHostName" : {
+      "Type" : "Custom::GetHostName",
+      "Properties" : {
+        "ServiceToken" : { "Fn::ImportValue" : { "Fn::Sub" : "${CustomIdentifierFunctionsStackName}-GetHostNameFunctionArn" }},
+        "CompanyName" : { "Ref" : "CompanyName" },
+        "LocationName" : { "Ref": "AWS::Region" },
+        "EnvironmentName" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }},
+        "ApplicationName" : { "Ref" : "UtilityName" }
+      }
+    },
+
     "GetAmazonLinuxImageId" : {
       "Type" : "Custom::GetAmazonLinuxImageId",
       "Properties" : {
@@ -601,52 +644,6 @@
         "Region" : { "Ref" : "AWS::Region" },
         "OSName" : { "Ref" : "OSName" }
       }
-    },
-
-    "AddressCalculatorA" : {
-      "Type" : "Custom::AddressCalculator",
-      "Properties" : {
-        "ServiceToken" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardCIDRFunctionsStackName}-AddressCalculatorFunctionArn" }},
-        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-Public1SubnetA" }}
-      },
-      "Condition" : "ConfigureStaticPrivateAddress"
-    },
-
-    "AddressCalculatorB" : {
-      "Type" : "Custom::AddressCalculator",
-      "Properties" : {
-        "ServiceToken" : { "Fn::ImportValue" : { "Fn::Sub" : "${StandardCIDRFunctionsStackName}-AddressCalculatorFunctionArn" }},
-        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-Public1SubnetB" }}
-      },
-      "Condition" : "ConfigureStaticPrivateAddress&MultiZone"
-    },
-
-    "PrivateNetworkInterfaceA" : {
-      "Type" : "AWS::EC2::NetworkInterface",
-      "Properties" : {
-        "Description" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "UtilityName" }, "PrivateNetworkInterfaceA" ]]},
-        "PrivateIpAddress" : { "Fn::GetAtt" : [ "AddressCalculatorA", "Address4" ]},
-        "GroupSet" : [{ "Ref" : "SecurityGroup" }],
-        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-Public1SubnetA" }},
-        "Tags" : [
-          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "UtilityName" }, "PrivateNetworkInterfaceA" ]]}}
-        ]
-      },
-      "Condition" : "ConfigureStaticPrivateAddress"
-    },
-
-    "PrivateNetworkInterfaceB" : {
-      "Type" : "AWS::EC2::NetworkInterface",
-      "Properties" : {
-        "Description" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "UtilityName" }, "PrivateNetworkInterfaceB" ]]},
-        "PrivateIpAddress" : { "Fn::GetAtt" : [ "AddressCalculatorB", "Address4" ]},
-        "GroupSet" : [{ "Ref" : "SecurityGroup" }],
-        "SubnetId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-Public1SubnetB" }},
-        "Tags" : [
-          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "UtilityName" }, "PrivateNetworkInterfaceB" ]]}}
-        ]
-      },
-      "Condition" : "ConfigureStaticPrivateAddress&MultiZone"
     },
 
     "InstanceProfile" : {
@@ -665,6 +662,7 @@
             "type" : "S3",
             "roleName" : { "Ref" : "Role" },
             "buckets" : [
+              { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ScriptsBucket" }},
               { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}
             ]
           }
@@ -674,20 +672,19 @@
             "All" : [
               "UpdateOS",
               "ConfigureOSUpdates",
-              "InstallSSMAgent",
               { "Fn::If" : [ "ConfigureLogs", "ConfigureLogs", { "Ref" : "AWS::NoValue" }]},
+              "InstallSSMAgent",
               "ConfigureCFN",
-              "ConfigureHostname",
               "ConfigureOS",
+              "ConfigureHostName",
               { "Fn::If" : [ "ConfigureStaticPublicAddress", "ConfigureStaticPublicAddress", { "Ref" : "AWS::NoValue" }]},
-              { "Fn::If" : [ "ConfigureStaticPrivateAddress", "ConfigureStaticPrivateAddress", { "Ref" : "AWS::NoValue" }]},
               { "Fn::If" : [ "ConfigureUsers", "ConfigureUsers", { "Ref" : "AWS::NoValue" }]},
-              { "Fn::If" : [ "InstallConfiguration", "InstallConfiguration", { "Ref" : "AWS::NoValue" }]}
+              { "Fn::If" : [ "InstallHostsConfiguration", "InstallHostsConfiguration", { "Ref" : "AWS::NoValue" }]}
             ]
           },
           "UpdateOS" : {
             "commands" : {
-              "01_yum_update" : {
+              "01-yum-update" : {
                 "command" : "yum update -y",
                 "ignoreErrors" : "false"
               }
@@ -712,13 +709,6 @@
                 "mode"  : "000644",
                 "owner" : "root",
                 "group" : "root"
-              }
-            }
-          },
-          "InstallSSMAgent" : {
-            "packages" : {
-              "rpm" : {
-                "amazon-ssm-agent" : [ "https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm" ]
               }
             }
           },
@@ -807,6 +797,13 @@
               }
             }
           },
+          "InstallSSMAgent" : {
+            "packages" : {
+              "rpm" : {
+                "amazon-ssm-agent" : [ "https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm" ]
+              }
+            }
+          },
           "ConfigureCFN" : {
             "files" : {
               "/etc/cfn/cfn-hup.conf" : {
@@ -844,33 +841,6 @@
               }
             }
           },
-          "ConfigureHostname" : {
-            "files" : {
-              "/root/bin/sethostname" : {
-                "content" : { "Fn::Join" : [ "\n", [
-                  "#!/bin/bash",
-                  "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)",
-                  "region=${zone::-1}",
-                  "case $zone in",
-                  { "Fn::Join" : [ "", [ "  ", { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]}, ") hostname=", { "Ref" : "UtilityDomain" }, { "Fn::If" : [ "ConfigureMultiZone", "a.", "."]}, { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, ";;" ]]},
-                  { "Fn::Join" : [ "", [ "  ", { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]}, ") hostname=", { "Ref" : "UtilityDomain" }, "b.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, ";;" ]]},
-                  "esac",
-                  "address=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)",
-                  "sed -i -e \"/^$address/d\" -e \"$ a$address $hostname\" /etc/hosts",
-                  "hostname $hostname"
-                ]]},
-                "mode"  : "000700",
-                "owner" : "root",
-                "group" : "root"
-              }
-            },
-            "commands" : {
-              "01_sethostname" : {
-                "command" : "/root/bin/sethostname",
-                "ignoreErrors" : "false"
-              }
-            }
-          },
           "ConfigureOS" : {
             "packages" : {
               "yum" : {
@@ -889,17 +859,68 @@
               }
             }
           },
+          "ConfigureHostName" : {
+            "files" : {
+              "/root/bin/sethostname" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "#!/bin/bash",
+                  "while getopts ma:b:H:D: arg; do",
+                  "    case $arg in",
+                  "    m)  multizone=1;;",
+                  "    a)  zonea=\"$OPTARG\";;",
+                  "    b)  zoneb=\"$OPTARG\";;",
+                  "    H)  host=\"$OPTARG\";;",
+                  "    D)  domain=\"$OPTARG\";;",
+                  "    esac",
+                  "done",
+                  "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)",
+                  "region=${zone::-1}",
+                  "case $zone in",
+                  "  $zonea) hostname=${host}01a.$domain;;",
+                  "  $zoneb) hostname=${host}01b.$domain;;",
+                  "esac",
+                  "address=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)",
+                  "sed -i -e \"/^$address/d\" -e \"$ a$address $hostname\" /etc/hosts",
+                  "hostname $hostname"
+                ]]},
+                "mode"  : "000700",
+                "owner" : "root",
+                "group" : "root"
+              }
+            },
+            "commands" : {
+              "01-sethostname" : {
+                "command" : { "Fn::Join" : [ "", [
+                  "/root/bin/sethostname",
+                  { "Fn::If" : [ "ConfigureMultiZone", " -m", { "Ref" : "AWS::NoValue" }]},
+                  " -a ", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-ZoneA" }},
+                  " -b ", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-ZoneB" }},
+                  " -H ", { "Fn::GetAtt" : [ "GetHostName", "HostName" ]},
+                  " -D ", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPrivateDomain" }}
+                ]]},
+                "ignoreErrors" : "false"
+              }
+            }
+          },
           "ConfigureStaticPublicAddress" : {
             "files" : {
               "/root/bin/associateaddress" : {
                 "content" : { "Fn::Join" : [ "\n", [
                   "#!/bin/bash",
+                  "while getopts a:b:1:2: arg; do",
+                  "    case $arg in",
+                  "    a)  zonea=\"$OPTARG\";;",
+                  "    b)  zoneb=\"$OPTARG\";;",
+                  "    1)  eipalloca=\"$OPTARG\";;",
+                  "    2)  eipallocb=\"$OPTARG\";;",
+                  "    esac",
+                  "done",
                   "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)",
                   "region=${zone::-1}",
                   "instance=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/instance-id)",
                   "case $zone in",
-                  { "Fn::Join" : [ "", [ "  ", { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]}, ") eipalloc=", { "Fn::If" : [ "ConfigureStaticPublicAddress", { "Fn::GetAtt" : [ "EIPA", "AllocationId" ]}, { "Ref" : "AWS::NoValue" }]}, ";;" ]]},
-                  { "Fn::Join" : [ "", [ "  ", { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]}, ") eipalloc=", { "Fn::If" : [ "ConfigureStaticPublicAddress&MultiZone", { "Fn::GetAtt" : [ "EIPB", "AllocationId" ]}, { "Ref" : "AWS::NoValue" }]}, ";;" ]]},
+                  "  $zonea) eipalloc=$eipalloca;;",
+                  "  $zoneb) eipalloc=$eipallocb;;",
                   "esac",
                   "aws ec2 associate-address --instance-id $instance --allocation-id $eipalloc --region $region --output text"
                 ]]},
@@ -909,34 +930,14 @@
               }
             },
             "commands" : {
-              "01_associateaddress" : {
-                "command" : "/root/bin/associateaddress",
-                "ignoreErrors" : "false"
-              }
-            }
-          },
-          "ConfigureStaticPrivateAddress" : {
-            "files" : {
-              "/root/bin/attachnetworkinterface" : {
-                "content" : { "Fn::Join" : [ "\n", [
-                  "#!/bin/bash",
-                  "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)",
-                  "region=${zone::-1}",
-                  "instance=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/instance-id)",
-                  "case $zone in",
-                  { "Fn::Join" : [ "", [ "  ", { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]}, ") eni=", { "Fn::If" : [ "ConfigureStaticPrivateAddress", { "Ref" : "PrivateNetworkInterfaceA" }, { "Ref" : "AWS::NoValue" }]}, ";;" ]]},
-                  { "Fn::Join" : [ "", [ "  ", { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]}, ") eni=", { "Fn::If" : [ "ConfigureStaticPrivateAddress&MultiZone", { "Ref" : "PrivateNetworkInterfaceB" }, { "Ref" : "AWS::NoValue" }]}, ";;" ]]},
-                  "esac",
-                  "aws ec2 attach-network-interface --instance-id $instance --network-interface-id $eni --device-index 1 --region $region --output text"
+              "01-associateaddress" : {
+                "command" : { "Fn::Join" : [ "", [
+                  "/root/bin/associateaddress",
+                  " -a ", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-ZoneA" }},
+                  " -b ", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-ZoneB" }},
+                  { "Fn::If" : [ "ConfigureStaticPublicAddress", { "Fn::Sub" : " -1 ${EIPA.AllocationId}" }, { "Ref" : "AWS::NoValue" }]},
+                  { "Fn::If" : [ "ConfigureStaticPublicAddress&MultiZone", { "Fn::Sub" : " -2 ${EIPB.AllocationId}" }, { "Ref" : "AWS::NoValue" }]}
                 ]]},
-                "mode"  : "000700",
-                "owner" : "root",
-                "group" : "root"
-              }
-            },
-            "commands" : {
-              "01_attachnetworkinterface" : {
-                "command" : "/root/bin/attachnetworkinterface",
                 "ignoreErrors" : "false"
               }
             }
@@ -1025,23 +1026,27 @@
               }
             },
             "commands" : {
-              "01_createusers" : {
+              "01-createusers" : {
                 "command" : "/root/bin/createusers",
                 "ignoreErrors" : "false"
               }
             }
           },
-          "InstallConfiguration" : {
+          "InstallHostsConfiguration" : {
             "files" : {
               "/var/tmp/hosts" : {
-                "source" :  { "Fn::Join" : [ "", [ "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/", { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "ConfigurationFolder" }, "/", { "Ref" : "ConfigurationObject" }]]},
+                "source" :  { "Fn::Join" : [ "", [
+                  "https://", { "Fn::If" : [ "ConfigureGlobalS3", "s3", { "Fn::Sub" : "s3-${AWS::Region}" }]}, ".amazonaws.com/",
+                  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ConfigurationsBucket" }}, "/", { "Ref" : "SharedConfigurationFolder" }, "/", { "Ref" : "HostsConfigurationObject" }
+                ]]},
+                "authentication" : "S3Credentials",
                 "mode"  : "000600",
                 "owner" : "root",
                 "group" : "root"
               }
             },
             "commands" : {
-              "01_appendhosts" : {
+              "01-append-hosts" : {
                 "command" : "cat /var/tmp/hosts >> /etc/hosts",
                 "ignoreErrors" : "false"
               }
@@ -1054,7 +1059,10 @@
         "InstanceType" : { "Fn::FindInMap" : [ "InstanceTypeMap", "Bastion", { "Ref" : "EnvironmentType" }]},
         "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
         "KeyName" : { "Fn::If" : [ "ConfigureKey", { "Ref" : "KeyName" }, { "Ref" : "AWS::NoValue" }]},
-        "SecurityGroups" : [{ "Ref" : "SecurityGroup" }],
+        "SecurityGroups" : [
+          { "Ref" : "InstanceSecurityGroup" },
+          { "Fn::If" : [ "ConfigureActiveDirectoryIntegration", { "Fn::ImportValue" : { "Fn::Sub" : "${ActiveDirectoryStackName}-DomainMemberSecurityGroup" }}, { "Ref" : "AWS::NoValue" }]}
+        ],
         "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "\n", [
           "#!/bin/bash -xe",
           "yum update -y aws-cfn-bootstrap",
@@ -1125,7 +1133,7 @@
       "Properties" : {
         "HostedZoneId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicHostedZone" }},
         "Comment" : { "Fn::Join" : [ "", [ "DNS name for ", { "Ref" : "UtilityName" }, " Instance" ]]},
-        "Name" : { "Fn::Join" : [ "", [ { "Ref" : "UtilityDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "." ]]},
+        "Name" : { "Fn::Join" : [ "", [ { "Ref" : "UtilityDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPublicDomain" }}, "." ]]},
         "Type" : "A",
         "TTL" : "900",
         "ResourceRecords" : [{ "Ref" : "EIPA" }]
@@ -1138,7 +1146,7 @@
       "Properties" : {
         "HostedZoneId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicHostedZone" }},
         "Comment" : { "Fn::Join" : [ "", [ "DNS name for ", { "Ref" : "UtilityName" }, " Instance in ", { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" }]}]]},
-        "Name" : { "Fn::Join" : [ "", [ { "Ref" : "UtilityDomain" }, "a.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "." ]]},
+        "Name" : { "Fn::Join" : [ "", [ { "Ref" : "UtilityDomain" }, "a.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPublicDomain" }}, "." ]]},
         "Type" : "A",
         "TTL" : "900",
         "ResourceRecords" : [{ "Ref" : "EIPA" }]
@@ -1151,7 +1159,7 @@
       "Properties" : {
         "HostedZoneId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicHostedZone" }},
         "Comment" : { "Fn::Join" : [ "", [ "DNS name for ", { "Ref" : "UtilityName" }, " Instance in ", { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }]}]]},
-        "Name" : { "Fn::Join" : [ "", [ { "Ref" : "UtilityDomain" }, "b.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "." ]]},
+        "Name" : { "Fn::Join" : [ "", [ { "Ref" : "UtilityDomain" }, "b.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPublicDomain" }}, "." ]]},
         "Type" : "A",
         "TTL" : "900",
         "ResourceRecords" : [{ "Ref" : "EIPB" }]
@@ -1161,10 +1169,10 @@
   },
 
   "Outputs" : {
-    "SecurityGroup" : {
-      "Description" : "The SecurityGroup",
-      "Value" : { "Ref" : "SecurityGroup" },
-      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-SecurityGroup" }}
+    "InstanceSecurityGroup" : {
+      "Description" : "The Instance SecurityGroup",
+      "Value" : { "Ref" : "InstanceSecurityGroup" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-InstanceSecurityGroup" }}
     },
 
     "EIPA" : {
@@ -1183,21 +1191,21 @@
 
     "PublicHostname" : {
       "Description" : "The Public Hostname of the Bastion",
-      "Value" : { "Fn::Join" : [ "", [ { "Ref" : "UtilityDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]},
+      "Value" : { "Fn::Join" : [ "", [ { "Ref" : "UtilityDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPublicDomain" }}]]},
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-PublicHostname" }},
       "Condition" : "ConfigureDomainName"
     },
 
     "PublicHostnameA" : {
       "Description" : "The Public Hostname of the Bastion in Availability Zone A",
-      "Value" : { "Fn::Join" : [ "", [ { "Ref" : "UtilityDomain" }, "a.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]},
+      "Value" : { "Fn::Join" : [ "", [ { "Ref" : "UtilityDomain" }, "a.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPublicDomain" }}]]},
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-PublicHostnameA" }},
       "Condition" : "ConfigureDomainName&MultiZone"
     },
 
     "PublicHostnameB" : {
       "Description" : "The Public Hostname of the Bastion in Availability Zone B",
-      "Value" : { "Fn::Join" : [ "", [ { "Ref" : "UtilityDomain" }, "b.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]},
+      "Value" : { "Fn::Join" : [ "", [ { "Ref" : "UtilityDomain" }, "b.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPublicDomain" }}]]},
       "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-PublicHostnameB" }},
       "Condition" : "ConfigureDomainName&MultiZone"
     }

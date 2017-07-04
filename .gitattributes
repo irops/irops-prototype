@@ -1,7 +1,19 @@
-# Override some default behavior for binary files
+# Autodetect text files
+* text=auto
+
+# Explicitly identify binary files
 *.xls binary
 *.xlsx binary
 *.doc binary
 *.docx binary
 *.vsd binary
+*.vsdx binary
 *.pdf binary
+*.png binary
+*.jpg binary
+*.gif binary
+
+# Explicitly identify text files
+*.txt text
+*.md text
+*.json text

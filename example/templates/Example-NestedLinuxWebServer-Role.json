@@ -13,8 +13,16 @@
           ]
         },
         {
+          "Label" : { "default" : "Application Dependencies Configuration" },
+          "Parameters" : [
+            "SharedScriptFolder",
+            "ScriptFolder"
+          ]
+        },
+        {
           "Label" : { "default" : "Application Configuration" },
           "Parameters" : [
+            "SharedApplicationFolder",
             "ApplicationFolder",
             "ApplicationObject",
             "LogRetention"
@@ -24,6 +32,9 @@
 
       "ParameterLabels" : {
         "StandardBucketsStackName" : { "default" : "StandardBuckets Stack Name" },
+        "SharedScriptFolder" : { "default" : "Shared Script Folder" },
+        "ScriptFolder" : { "default" : "Script Folder" },
+        "SharedApplicationFolder" : { "default" : "Shared Application Folder" },
         "ApplicationFolder" : { "default" : "Application Folder" },
         "ApplicationObject" : { "default" : "Application Object" },
         "LogRetention" : { "default" : "Log Retention" }
@@ -35,11 +46,41 @@
     "StandardBucketsStackName" : {
       "Description" : "Name of the CloudFormation Stack containing Standard Buckets",
       "Type" : "String",
-      "MinLength" : 2,
+      "MinLength" : 8,
       "MaxLength" : 64,
       "Default" : "StandardBuckets",
       "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "SharedScriptFolder" : {
+      "Description" : "Folder within the S3 Scripts bucket containing Shared Scripts deployed by this Template",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "Linux",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "ScriptFolder" : {
+      "Description" : "Folder within the S3 Scripts bucket containing Scripts deployed by this Template",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "LinuxWebServer",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "SharedApplicationFolder" : {
+      "Description" : "Folder within the S3 Applications bucket containing Shared Applications deployed by this Template",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "Linux",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
     },
 
     "ApplicationFolder" : {
@@ -53,7 +94,7 @@
     },
 
     "ApplicationObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the LinuxWebServer Application",
+      "Description" : "Object within the S3 bucket and folder containing the Application",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
@@ -92,6 +133,27 @@
       }
     },
 
+    "DownloadScriptFromS3Policy" : {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "DownloadScriptFromS3Policy",
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [{
+            "Effect" : "Allow",
+            "Action" : [
+              "s3:GetObject"
+            ],
+            "Resource" : [
+              { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ScriptsBucket" }}, "/", { "Ref" : "SharedScriptFolder" }, "/*" ]]},
+              { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ScriptsBucket" }}, "/", { "Ref" : "ScriptFolder" }, "/*" ]]}
+            ]
+          }]
+        },
+        "Roles" : [{ "Ref" : "Role" }]
+      }
+    },
+
     "DownloadApplicationFromS3Policy" : {
       "Type" : "AWS::IAM::Policy",
       "Properties" : {
@@ -103,7 +165,10 @@
             "Action" : [
               "s3:GetObject"
             ],
-            "Resource" : { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ExamplesBucket" }}, "/", { "Ref" : "ApplicationFolder" }, "/*" ]]}
+            "Resource" : [
+              { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ApplicationsBucket" }}, "/", { "Ref" : "SharedApplicationFolder" }, "/*" ]]},
+              { "Fn::Join" : [ "", [ "arn:aws:s3:::",  { "Fn::ImportValue" : { "Fn::Sub" : "${StandardBucketsStackName}-ApplicationsBucket" }}, "/", { "Ref" : "ApplicationFolder" }, "/*" ]]}
+            ]
           }]
         },
         "Roles" : [{ "Ref" : "Role" }]

@@ -4,29 +4,37 @@
   "Description" : "Example-GetUbuntuImageIdCustomResource Template. This demonstrates how to dynamically get the most recent Ubuntu ImageId, given the Ubuntu OS Variant and Region. This template provisions an EC2 instance with an AMI ID that is based on the selected InstanceType, Ubuntu OS Variant and Region.",
 
   "Parameters" : {
-    "InstanceType" : {
-      "Description" : "EC2 instance type",
-      "Type" : "String",
-      "Default" : "t2.medium",
-      "AllowedValues" : [ "t2.micro", "t2.small", "t2.medium" ],
-      "ConstraintDescription" : "Must be a valid EC2 instance type."
-    },
-
     "UbuntuVersion" : {
       "Description" : "Ubuntu Version",
       "Type" : "String",
-      "Default" : "Ubuntu Server 16.04 LTS",
+      "Default" : "Ubuntu Server 14.04 LTS",
       "AllowedValues" : [
         "Ubuntu Server 16.04 LTS",
         "Ubuntu Server 14.04 LTS",
         "Ubuntu Server 12.04 LTS"
       ],
       "ConstraintDescription" : "Must be a valid Ubuntu LTS version."
+    },
+
+    "UbuntuDate" : {
+      "Description" : "Optional Ubuntu Date, specify to select a specific publication date for the Image",
+      "Type" : "String",
+      "Default" : "20160406",
+      "AllowedPattern" : "(^$|^20(1[6-9]|[2-9][0-9])(0[1-9]|1[0-2])(0[1-9]|[1-2][0-9]|3[0-1])$)",
+      "ConstraintDescription" : "Must be a valid date."
     }
   },
 
   "Resources" : {
-    "GetUbuntuImageId" : {
+    "GetLatestUbuntuImageId" : {
+      "Type" : "Custom::GetUbuntuImageId",
+      "Properties" : {
+        "ServiceToken" : { "Fn::Sub" : "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GetUbuntuImageId" },
+        "Region" : { "Ref" : "AWS::Region" }
+      }
+    },
+
+    "GetLatestVersionedUbuntuImageId" : {
       "Type" : "Custom::GetUbuntuImageId",
       "Properties" : {
         "ServiceToken" : { "Fn::Sub" : "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GetUbuntuImageId" },
@@ -35,25 +43,46 @@
       }
     },
 
-    "Instance" : {
-      "Type" : "AWS::EC2::Instance",
+    "GetSpecificVersionedUbuntuImageId" : {
+      "Type" : "Custom::GetUbuntuImageId",
       "Properties" : {
-        "InstanceType" : { "Ref" : "InstanceType" },
-        "ImageId" : { "Fn::GetAtt" : [ "GetUbuntuImageId", "ImageId" ]}
+        "ServiceToken" : { "Fn::Sub" : "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GetUbuntuImageId" },
+        "Region" : { "Ref" : "AWS::Region" },
+        "OSName" : { "Ref" : "UbuntuVersion" },
+        "OSDate" : { "Ref" : "UbuntuDate" }
       }
-    },
-
+    }
   },
 
   "Outputs" : {
-    "ImageId" : {
-      "Description" : "The ImageId",
-      "Value" : { "Fn::GetAtt" : [ "GetUbuntuImageId", "ImageId" ]}
+    "LatestImageId" : {
+      "Description" : "The Latest ImageId",
+      "Value" : { "Fn::GetAtt" : [ "GetLatestUbuntuImageId", "ImageId" ]}
     },
 
-    "Name" : {
-      "Description" : "The Image Name",
-      "Value" : { "Fn::GetAtt" : [ "GetUbuntuImageId", "Name" ]}
+    "LatestName" : {
+      "Description" : "The Latest Image Name",
+      "Value" : { "Fn::GetAtt" : [ "GetLatestUbuntuImageId", "Name" ]}
+    },
+
+    "LatestVersionedImageId" : {
+      "Description" : "The Latest Versioned ImageId",
+      "Value" : { "Fn::GetAtt" : [ "GetLatestVersionedUbuntuImageId", "ImageId" ]}
+    },
+
+    "LatestVersionedName" : {
+      "Description" : "The Latest Versioned Image Name",
+      "Value" : { "Fn::GetAtt" : [ "GetLatestVersionedUbuntuImageId", "Name" ]}
+    },
+
+    "SpecificVersionedImageId" : {
+      "Description" : "The Specific Versioned ImageId",
+      "Value" : { "Fn::GetAtt" : [ "GetSpecificVersionedUbuntuImageId", "ImageId" ]}
+    },
+
+    "SpecificVersionedName" : {
+      "Description" : "The Specific Versioned Image Name",
+      "Value" : { "Fn::GetAtt" : [ "GetSpecificVersionedUbuntuImageId", "Name" ]}
     }
   }
 }

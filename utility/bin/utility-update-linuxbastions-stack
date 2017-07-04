@@ -2,9 +2,6 @@
 #
 # This script updates the Utility LinuxBastions Stack in an Environment, Core or Build VPC.
 #
-# This script is written in a format suitable for interactive demos,
-# but can be run non-Iteractively and more quickly with the "-I" flag.
-#
 
 #  1. Initalize Environment
 
@@ -20,7 +17,7 @@ next_default=5
 update_default=15
 update_attempts=40
 
-interactive=1
+interactive=0
 speed=100
 verbose=0
 monitor=0
@@ -33,12 +30,7 @@ environment_type=standby  # By default, these run in standby mode
 environment_zones=${ENVIRONMENT_ZONES:-1}
 utility=${UTILITY_NAME:-LinuxBastions}
 utility_domain=${UTILITY_DOMAIN:-lbastion}
-public_user_network=${PUBLIC_USER_NETWORK:-0.0.0.0/0}
-public_user_network1=${PUBLIC_USER_NETWORK1:-}
-public_user_network2=${PUBLIC_USER_NETWORK2:-}
-private_user_network=${PRIVATE_USER_NETWORK:-10.0.0.0/16}
-private_user_network1=${PRIVATE_USER_NETWORK1:-}
-private_user_network2=${PRIVATE_USER_NETWORK2:-}
+user_networks=${LINUXBASTIONS_USER_NETWORKS:-0.0.0.0/0,NONE,NONE,NONE,NONE,NONE,NONE,NONE}
 region=${AWS_DEFAULT_REGION:-us-west-2}
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-administrator}
@@ -48,14 +40,13 @@ key=${AWS_KEY_NAME:-administrator}
 #  2. Define functions
 
 usage () {
-    echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v] [-m] [-o]"
+    echo "Usage: ${BASH_SOURCE##*/} [[-i] | [-s | -f]] [-v] [-m] [-o]"
     echo "                  [-O owner] [-C company] [-S system]"
     echo "                  [-E environment] [-T type] [-Z zones]"
     echo "                  [-U utility] [-D domain]"
-    echo "                  [-p network]"
-    echo "                  [-n network]"
+    echo "                  [-n networks]"
     echo "                  [-r region] [-a account] [-u user] [-k key]"
-    echo "  -I              non-interactive"
+    echo "  -i              interactive"
     echo "  -s              slower: increase pauses by 25%"
     echo "  -f              faster: reduce pauses by 25%"
     echo "  -v              verbose"
@@ -69,8 +60,7 @@ usage () {
     echo "  -Z zones        Environment Zones (default: $environment_zones)"
     echo "  -U utility      Utility Name (default: $utility)"
     echo "  -D domain       Utility Domain (default: $utility_domain)"
-    echo "  -p network      Public User Network (default: $public_user_network)"
-    echo "  -n network      Private User Network (default: $private_user_network)"
+    echo "  -n networks     User Networks (default: $user_networks)"
     echo "  -r region       Region (default: $region)"
     echo "  -a account      Account (default: $account)"
     echo "  -u user         User (default: $user)"
@@ -156,11 +146,10 @@ next() {
 
 
 #  3. Parse command line options
-#     - Note, using options 1-8 as hidden options to set additional network ranges
 
-while getopts IsfvmoO:C:S:E:T:Z:U:D:p:1:2:n:5:6:r:a:u:k:? arg; do
+while getopts isfvmoO:C:S:E:T:Z:U:D:n:r:a:u:k:? arg; do
     case $arg in
-    I)  interactive=0;;
+    i)  interactive=1;;
     s)  ((speed < speed_max)) && ((speed=speed+25));;
     f)  ((speed > 0)) && ((speed=speed-25));;
     v)  verbose=1;;
@@ -174,12 +163,7 @@ while getopts IsfvmoO:C:S:E:T:Z:U:D:p:1:2:n:5:6:r:a:u:k:? arg; do
     Z)  environment_zones="$OPTARG";;
     U)  utility="$OPTARG";;
     D)  utility_domain="$OPTARG";;
-    p)  public_user_network="$OPTARG";;
-    1)  public_user_network1="$OPTARG";;
-    2)  public_user_network2="$OPTARG";;
-    n)  private_user_network="$OPTARG";;
-    5)  private_user_network1="$OPTARG";;
-    6)  private_user_network2="$OPTARG";;
+    n)  user_networks="$OPTARG";;
     r)  region="$OPTARG";;
     a)  account="$OPTARG";;
     u)  user="$OPTARG";;
@@ -337,16 +321,10 @@ if [ -z $utility_domain ]; then
     exit 32
 fi
 
-if [ -z $public_user_network ]; then
-    echo "-p network missing!"
-    echo "Could not automatically determine public user network, and it was not specified as a parameter"
+if [ -z $user_networks ]; then
+    echo "-n networks missing!"
+    echo "Could not automatically determine user networks, and it was not specified as a parameter"
     exit 40
-fi
-
-if [ -z $private_user_network ]; then
-    echo "-n network missing!"
-    echo "Could not automatically determine private user network, and it was not specified as a parameter"
-    exit 44
 fi
 
 if [ -z $region ]; then
@@ -391,18 +369,31 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     exit 58
 fi
 
+echo -n "Confirming Stack pre-requisites "
+
 if ! aws cloudformation describe-stacks --stack-name $environment-$utility \
                                         --profile $profile --region $region --output text &> /dev/null; then
+    echo
     echo "Unable to update - $environment-$utility Stack does not exist!"
-    exit 80
+    exit 98
+else
+    echo -n "."
 fi
+echo " Done"
+sleep 1
 
 templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
 template_folder=utility
 
+scripts_bucket=${AWS_SCRIPTS_BUCKET:-scripts-$region-$account}
+shared_script_folder=Linux
+script_folder=LinuxBastions
+
 configurations_bucket=${AWS_CONFIGURATIONS_BUCKET:-configurations-$region-$account}
-configuration_folder=$utility
-configuration_object=$environment-$utility-etc-hosts
+shared_configuration_folder=Linux
+configuration_folder=LinuxBastions
+#hosts_configuration_object=$environment-etc-hosts
+hosts_configuration_object=""
 
 # Prevent certain environment variables from breaking commands
 unset AWS_DEFAULT_PROFILE
@@ -500,8 +491,11 @@ aws cloudformation update-stack --stack-name $environment-$utility \\
                                              ParameterKey=EnvironmentType,ParameterValue=$environment_type \\
                                              ParameterKey=EnvironmentZones,ParameterValue=$environment_zones \\
                                              ParameterKey=OSName,ParameterValue="$os_name" \\
+                                             ParameterKey=SharedScriptFolder,ParameterValue=$shared_script_folder \\
+                                             ParameterKey=ScriptFolder,ParameterValue=$script_folder \\
+                                             ParameterKey=SharedConfigurationFolder,ParameterValue=$shared_configuration_folder \\
                                              ParameterKey=ConfigurationFolder,ParameterValue=$configuration_folder \\
-                                             ParameterKey=ConfigurationObject,ParameterValue=$configuration_object \\
+                                             ParameterKey=HostsConfigurationObject,ParameterValue=$hosts_configuration_object \\
                                              ParameterKey=UtilityName,ParameterValue=$utility \\
                                              ParameterKey=UtilityDomain,ParameterValue=$utility_domain \\
                                              ParameterKey=UseStaticPublicAddress,ParameterValue=$use_static_public_address \\
@@ -510,12 +504,7 @@ aws cloudformation update-stack --stack-name $environment-$utility \\
                                              ParameterKey=LogRetention,ParameterValue=$log_retention \\
                                              ParameterKey=OnSchedule,ParameterValue="$on_schedule" \\
                                              ParameterKey=OffSchedule,ParameterValue="$off_schedule" \\
-                                             ParameterKey=PublicUserNetwork,ParameterValue=$public_user_network \\
-                                             ParameterKey=PublicUserNetwork1,ParameterValue=$public_user_network1 \\
-                                             ParameterKey=PublicUserNetwork2,ParameterValue=$public_user_network2 \\
-                                             ParameterKey=PrivateUserNetwork,ParameterValue=$private_user_network \\
-                                             ParameterKey=PrivateUserNetwork1,ParameterValue=$private_user_network1 \\
-                                             ParameterKey=PrivateUserNetwork2,ParameterValue=$private_user_network2 \\
+                                             ParameterKey=UserNetworks,ParameterValue=\"$user_networks\" \\
                                 --tags Key=Owner,Value=$owner \\
                                        Key=Company,Value=$company \\
                                        Key=System,Value=$system \\

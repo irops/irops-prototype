@@ -2,9 +2,6 @@
 #
 # This script updates the Application Engine Component Web Stack in an Environment Account.
 #
-# This script is written in a format suitable for interactive demos,
-# but can be run non-Iteractively and more quickly with the "-I" flag.
-#
 
 #  1. Initalize Environment
 
@@ -20,7 +17,7 @@ next_default=5
 update_default=15
 update_attempts=40
 
-interactive=1
+interactive=0
 speed=100
 verbose=0
 monitor=0
@@ -35,15 +32,11 @@ application=${APPLICATION_NAME:-Engine}
 application_domain=${APPLICATION_DOMAIN:-engine}
 application_version=${APPLICATION_VERSION:-1.0.0}
 component=${COMPONENT_NAME:-Web}
-public_user_network=${PUBLIC_USER_NETWORK:-0.0.0.0/0}
-public_user_network1=${PUBLIC_USER_NETWORK1:-}
-public_user_network2=${PUBLIC_USER_NETWORK2:-}
-private_user_network=${PRIVATE_USER_NETWORK:-10.0.0.0/16}
-private_user_network1=${PRIVATE_USER_NETWORK1:-}
-private_user_network2=${PRIVATE_USER_NETWORK2:-}
-private_administrator_network=${PRIVATE_ADMINISTRATOR_NETWORK:-10.0.0.0/16}
-private_administrator_network1=${PRIVATE_ADMINISTRATOR_NETWORK1:-}
-private_administrator_network2=${PRIVATE_ADMINISTRATOR_NETWORK2:-}
+user_networks=${ENGINE_USER_NETWORKS:-NONE,NONE,NONE,NONE,NONE,NONE,NONE,NONE}
+administrator_networks=${ENGINE_ADMINISTRATOR_NETWORKS:-NONE,NONE,NONE,NONE,NONE,NONE,NONE,NONE}
+integration_networks=${ENGINE_INTEGRATION_NETWORKS:-NONE,NONE,NONE,NONE,NONE,NONE,NONE,NONE}
+domainadmin_user=${DOMAINADMIN_USER:-StackAdmin}
+domainadmin_password=${DOMAINADMIN_PASSWORD:-} # This should have no default value
 region=${AWS_DEFAULT_REGION:-us-west-2}
 account=${AWS_ACCOUNT_ALIAS:-irops}
 user=${AWS_USER_NAME:-administrator}
@@ -53,15 +46,15 @@ key=${AWS_KEY_NAME:-user}
 #  2. Define functions
 
 usage () {
-    echo "Usage: ${BASH_SOURCE##*/} [-I [-s | -f]] [-v] [-m] [-o]"
+    echo "Usage: ${BASH_SOURCE##*/} [[-i] | [-s | -f]] [-v] [-m] [-o]"
     echo "                  [-O owner] [-C company] [-S system]"
     echo "                  [-E environment] [-T type] [-Z zones]"
     echo "                  [-A application] [-D domain] [-V version]"
     echo "                  [-c component]"
-    echo "                  [-p network]"
-    echo "                  [-n network] [-N network]"
+    echo "                  [-n networks] [-N networks] [-I networks]"
+    echo "                  [-U user] [-P password]"
     echo "                  [-r region] [-a account] [-u user] [-k key]"
-    echo "  -I              non-interactive"
+    echo "  -i              interactive"
     echo "  -s              slower: increase pauses by 25%"
     echo "  -f              faster: reduce pauses by 25%"
     echo "  -v              verbose"
@@ -77,9 +70,11 @@ usage () {
     echo "  -D domain       Application Domain (default: $application_domain)"
     echo "  -V version      Application Version (default: $application_version)"
     echo "  -c component    Component Name (default: $component)"
-    echo "  -p network      Public User Network (default: $public_user_network)"
-    echo "  -n network      Private User Network (default: $private_user_network)"
-    echo "  -N network      Private Administrator Network (default: $private_administrator_network)"
+    echo "  -n networks     User Networks (default: $user_networks)"
+    echo "  -N networks     Administrator Networks (default: $administrator_networks)"
+    echo "  -I networks     Integration Networks (default: $integration_networks)"
+    echo "  -U user         DomainAdmin User (default: $domainadmin_user)"
+    echo "  -P password     DomainAdmin Password (default: $domainadmin_password)"
     echo "  -r region       Region (default: $region)"
     echo "  -a account      Account (default: $account)"
     echo "  -u user         User (default: $user)"
@@ -165,11 +160,10 @@ next() {
 
 
 #  3. Parse command line options
-#     - Note, using options 1-8 as hidden options to set additional network ranges
 
-while getopts IsfvmoO:C:S:E:T:Z:A:V:c:n:5:6:N:7:8:r:a:u:k:? arg; do
+while getopts isfvmoO:C:S:E:T:Z:A:D:V:c:n:N:I:U:P:r:a:u:k:? arg; do
     case $arg in
-    I)  interactive=0;;
+    i)  interactive=1;;
     s)  ((speed < speed_max)) && ((speed=speed+25));;
     f)  ((speed > 0)) && ((speed=speed-25));;
     v)  verbose=1;;
@@ -185,15 +179,11 @@ while getopts IsfvmoO:C:S:E:T:Z:A:V:c:n:5:6:N:7:8:r:a:u:k:? arg; do
     D)  application_domain="$OPTARG";;
     V)  application_version="$OPTARG";;
     c)  component="$OPTARG";;
-    p)  public_user_network="$OPTARG";;
-    1)  public_user_network1="$OPTARG";;
-    2)  public_user_network2="$OPTARG";;
-    n)  private_user_network="$OPTARG";;
-    5)  private_user_network1="$OPTARG";;
-    6)  private_user_network2="$OPTARG";;
-    N)  private_administrator_network="$OPTARG";;
-    7)  private_administrator_network1="$OPTARG";;
-    8)  private_administrator_network2="$OPTARG";;
+    n)  user_networks="$OPTARG";;
+    N)  administrator_networks="$OPTARG";;
+    I)  integration_networks="$OPTARG";;
+    U)  domainadmin_user="$OPTARG";;
+    P)  domainadmin_password="$OPTARG";;
     r)  region="$OPTARG";;
     a)  account="$OPTARG";;
     u)  user="$OPTARG";;
@@ -251,24 +241,28 @@ else
     case $environment in
       Production)
         os_name="Windows Server 2012 R2"
+        os_date="20170614"
         use_static_address=false
         log_retention=30
         schedule="";;  # 11:00 - 4:00 UTC = 3:00 AM - 8:00 PM PST = 6:00 AM - 11:00 PM EST
       Staging)
         os_name="Windows Server 2012 R2"
+        os_date="20170614"
         use_static_address=false
         log_retention=7
         schedule="";;  # 11:00 - 4:00 UTC = 3:00 AM - 8:00 PM PST = 6:00 AM - 11:00 PM EST
       Testing)
         os_name="Windows Server 2012 R2"
+        os_date="20170614"
         use_static_address=false
-        log_retention=7
+        log_retention=3
         schedule="13:00-2:00";; # 13:00 - 2:00 UTC = 5:00 AM - 6:00 PM PST = 8:00 AM - 9:00 PM EST
       Development)
         os_name="Windows Server 2012 R2"
+        os_date="20170614"
         use_static_address=false
-        log_retention=14
-        schedule="";; # 13:00 - 2:00 UTC = 5:00 AM - 6:00 PM PST = 8:00 AM - 9:00 PM EST
+        log_retention=3
+        schedule="13:00-2:00";; # 13:00 - 2:00 UTC = 5:00 AM - 6:00 PM PST = 8:00 AM - 9:00 PM EST
       *)
         echo "-E $environment invalid! Must be Production, Staging, Testing or Development"
         exit 21;;
@@ -332,33 +326,53 @@ fi
 if [ -z $component ]; then
     echo "-c component missing!"
     echo "Could not automatically determine component, and it was not specified as a parameter"
-    exit 36
+    exit 38
 else
     case $component in
       Web)
         ;;
       *)
         echo "-c $component invalid! Must be Web"
-        exit 37;;
+        exit 39;;
     esac
 fi
 
-if [ -z $public_user_network ]; then
-    echo "-p network missing!"
-    echo "Could not automatically determine public user network, and it was not specified as a parameter"
+if [ -z $user_networks ]; then
+    echo "-n networks missing!"
+    echo "Could not automatically determine user networks, and it was not specified as a parameter"
     exit 40
 fi
 
-if [ -z $private_user_network ]; then
-    echo "-n network missing!"
-    echo "Could not automatically determine private user network, and it was not specified as a parameter"
+if [ -z $administrator_networks ]; then
+    echo "-N networks missing!"
+    echo "Could not automatically determine administrator networks, and it was not specified as a parameter"
+    exit 42
+fi
+
+if [ -z $integration_networks ]; then
+    echo "-I networks missing!"
+    echo "Could not automatically determine integration networks, and it was not specified as a parameter"
     exit 44
 fi
 
-if [ -z $private_administrator_network ]; then
-    echo "-N network missing!"
-    echo "Could not automatically determine private administrator network, and it was not specified as a parameter"
+if [ -z $domainadmin_user ]; then
+    echo "-U user missing!"
+    echo "Could not automatically determine DomainAdmin user, and it was not specified as a parameter"
     exit 46
+else
+    case $domainadmin_user in
+      StackAdmin)
+        ;;
+      *)
+        echo "-U $domainadmin_user invalid! Must be StackAdmin"
+        exit 47;;
+    esac
+fi
+
+if [ -z $domainadmin_password ]; then
+    echo "-P password missing!"
+    echo "Could not automatically determine DomainAdmin password, and it was not specified as a parameter"
+    exit 48
 fi
 
 if [ -z $region ]; then
@@ -403,24 +417,39 @@ if ! grep -s -q "\[profile $profile]" ~/.aws/config; then
     exit 58
 fi
 
+echo -n "Confirming Stack pre-requisites "
+
 if ! aws cloudformation describe-stacks --stack-name $environment-$application-$component \
                                         --profile $profile --region $region --output text &> /dev/null; then
+    echo
     echo "Unable to update - $environment-$application-$component Stack does not exist!"
-    exit 80
+    exit 98
+else
+    echo -n "."
 fi
+echo " Done"
+sleep 1
 
 templates_bucket=${AWS_TEMPLATES_BUCKET:-templates-$region-$account}
 template_folder=application
 
+scripts_bucket=${AWS_SCRIPTS_BUCKET:-scripts-$region-$account}
+shared_script_folder=Windows
+script_folder=Engine
+
 products_bucket=${AWS_PRODUCTS_BUCKET:-products-$region-$account}
+shared_product_folder=Windows
 product_folder=Engine
+atom_product_object="AtomSetup-x64.msi"
 product_object=""
 
 configurations_bucket=${AWS_CONFIGURATIONS_BUCKET:-configurations-$region-$account}
+shared_configuration_folder=Windows
 configuration_folder=Engine
 configuration_object=""
 
 applications_bucket=${AWS_APPLICATIONS_BUCKET:-applications-$region-$account}
+shared_application_folder=Windows
 application_folder=Engine
 application_object=""
 
@@ -509,7 +538,14 @@ read -r -d '' statement << EOS
 aws cloudformation update-stack --stack-name $environment-$application-$component \\
                                 $template_parameter \\
                                 $stack_policy_parameter \\
-                                --parameters ParameterKey=VPNStackName,ParameterValue=$environment-OpenVPNAS \\
+                                --parameters ParameterKey=EngineMonitoringStackName,ParameterValue=$environment-Engine-Monitoring \\
+                                             ParameterKey=FederatedSecuritySecurityServerStackName,ParameterValue= \\
+                                             ParameterKey=MongoDBStackName,ParameterValue=$environment-MongoDB \\
+                                             ParameterKey=RabbitMQStackName,ParameterValue=$environment-RabbitMQ \\
+                                             ParameterKey=WebSphereMQStackName,ParameterValue=$environment-WebSphereMQ \\
+                                             ParameterKey=OctopusDeployStackName,ParameterValue=$environment-Octopus-Deploy \\
+                                             ParameterKey=VPNStackName,ParameterValue=$environment-OpenVPNAS \\
+                                             ParameterKey=ActiveDirectoryStackName,ParameterValue=$environment-ActiveDirectory \\
                                              ParameterKey=VPCStackName,ParameterValue=$environment-VPC \\
                                              ParameterKey=CustomIdentifierFunctionsStackName,ParameterValue=CustomIdentifierFunctions \\
                                              ParameterKey=StandardCIDRFunctionsStackName,ParameterValue=StandardCIDRFunctions \\
@@ -522,10 +558,17 @@ aws cloudformation update-stack --stack-name $environment-$application-$componen
                                              ParameterKey=EnvironmentType,ParameterValue=$environment_type \\
                                              ParameterKey=EnvironmentZones,ParameterValue=$environment_zones \\
                                              ParameterKey=OSName,ParameterValue="$os_name" \\
+                                             ParameterKey=OSDate,ParameterValue="$os_date" \\
+                                             ParameterKey=SharedScriptFolder,ParameterValue=$shared_script_folder \\
+                                             ParameterKey=ScriptFolder,ParameterValue=$script_folder \\
+                                             ParameterKey=SharedProductFolder,ParameterValue=$shared_product_folder \\
                                              ParameterKey=ProductFolder,ParameterValue=$product_folder \\
+                                             ParameterKey=AtomProductObject,ParameterValue=$atom_product_object \\
                                              ParameterKey=ProductObject,ParameterValue=$product_object \\
+                                             ParameterKey=SharedConfigurationFolder,ParameterValue=$shared_configuration_folder \\
                                              ParameterKey=ConfigurationFolder,ParameterValue=$configuration_folder \\
                                              ParameterKey=ConfigurationObject,ParameterValue=$configuration_object \\
+                                             ParameterKey=SharedApplicationFolder,ParameterValue=$shared_application_folder \\
                                              ParameterKey=ApplicationFolder,ParameterValue=$application_folder \\
                                              ParameterKey=ApplicationObject,ParameterValue=$application_object \\
                                              ParameterKey=ApplicationName,ParameterValue=$application \\
@@ -535,15 +578,11 @@ aws cloudformation update-stack --stack-name $environment-$application-$componen
                                              ParameterKey=UseStaticAddress,ParameterValue=$use_static_address \\
                                              ParameterKey=LogRetention,ParameterValue=$log_retention \\
                                              ParameterKey=Schedule,ParameterValue=$schedule \\
-                                             ParameterKey=PublicUserNetwork,ParameterValue=$public_user_network \\
-                                             ParameterKey=PublicUserNetwork1,ParameterValue=$public_user_network1 \\
-                                             ParameterKey=PublicUserNetwork2,ParameterValue=$public_user_network2 \\
-                                             ParameterKey=PrivateUserNetwork,ParameterValue=$private_user_network \\
-                                             ParameterKey=PrivateUserNetwork1,ParameterValue=$private_user_network1 \\
-                                             ParameterKey=PrivateUserNetwork2,ParameterValue=$private_user_network2 \\
-                                             ParameterKey=PrivateAdministratorNetwork,ParameterValue=$private_administrator_network \\
-                                             ParameterKey=PrivateAdministratorNetwork1,ParameterValue=$private_administrator_network1 \\
-                                             ParameterKey=PrivateAdministratorNetwork2,ParameterValue=$private_administrator_network2 \\
+                                             ParameterKey=UserNetworks,ParameterValue=\"$user_networks\" \\
+                                             ParameterKey=AdministratorNetworks,ParameterValue=\"$administrator_networks\" \\
+                                             ParameterKey=IntegrationNetworks,ParameterValue=\"$integration_networks\" \\
+                                             ParameterKey=DomainAdminUser,ParameterValue="$domainadmin_user" \\
+                                             ParameterKey=DomainAdminPassword,ParameterValue="$domainadmin_password" \\
                                 --tags Key=Owner,Value=$owner \\
                                        Key=Company,Value=$company \\
                                        Key=System,Value=$system \\

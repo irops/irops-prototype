@@ -21,7 +21,7 @@
             "KeyName",
             "Role",
             "LogGroup",
-            "SecurityGroup"
+            "InstanceSecurityGroup"
           ]
         },
         {
@@ -39,8 +39,16 @@
           ]
         },
         {
+          "Label" : { "default" : "Application Dependencies Configuration" },
+          "Parameters" : [
+            "SharedScriptFolder",
+            "ScriptFolder"
+          ]
+        },
+        {
           "Label" : { "default" : "Application Configuration" },
           "Parameters" : [
+            "SharedApplicationFolder",
             "ApplicationFolder",
             "ApplicationObject",
             "ApplicationName",
@@ -59,11 +67,14 @@
         "KeyName" : { "default" : "Key Name" },
         "Role" : { "default" : "Role" },
         "LogGroup" : { "default" : "LogGroup" },
-        "SecurityGroup" : { "default" : "SecurityGroup" },
+        "InstanceSecurityGroup" : { "default" : "Instance SecurityGroup" },
         "CompanyName" : { "default" : "Company Name" },
         "SystemName" : { "default" : "System Name" },
         "EnvironmentType" : { "default" : "Environment Type" },
         "OSName" : { "default" : "Operating System Name" },
+        "SharedScriptFolder" : { "default" : "Shared Script Folder" },
+        "ScriptFolder" : { "default" : "Script Folder" },
+        "SharedApplicationFolder" : { "default" : "Shared Application Folder" },
         "ApplicationFolder" : { "default" : "Application Folder" },
         "ApplicationObject" : { "default" : "Application Object" },
         "ApplicationName" : { "default" : "Application Name" },
@@ -88,25 +99,27 @@
     "CustomIdentifierFunctionsStackName" : {
       "Description" : "Name of the CloudFormation Stack containing the Custom Identifier Functions",
       "Type" : "String",
+      "MinLength" : 8,
       "MaxLength" : 64,
       "Default" : "CustomIdentifierFunctions",
-      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
     "StandardAMIFunctionsStackName" : {
       "Description" : "Name of the CloudFormation Stack containing the Standard AMI Functions",
       "Type" : "String",
+      "MinLength" : 8,
       "MaxLength" : 64,
       "Default" : "StandardAMIFunctions",
-      "AllowedPattern" : "(^$|^[A-Z][-a-zA-Z0-9]*$)",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
       "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
     },
 
     "StandardBucketsStackName" : {
       "Description" : "Name of the CloudFormation Stack containing Standard Buckets",
       "Type" : "String",
-      "MinLength" : 2,
+      "MinLength" : 8,
       "MaxLength" : 64,
       "Default" : "StandardBuckets",
       "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
@@ -138,7 +151,7 @@
       "ConstraintDescription" : "must be the name of an existing LogGroup."
     },
 
-    "SecurityGroup" : {
+    "InstanceSecurityGroup" : {
       "Description" : "ID of an existing SecurityGroup which controls access to the Instance",
       "Type" : "AWS::EC2::SecurityGroup::Id",
       "MaxLength" : 32,
@@ -182,6 +195,36 @@
       "ConstraintDescription" : "must be \"Amazon Linux\" (latest), \"Amazon Linux 2017.03.0\", \"Amazon Linux 2016.09.1\", \"Amazon Linux 2016.09.0\", \"RHEL 7\" (latest), \"RHEL 7.4\" or \"RHEL 7.3\"."
     },
 
+    "SharedScriptFolder" : {
+      "Description" : "Folder within the S3 Scripts bucket containing Shared Scripts deployed by this Template",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "Linux",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "ScriptFolder" : {
+      "Description" : "Folder within the S3 Scripts bucket containing Scripts deployed by this Template",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "LinuxWebServer",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
+    "SharedApplicationFolder" : {
+      "Description" : "Folder within the S3 Applications bucket containing Shared Applications deployed by this Template",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "Linux",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    },
+
     "ApplicationFolder" : {
       "Description" : "Folder within the S3 Applications bucket containing Applications deployed by this Template",
       "Type" : "String",
@@ -193,7 +236,7 @@
     },
 
     "ApplicationObject" : {
-      "Description" : "Object within the S3 bucket and folder containing the LinuxWebServer Application",
+      "Description" : "Object within the S3 bucket and folder containing the Application",
       "Type" : "String",
       "MaxLength" : 64,
       "Default" : "",
@@ -315,15 +358,15 @@
               { "Fn::If" : [ "ConfigureLogs", { "Fn::If" : [ "ConfigureAMZN", "InstallLogs", "BuildLogs" ]}, { "Ref": "AWS::NoValue" }]},
               { "Fn::If" : [ "ConfigureLogs", "ConfigureLogs", { "Ref": "AWS::NoValue" }]},
               "ConfigureCFN",
-              "ConfigureHostname",
               "ConfigureOS",
+              "ConfigureHostName",
               "InstallApache",
               { "Fn::If" : [ "InstallApplication", "InstallApplication", "ConfigureApplication" ]}
             ]
           },
           "UpdateOS" : {
             "commands" : {
-              "01_yum_update" : {
+              "01-yum-update" : {
                 "command" : "yum update -y",
                 "ignoreErrors" : "false"
               }
@@ -415,7 +458,7 @@
               }
             },
             "commands" : {
-              "01_buildawslogs" : {
+              "01-buildawslogs" : {
                 "command" : "/root/bin/buildawslogs"
               }
             }
@@ -545,30 +588,6 @@
               }
             }
           },
-          "ConfigureHostname" : {
-            "files" : {
-              "/root/bin/sethostname" : {
-                "content" : { "Fn::Join" : [ "\n", [
-                  "#!/bin/bash",
-                  "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)",
-                  "region=${zone::-1}",
-                  { "Fn::Join" : [ "", [ "hostname=", { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01a.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]},
-                  "address=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)",
-                  "sed -i -e \"/^$address/d\" -e \"$ a$address $hostname ${hostname%%.*} lws\" /etc/hosts",
-                  "hostname $hostname"
-                ]]},
-                "mode"  : "000700",
-                "owner" : "root",
-                "group" : "root"
-              }
-            },
-            "commands" : {
-              "01_sethostname" : {
-                "command" : "/root/bin/sethostname",
-                "ignoreErrors" : "false"
-              }
-            }
-          },
           "ConfigureOS" : {
             "packages" : {
               "yum" : {
@@ -587,6 +606,30 @@
               }
             }
           },
+          "ConfigureHostName" : {
+            "files" : {
+              "/root/bin/sethostname" : {
+                "content" : { "Fn::Join" : [ "\n", [
+                  "#!/bin/bash",
+                  "zone=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/placement/availability-zone)",
+                  "region=${zone::-1}",
+                  { "Fn::Join" : [ "", [ "hostname=", { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPrivateDomain" }}]]},
+                  "address=$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)",
+                  "sed -i -e \"/^$address/d\" -e \"$ a$address $hostname ${hostname%%.*}\" /etc/hosts",
+                  "hostname $hostname"
+                ]]},
+                "mode"  : "000700",
+                "owner" : "root",
+                "group" : "root"
+              }
+            },
+            "commands" : {
+              "01-sethostname" : {
+                "command" : "/root/bin/sethostname",
+                "ignoreErrors" : "false"
+              }
+            }
+          },
           "InstallApache" : {
             "packages" : {
               "yum" : {
@@ -594,7 +637,7 @@
               }
             },
             "commands" : {
-              "01_enable_ssi" : {
+              "01-enable-ssi" : {
                 "command" : "sed -i -e 's/\\(^    Options Indexes FollowSymLinks$\\)/\\1 Includes\\n    XBitHack on/' /etc/httpd/conf/httpd.conf",
                 "ignoreErrors" : "false"
               }
@@ -661,12 +704,13 @@
           "Description"              : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "NetworkInterface", "eth0" ]]},
           "DeviceIndex"              : "0",
           "SubnetId"                 : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-WebSubnetA" }},
-          "GroupSet"                 : [{ "Ref" :  "SecurityGroup" }],
+          "GroupSet"                 : [{ "Ref" :  "InstanceSecurityGroup" }],
           "AssociatePublicIpAddress" : "true",
           "DeleteOnTermination"      : "true"
         }],
         "Tags" : [
-          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "Instance" ]]}}
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "Instance" ]]}},
+          { "Key" : "HostName", "Value" : { "Fn::Sub" : "${GetHostName.HostName}01" }}
         ],
         "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "\n", [
           "#!/bin/bash -xe",
@@ -727,7 +771,7 @@
 
     "InstanceHostName" : {
       "Description" : "The Instance HostName",
-      "Value" : { "Fn::Join" : [ "", [ { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}]]}
+      "Value" : { "Fn::Join" : [ "", [ { "Fn::GetAtt" : [ "GetHostName", "HostName" ]}, "01.", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPublicDomain" }}]]}
     },
 
     "InstancePublicIp" : {
