@@ -53,7 +53,7 @@
       "Description" : "HostedZone ID of the LoadBalancer needed by the RecordSetGroup",
       "Type" : "String",
       "Default" : "",
-      "AllowedPattern" : "(^$|^[A-Z0-9]{13}$)",
+      "AllowedPattern" : "(^$|^[A-Z0-9]{14}$)",
       "ConstraintDescription" : "must be a valid HostedZone ID."
     },
 
@@ -86,21 +86,26 @@
     }
   },
 
+  "Conditions" : {
+    "ConfigureDomainName" : { "Fn::Not" : [{ "Fn::Equals" : [{ "Ref" : "ApplicationDomain" }, "" ]}]}
+  },
+
   "Resources" : {
-    "RecordSetGroup" : {
+    "ServiceNameRecordSetGroup" : {
       "Type" : "AWS::Route53::RecordSetGroup",
       "Properties" : {
         "HostedZoneId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-PublicHostedZone" }},
         "Comment" : { "Fn::Sub" : "Public DNS name for ${ApplicationName} ELB." },
         "RecordSets" : [{
-          "Name" : { "Fn::Join" : [ "", [ { "Ref" : "ApplicationDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCDomain" }}, "." ]]},
+          "Name" : { "Fn::Join" : [ "", [ { "Ref" : "ApplicationDomain" }, ".", { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCPublicDomain" }}, "." ]]},
           "Type" : "A",
           "AliasTarget" : {
             "HostedZoneId" : { "Ref" : "LoadBalancerHostedZoneId" },
             "DNSName" : { "Ref" : "LoadBalancerDNSName" }
           }
         }]
-      }
+      },
+      "Condition" : "ConfigureDomainName"
     }
   }
 }

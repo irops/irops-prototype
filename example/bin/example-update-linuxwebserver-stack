@@ -361,7 +361,7 @@ template_folder=example
 
 scripts_bucket=${AWS_SCRIPTS_BUCKET:-scripts-$region-$account}
 shared_script_folder=Linux
-script_folder=LinuxBastions
+script_folder=LinuxWebServer
 
 examples_bucket=${AWS_EXAMPLES_BUCKET:-examples-$region-$account}
 shared_example_folder=Linux
