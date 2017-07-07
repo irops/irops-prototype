@@ -277,12 +277,12 @@ run "$utilitybindir/utility-delete-openvpnas-stack -E Build -m $i $f"
 #     10.5. Delete Core-ActiveDirectory Stack
 #     10.6. Delete Build-ActiveDirectory Stack
 
-run "$utilitybindir/utility-create-activedirectory-stack -E Production $i $f"
-run "$utilitybindir/utility-create-activedirectory-stack -E Staging $i $f"
-run "$utilitybindir/utility-create-activedirectory-stack -E Testing $i $f"
-run "$utilitybindir/utility-create-activedirectory-stack -E Development $i $f"
-run "$utilitybindir/utility-create-activedirectory-stack -E Core $i $f"
-run "$utilitybindir/utility-create-activedirectory-stack -E Build -m $i $f"
+run "$utilitybindir/utility-delete-activedirectory-stack -E Production $i $f"
+run "$utilitybindir/utility-delete-activedirectory-stack -E Staging $i $f"
+run "$utilitybindir/utility-delete-activedirectory-stack -E Testing $i $f"
+run "$utilitybindir/utility-delete-activedirectory-stack -E Development $i $f"
+run "$utilitybindir/utility-delete-activedirectory-stack -E Core $i $f"
+run "$utilitybindir/utility-delete-activedirectory-stack -E Build -m $i $f"
 
 
 # 11. Delete VPCPeeringConnections
