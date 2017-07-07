@@ -174,16 +174,16 @@ else
     esac
 fi
 
-if [ -z $application ]; then
-    echo "-A application missing!"
-    echo "Could not automatically determine application, and it was not specified as a parameter"
+if [ -z $utility ]; then
+    echo "-U utility missing!"
+    echo "Could not automatically determine utility, and it was not specified as a parameter"
     exit 30
 else
-    case $application in
+    case $utility in
       LinuxBastions)
         ;;
       *)
-        echo "-A $application invalid! Must be LinuxBastions"
+        echo "-U $utility invalid! Must be LinuxBastions"
         exit 31;;
     esac
 fi
