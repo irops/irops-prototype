@@ -237,24 +237,36 @@ if [ -z $environment ]; then
 else
     case $environment in
       Production)
+        federatedsecurity_securityserver_stack_name=$environment-FederatedSecurity-SecurityServer
+        webspheremq_stack_name=$environment-WebSphereMQ
+        octopus_deploy_stack_name=$environment-Octopus-Deploy
         os_name="Windows Server 2012 R2"
         os_date="20170614"
         use_static_address=false
         log_retention=30
         schedule="";;  # 11:00 - 4:00 UTC = 3:00 AM - 8:00 PM PST = 6:00 AM - 11:00 PM EST
       Staging)
+        federatedsecurity_securityserver_stack_name=$environment-FederatedSecurity-SecurityServer
+        webspheremq_stack_name=Core-WebSphereMQ
+        octopus_deploy_stack_name=$environment-Octopus-Deploy
         os_name="Windows Server 2012 R2"
         os_date="20170614"
         use_static_address=false
         log_retention=7
         schedule="";;  # 11:00 - 4:00 UTC = 3:00 AM - 8:00 PM PST = 6:00 AM - 11:00 PM EST
       Testing)
+        unset federatedsecurity_securityserver_stack_name
+        webspheremq_stack_name=Core-WebSphereMQ
+        octopus_deploy_stack_name=Core-Octopus-Deploy
         os_name="Windows Server 2012 R2"
         os_date="20170614"
         use_static_address=false
         log_retention=3
         schedule="13:00-2:00";; # 13:00 - 2:00 UTC = 5:00 AM - 6:00 PM PST = 8:00 AM - 9:00 PM EST
       Development)
+        unset federatedsecurity_securityserver_stack_name
+        webspheremq_stack_name=Core-WebSphereMQ
+        octopus_deploy_stack_name=Core-Octopus-Deploy
         os_name="Windows Server 2012 R2"
         os_date="20170614"
         use_static_address=false
@@ -488,19 +500,19 @@ else
     echo -n "."
 fi
 
-if ! aws cloudformation describe-stacks --stack-name $environment-Octopus-Deploy \
+if ! aws cloudformation describe-stacks --stack-name $octopus_deploy_stack_name \
                                         --profile $profile --region $region --output text &> /dev/null; then
     echo
-    echo "Stack dependency missing - $environment-Octopus-Deploy Stack does not exist!"
+    echo "Stack dependency missing - $octopus_deploy_stack_name Stack does not exist!"
     exit 79
 else
     echo -n "."
 fi
 
-if ! aws cloudformation describe-stacks --stack-name $environment-WebSphereMQ \
+if ! aws cloudformation describe-stacks --stack-name $webspheremq_stack_name \
                                         --profile $profile --region $region --output text &> /dev/null; then
     echo
-    echo "Stack dependency missing - $environment-WebSphereMQ Stack does not exist!"
+    echo "Stack dependency missing - $webspheremq_stack_name Stack does not exist!"
     exit 80
 else
     echo -n "."
@@ -524,14 +536,16 @@ else
     echo -n "."
 fi
 
-if ! aws cloudformation describe-stacks --stack-name $environment-FederatedServices-SecurityServer \
-                                        --profile $profile --region $region --output text &> /dev/null; then
-    echo
-    echo "Stack dependency missing - $environment-FederatedServices-SecurityServer Stack does not exist!"
-#    exit 84
-    echo "TODO: This needs to be added later and integrated with this Stack"
-else
-    echo -n "."
+if [ -n $federatedsecurity_securityserver_stack_name ]; then
+    if ! aws cloudformation describe-stacks --stack-name $federatedsecurity_securityserver_stack_name \
+                                            --profile $profile --region $region --output text &> /dev/null; then
+        echo
+        echo "Stack dependency missing - $federatedsecurity_securityserver_stack_name Stack does not exist!"
+        #exit 84
+        echo "TODO: This needs to be added later and integrated with this Stack"
+    else
+        echo -n "."
+    fi
 fi
 
 if ! aws cloudformation describe-stacks --stack-name $environment-Engine-Monitoring \
@@ -651,11 +665,11 @@ aws cloudformation create-stack --stack-name $environment-$application-$componen
                                 $template_parameter \\
                                 $stack_policy_parameter \\
                                 --parameters ParameterKey=EngineMonitoringStackName,ParameterValue=$environment-Engine-Monitoring \\
-                                             ParameterKey=FederatedSecuritySecurityServerStackName,ParameterValue= \\
+                                             ParameterKey=FederatedSecuritySecurityServerStackName,ParameterValue=$federatedsecurity_securityserver_stack_name \\
                                              ParameterKey=MongoDBStackName,ParameterValue=$environment-MongoDB \\
                                              ParameterKey=RabbitMQStackName,ParameterValue=$environment-RabbitMQ \\
-                                             ParameterKey=WebSphereMQStackName,ParameterValue=$environment-WebSphereMQ \\
-                                             ParameterKey=OctopusDeployStackName,ParameterValue=$environment-Octopus-Deploy \\
+                                             ParameterKey=WebSphereMQStackName,ParameterValue=$webspheremq_stack_name \\
+                                             ParameterKey=OctopusDeployStackName,ParameterValue=$octopus_deploy_stack_name \\
                                              ParameterKey=VPNStackName,ParameterValue=$environment-OpenVPNAS \\
                                              ParameterKey=ActiveDirectoryStackName,ParameterValue=$environment-ActiveDirectory \\
                                              ParameterKey=VPCStackName,ParameterValue=$environment-VPC \\
