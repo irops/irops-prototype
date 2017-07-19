@@ -474,13 +474,15 @@ else
     echo -n "."
 fi
 
-if ! aws cloudformation describe-stacks --stack-name $octopus_deploy_stack_name \
-                                        --profile $profile --region $region --output text &> /dev/null; then
-    echo
-    echo "Stack dependency missing - $octopus_deploy_stack_name Stack does not exist!"
-    exit 79
-else
-    echo -n "."
+if [ -n "$octopus_deploy_stack_name" ]; then
+    if ! aws cloudformation describe-stacks --stack-name $octopus_deploy_stack_name \
+                                            --profile $profile --region $region --output text &> /dev/null; then
+        echo
+        echo "Stack dependency missing - $octopus_deploy_stack_name Stack does not exist!"
+        exit 79
+    else
+        echo -n "."
+    fi
 fi
 
 if ! aws cloudformation describe-stacks --stack-name $environment-RabbitMQ \
