@@ -237,7 +237,9 @@ if [ -z $environment ]; then
 else
     case $environment in
       Production)
-        federatedsecurity_securityserver_stack_name=$environment-FederatedSecurity-SecurityServer
+        #federatedsecurity_securityserver_stack_name=$environment-FederatedSecurity-SecurityServer
+        # TODO: Currently, we're not yet planning on using FederatedSecurity
+        unset federatedsecurity_securityserver_stack_name
         webspheremq_stack_name=$environment-WebSphereMQ
         octopus_deploy_stack_name=$environment-Octopus-Deploy
         os_name="Windows Server 2012 R2"
@@ -246,7 +248,9 @@ else
         log_retention=30
         schedule="";;  # 11:00 - 4:00 UTC = 3:00 AM - 8:00 PM PST = 6:00 AM - 11:00 PM EST
       Staging)
-        federatedsecurity_securityserver_stack_name=$environment-FederatedSecurity-SecurityServer
+        #federatedsecurity_securityserver_stack_name=$environment-FederatedSecurity-SecurityServer
+        unset federatedsecurity_securityserver_stack_name
+        # TODO: Currently, we're not yet planning on using FederatedSecurity
         webspheremq_stack_name=Core-WebSphereMQ
         octopus_deploy_stack_name=$environment-Octopus-Deploy
         os_name="Windows Server 2012 R2"
