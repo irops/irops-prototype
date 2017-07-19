@@ -31,112 +31,120 @@
 #      2.19. Delete Development-Engine-Publishing Stack
 #      2.20. Delete Development-Engine-Monitoring Stack
 #
-#  3. Delete MongoDB Instances
-#      3.1. Delete Production-MongoDB Stack
-#      3.2. Delete Staging-MongoDB Stack
-#      3.3. Delete Testing-MongoDB Stack
-#      3.4. Delete Development-MongoDB Stack
+#  3. Delete DataTransfer Instances
+#     18.3. Delete Production-DataTransfer-SFTP Stack
+#     18.2. Delete Staging-DataTransfer-SFTP Stack (Client, references Core)
+#     18.1. Delete Core-DataTransfer-SFTP Stack
 #
-#  4. Delete RabbitMQ Instances
-#      4.1. Delete Production-RabbitMQ Stack
-#      4.2. Delete Staging-RabbitMQ Stack
-#      4.3. Delete Testing-RabbitMQ Stack
-#      4.4. Delete Development-RabbitMQ Stack
+#  4. Delete MongoDB Instances
+#      4.1. Delete Production-MongoDB Stack
+#      4.2. Delete Staging-MongoDB Stack
+#      4.3. Delete Testing-MongoDB Stack
+#      4.4. Delete Development-MongoDB Stack
 #
-#  5. Delete WebSphereMQ Instances
-#      5.1. Delete Production-WebSphereMQ Stack
-#      5.2. Delete Core-WebSphereMQ Stack
+#  5. Delete RabbitMQ Instances
+#      5.1. Delete Production-RabbitMQ Stack
+#      5.2. Delete Staging-RabbitMQ Stack
+#      5.3. Delete Testing-RabbitMQ Stack
+#      5.4. Delete Development-RabbitMQ Stack
 #
-#  6. Delete Octopus Instances
-#      6.1. Delete Production-Octopus-Deploy Stack
-#      6.2. Delete Staging-Octopus-Deploy Stack
-#      6.3. Delete Core-Octopus-Deploy Stack
+#  6. Delete WebSphereMQ Instances
+#      6.1. Create Production-WebSphereMQ Stack
+#      6.2. Create Staging-WebSphereMQ Stack (Client, references Core)
+#      6.3. Create Testing-WebSphereMQ Stack (Client, references Core)
+#      6.4. Create Development-WebSphereMQ Stack (Client, references Core)
+#      6.5. Create Core-WebSphereMQ Stack
 #
-#  7. Delete WindowsBastions Instances (Only in Unstable)
-#      7.1. Delete Production-WindowsBastions Stack
-#      7.2. Delete Staging-WindowsBastions Stack
-#      7.3. Delete Testing-WindowsBastions Stack
-#      7.4. Delete Development-WindowsBastions Stack
-#      7.5. Delete Core-WindowsBastions Stack
-#      7.6. Delete Build-WindowsBastions Stack
+#  7. Delete Octopus Instances
+#      7.1. Delete Production-Octopus-Deploy Stack
+#      7.2. Delete Staging-Octopus-Deploy Stack
+#      7.3. Delete Core-Octopus-Deploy Stack
 #
-#  8. Delete LinuxBastions Instances (Only in Unstable)
-#      8.1. Delete Production-LinuxBastions Stack
-#      8.2. Delete Staging-LinuxBastions Stack
-#      8.3. Delete Testing-LinuxBastions Stack
-#      8.4. Delete Development-LinuxBastions Stack
-#      8.5. Delete Core-LinuxBastions Stack
-#      8.6. Delete Build-LinuxBastions Stack
+#  8. Delete WindowsBastions Instances (Only in Unstable)
+#      8.1. Delete Production-WindowsBastions Stack
+#      8.2. Delete Staging-WindowsBastions Stack
+#      8.3. Delete Testing-WindowsBastions Stack
+#      8.4. Delete Development-WindowsBastions Stack
+#      8.5. Delete Core-WindowsBastions Stack
+#      8.6. Delete Build-WindowsBastions Stack
 #
-#  9. Delete OpenVPNAS Instances
-#      9.1. Delete Production-OpenVPNAS Stack
-#      9.2. Delete Staging-OpenVPNAS Stack
-#      9.3. Delete Testing-OpenVPNAS Stack
-#      9.4. Delete Development-OpenVPNAS Stack
-#      9.5. Delete Core-OpenVPNAS Stack
-#      9.6. Delete Build-OpenVPNAS Stack
+#  9. Delete LinuxBastions Instances (Only in Unstable)
+#      9.1. Delete Production-LinuxBastions Stack
+#      9.2. Delete Staging-LinuxBastions Stack
+#      9.3. Delete Testing-LinuxBastions Stack
+#      9.4. Delete Development-LinuxBastions Stack
+#      9.5. Delete Core-LinuxBastions Stack
+#      9.6. Delete Build-LinuxBastions Stack
 #
-# 10. Delete ActiveDirectory Instances
-#     10.1. Delete Production-ActiveDirectory Stack
-#     10.2. Delete Staging-ActiveDirectory Stack
-#     10.3. Delete Testing-ActiveDirectory Stack
-#     10.4. Delete Development-ActiveDirectory Stack
-#     10.5. Delete Core-ActiveDirectory Stack
-#     10.6. Delete Build-ActiveDirectory Stack
+# 10. Delete OpenVPNAS Instances
+#     10.1. Delete Production-OpenVPNAS Stack
+#     10.2. Delete Staging-OpenVPNAS Stack
+#     10.3. Delete Testing-OpenVPNAS Stack
+#     10.4. Delete Development-OpenVPNAS Stack
+#     10.5. Delete Core-OpenVPNAS Stack
+#     10.6. Delete Build-OpenVPNAS Stack
 #
-# 11. Delete VPCPeeringConnections
-#     11.1. Delete Production-StagingVPCPeeringConnection Stack
-#     11.2. Delete Staging-TestingVPCPeeringConnection Stack
-#     11.3. Delete Testing-DevelopmentVPCPeeringConnection Stack
-#     11.4. Delete Core-VPCPeeringConnections Stack
+# 11. Delete ActiveDirectory Instances
+#     11.1. Delete Production-ActiveDirectory Stack
+#     11.2. Delete Staging-ActiveDirectory Stack
+#     11.3. Delete Testing-ActiveDirectory Stack
+#     11.4. Delete Development-ActiveDirectory Stack
+#     11.5. Delete Core-ActiveDirectory Stack
+#     11.6. Delete Build-ActiveDirectory Stack
 #
-# 12. Delete VPNConnections
-#     12.1. Delete Production-SantaBarbaraVPNConnection Stack
-#     12.2. Delete Production-CharlotteVPNConnection Stack
-#     12.3. Delete Staging-SantaBarbaraVPNConnection Stack
-#     12.4. Delete Staging-CharlotteVPNConnection Stack
-#     12.5. Delete Testing-SantaBarbaraVPNConnection Stack
-#     12.6. Delete Testing-CharlotteVPNConnection Stack
-#     12.7. Delete Development-SantaBarbaraVPNConnection Stack
-#     12.8. Delete Development-CharlotteVPNConnection Stack
-#     12.9. Delete Core-SantaBarbaraVPNConnection Stack
-#     12.10. Delete Core-CharlotteVPNConnection Stack
-#     12.11. Delete Build-SantaBarbaraVPNConnection Stack
-#     12.12. Delete Build-CharlotteVPNConnection Stack
+# 12. Delete VPCPeeringConnections
+#     12.1. Delete Production-StagingVPCPeeringConnection Stack
+#     12.2. Delete Staging-TestingVPCPeeringConnection Stack
+#     12.3. Delete Testing-DevelopmentVPCPeeringConnection Stack
+#     12.4. Delete Core-VPCPeeringConnections Stack
 #
-# 13. Delete CustomerGateways
-#     13.1. Delete SantaBarbaraCustomerGateway Stack
-#     13.2. Delete CharlotteCustomerGateway Stack
+# 13. Delete VPNConnections
+#     13.1. Delete Production-SantaBarbaraVPNConnection Stack
+#     13.2. Delete Production-CharlotteVPNConnection Stack
+#     13.3. Delete Staging-SantaBarbaraVPNConnection Stack
+#     13.4. Delete Staging-CharlotteVPNConnection Stack
+#     13.5. Delete Testing-SantaBarbaraVPNConnection Stack
+#     13.6. Delete Testing-CharlotteVPNConnection Stack
+#     13.7. Delete Development-SantaBarbaraVPNConnection Stack
+#     13.8. Delete Development-CharlotteVPNConnection Stack
+#     13.9. Delete Core-SantaBarbaraVPNConnection Stack
+#     13.10. Delete Core-CharlotteVPNConnection Stack
+#     13.11. Delete Build-SantaBarbaraVPNConnection Stack
+#     13.12. Delete Build-CharlotteVPNConnection Stack
 #
-# 14. Delete NetworkACLs
-#     14.1. Delete Production-NetworkAcls Stack
-#     14.2. Delete Staging-NetworkAcls Stack
-#     14.3. Delete Testing-NetworkAcls Stack
-#     14.4. Delete Development-NetworkAcls Stack
-#     14.5. Delete Core-NetworkAcls Stack
-#     14.6. Delete Build-NetworkAcls Stack
+# 14. Delete CustomerGateways
+#     14.1. Delete SantaBarbaraCustomerGateway Stack
+#     14.2. Delete CharlotteCustomerGateway Stack
 #
-# 15. Delete VPCs
-#     15.1. Delete Production-VPC Stack
-#     15.2. Delete Staging-VPC Stack
-#     15.3. Delete Testing-VPC Stack
-#     15.4. Delete Development-VPC Stack
-#     15.5. Delete Core-VPC Stack
-#     15.6. Delete Build-VPC Stack
+# 15. Delete NetworkACLs
+#     15.1. Delete Production-NetworkAcls Stack
+#     15.2. Delete Staging-NetworkAcls Stack
+#     15.3. Delete Testing-NetworkAcls Stack
+#     15.4. Delete Development-NetworkAcls Stack
+#     15.5. Delete Core-NetworkAcls Stack
+#     15.6. Delete Build-NetworkAcls Stack
 #
-# 16. Delete Lambda Functions
-#     16.1 Delete CustomIdentifierFunctions Stack
-#     16.2 Delete StandardScheduleFunctions Stack
-#     16.3 Delete StandardCIDRFunctions Stack
-#     16.4 Delete StandardAMIFunctions Stack
+# 16. Delete VPCs
+#     16.1. Delete Production-VPC Stack
+#     16.2. Delete Staging-VPC Stack
+#     16.3. Delete Testing-VPC Stack
+#     16.4. Delete Development-VPC Stack
+#     16.5. Delete Core-VPC Stack
+#     16.6. Delete Build-VPC Stack
 #
-# 17. Delete S3 Buckets
-#     17.1 Delete StandardBuckets Stack
+# 17. Delete Lambda Functions
+#     17.1 Delete CustomIdentifierFunctions Stack
+#     17.2 Delete StandardScheduleFunctions Stack
+#     17.3 Delete StandardCIDRFunctions Stack
+#     17.4 Delete StandardAMIFunctions Stack
 #
-# 18. Delete SNS Topics and Subscriptions
-#     18.1 Delete CustomSubscriptions Stack
-#     18.2 Delete StandardSubscriptions Stack
-#     18.3 Delete StandardTopics Stack
+# 18. Delete S3 Buckets
+#     18.1 Delete StandardBuckets Stack
+#
+# 19. Delete SNS Topics and Subscriptions
+#     19.1 Delete CustomSubscriptions Stack
+#     19.2 Delete StandardSubscriptions Stack
+#     19.3 Delete StandardTopics Stack
 #
 
 run() {
@@ -217,11 +225,21 @@ run "$applicationbindir/application-delete-engine-publishing-stack -E Developmen
 run "$applicationbindir/application-delete-engine-monitoring-stack -E Development -m $i $f"
 
 
-#  3. Delete MongoDB Instances
-#      3.1. Delete Production-MongoDB Stack
-#      3.2. Delete Staging-MongoDB Stack
-#      3.3. Delete Testing-MongoDB Stack
-#      3.4. Delete Development-MongoDB Stack
+#  3. Delete DataTransfer Instances
+#     18.3. Delete Production-DataTransfer-SFTP Stack
+#     18.2. Delete Staging-DataTransfer-SFTP Stack (Client, references Core)
+#     18.1. Delete Core-DataTransfer-SFTP Stack
+
+run "$applicationbindir/application-delete-datatransfer-sftp-stack -E Production $i $f"
+run "$applicationbindir/application-delete-datatransfer-sftp-stack -E Staging -m $i $f"
+run "$applicationbindir/application-delete-datatransfer-sftp-stack -E Core -m $i $f"
+
+
+#  4. Delete MongoDB Instances
+#      4.1. Delete Production-MongoDB Stack
+#      4.2. Delete Staging-MongoDB Stack
+#      4.3. Delete Testing-MongoDB Stack
+#      4.4. Delete Development-MongoDB Stack
 
 run "$applicationbindir/application-delete-mongodb-stack -E Production $i $f"
 run "$applicationbindir/application-delete-mongodb-stack -E Staging $i $f"
@@ -229,11 +247,11 @@ run "$applicationbindir/application-delete-mongodb-stack -E Testing $i $f"
 run "$applicationbindir/application-delete-mongodb-stack -E Development -m $i $f"
 
 
-#  4. Delete RabbitMQ Instances
-#      4.1. Delete Production-RabbitMQ Stack
-#      4.2. Delete Staging-RabbitMQ Stack
-#      4.3. Delete Testing-RabbitMQ Stack
-#      4.4. Delete Development-RabbitMQ Stack
+#  5. Delete RabbitMQ Instances
+#      5.1. Delete Production-RabbitMQ Stack
+#      5.2. Delete Staging-RabbitMQ Stack
+#      5.3. Delete Testing-RabbitMQ Stack
+#      5.4. Delete Development-RabbitMQ Stack
 
 run "$applicationbindir/application-delete-rabbitmq-stack -E Production $i $f"
 run "$applicationbindir/application-delete-rabbitmq-stack -E Staging $i $f"
@@ -241,31 +259,37 @@ run "$applicationbindir/application-delete-rabbitmq-stack -E Testing $i $f"
 run "$applicationbindir/application-delete-rabbitmq-stack -E Development -m $i $f"
 
 
-#  5. Delete WebSphereMQ Instances
-#      5.1. Delete Production-WebSphereMQ Stack
-#      5.2. Delete Core-WebSphereMQ Stack
+#  6. Delete WebSphereMQ Instances
+#      6.1. Create Production-WebSphereMQ Stack
+#      6.2. Create Staging-WebSphereMQ Stack (Client, references Core)
+#      6.3. Create Testing-WebSphereMQ Stack (Client, references Core)
+#      6.4. Create Development-WebSphereMQ Stack (Client, references Core)
+#      6.5. Create Core-WebSphereMQ Stack
 
 run "$applicationbindir/application-delete-webspheremq-stack -E Production $i $f"
+run "$applicationbindir/application-delete-webspheremq-stack -E Staging $i $f"
+run "$applicationbindir/application-delete-webspheremq-stack -E Testing $i $f"
+run "$applicationbindir/application-delete-webspheremq-stack -E Development -m $i $f"
 run "$applicationbindir/application-delete-webspheremq-stack -E Core -m $i $f"
 
 
-#  6. Delete Octopus Instances
-#      6.1. Delete Production-Octopus-Deploy Stack
-#      6.2. Delete Staging-Octopus-Deploy Stack
-#      6.3. Delete Core-Octopus-Deploy Stack
+#  7. Delete Octopus Instances
+#      7.1. Delete Production-Octopus-Deploy Stack
+#      7.2. Delete Staging-Octopus-Deploy Stack
+#      7.3. Delete Core-Octopus-Deploy Stack
 
 run "$applicationbindir/application-delete-octopus-deploy-stack -E Production $i $f"
 run "$applicationbindir/application-delete-octopus-deploy-stack -E Staging $i $f"
 run "$applicationbindir/application-delete-octopus-deploy-stack -E Core -m $i $f"
 
 
-#  7. Delete WindowsBastions Instances (Only in Unstable)
-#      7.1. Delete Production-WindowsBastions Stack
-#      7.2. Delete Staging-WindowsBastions Stack
-#      7.3. Delete Testing-WindowsBastions Stack
-#      7.4. Delete Development-WindowsBastions Stack
-#      7.5. Delete Core-WindowsBastions Stack
-#      7.6. Delete Build-WindowsBastions Stack
+#  8. Delete WindowsBastions Instances (Only in Unstable)
+#      8.1. Delete Production-WindowsBastions Stack
+#      8.2. Delete Staging-WindowsBastions Stack
+#      8.3. Delete Testing-WindowsBastions Stack
+#      8.4. Delete Development-WindowsBastions Stack
+#      8.5. Delete Core-WindowsBastions Stack
+#      8.6. Delete Build-WindowsBastions Stack
 
 run "$utilitybindir/utility-delete-windowsbastions-stack -E Production $i $f"
 run "$utilitybindir/utility-delete-windowsbastions-stack -E Staging $i $f"
@@ -275,13 +299,13 @@ run "$utilitybindir/utility-delete-windowsbastions-stack -E Core $i $f"
 run "$utilitybindir/utility-delete-windowsbastions-stack -E Build -m $i $f"
 
 
-#  8. Delete LinuxBastions Instances (Only in Unstable)
-#      8.1. Delete Production-LinuxBastions Stack
-#      8.2. Delete Staging-LinuxBastions Stack
-#      8.3. Delete Testing-LinuxBastions Stack
-#      8.4. Delete Development-LinuxBastions Stack
-#      8.5. Delete Core-LinuxBastions Stack
-#      8.6. Delete Build-LinuxBastions Stack
+#  9. Delete LinuxBastions Instances (Only in Unstable)
+#      9.1. Delete Production-LinuxBastions Stack
+#      9.2. Delete Staging-LinuxBastions Stack
+#      9.3. Delete Testing-LinuxBastions Stack
+#      9.4. Delete Development-LinuxBastions Stack
+#      9.5. Delete Core-LinuxBastions Stack
+#      9.6. Delete Build-LinuxBastions Stack
 
 run "$utilitybindir/utility-delete-linuxbastions-stack -E Production $i $f"
 run "$utilitybindir/utility-delete-linuxbastions-stack -E Staging $i $f"
@@ -291,13 +315,13 @@ run "$utilitybindir/utility-delete-linuxbastions-stack -E Core $i $f"
 run "$utilitybindir/utility-delete-linuxbastions-stack -E Build -m $i $f"
 
 
-#  9. Delete OpenVPNAS Instances
-#      9.1. Delete Production-OpenVPNAS Stack
-#      9.2. Delete Staging-OpenVPNAS Stack
-#      9.3. Delete Testing-OpenVPNAS Stack
-#      9.4. Delete Development-OpenVPNAS Stack
-#      9.5. Delete Core-OpenVPNAS Stack
-#      9.6. Delete Build-OpenVPNAS Stack
+# 10. Delete OpenVPNAS Instances
+#     10.1. Delete Production-OpenVPNAS Stack
+#     10.2. Delete Staging-OpenVPNAS Stack
+#     10.3. Delete Testing-OpenVPNAS Stack
+#     10.4. Delete Development-OpenVPNAS Stack
+#     10.5. Delete Core-OpenVPNAS Stack
+#     10.6. Delete Build-OpenVPNAS Stack
 
 run "$utilitybindir/utility-delete-openvpnas-stack -E Production $i $f"
 run "$utilitybindir/utility-delete-openvpnas-stack -E Staging $i $f"
@@ -307,13 +331,13 @@ run "$utilitybindir/utility-delete-openvpnas-stack -E Core $i $f"
 run "$utilitybindir/utility-delete-openvpnas-stack -E Build -m $i $f"
 
 
-# 10. Delete ActiveDirectory Instances
-#     10.1. Delete Production-ActiveDirectory Stack
-#     10.2. Delete Staging-ActiveDirectory Stack
-#     10.3. Delete Testing-ActiveDirectory Stack
-#     10.4. Delete Development-ActiveDirectory Stack
-#     10.5. Delete Core-ActiveDirectory Stack
-#     10.6. Delete Build-ActiveDirectory Stack
+# 11. Delete ActiveDirectory Instances
+#     11.1. Delete Production-ActiveDirectory Stack
+#     11.2. Delete Staging-ActiveDirectory Stack
+#     11.3. Delete Testing-ActiveDirectory Stack
+#     11.4. Delete Development-ActiveDirectory Stack
+#     11.5. Delete Core-ActiveDirectory Stack
+#     11.6. Delete Build-ActiveDirectory Stack
 
 run "$utilitybindir/utility-delete-activedirectory-stack -E Production $i $f"
 run "$utilitybindir/utility-delete-activedirectory-stack -E Staging $i $f"
@@ -323,11 +347,11 @@ run "$utilitybindir/utility-delete-activedirectory-stack -E Core $i $f"
 run "$utilitybindir/utility-delete-activedirectory-stack -E Build -m $i $f"
 
 
-# 11. Delete VPCPeeringConnections
-#     11.1. Delete Production-StagingVPCPeeringConnection Stack
-#     11.2. Delete Staging-TestingVPCPeeringConnection Stack
-#     11.3. Delete Testing-DevelopmentVPCPeeringConnection Stack
-#     11.4. Delete Core-VPCPeeringConnections Stack
+# 12. Delete VPCPeeringConnections
+#     12.1. Delete Production-StagingVPCPeeringConnection Stack
+#     12.2. Delete Staging-TestingVPCPeeringConnection Stack
+#     12.3. Delete Testing-DevelopmentVPCPeeringConnection Stack
+#     12.4. Delete Core-VPCPeeringConnections Stack
 
 run "$environmentbindir/environment-delete-vpcpeeringconnection-stack -E Production -P Staging $i $f"
 run "$environmentbindir/environment-delete-vpcpeeringconnection-stack -E Staging -P Testing $i $f"
@@ -335,19 +359,19 @@ run "$environmentbindir/environment-delete-vpcpeeringconnection-stack -E Testing
 run "$corebindir/core-delete-vpcpeeringconnections-stack -m $i $f"
 
 
-# 12. Delete VPNConnections
-#     12.1. Delete Production-SantaBarbaraVPNConnection Stack
-#     12.2. Delete Production-CharlotteVPNConnection Stack
-#     12.3. Delete Staging-SantaBarbaraVPNConnection Stack
-#     12.4. Delete Staging-CharlotteVPNConnection Stack
-#     12.5. Delete Testing-SantaBarbaraVPNConnection Stack
-#     12.6. Delete Testing-CharlotteVPNConnection Stack
-#     12.7. Delete Development-SantaBarbaraVPNConnection Stack
-#     12.8. Delete Development-CharlotteVPNConnection Stack
-#     12.9. Delete Core-SantaBarbaraVPNConnection Stack
-#     12.10. Delete Core-CharlotteVPNConnection Stack
-#     12.11. Delete Build-SantaBarbaraVPNConnection Stack
-#     12.12. Delete Build-CharlotteVPNConnection Stack
+# 13. Delete VPNConnections
+#     13.1. Delete Production-SantaBarbaraVPNConnection Stack
+#     13.2. Delete Production-CharlotteVPNConnection Stack
+#     13.3. Delete Staging-SantaBarbaraVPNConnection Stack
+#     13.4. Delete Staging-CharlotteVPNConnection Stack
+#     13.5. Delete Testing-SantaBarbaraVPNConnection Stack
+#     13.6. Delete Testing-CharlotteVPNConnection Stack
+#     13.7. Delete Development-SantaBarbaraVPNConnection Stack
+#     13.8. Delete Development-CharlotteVPNConnection Stack
+#     13.9. Delete Core-SantaBarbaraVPNConnection Stack
+#     13.10. Delete Core-CharlotteVPNConnection Stack
+#     13.11. Delete Build-SantaBarbaraVPNConnection Stack
+#     13.12. Delete Build-CharlotteVPNConnection Stack
 
 run "$commonbindir/common-delete-vpnconnection-stack -E Production -G SantaBarbara $i $f"
 #run "$commonbindir/common-delete-vpnconnection-stack -E Production -G Charlotte $i $f"
@@ -363,21 +387,21 @@ run "$commonbindir/common-delete-vpnconnection-stack -E Build -G SantaBarbara $i
 #run "$commonbindir/common-delete-vpnconnection-stack -E Build -G Charlotte -m $i $f"
 
 
-# 13. Delete CustomerGateways
-#     13.1. Delete SantaBarbaraCustomerGateway Stack
-#     13.2. Delete CharlotteCustomerGateway Stack
+# 14. Delete CustomerGateways
+#     14.1. Delete SantaBarbaraCustomerGateway Stack
+#     14.2. Delete CharlotteCustomerGateway Stack
 
 run "$commonbindir/common-delete-customergateway-stack -G SantaBarbara $i $f"
 #run "$commonbindir/common-delete-customergateway-stack -G Charlotte -m $i $f"
 
 
-# 14. Delete NetworkACLs
-#     14.1. Delete Production-NetworkAcls Stack
-#     14.2. Delete Staging-NetworkAcls Stack
-#     14.3. Delete Testing-NetworkAcls Stack
-#     14.4. Delete Development-NetworkAcls Stack
-#     14.5. Delete Core-NetworkAcls Stack
-#     14.6. Delete Build-NetworkAcls Stack
+# 15. Delete NetworkACLs
+#     15.1. Delete Production-NetworkAcls Stack
+#     15.2. Delete Staging-NetworkAcls Stack
+#     15.3. Delete Testing-NetworkAcls Stack
+#     15.4. Delete Development-NetworkAcls Stack
+#     15.5. Delete Core-NetworkAcls Stack
+#     15.6. Delete Build-NetworkAcls Stack
 
 run "$environmentbindir/environment-delete-networkacls-stack -E Production $i $f"
 run "$environmentbindir/environment-delete-networkacls-stack -E Staging $i $f"
@@ -387,13 +411,13 @@ run "$corebindir/core-delete-networkacls-stack -E Core $i $f"
 run "$corebindir/build-delete-networkacls-stack -E Build -m $i $f"
 
 
-# 15. Delete VPCs
-#     15.1. Delete Production-VPC Stack
-#     15.2. Delete Staging-VPC Stack
-#     15.3. Delete Testing-VPC Stack
-#     15.4. Delete Development-VPC Stack
-#     15.5. Delete Core-VPC Stack
-#     15.6. Delete Build-VPC Stack
+# 16. Delete VPCs
+#     16.1. Delete Production-VPC Stack
+#     16.2. Delete Staging-VPC Stack
+#     16.3. Delete Testing-VPC Stack
+#     16.4. Delete Development-VPC Stack
+#     16.5. Delete Core-VPC Stack
+#     16.6. Delete Build-VPC Stack
 
 echo "Stop! Currently, you must manually check each hostedzone to confirm there are no records"
 echo "      remaining other than the SOA and the hostedzone's own NS records. We are currently"
@@ -410,11 +434,11 @@ run "$corebindir/core-delete-vpc-stack -E Core $i $f"
 run "$corebindir/build-delete-vpc-stack -E Build -m $i $f"
 
 
-# 16. Delete Lambda Functions
-#     16.1 Delete CustomIdentifierFunctions Stack
-#     16.2 Delete StandardScheduleFunctions Stack
-#     16.3 Delete StandardCIDRFunctions Stack
-#     16.4 Delete StandardAMIFunctions Stack
+# 17. Delete Lambda Functions
+#     17.1 Delete CustomIdentifierFunctions Stack
+#     17.2 Delete StandardScheduleFunctions Stack
+#     17.3 Delete StandardCIDRFunctions Stack
+#     17.4 Delete StandardAMIFunctions Stack
 
 run "$corebindir/core-delete-customidentifierfunctions-stack $i $f"
 run "$corebindir/core-delete-standardschedulefunctions-stack $i $f"
@@ -422,8 +446,8 @@ run "$corebindir/core-delete-standardcidrfunctions-stack $i $f"
 run "$corebindir/core-delete-standardamifunctions-stack -m $i $f"
 
 
-# 17. Delete S3 Buckets
-#     17.1 Delete StandardBuckets Stack
+# 18. Delete S3 Buckets
+#     18.1 Delete StandardBuckets Stack
 
 run "$corebindir/core-delete-standardbuckets-stack -m $i $f"
 
@@ -433,10 +457,10 @@ echo
 sleep 5
 
 
-# 18. Delete SNS Topics and Subscriptions
-#     18.1 Delete CustomSubscriptions Stack
-#     18.2 Delete StandardSubscriptions Stack
-#     18.3 Delete StandardTopics Stack
+# 19. Delete SNS Topics and Subscriptions
+#     19.1 Delete CustomSubscriptions Stack
+#     19.2 Delete StandardSubscriptions Stack
+#     19.3 Delete StandardTopics Stack
 
 run "$corebindir/core-delete-customsubscriptions-stack $i $f"
 run "$corebindir/core-delete-standardsubscriptions-stack $i $f"
