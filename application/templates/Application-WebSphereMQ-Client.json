@@ -1,0 +1,91 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Application-WebSphereMQ-Client Template. This template creates only the WebSphereMQ-ClientSecurityGroup SecurityGroup, then integrates with an existing WebSphereMQ Application Stack running in another VPC.",
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Stack Dependencies" },
+          "Parameters" : [
+            "VPCStackName",
+            "WebSphereMQStackName"
+          ]
+        },
+        {
+          "Label" : { "default" : "Application Configuration" },
+          "Parameters" : [
+            "ApplicationName"
+          ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "VPCStackName" : { "default" : "VPC Stack Name" },
+        "WebSphereMQStackName" : { "default" : "WebSphereMQ Stack Name" },
+        "ApplicationName" : { "default" : "Application Name" }
+      }
+    }
+  },
+
+  "Parameters" : {
+    "VPCStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the VPC",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Production-VPC",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "WebSphereMQStackName" : {
+      "Description" : "Name of the CloudFormation Stack containing the WebSphereMQ Instances",
+      "Type" : "String",
+      "MinLength" : 8,
+      "MaxLength" : 64,
+      "Default" : "Core-WebSphereMQ",
+      "AllowedPattern" : "^[A-Z][-a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters and dashes."
+    },
+
+    "ApplicationName" : {
+      "Description" : "Name of the Application associated with the Stack",
+      "Type" : "String",
+      "MinLength" : 2,
+      "MaxLength" : 32,
+      "Default" : "WebSphereMQ",
+      "AllowedPattern" : "^[A-Z][a-zA-Z0-9]*$",
+      "ConstraintDescription" : "must begin with an upper case letter and contain alphanumeric characters."
+    }
+  },
+
+  "Resources" : {
+    "ClientSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "ClientSecurityGroup" ]]},
+        "VpcId" : { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPC" }},
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Fn::ImportValue" : { "Fn::Sub" : "${VPCStackName}-VPCName" }}, { "Ref" : "ApplicationName" }, "ClientSecurityGroup" ]]}}
+        ]
+      }
+    },
+
+    "InstanceSecurityGroupIngress1414" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Fn::ImportValue" : { "Fn::Sub" : "${WebSphereMQStackName}-InstanceSecurityGroup" }}, "IpProtocol" : "tcp", "FromPort" : "1414", "ToPort": "1430", "SourceSecurityGroupId": { "Ref": "ClientSecurityGroup" }
+      }
+    }
+  },
+
+  "Outputs" : {
+    "ClientSecurityGroup" : {
+      "Description" : "The Client SecurityGroup",
+      "Value" : { "Ref" : "ClientSecurityGroup" },
+      "Export" : { "Name" : { "Fn::Sub" : "${AWS::StackName}-ClientSecurityGroup" }}
+    }
+  }
+}

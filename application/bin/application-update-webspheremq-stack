@@ -1,6 +1,8 @@
 #!/bin/bash
 #
-# This script updates the Application WebSphereMQ Stack in an Environment Account.
+# This script updates the Application WebSphereMQ Stack in an Environment Account,
+# or, a variant of the Application WebSphereMQ Stack containing only Client-related
+# Resources, connected to an existing shared WebSphereMQ Stack in a different VPC.
 #
 
 #  1. Initalize Environment
@@ -220,6 +222,7 @@ if [ -z $environment ]; then
 else
     case $environment in
       Production)
+        unset webspheremq_stack_name
         os_name="RHEL 7.3"
         os_date="20161026"
         use_static_address=false
@@ -227,6 +230,7 @@ else
         log_retention=30
         schedule="";;  # 11:00 - 4:00 UTC = 3:00 AM - 8:00 PM PST = 6:00 AM - 11:00 PM EST
       Staging)
+        webspheremq_stack_name=Core-WebSphereMQ
         os_name="RHEL 7.3"
         os_date="20161026"
         use_static_address=false
@@ -234,6 +238,7 @@ else
         log_retention=7
         schedule="";;  # 11:00 - 4:00 UTC = 3:00 AM - 8:00 PM PST = 6:00 AM - 11:00 PM EST
       Testing)
+        webspheremq_stack_name=Core-WebSphereMQ
         os_name="RHEL 7.3"
         os_date="20161026"
         use_static_address=false
@@ -241,6 +246,7 @@ else
         log_retention=0
         schedule="13:00-2:00";; # 13:00 - 2:00 UTC = 5:00 AM - 6:00 PM PST = 8:00 AM - 9:00 PM EST
       Development)
+        webspheremq_stack_name=Core-WebSphereMQ
         os_name="RHEL 7.3"
         os_date="20161026"
         use_static_address=false
@@ -248,6 +254,7 @@ else
         log_retention=0
         schedule="";; # 13:00 - 2:00 UTC = 5:00 AM - 6:00 PM PST = 8:00 AM - 9:00 PM EST
       Core)
+        unset webspheremq_stack_name
         os_name="RHEL 7.3"
         os_date="20161026"
         use_static_address=false
@@ -428,6 +435,7 @@ read -r -d '' statement << EOS
 aws s3 sync $templatesdir \\
             s3://$templates_bucket/$template_folder \\
             --exclude '*' --include 'Application-WebSphereMQ.json' --include 'Application-WebSphereMQ-StackPolicy.json' \\
+                          --include 'Application-WebSphereMQ-Client.json' \\
             --profile $profile --region $region --output table
 EOS
 run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
@@ -503,6 +511,25 @@ EOS
 run_statement=$(echo "$statement" | sed -e '1s/^/# /;2,$ s/^/> /')
 eval_statement="${statement//\\$'\n'}"
 
+client_template_parameter="--template-url https://$s3_domain/$templates_bucket/$template_folder/Application-WebSphereMQ-Client.json"
+read -r -d '' client_statement << EOS
+aws cloudformation update-stack --stack-name $environment-$application \\
+                                $client_template_parameter \\
+                                $stack_policy_parameter \\
+                                --parameters ParameterKey=VPCStackName,ParameterValue=$environment-VPC \\
+                                             ParameterKey=WebSphereMQStackName,ParameterValue=$webspheremq_stack_name \\
+                                             ParameterKey=ApplicationName,ParameterValue=$application \\
+                                --tags Key=Owner,Value=$owner \\
+                                       Key=Company,Value=$company \\
+                                       Key=System,Value=$system \\
+                                       Key=Environment,Value=$environment \\
+                                       Key=Application,Value=$application \\
+                                --capabilities CAPABILITY_IAM \\
+                                --profile $profile --region $region --output table
+EOS
+run_client_statement=$(echo "$client_statement" | sed -e '1s/^/# /;2,$ s/^/> /')
+eval_client_statement="${client_statement//\\$'\n'}"
+
 clear
 echo
 echo "============================================================"
@@ -513,14 +540,24 @@ echo "============================================================"
 echo
 echo "Commands:"
 echo
-echo "$statement"
+if [ -z "$webspheremq_stack_name" ]; then
+    echo "$statement"
+else
+    echo "$client_statement"
+fi
 
 run
 
 if [ $choice = y ]; then
     echo
-    echo "$run_statement"
-    eval "$eval_statement"
+    if [ -z "$webspheremq_stack_name" ]; then
+        echo "$run_statement"
+        eval "$eval_statement"
+    else
+        echo "$run_client_statement"
+        eval "$eval_client_statement"
+    fi
+fi
 
     next
 fi
