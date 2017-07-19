@@ -237,10 +237,9 @@ if [ -z $environment ]; then
 else
     case $environment in
       Production)
-        #federatedsecurity_securityserver_stack_name=$environment-FederatedSecurity-SecurityServer
         # TODO: Currently, we're not yet planning on using FederatedSecurity
+        #federatedsecurity_securityserver_stack_name=$environment-FederatedSecurity-SecurityServer
         unset federatedsecurity_securityserver_stack_name
-        webspheremq_stack_name=$environment-WebSphereMQ
         octopus_deploy_stack_name=$environment-Octopus-Deploy
         os_name="Windows Server 2012 R2"
         os_date="20170614"
@@ -248,10 +247,9 @@ else
         log_retention=30
         schedule="";;  # 11:00 - 4:00 UTC = 3:00 AM - 8:00 PM PST = 6:00 AM - 11:00 PM EST
       Staging)
+        # TODO: Currently, we're not yet planning on using FederatedSecurity
         #federatedsecurity_securityserver_stack_name=$environment-FederatedSecurity-SecurityServer
         unset federatedsecurity_securityserver_stack_name
-        # TODO: Currently, we're not yet planning on using FederatedSecurity
-        webspheremq_stack_name=Core-WebSphereMQ
         octopus_deploy_stack_name=$environment-Octopus-Deploy
         os_name="Windows Server 2012 R2"
         os_date="20170614"
@@ -504,22 +502,15 @@ else
     echo -n "."
 fi
 
-if ! aws cloudformation describe-stacks --stack-name $octopus_deploy_stack_name \
-                                        --profile $profile --region $region --output text &> /dev/null; then
-    echo
-    echo "Stack dependency missing - $octopus_deploy_stack_name Stack does not exist!"
-    exit 79
-else
-    echo -n "."
-fi
-
-if ! aws cloudformation describe-stacks --stack-name $webspheremq_stack_name \
-                                        --profile $profile --region $region --output text &> /dev/null; then
-    echo
-    echo "Stack dependency missing - $webspheremq_stack_name Stack does not exist!"
-    exit 80
-else
-    echo -n "."
+if [ -n "$octopus_deploy_stack_name" ]; then
+    if ! aws cloudformation describe-stacks --stack-name $octopus_deploy_stack_name \
+                                            --profile $profile --region $region --output text &> /dev/null; then
+        echo
+        echo "Stack dependency missing - $octopus_deploy_stack_name Stack does not exist!"
+        exit 79
+    else
+        echo -n "."
+    fi
 fi
 
 if ! aws cloudformation describe-stacks --stack-name $environment-RabbitMQ \
@@ -540,13 +531,12 @@ else
     echo -n "."
 fi
 
-if [ -n $federatedsecurity_securityserver_stack_name ]; then
+if [ -n "$federatedsecurity_securityserver_stack_name" ]; then
     if ! aws cloudformation describe-stacks --stack-name $federatedsecurity_securityserver_stack_name \
                                             --profile $profile --region $region --output text &> /dev/null; then
         echo
         echo "Stack dependency missing - $federatedsecurity_securityserver_stack_name Stack does not exist!"
-        #exit 84
-        echo "TODO: This needs to be added later and integrated with this Stack"
+        exit 84
     else
         echo -n "."
     fi
@@ -672,7 +662,6 @@ aws cloudformation create-stack --stack-name $environment-$application-$componen
                                              ParameterKey=FederatedSecuritySecurityServerStackName,ParameterValue=$federatedsecurity_securityserver_stack_name \\
                                              ParameterKey=MongoDBStackName,ParameterValue=$environment-MongoDB \\
                                              ParameterKey=RabbitMQStackName,ParameterValue=$environment-RabbitMQ \\
-                                             ParameterKey=WebSphereMQStackName,ParameterValue=$webspheremq_stack_name \\
                                              ParameterKey=OctopusDeployStackName,ParameterValue=$octopus_deploy_stack_name \\
                                              ParameterKey=VPNStackName,ParameterValue=$environment-OpenVPNAS \\
                                              ParameterKey=ActiveDirectoryStackName,ParameterValue=$environment-ActiveDirectory \\
