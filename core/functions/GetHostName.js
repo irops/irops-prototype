@@ -125,10 +125,7 @@ exports.handler = function(event, context) {
 
   responseData.CompanyCode = companyNameToCode[event.ResourceProperties.CompanyName];
   if (responseData.CompanyCode === undefined) {
-    responseData = {Error: 'CompanyName invalid'};
-    console.error(responseData.Error);
-    sendResponse(event, context, 'FAILED', responseData);
-    return;
+    responseData.CompanyCode = '';
   }
   responseData.LocationCode = locationNameToCode[event.ResourceProperties.LocationName];
   if (responseData.LocationCode === undefined) {
