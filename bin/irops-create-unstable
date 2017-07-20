@@ -428,7 +428,7 @@ run "$applicationbindir/application-create-octopus-deploy-stack -E Production -T
 #     15.5. Create Production-WebSphereMQ Stack
 
 source $bindir/irops-define-unstable-production
-run "$applicationbindir/application-create-webspheremq-stack -E Core -T small $i $f"
+run "$applicationbindir/application-create-webspheremq-stack -E Core -T small -m $i $f"
 source $bindir/irops-define-unstable-development
 run "$applicationbindir/application-create-webspheremq-stack -E Development -T small $i $f"
 source $bindir/irops-define-unstable-testing

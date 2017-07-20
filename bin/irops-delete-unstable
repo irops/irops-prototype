@@ -230,9 +230,9 @@ run "$applicationbindir/application-delete-engine-monitoring-stack -E Developmen
 #     18.2. Delete Staging-DataTransfer-SFTP Stack (Client, references Core)
 #     18.1. Delete Core-DataTransfer-SFTP Stack
 
-run "$applicationbindir/application-delete-datatransfer-sftp-stack -E Production $i $f"
-run "$applicationbindir/application-delete-datatransfer-sftp-stack -E Staging -m $i $f"
-run "$applicationbindir/application-delete-datatransfer-sftp-stack -E Core -m $i $f"
+#run "$applicationbindir/application-delete-datatransfer-sftp-stack -E Production $i $f"
+#run "$applicationbindir/application-delete-datatransfer-sftp-stack -E Staging -m $i $f"
+#run "$applicationbindir/application-delete-datatransfer-sftp-stack -E Core -m $i $f"
 
 
 #  4. Delete MongoDB Instances
