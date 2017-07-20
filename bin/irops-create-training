@@ -102,7 +102,10 @@
 #
 # 15. Create WebSphereMQ Instances
 #     15.1. Create Core-WebSphereMQ Stack
-#     15.2. Create Production-WebSphereMQ Stack
+#     15.2. Create Development-WebSphereMQ Stack (Client, references Core)
+#     15.3. Create Testing-WebSphereMQ Stack (Client, references Core)
+#     15.4. Create Staging-WebSphereMQ Stack (Client, references Core)
+#     15.5. Create Production-WebSphereMQ Stack
 #
 # 16. Create RabbitMQ Instances
 #     16.1. Create Development-RabbitMQ Stack
@@ -116,27 +119,32 @@
 #     17.3. Create Staging-MongoDB Stack
 #     17.4. Create Production-MongoDB Stack
 #
-# 18. Create Engine Instances
-#     18.1. Create Development-Engine-Monitoring Stack
-#     18.2. Create Development-Engine-Publishing Stack
-#     18.3. Create Development-Engine-DataStaging Stack
-#     18.4. Create Development-Engine-Calculation Stack
-#     18.5. Create Development-Engine-Web Stack
-#     18.6. Create Testing-Engine-Monitoring Stack
-#     18.7. Create Testing-Engine-Publishing Stack
-#     18.8. Create Testing-Engine-DataStaging Stack
-#     18.9. Create Testing-Engine-Calculation Stack
-#     18.10. Create Testing-Engine-Web Stack
-#     18.11. Create Staging-Engine-Monitoring Stack
-#     18.12. Create Staging-Engine-Publishing Stack
-#     18.13. Create Staging-Engine-DataStaging Stack
-#     18.14. Create Staging-Engine-Calculation Stack
-#     18.15. Create Staging-Engine-Web Stack
-#     18.16. Create Production-Engine-Monitoring Stack
-#     18.17. Create Production-Engine-Publishing Stack
-#     18.18. Create Production-Engine-DataStaging Stack
-#     18.19. Create Production-Engine-Calculation Stack
-#     18.20. Create Production-Engine-Web Stack
+# 18. Create DataTransfer Instances
+#     18.1. Create Core-DataTransfer-SFTP Stack
+#     18.2. Create Staging-DataTransfer-SFTP Stack (Client, references Core)
+#     18.3. Create Production-DataTransfer-SFTP Stack
+#
+# 19. Create Engine Instances
+#     19.1. Create Development-Engine-Monitoring Stack
+#     19.2. Create Development-Engine-Publishing Stack
+#     19.3. Create Development-Engine-DataStaging Stack
+#     19.4. Create Development-Engine-Calculation Stack
+#     19.5. Create Development-Engine-Web Stack
+#     19.6. Create Testing-Engine-Monitoring Stack
+#     19.7. Create Testing-Engine-Publishing Stack
+#     19.8. Create Testing-Engine-DataStaging Stack
+#     19.9. Create Testing-Engine-Calculation Stack
+#     19.10. Create Testing-Engine-Web Stack
+#     19.11. Create Staging-Engine-Monitoring Stack
+#     19.12. Create Staging-Engine-Publishing Stack
+#     19.13. Create Staging-Engine-DataStaging Stack
+#     19.14. Create Staging-Engine-Calculation Stack
+#     19.15. Create Staging-Engine-Web Stack
+#     19.16. Create Production-Engine-Monitoring Stack
+#     19.17. Create Production-Engine-Publishing Stack
+#     19.18. Create Production-Engine-DataStaging Stack
+#     19.19. Create Production-Engine-Calculation Stack
+#     19.20. Create Production-Engine-Web Stack
 #
 
 run() {
@@ -376,10 +384,20 @@ run "$applicationbindir/application-create-octopus-deploy-stack -E Production -T
 
 # 15. Create WebSphereMQ Instances
 #     15.1. Create Core-WebSphereMQ Stack
-#     15.2. Create Production-WebSphereMQ Stack
+#     15.2. Create Development-WebSphereMQ Stack (Client, references Core)
+#     15.3. Create Testing-WebSphereMQ Stack (Client, references Core)
+#     15.4. Create Staging-WebSphereMQ Stack (Client, references Core)
+#     15.5. Create Production-WebSphereMQ Stack
 
 source $bindir/irops-define-training-production
-run "$applicationbindir/application-create-webspheremq-stack -E Core -T small $i $f"
+run "$applicationbindir/application-create-webspheremq-stack -E Core -T small -m $i $f"
+source $bindir/irops-define-training-development
+run "$applicationbindir/application-create-webspheremq-stack -E Development -T small $i $f"
+source $bindir/irops-define-training-testing
+run "$applicationbindir/application-create-webspheremq-stack -E Testing -T small $i $f"
+source $bindir/irops-define-training-staging
+run "$applicationbindir/application-create-webspheremq-stack -E Staging -T small $i $f"
+source $bindir/irops-define-training-production
 run "$applicationbindir/application-create-webspheremq-stack -E Production -T small -m $i $f"
 
 
@@ -415,27 +433,41 @@ source $bindir/irops-define-training-production
 run "$applicationbindir/application-create-mongodb-stack -E Production -T small -Z 2 -m $i $f"
 
 
-# 18. Create Engine Instances
-#     18.1. Create Development-Engine-Monitoring Stack
-#     18.2. Create Development-Engine-Publishing Stack
-#     18.3. Create Development-Engine-DataStaging Stack
-#     18.4. Create Development-Engine-Calculation Stack
-#     18.5. Create Development-Engine-Web Stack
-#     18.6. Create Testing-Engine-Monitoring Stack
-#     18.7. Create Testing-Engine-Publishing Stack
-#     18.8. Create Testing-Engine-DataStaging Stack
-#     18.9. Create Testing-Engine-Calculation Stack
-#     18.10. Create Testing-Engine-Web Stack
-#     18.11. Create Staging-Engine-Monitoring Stack
-#     18.12. Create Staging-Engine-Publishing Stack
-#     18.13. Create Staging-Engine-DataStaging Stack
-#     18.14. Create Staging-Engine-Calculation Stack
-#     18.15. Create Staging-Engine-Web Stack
-#     18.16. Create Production-Engine-Monitoring Stack
-#     18.17. Create Production-Engine-Publishing Stack
-#     18.18. Create Production-Engine-DataStaging Stack
-#     18.19. Create Production-Engine-Calculation Stack
-#     18.20. Create Production-Engine-Web Stack
+# 18. Create DataTransfer Instances
+#     18.1. Create Core-DataTransfer-SFTP Stack
+#     18.2. Create Staging-DataTransfer-SFTP Stack (Client, references Core)
+#     18.3. Create Production-DataTransfer-SFTP Stack
+
+# TODO: Implement DataTransfer and then uncomment this section
+#source $bindir/irops-define-training-production
+#run "$applicationbindir/application-create-datatransfer-sftp-stack -E Core -T small -Z 2 -m $i $f"
+#source $bindir/irops-define-training-staging
+#run "$applicationbindir/application-create-datatransfer-sftp-stack -E Staging -T small -Z 2 $i $f"
+#source $bindir/irops-define-training-production
+#run "$applicationbindir/application-create-datatransfer-sftp-stack -E Production -T small -Z 2 -m $i $f"
+
+
+# 19. Create Engine Instances
+#     19.1. Create Development-Engine-Monitoring Stack
+#     19.2. Create Development-Engine-Publishing Stack
+#     19.3. Create Development-Engine-DataStaging Stack
+#     19.4. Create Development-Engine-Calculation Stack
+#     19.5. Create Development-Engine-Web Stack
+#     19.6. Create Testing-Engine-Monitoring Stack
+#     19.7. Create Testing-Engine-Publishing Stack
+#     19.8. Create Testing-Engine-DataStaging Stack
+#     19.9. Create Testing-Engine-Calculation Stack
+#     19.10. Create Testing-Engine-Web Stack
+#     19.11. Create Staging-Engine-Monitoring Stack
+#     19.12. Create Staging-Engine-Publishing Stack
+#     19.13. Create Staging-Engine-DataStaging Stack
+#     19.14. Create Staging-Engine-Calculation Stack
+#     19.15. Create Staging-Engine-Web Stack
+#     19.16. Create Production-Engine-Monitoring Stack
+#     19.17. Create Production-Engine-Publishing Stack
+#     19.18. Create Production-Engine-DataStaging Stack
+#     19.19. Create Production-Engine-Calculation Stack
+#     19.20. Create Production-Engine-Web Stack
 
 source $bindir/irops-define-training-development
 run "$applicationbindir/application-create-engine-monitoring-stack -E Development -T small -m $i $f"
